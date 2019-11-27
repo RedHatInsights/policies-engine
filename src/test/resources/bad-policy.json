@@ -1,0 +1,6 @@
+{ "id":0,
+  "customerid": "1",
+  "description": "Another test",
+  "isEnabled": true,
+  "name": "3rd policy",
+  "conditions": "IF THEN EMAIL"}

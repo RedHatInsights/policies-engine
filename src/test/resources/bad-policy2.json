@@ -1,0 +1,8 @@
+
+{ "id":0,
+  "customerid":"1",
+  "description":"Another test",
+  "isEnabled":true,
+  "name":"My policy",
+  "conditions":"\"rhelversion\" >= \"8\""
+}
