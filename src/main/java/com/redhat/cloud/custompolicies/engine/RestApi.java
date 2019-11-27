@@ -101,11 +101,12 @@ public class RestApi {
   @Path("/eval/{customer}")
   @Operation(summary = "Evaluate the facts against stored policies. Sends a notification if they match. TODO needs " +
       "clarification")
-  public Response evaluate(@PathParam("customer") String customer, boolean shouldNotify, Map<String,Object> facts) {
+  public Response evaluate(@PathParam("customer") String customer, Map<String,Object> facts) {
     PolicyRetriever policyRetriever = new PolicyRetriever();
     List<Policy> policies = policyRetriever.getEnabledPoliciesForAccount(customer);
 
     List<String> replies =new ArrayList<>();
+    boolean isOneMatch = false;
 
     for (Policy policy : policies) {
       PolicyParser pp = new PolicyParser(policy);
@@ -116,21 +117,31 @@ public class RestApi {
       // TODO We should perhaps collect matching policies and then send notifications in batch
       if (match) {
         notifier.doNotify(policy);
+        isOneMatch = true;
       }
     }
 
-    return Response.ok(replies).build();
+    if (isOneMatch) {
+      return Response.ok(replies).build();
+    } else {
+      return Response.status(Response.Status.PRECONDITION_FAILED).build();
+    }
+
   }
 
   @POST
   @Path("/evalsp/{customer}")
   @Operation(summary = "Evaluate the system profile. Sends a notification if there are matches. TODO needs " +
       "clarification")
+  @APIResponse(responseCode = "200", description = "The facts match the stored policy")
+  @APIResponse(responseCode = "412", description = "Facts are not matching")
   public Response evaluatesp(@PathParam("customer") String customer, SystemProfile profile) {
     PolicyRetriever policyRetriever = new PolicyRetriever();
     List<Policy> policies = policyRetriever.getEnabledPoliciesForAccount(customer);
 
     List<String> replies =new ArrayList<>();
+
+    boolean isOneMatch = false;
 
     for (Policy policy : policies) {
       PolicyParser pp = new PolicyParser(policy);
@@ -139,10 +150,14 @@ public class RestApi {
       replies.add("Policy >" + policy.conditions.trim() + "< match: " + match);
       if (match) {
         notifier.doNotify(policy);
+        isOneMatch = true;
       }
     }
-
-    return Response.ok(replies).build();
+    if (isOneMatch) {
+      return Response.ok(replies).build();
+    } else {
+      return Response.status(Response.Status.PRECONDITION_FAILED).build();
+    }
   }
 
   @GET

@@ -16,8 +16,8 @@
  */
 package com.redhat.cloud.custompolicies.engine.model;
 
+import io.smallrye.reactive.messaging.annotations.Channel;
 import io.smallrye.reactive.messaging.annotations.Emitter;
-import io.smallrye.reactive.messaging.annotations.Stream;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
@@ -28,7 +28,7 @@ import javax.inject.Inject;
 public class Notifier {
 
   @Inject
-  @Stream("notification")
+  @Channel("notification")
   Emitter<String> emitter;
 
   public void  doNotify(Policy policy) {
