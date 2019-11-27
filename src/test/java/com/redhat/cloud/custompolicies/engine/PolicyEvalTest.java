@@ -21,8 +21,11 @@ import static io.restassured.RestAssured.given;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 import java.sql.SQLException;
+import java.time.Duration;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import liquibase.Contexts;
 import liquibase.Liquibase;
 import liquibase.database.DatabaseConnection;
@@ -30,6 +33,11 @@ import liquibase.database.jvm.JdbcConnection;
 import liquibase.exception.LiquibaseException;
 import liquibase.resource.FileSystemResourceAccessor;
 import liquibase.resource.ResourceAccessor;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -86,6 +94,20 @@ class PolicyEvalTest {
     postgreSQLContainer.stop();
   }
 
+  // Taken from Quarkus test suite after help from Gunnar Morling
+  static KafkaConsumer<String, String> createConsumer(String topic) {
+    Properties props = new Properties();
+    props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers());
+    props.put(ConsumerConfig.GROUP_ID_CONFIG, "test");
+    props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+    props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+    props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true");
+    props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+    KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props);
+    consumer.subscribe(Collections.singletonList(topic));
+    return consumer;
+  }
+
   @Test
   void test1NoMatch() {
 
@@ -107,12 +129,14 @@ class PolicyEvalTest {
   void test1Match() {
 
     // Policies are already in the DB
-
+    // supply matching facts
     Map<String, Object> facts = new HashMap<>();
     String[] flags = {"fpu","8bit","foo","cat"};
     facts.put("flags",flags);
     facts.put("os_version","7.5");
     facts.put("arch","x86_64");
+
+    KafkaConsumer<String, String> consumer = createConsumer("notification");
 
     given()
         .body(facts)
@@ -122,6 +146,8 @@ class PolicyEvalTest {
         .statusCode(200);
 
     // We should now have a notification in Kafka
-    // TODO implement
+    ConsumerRecord<String, String> records = consumer.poll(Duration.ofMillis(10000)).iterator().next();
+    String val = records.value();
+    Assert.assertTrue("Expected value not found", val.startsWith("NOTIFY; EMAIL foo@acme.org"));
   }
 }
