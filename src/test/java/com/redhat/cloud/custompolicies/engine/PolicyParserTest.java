@@ -40,6 +40,53 @@ public class PolicyParserTest {
     assert parser.getActions().equals("EMAIL");
   }
 
+  @Test()
+  void testSimpleNoTHEN() {
+    String policy = "IF \"cores\" == ";
+
+    try {
+      new PolicyParser(policy);
+      Assert.fail("Parsing should have failed");
+    }
+    catch (Exception  e) {
+      // expected
+    }
+  }
+
+  @Test()
+  void testStructuredNoCondition() {
+
+    Policy policy = new Policy();
+    policy.name="bla";
+    policy.conditions = "";
+    policy.actions = "EMAIL";
+
+    try {
+      new PolicyParser(policy);
+      Assert.fail("Parsing should have failed");
+    }
+    catch (Exception  e) {
+      // expected
+    }
+  }
+
+  @Test()
+  void testStructuredBadCondition() {
+
+    Policy policy = new Policy();
+    policy.name="bla";
+    policy.conditions = "\"a\" ==";
+    policy.actions = "EMAIL";
+
+    try {
+      PolicyParser pp = new PolicyParser(policy);
+      Assert.fail("Parsing should have failed");
+    }
+    catch (Exception  e) {
+      // expected
+    }
+  }
+
   @Test
   void testEmptyConditions() {
     String policy = "IF  THEN EMAIL";

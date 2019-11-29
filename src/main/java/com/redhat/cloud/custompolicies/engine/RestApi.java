@@ -82,16 +82,17 @@ public class RestApi {
   @Path("/verifyPolicy")
   @Operation(summary = "Verify a Policy in the structured form")
   @APIResponse(responseCode = "204", description = "Policy string is ok")
-  @APIResponse(responseCode = "400", description = "Policy verification failed")
+  @APIResponse(responseCode = "412", description = "Policy verification failed")
   public Response verifyPolicy(Policy policy) {
 
     Response.ResponseBuilder builder;
     try {
       new PolicyParser(policy);
       builder = Response.noContent();
-    } catch (IllegalArgumentException iae) {
-      Msg msg = new Msg(iae.getMessage());
-      builder = Response.status(400, iae.getMessage()).entity(msg);
+    } catch (Exception ie) {
+//    } catch (IllegalArgumentException|IllegalStateException ie) { // See Quarkus #5878
+      Msg msg = new Msg(ie.getMessage());
+      builder = Response.status(412, ie.getMessage()).entity(msg);
     }
     builder.header(ACCESS_CONTROL_ALLOW_ORIGIN, ALLOWED_ORIGINS);
     return builder.build();

@@ -113,7 +113,6 @@ class PolicyEvalTest {
   void test1NoMatch() {
 
     // Policies are already in the DB
-
     Map<String, Object> facts = new HashMap<>();
     String[] flags = {"fpu","8bit","foo","cat"};
     facts.put("flags",flags);
@@ -155,10 +154,7 @@ class PolicyEvalTest {
   @Test
   void testEvalSystemProfile() {
 
-    File file = new File(".");
-    System.err.println(file.getAbsolutePath());
-    file = new File("src/test/resources/system_profile_sample.json");
-    System.err.println(file.getAbsolutePath());
+    File file = new File("src/test/resources/system_profile_sample.json");
 
     given()
         .body(file)
@@ -170,6 +166,5 @@ class PolicyEvalTest {
     // TODO check for notification in Kafka. But this may clash with the
     // test1Match() test's receiver.
   }
-
 
 }
