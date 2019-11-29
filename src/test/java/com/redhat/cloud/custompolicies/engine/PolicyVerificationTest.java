@@ -49,7 +49,7 @@ class PolicyVerificationTest {
         .body(file)
         .when().post("/api/v1/verifyPolicy")
         .then()
-        .statusCode(400);
+        .statusCode(412);
   }
 
   @Test
@@ -61,7 +61,7 @@ class PolicyVerificationTest {
         .body(file)
         .when().post("/api/v1/verifyPolicy")
         .then()
-        .statusCode(400);
+        .statusCode(412);
   }
 
   @Test

@@ -18,6 +18,7 @@ package com.redhat.cloud.custompolicies.engine;
 
 import com.redhat.cloud.custompolicies.engine.model.Policy;
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -30,6 +31,7 @@ class PolicyParser {
 
   PolicyParser(String policy) {
     validate(policy);
+    evaluateConditions(new HashMap<>());
   }
 
   PolicyParser(Policy policy) {
@@ -45,6 +47,9 @@ class PolicyParser {
 
     this.condition_string = policy.conditions;
     this.actions = policy.actions;
+
+    evaluateConditions(new HashMap<>());
+
   }
 
 
@@ -151,11 +156,15 @@ class PolicyParser {
     // Simple case for now  Fact compare value
     int pos = findComparator(condition);
     if (pos == -1 ) {
-      return false;
+      throw new IllegalStateException("No comparator found");
     }
     String factName = condition.substring(0, pos);
     factName= stripQuoteSigns(factName);
-    String comparatorString = condition.substring(pos, condition.indexOf(" ", pos+1));
+    int afterComparatorIndex = condition.indexOf(" ", pos + 1);
+    if (afterComparatorIndex == -1) {
+      throw new IllegalStateException("Comparision lacking right side");
+    }
+    String comparatorString = condition.substring(pos, afterComparatorIndex);
     String value = condition.substring(pos+comparatorString.length()+1);
 
     boolean isStringValue = false;

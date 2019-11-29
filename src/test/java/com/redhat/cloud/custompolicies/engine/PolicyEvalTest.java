@@ -20,6 +20,7 @@ import static io.restassured.RestAssured.given;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
+import java.io.File;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.util.Collections;
@@ -112,7 +113,6 @@ class PolicyEvalTest {
   void test1NoMatch() {
 
     // Policies are already in the DB
-
     Map<String, Object> facts = new HashMap<>();
     String[] flags = {"fpu","8bit","foo","cat"};
     facts.put("flags",flags);
@@ -133,7 +133,7 @@ class PolicyEvalTest {
     Map<String, Object> facts = new HashMap<>();
     String[] flags = {"fpu","8bit","foo","cat"};
     facts.put("flags",flags);
-    facts.put("os_version","7.5");
+    facts.put("os_release","7.5");
     facts.put("arch","x86_64");
 
     KafkaConsumer<String, String> consumer = createConsumer("notification");
@@ -150,4 +150,21 @@ class PolicyEvalTest {
     String val = records.value();
     Assert.assertTrue("Expected value not found", val.startsWith("NOTIFY; EMAIL foo@acme.org"));
   }
+
+  @Test
+  void testEvalSystemProfile() {
+
+    File file = new File("src/test/resources/system_profile_sample.json");
+
+    given()
+        .body(file)
+        .contentType(ContentType.JSON)
+        .when().post("/api/v1/evalsp/1")
+        .then()
+        .statusCode(200);
+
+    // TODO check for notification in Kafka. But this may clash with the
+    // test1Match() test's receiver.
+  }
+
 }
