@@ -57,3 +57,45 @@ OpenAPI spec of the API is available under http://localhost:8083/openapi
 When the server is running in dev mode, there is also the Swagger-UI available under
 http://localhost:8083/swagger-ui/
 
+== Container usage
+
+The `deploy/` directory contains a script to create a container image of the engine.
+
+[source,shell]
+----
+cd deploy
+sh create_docker_image.sh
+----
+
+To run the image you need to pass some parameters:
+
+[source,shell]
+----
+docker run -it -p 8083:8083 \                       # <1>
+    -e kafka.bootstrap.servers=1.2.3.4:9092 \       # <2>
+    -e quarkus.datasource.url=jdbc://1.2.3.4:5432/postgres \ # <3>
+     cp-engine
+----
+<1> Expose the internal port.
+<2> Url of your Kafka broker -- see also below
+<3> Database URL of your postgres instance
+
+You can also pass the Postgres user name + password - see Dockerfile.
+
+=== A note on the Kafka broker configuration
+
+For the above to work you need to make sure that Kafka is not (only) advertising
+a listener to localhost. In this case, Quarkus could connect to Kafka and Kafka will
+reply with "Hey I a listening on localhost:9092", and Quarkus would then try to
+connect on localhost:9092, which is expected to be inside the container.
+
+In your Kafka configuration you should thus put something like
+
+[source,shell]
+----
+KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://1.2.3.4:9092
+----
+
+to match the `kafka.bootstrap.servers` from above.
+
+
