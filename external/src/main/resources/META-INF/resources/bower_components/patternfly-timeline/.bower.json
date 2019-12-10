@@ -1,0 +1,27 @@
+{
+  "name": "patternfly-timeline",
+  "description": "A time based/event series interactive visualization using d3.js. Use drag and zoom to navigate in time.",
+  "main": "dist/timeline.js",
+  "version": "1.0.7",
+  "authors": [
+    "Red Hat"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/patternfly/patternfly-timeline",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "_release": "1.0.7",
+  "_resolution": {
+    "type": "version",
+    "tag": "v1.0.7",
+    "commit": "9d2a8cc4155175d1fe7ad1e35dc966df07150382"
+  },
+  "_source": "https://github.com/patternfly/patternfly-timeline.git",
+  "_target": "1.0.7",
+  "_originalSource": "patternfly-timeline"
+}
