@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hawkular.alerts.handlers.util;
+package com.redhat.cloud.custompolicies.engine.handlers.util;
 
 import static org.hawkular.alerts.api.json.JsonUtil.toJson;
 import static org.hawkular.alerts.api.util.Util.isEmpty;

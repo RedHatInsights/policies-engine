@@ -14,15 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hawkular.alerts.handlers;
+package com.redhat.cloud.custompolicies.engine.handlers;
 
-import org.hawkular.alerts.api.model.event.Event;
+import org.hawkular.alerts.api.model.event.Alert;
 import org.hawkular.alerts.api.model.paging.Order;
 import org.hawkular.alerts.api.model.paging.Page;
 import org.hawkular.alerts.api.model.paging.PageContext;
 import org.hawkular.alerts.api.model.paging.Pager;
+import org.hawkular.alerts.api.services.AlertsCriteria;
 import org.hawkular.alerts.api.services.AlertsService;
-import org.hawkular.alerts.api.services.EventsCriteria;
 import org.hawkular.commons.log.MsgLogger;
 import org.hawkular.commons.log.MsgLogging;
 
@@ -36,22 +36,22 @@ import java.util.Set;
  * @author Jay Shaughnessy
  * @author Lucas Ponce
  */
-public class EventsWatcher extends Thread {
-    private static final MsgLogger log = MsgLogging.getMsgLogger(EventsWatcher.class);
-    private static final Pager ctimePager;
+public class AlertsWatcher extends Thread {
+    private static final MsgLogger log = MsgLogging.getMsgLogger(AlertsWatcher.class);
+    private static final Pager stimePager;
     private static final long WATCHER_INTERVAL_DEFAULT = 5 * 1000;
     private static final long CLEAN_INTERVAL = 10 * 1000;
     private static final long LEAP_INTERVAL = 1 * 1000;
 
     static {
         List<Order> ordering = new ArrayList<>();
-        ordering.add(Order.by("ctime", Order.Direction.ASCENDING));
-        ctimePager = new Pager(0, PageContext.UNLIMITED_PAGE_SIZE, ordering);
+        ordering.add(Order.by("stime", Order.Direction.ASCENDING));
+        stimePager = new Pager(0, PageContext.UNLIMITED_PAGE_SIZE, ordering);
     }
 
     String id;
-    EventsCriteria criteria;
-    EventsListener listener;
+    AlertsCriteria criteria;
+    AlertsListener listener;
 
     @Inject
     AlertsService alertsService;
@@ -60,8 +60,8 @@ public class EventsWatcher extends Thread {
     Long watchInterval;
     boolean running = true;
 
-    public EventsWatcher(String id, EventsListener listener, Set<String> tenantIds, EventsCriteria criteria, Long watchInterval) {
-        super("EventsWatcher[" + id + "]");
+    public AlertsWatcher(String id, AlertsListener listener, Set<String> tenantIds, AlertsCriteria criteria, Long watchInterval) {
+        super("AlertsWatcher[" + id + "]");
         this.id = id;
         this.listener = listener;
         this.criteria = criteria;
@@ -79,46 +79,50 @@ public class EventsWatcher extends Thread {
             log.error("Listener is null");
             return;
         }
-        Long startWatchTime = criteria.getEndTime();
-        Page<Event> initialEvents;
+        Long startWatchTime = criteria.getEndStatusTime();
+        Page<Alert> initialAlerts;
         try {
-            initialEvents = alertsService.getEvents(tenantIds, criteria, ctimePager);
+            initialAlerts = alertsService.getAlerts(tenantIds, criteria, stimePager);
         } catch (Exception e) {
             log.error(e);
             return;
         }
-        if (initialEvents == null) {
-            log.error("initialEvents is null");
+        if (initialAlerts == null) {
+            log.error("initialAlerts is null");
             return;
         }
         Set<WatchedId> watchedIds = new HashSet<>();
-        initialEvents.forEach(ev -> {
-            listener.onEvent(ev);
-            watchedIds.add(new WatchedId(ev.getId(), ev.getCtime()));
+        initialAlerts.forEach(a -> {
+            listener.onAlert(a);
+            watchedIds.add(new WatchedId(a.getId(), a.getCurrentLifecycle().getStime()));
         });
         startWatchTime = startWatchTime == null ? System.currentTimeMillis() : startWatchTime;
         long sleepWatcher = watchInterval == null ? WATCHER_INTERVAL_DEFAULT : watchInterval * 1000;
         /*
-            Watcher will reuse the EventsCriteria but without time constraints.
-            Time constraints are defined by the watcher on ctime via regular intervals.
+            Watcher will reuse the AlertsCriteria but without time constraints.
+            Time constraints are defined by the watcher on stime via regular intervals.
          */
         criteria.setStartTime(null);
         criteria.setEndTime(null);
+        criteria.setStartAckTime(null);
+        criteria.setEndAckTime(null);
+        criteria.setStartResolvedTime(null);
+        criteria.setEndResolvedTime(null);
         long lastWatched = System.currentTimeMillis();
         Set<WatchedId> newWatchedIds = new HashSet<>();
         while (running) {
-            startWatchTime = criteria.getEndTime() == null ? startWatchTime : criteria.getEndTime();
-            criteria.setStartTime(startWatchTime);
-            criteria.setEndTime(System.currentTimeMillis());
+            startWatchTime = criteria.getEndStatusTime() == null ? startWatchTime : criteria.getEndStatusTime();
+            criteria.setStartStatusTime(startWatchTime);
+            criteria.setEndStatusTime(System.currentTimeMillis());
             try {
                 Thread.sleep(LEAP_INTERVAL);
-                log.debugf("Query timestamp %s. startTime: %s endTime: %s",
-                        System.currentTimeMillis(), criteria.getStartTime(), criteria.getEndTime());
-                Page<Event> watchedEvents = alertsService.getEvents(tenantIds, criteria, ctimePager);
-                for (Event event : watchedEvents) {
-                    WatchedId watchedId = new WatchedId(event.getId(), event.getCtime());
+                log.debugf("Query timestamp %s. startStatusTime: %s endStatusTime: %s",
+                        System.currentTimeMillis(), criteria.getStartStatusTime(), criteria.getEndStatusTime());
+                Page<Alert> watchedAlerts = alertsService.getAlerts(tenantIds, criteria, stimePager);
+                for (Alert alert : watchedAlerts) {
+                    WatchedId watchedId = new WatchedId(alert.getId(), alert.getCurrentLifecycle().getStime());
                     if (!watchedIds.contains(watchedId)) {
-                        listener.onEvent(event);
+                        listener.onAlert(alert);
                         newWatchedIds.add(watchedId);
                     }
                 }
@@ -133,20 +137,20 @@ public class EventsWatcher extends Thread {
                 return;
             }
         }
-        log.infof("EventsWatcher[%s] finished", id);
+        log.infof("AlertsWatcher[%s] finished", id);
     }
 
-    public interface EventsListener {
-        void onEvent(Event a);
+    public interface AlertsListener {
+        void onAlert(Alert a);
     }
 
     static class WatchedId {
         String id;
-        long ctime;
+        long stime;
 
-        public WatchedId(String id, long ctime) {
+        public WatchedId(String id, long stime) {
             this.id = id;
-            this.ctime = ctime;
+            this.stime = stime;
         }
 
         @Override
@@ -156,14 +160,14 @@ public class EventsWatcher extends Thread {
 
             WatchedId watchedId = (WatchedId) o;
 
-            if (ctime != watchedId.ctime) return false;
+            if (stime != watchedId.stime) return false;
             return id != null ? id.equals(watchedId.id) : watchedId.id == null;
         }
 
         @Override
         public int hashCode() {
             int result = id != null ? id.hashCode() : 0;
-            result = 31 * result + (int) (ctime ^ (ctime >>> 32));
+            result = 31 * result + (int) (stime ^ (stime >>> 32));
             return result;
         }
     }

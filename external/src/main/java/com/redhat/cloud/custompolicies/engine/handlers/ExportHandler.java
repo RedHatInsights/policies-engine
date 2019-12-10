@@ -14,8 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hawkular.alerts.handlers;
+package com.redhat.cloud.custompolicies.engine.handlers;
 
+import com.redhat.cloud.custompolicies.engine.handlers.util.ResponseUtil;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import org.hawkular.alerts.api.doc.DocEndpoint;
@@ -24,7 +25,6 @@ import org.hawkular.alerts.api.doc.DocResponse;
 import org.hawkular.alerts.api.doc.DocResponses;
 import org.hawkular.alerts.api.model.export.Definitions;
 import org.hawkular.alerts.api.services.DefinitionsService;
-import org.hawkular.alerts.handlers.util.ResponseUtil;
 import org.hawkular.commons.log.MsgLogger;
 import org.hawkular.commons.log.MsgLogging;
 

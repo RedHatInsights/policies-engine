@@ -1,4 +1,4 @@
-package com.redhat.cloud.custompolicies.process;
+package com.redhat.cloud.custompolicies.engine.process;
 
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;

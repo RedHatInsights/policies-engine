@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hawkular.alerts.handlers;
+package com.redhat.cloud.custompolicies.engine.handlers;
 
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
@@ -29,9 +29,9 @@ import org.hawkular.alerts.api.model.paging.Page;
 import org.hawkular.alerts.api.model.paging.Pager;
 import org.hawkular.alerts.api.services.AlertsService;
 import org.hawkular.alerts.api.services.EventsCriteria;
-import org.hawkular.alerts.handlers.util.ResponseUtil;
-import org.hawkular.alerts.handlers.util.ResponseUtil.ApiDeleted;
-import org.hawkular.alerts.handlers.util.ResponseUtil.ApiError;
+import com.redhat.cloud.custompolicies.engine.handlers.util.ResponseUtil;
+import com.redhat.cloud.custompolicies.engine.handlers.util.ResponseUtil.ApiDeleted;
+import com.redhat.cloud.custompolicies.engine.handlers.util.ResponseUtil.ApiError;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
@@ -43,8 +43,8 @@ import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static org.hawkular.alerts.api.doc.DocConstants.*;
 import static org.hawkular.alerts.api.json.JsonUtil.*;
 import static org.hawkular.alerts.api.util.Util.isEmpty;
-import static org.hawkular.alerts.handlers.util.ResponseUtil.PARAMS_PAGING;
-import static org.hawkular.alerts.handlers.util.ResponseUtil.checkForUnknownQueryParams;
+import static com.redhat.cloud.custompolicies.engine.handlers.util.ResponseUtil.PARAMS_PAGING;
+import static com.redhat.cloud.custompolicies.engine.handlers.util.ResponseUtil.checkForUnknownQueryParams;
 
 /**
  * @author Jay Shaughnessy

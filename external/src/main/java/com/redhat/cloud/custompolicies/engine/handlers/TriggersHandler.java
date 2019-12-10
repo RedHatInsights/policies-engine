@@ -14,8 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hawkular.alerts.handlers;
+package com.redhat.cloud.custompolicies.engine.handlers;
 
+import com.redhat.cloud.custompolicies.engine.handlers.util.ResponseUtil;
 import io.vertx.core.MultiMap;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
@@ -34,8 +35,6 @@ import org.hawkular.alerts.api.model.trigger.Mode;
 import org.hawkular.alerts.api.model.trigger.Trigger;
 import org.hawkular.alerts.api.services.DefinitionsService;
 import org.hawkular.alerts.api.services.TriggersCriteria;
-import org.hawkular.alerts.handlers.util.ResponseUtil;
-import org.hawkular.alerts.handlers.util.ResponseUtil.*;
 import org.hawkular.commons.log.MsgLogger;
 import org.hawkular.commons.log.MsgLogging;
 
@@ -50,7 +49,6 @@ import static org.hawkular.alerts.api.doc.DocConstants.*;
 import static org.hawkular.alerts.api.json.JsonUtil.collectionFromJson;
 import static org.hawkular.alerts.api.json.JsonUtil.fromJson;
 import static org.hawkular.alerts.api.util.Util.isEmpty;
-import static org.hawkular.alerts.handlers.util.ResponseUtil.*;
 
 /**
  * @author Jay Shaughnessy
@@ -76,7 +74,7 @@ public class TriggersHandler {
                 PARAM_TRIGGER_IDS,
                 PARAM_THIN);
         queryParamValidationMap.put(FIND_TRIGGERS, new HashSet<>(TRIGGERS_CRITERIA));
-        queryParamValidationMap.get(FIND_TRIGGERS).addAll(PARAMS_PAGING);
+        queryParamValidationMap.get(FIND_TRIGGERS).addAll(ResponseUtil.PARAMS_PAGING);
     }
 
     @Inject
@@ -131,8 +129,8 @@ public class TriggersHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Dampening created.", response = Dampening.class),
-            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void createDampening(RoutingContext routing) {
         createDampening(routing, false);
@@ -150,8 +148,8 @@ public class TriggersHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Dampening created.", response = Dampening.class),
-            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void createGroupDampening(RoutingContext routing) {
         createDampening(routing, true);
@@ -160,7 +158,7 @@ public class TriggersHandler {
     void createDampening(RoutingContext routing, boolean isGroup) {
         routing.vertx()
                 .executeBlocking(future -> {
-                    String tenantId = checkTenant(routing);
+                    String tenantId = ResponseUtil.checkTenant(routing);
                     String json = routing.getBodyAsString();
                     String triggerId = routing.request().getParam("triggerId");
                     String groupId = routing.request().getParam("groupId");
@@ -169,7 +167,7 @@ public class TriggersHandler {
                         dampening = fromJson(json, Dampening.class);
                     } catch (Exception e) {
                         log.errorf("Error parsing Dampening json: %s. Reason: %s", json, e.toString());
-                        throw new BadRequestException(e.toString());
+                        throw new ResponseUtil.BadRequestException(e.toString());
                     }
                     dampening.setTenantId(tenantId);
                     dampening.setTriggerId(isGroup ? groupId : triggerId);
@@ -180,13 +178,13 @@ public class TriggersHandler {
                         // Expected
                     } catch (Exception e) {
                         log.debug(e.getMessage(), e);
-                        throw new InternalServerException(e.toString());
+                        throw new ResponseUtil.InternalServerException(e.toString());
                     }
                     if (found != null) {
-                        throw new BadRequestException("Existing dampening for dampeningId: " + dampening.getDampeningId());
+                        throw new ResponseUtil.BadRequestException("Existing dampening for dampeningId: " + dampening.getDampeningId());
                     }
                     try {
-                        Dampening d = getCleanDampening(dampening);
+                        Dampening d = ResponseUtil.getCleanDampening(dampening);
                         if (isGroup) {
                             definitionsService.addGroupDampening(tenantId, d);
                         } else {
@@ -195,12 +193,12 @@ public class TriggersHandler {
                         log.debugf("Dampening: %s", dampening);
                         future.complete(d);
                     } catch (IllegalArgumentException e) {
-                        throw new BadRequestException("Bad arguments: " + e.getMessage());
+                        throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
                     } catch (Exception e) {
                         log.debug(e.getMessage(), e);
-                        throw new InternalServerException(e.toString());
+                        throw new ResponseUtil.InternalServerException(e.toString());
                     }
-                }, res -> result(routing, res));
+                }, res -> ResponseUtil.result(routing, res));
     }
 
     @DocPath(method = POST,
@@ -213,23 +211,23 @@ public class TriggersHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, FullTrigger created.", response = FullTrigger.class),
-            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void createFullTrigger(RoutingContext routing) {
         routing.vertx()
                 .executeBlocking(future -> {
-                    String tenantId = checkTenant(routing);
+                    String tenantId = ResponseUtil.checkTenant(routing);
                     String json = routing.getBodyAsString();
                     FullTrigger fullTrigger;
                     try {
                         fullTrigger = fromJson(json, FullTrigger.class);
                     } catch (Exception e) {
                         log.errorf("Error parsing FullTrigger json: %s. Reason: %s", json, e.toString());
-                        throw new BadRequestException(e);
+                        throw new ResponseUtil.BadRequestException(e);
                     }
                     if (fullTrigger.getTrigger() == null) {
-                        throw new BadRequestException("Trigger is empty");
+                        throw new ResponseUtil.BadRequestException("Trigger is empty");
                     }
 
                     Trigger trigger = fullTrigger.getTrigger();
@@ -244,26 +242,26 @@ public class TriggersHandler {
                             // Expected
                         } catch (Exception e) {
                             log.debug(e.getMessage(), e);
-                            throw new InternalServerException(e.toString());
+                            throw new ResponseUtil.InternalServerException(e.toString());
                         }
                         if (found != null) {
-                            throw new BadRequestException("Trigger with ID [" + trigger.getId() + "] exists.");
+                            throw new ResponseUtil.BadRequestException("Trigger with ID [" + trigger.getId() + "] exists.");
                         }
                     }
-                    if (!checkTags(trigger)) {
-                        throw new BadRequestException("Tags " + trigger.getTags() + " must be non empty.");
+                    if (!ResponseUtil.checkTags(trigger)) {
+                        throw new ResponseUtil.BadRequestException("Tags " + trigger.getTags() + " must be non empty.");
                     }
                     try {
                         definitionsService.createFullTrigger(tenantId, fullTrigger);
                         future.complete(fullTrigger);
 
                     } catch (IllegalArgumentException e) {
-                        throw new BadRequestException("Bad arguments: " + e.getMessage());
+                        throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
                     } catch (Exception e) {
                         log.debug(e.getMessage(), e);
-                        throw new InternalServerException(e);
+                        throw new ResponseUtil.InternalServerException(e);
                     }
-                }, res -> result(routing, res));
+                }, res -> ResponseUtil.result(routing, res));
     }
 
     @DocPath(method = PUT,
@@ -278,13 +276,13 @@ public class TriggersHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, FullTrigger updated.", response = FullTrigger.class),
-            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void updateFullTrigger(RoutingContext routing) {
         routing.vertx()
                 .executeBlocking(future -> {
-                    String tenantId = checkTenant(routing);
+                    String tenantId = ResponseUtil.checkTenant(routing);
                     String json = routing.getBodyAsString();
                     String triggerId = routing.request().getParam("triggerId");
                     FullTrigger fullTrigger;
@@ -293,18 +291,18 @@ public class TriggersHandler {
                         fullTrigger = fromJson(json, FullTrigger.class);
                     } catch (Exception e) {
                         log.errorf("Error parsing FullTrigger json: %s. Reason: %s", json, e.toString());
-                        throw new BadRequestException(e.toString(), e);
+                        throw new ResponseUtil.BadRequestException(e.toString(), e);
                     }
                     if (null == fullTrigger) {
-                        throw new BadRequestException("FullTrigger can not be null.");
+                        throw new ResponseUtil.BadRequestException("FullTrigger can not be null.");
                     }
                     trigger = fullTrigger.getTrigger();
                     if (null == trigger) {
-                        throw new BadRequestException("FullTrigger.Trigger can not be null.");
+                        throw new ResponseUtil.BadRequestException("FullTrigger.Trigger can not be null.");
                     }
                     trigger.setId(triggerId);
-                    if (!checkTags(trigger)) {
-                        throw new BadRequestException(
+                    if (!ResponseUtil.checkTags(trigger)) {
+                        throw new ResponseUtil.BadRequestException(
                                 "Tags " + trigger.getTags() + " must be non empty.");
                     }
                     try {
@@ -314,12 +312,12 @@ public class TriggersHandler {
                     } catch (NotFoundException e) {
                         throw new NotFoundException(e.getMessage());
                     } catch (IllegalArgumentException e) {
-                        throw new BadRequestException("Bad arguments: " + e.getMessage());
+                        throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
                     } catch (Exception e) {
                         log.debug(e.getMessage(), e);
-                        throw new InternalServerException(e.toString());
+                        throw new ResponseUtil.InternalServerException(e.toString());
                     }
-                }, res -> result(routing, res));
+                }, res -> ResponseUtil.result(routing, res));
     }
 
     @DocPath(method = POST,
@@ -332,28 +330,28 @@ public class TriggersHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Member Trigger Created.", response = Trigger.class),
-            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ApiError.class),
-            @DocResponse(code = 404, message = "Group trigger not found.", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 404, message = "Group trigger not found.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void createGroupMember(RoutingContext routing) {
         routing.vertx()
                 .executeBlocking(future -> {
-                    String tenantId = checkTenant(routing);
+                    String tenantId = ResponseUtil.checkTenant(routing);
                     String json = routing.getBodyAsString();
                     GroupMemberInfo groupMember;
                     try {
                         groupMember = fromJson(json, GroupMemberInfo.class);
                     } catch (Exception e) {
                         log.errorf("Error parsing GroupMemberInfo json: %s. Reason: %s", json, e.toString());
-                        throw new BadRequestException(e.toString());
+                        throw new ResponseUtil.BadRequestException(e.toString());
                     }
                     String groupId = groupMember.getGroupId();
                     if (isEmpty(groupId)) {
-                        throw new BadRequestException("MemberTrigger groupId is null");
+                        throw new ResponseUtil.BadRequestException("MemberTrigger groupId is null");
                     }
-                    if (!checkTags(groupMember)) {
-                        throw new BadRequestException("Tags " + groupMember.getMemberTags() + " must be non empty.");
+                    if (!ResponseUtil.checkTags(groupMember)) {
+                        throw new ResponseUtil.BadRequestException("Tags " + groupMember.getMemberTags() + " must be non empty.");
                     }
                     try {
                         Trigger child = definitionsService.addMemberTrigger(tenantId, groupId, groupMember.getMemberId(),
@@ -365,12 +363,12 @@ public class TriggersHandler {
                         log.debugf("Child Trigger: %s", child);
                         future.complete(child);
                     } catch (IllegalArgumentException e) {
-                        throw new BadRequestException("Bad arguments: " + e.getMessage());
+                        throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
                     } catch (Exception e) {
                         log.debug(e.getMessage(), e);
-                        throw new InternalServerException(e.toString());
+                        throw new ResponseUtil.InternalServerException(e.toString());
                     }
-                }, res -> result(routing, res));
+                }, res -> ResponseUtil.result(routing, res));
     }
 
     @DocPath(method = POST,
@@ -383,8 +381,8 @@ public class TriggersHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Trigger Created.", response = Trigger.class),
-            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void createTrigger(RoutingContext routing) {
         createTrigger(routing, false);
@@ -400,8 +398,8 @@ public class TriggersHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Group Trigger Created.", response = Trigger.class),
-            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void createGroupTrigger(RoutingContext routing) {
         createTrigger(routing, true);
@@ -410,14 +408,14 @@ public class TriggersHandler {
     void createTrigger(RoutingContext routing, boolean isGroup) {
         routing.vertx()
                 .executeBlocking(future -> {
-                    String tenantId = checkTenant(routing);
+                    String tenantId = ResponseUtil.checkTenant(routing);
                     String json = routing.getBodyAsString();
                     Trigger trigger;
                     try {
                         trigger = fromJson(json, Trigger.class);
                     } catch (Exception e) {
                         log.errorf("Error parsing Trigger json: %s. Reason: %s", json, e.toString());
-                        throw new BadRequestException(e);
+                        throw new ResponseUtil.BadRequestException(e);
                     }
                     if (isEmpty(trigger.getId())) {
                         trigger.setId(Trigger.generateId());
@@ -429,14 +427,14 @@ public class TriggersHandler {
                             // expected
                         } catch (Exception e) {
                             log.debug(e.getMessage(), e);
-                            throw new InternalServerException(e.toString());
+                            throw new ResponseUtil.InternalServerException(e.toString());
                         }
                         if (found != null) {
-                            throw new BadRequestException("Trigger with ID [" + trigger.getId() + "] exists.");
+                            throw new ResponseUtil.BadRequestException("Trigger with ID [" + trigger.getId() + "] exists.");
                         }
                     }
-                    if (!checkTags(trigger)) {
-                        throw new BadRequestException("Tags " + trigger.getTags() + " must be non empty.");
+                    if (!ResponseUtil.checkTags(trigger)) {
+                        throw new ResponseUtil.BadRequestException("Tags " + trigger.getTags() + " must be non empty.");
                     }
                     try {
                         if (isGroup) {
@@ -447,12 +445,12 @@ public class TriggersHandler {
                         log.debugf("Trigger: %s", trigger);
                         future.complete(trigger);
                     } catch (IllegalArgumentException e) {
-                        throw new BadRequestException("Bad arguments: " + e.getMessage());
+                        throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
                     } catch (Exception e) {
                         log.debug(e.getMessage(), e);
-                        throw new InternalServerException(e.toString());
+                        throw new ResponseUtil.InternalServerException(e.toString());
                     }
-                }, res -> result(routing, res));
+                }, res -> ResponseUtil.result(routing, res));
     }
 
     @DocPath(method = DELETE,
@@ -466,8 +464,8 @@ public class TriggersHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Dampening updated.", response = FullTrigger.class),
-            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void deleteDampening(RoutingContext routing) {
         deleteDampening(routing, false);
@@ -484,8 +482,8 @@ public class TriggersHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Dampening updated.", response = FullTrigger.class),
-            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void deleteGroupDampening(RoutingContext routing) {
         deleteDampening(routing, true);
@@ -494,7 +492,7 @@ public class TriggersHandler {
     void deleteDampening(RoutingContext routing, boolean isGroup) {
         routing.vertx()
                 .executeBlocking(future -> {
-                    String tenantId = checkTenant(routing);
+                    String tenantId = ResponseUtil.checkTenant(routing);
                     String dampeningId = routing.request().getParam("dampeningId");
                     Dampening found;
                     try {
@@ -510,13 +508,13 @@ public class TriggersHandler {
                             return;
                         }
                     } catch (IllegalArgumentException e) {
-                        throw new BadRequestException("Bad arguments: " + e.getMessage());
+                        throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
                     } catch (Exception e) {
                         log.debug(e.getMessage(), e);
-                        throw new InternalServerException(e.toString());
+                        throw new ResponseUtil.InternalServerException(e.toString());
                     }
                     throw new ResponseUtil.NotFoundException("Dampening " + dampeningId + " not found ");
-                }, res -> result(routing, res));
+                }, res -> ResponseUtil.result(routing, res));
     }
 
     @DocPath(method = DELETE,
@@ -532,14 +530,14 @@ public class TriggersHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Group Trigger Removed."),
-            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ApiError.class),
-            @DocResponse(code = 404, message = "Group Trigger not found.", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 404, message = "Group Trigger not found.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void deleteGroupTrigger(RoutingContext routing) {
         routing.vertx()
                 .executeBlocking(future -> {
-                    String tenantId = checkTenant(routing);
+                    String tenantId = ResponseUtil.checkTenant(routing);
                     String groupId = routing.request().getParam("groupId");
                     try {
                         boolean keepNonOrphans = false;
@@ -558,12 +556,12 @@ public class TriggersHandler {
                     } catch (NotFoundException e) {
                         throw new ResponseUtil.NotFoundException(e.getMessage());
                     } catch (IllegalArgumentException e) {
-                        throw new BadRequestException("Bad arguments: " + e.getMessage());
+                        throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
                     } catch (Exception e) {
                         log.debug(e.getMessage(), e);
-                        throw new InternalServerException(e.toString());
+                        throw new ResponseUtil.InternalServerException(e.toString());
                     }
-                }, res -> result(routing, res));
+                }, res -> ResponseUtil.result(routing, res));
     }
 
     @DocPath(method = DELETE,
@@ -576,13 +574,13 @@ public class TriggersHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Trigger deleted."),
-            @DocResponse(code = 404, message = "Trigger not found", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 404, message = "Trigger not found", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void deleteTrigger(RoutingContext routing) {
         routing.vertx()
                 .executeBlocking(future -> {
-                    String tenantId = checkTenant(routing);
+                    String tenantId = ResponseUtil.checkTenant(routing);
                     String triggerId = routing.request().getParam("triggerId");
                     try {
                         definitionsService.removeTrigger(tenantId, triggerId);
@@ -596,7 +594,7 @@ public class TriggersHandler {
                         log.debug(e.getMessage(), e);
                         throw new ResponseUtil.InternalServerException(e.toString());
                     }
-                }, res -> result(routing, res));
+                }, res -> ResponseUtil.result(routing, res));
     }
 
     @DocPath(method = GET,
@@ -611,13 +609,13 @@ public class TriggersHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Successfully fetched list of triggers.", response = Trigger.class, responseContainer = "List"),
-            @DocResponse(code = 404, message = "Trigger not found", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 404, message = "Trigger not found", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void findGroupMembers(RoutingContext routing) {
         routing.vertx()
                 .executeBlocking(future -> {
-                    String tenantId = checkTenant(routing);
+                    String tenantId = ResponseUtil.checkTenant(routing);
                     String groupId = routing.request().getParam("groupId");
                     try {
                         boolean includeOrphans = false;
@@ -628,12 +626,12 @@ public class TriggersHandler {
                         log.debugf("Member Triggers: %s", members);
                         future.complete(members);
                     } catch (IllegalArgumentException e) {
-                        throw new BadRequestException("Bad arguments: " + e.getMessage());
+                        throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
                     } catch (Exception e) {
                         log.debug(e.getMessage(), e);
-                        throw new InternalServerException(e.toString());
+                        throw new ResponseUtil.InternalServerException(e.toString());
                     }
-                }, res -> result(routing, res));
+                }, res -> ResponseUtil.result(routing, res));
     }
 
     @DocPath(method = GET,
@@ -653,27 +651,27 @@ public class TriggersHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Successfully fetched list of triggers.", response = Trigger.class, responseContainer = "List"),
-            @DocResponse(code = 404, message = "Trigger not found", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 404, message = "Trigger not found", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void findTriggers(RoutingContext routing) {
         routing.vertx()
                 .executeBlocking(future -> {
-                    String tenantId = checkTenant(routing);
+                    String tenantId = ResponseUtil.checkTenant(routing);
                     try {
-                        checkForUnknownQueryParams(routing.request().params(), queryParamValidationMap.get(FIND_TRIGGERS));
-                        Pager pager = extractPaging(routing.request().params());
+                        ResponseUtil.checkForUnknownQueryParams(routing.request().params(), queryParamValidationMap.get(FIND_TRIGGERS));
+                        Pager pager = ResponseUtil.extractPaging(routing.request().params());
                         TriggersCriteria criteria = buildCriteria(routing.request().params());
                         Page<Trigger> triggerPage = definitionsService.getTriggers(tenantId, criteria, pager);
                         log.debugf("Triggers: %s", triggerPage);
                         future.complete(triggerPage);
                     } catch (IllegalArgumentException e) {
-                        throw new BadRequestException("Bad arguments: " + e.getMessage());
+                        throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
                     } catch (Exception e) {
                         log.debug(e.getMessage(), e);
-                        throw new InternalServerException(e.toString());
+                        throw new ResponseUtil.InternalServerException(e.toString());
                     }
-                }, res -> result(routing, res));
+                }, res -> ResponseUtil.result(routing, res));
     }
 
     @DocPath(method = GET,
@@ -687,13 +685,13 @@ public class TriggersHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Successfully fetched list of triggers.", response = Dampening.class),
-            @DocResponse(code = 404, message = "Damppening not found", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 404, message = "Damppening not found", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void getDampening(RoutingContext routing) {
         routing.vertx()
                 .executeBlocking(future -> {
-                    String tenantId = checkTenant(routing);
+                    String tenantId = ResponseUtil.checkTenant(routing);
                     String dampeningId = routing.request().getParam("dampeningId");
                     Dampening found;
                     try {
@@ -703,13 +701,13 @@ public class TriggersHandler {
                             return;
                         }
                     } catch (IllegalArgumentException e) {
-                        throw new BadRequestException("Bad arguments: " + e.getMessage());
+                        throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
                     } catch (Exception e) {
                         log.debug(e.getMessage(), e);
-                        throw new InternalServerException(e.toString());
+                        throw new ResponseUtil.InternalServerException(e.toString());
                     }
                     throw new ResponseUtil.NotFoundException("No dampening found for dampeningId:" + dampeningId);
-                }, res -> result(routing, res));
+                }, res -> ResponseUtil.result(routing, res));
     }
 
     @DocPath(method = GET,
@@ -721,8 +719,8 @@ public class TriggersHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Trigger found.", response = Trigger.class),
-            @DocResponse(code = 404, message = "Trigger not found", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 404, message = "Trigger not found", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void getTrigger(RoutingContext routing) {
         getTrigger(routing, false);
@@ -737,8 +735,8 @@ public class TriggersHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Trigger found.", response = FullTrigger.class),
-            @DocResponse(code = 404, message = "Trigger not found", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 404, message = "Trigger not found", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void getFullTrigger(RoutingContext routing) {
         getTrigger(routing, true);
@@ -747,7 +745,7 @@ public class TriggersHandler {
     void getTrigger(RoutingContext routing, boolean isFullTrigger) {
         routing.vertx()
                 .executeBlocking(future -> {
-                    String tenantId = checkTenant(routing);
+                    String tenantId = ResponseUtil.checkTenant(routing);
                     String triggerId = routing.request().getParam("triggerId");
                     Object found = null;
                     try {
@@ -756,17 +754,17 @@ public class TriggersHandler {
                     } catch (NotFoundException e) {
                         // Expected
                     } catch (IllegalArgumentException e) {
-                        throw new BadRequestException("Bad arguments: " + e.getMessage());
+                        throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
                     } catch (Exception e) {
                         log.debug(e.getMessage(), e);
-                        throw new InternalServerException(e.toString());
+                        throw new ResponseUtil.InternalServerException(e.toString());
                     }
                     if (found == null) {
                         throw new ResponseUtil.NotFoundException("triggerId: " + triggerId + " not found");
                     }
                     log.debugf("Trigger: %s", found);
                     future.complete(found);
-                }, res -> result(routing, res));
+                }, res -> ResponseUtil.result(routing, res));
     }
 
     @DocPath(method = GET,
@@ -778,24 +776,24 @@ public class TriggersHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Successfully fetched list of conditions.", response = Condition.class, responseContainer = "List"),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void getTriggerConditions(RoutingContext routing) {
         routing.vertx()
                 .executeBlocking(future -> {
-                    String tenantId = checkTenant(routing);
+                    String tenantId = ResponseUtil.checkTenant(routing);
                     String triggerId = routing.request().getParam("triggerId");
                     try {
                         Collection<Condition> conditions = definitionsService.getTriggerConditions(tenantId, triggerId, null);
                         log.debugf("Conditions: %s", conditions);
                         future.complete(conditions);
                     } catch (IllegalArgumentException e) {
-                        throw new BadRequestException("Bad arguments: " + e.getMessage());
+                        throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
                     } catch (Exception e) {
                         log.debug(e.getMessage(), e);
-                        throw new InternalServerException(e.toString());
+                        throw new ResponseUtil.InternalServerException(e.toString());
                     }
-                }, res -> result(routing, res));
+                }, res -> ResponseUtil.result(routing, res));
     }
 
     @DocPath(method = GET,
@@ -807,12 +805,12 @@ public class TriggersHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Trigger found.", response = Dampening.class, responseContainer = "List"),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void getTriggerDampenings(RoutingContext routing) {
         routing.vertx()
                 .executeBlocking(future -> {
-                    String tenantId = checkTenant(routing);
+                    String tenantId = ResponseUtil.checkTenant(routing);
                     String triggerId = routing.request().getParam("triggerId");
                     String triggerMode = routing.request().getParam("triggerMode");
                     Mode mode = null;
@@ -824,12 +822,12 @@ public class TriggersHandler {
                         log.debugf("Dampenings: %s", dampenings);
                         future.complete(dampenings);
                     } catch (IllegalArgumentException e) {
-                        throw new BadRequestException("Bad arguments: " + e.getMessage());
+                        throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
                     } catch (Exception e) {
                         log.debug(e.getMessage(), e);
-                        throw new InternalServerException(e.toString());
+                        throw new ResponseUtil.InternalServerException(e.toString());
                     }
-                }, res -> result(routing, res));
+                }, res -> ResponseUtil.result(routing, res));
     }
 
     @DocPath(method = GET,
@@ -843,8 +841,8 @@ public class TriggersHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Trigger found.", response = Dampening.class, responseContainer = "List"),
-            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void getTriggerModeDampenings(RoutingContext routing) {
         getTriggerDampenings(routing);
@@ -861,9 +859,9 @@ public class TriggersHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Trigger updated.", response = Trigger.class),
-            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ApiError.class),
-            @DocResponse(code = 404, message = "Trigger not found.", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 404, message = "Trigger not found.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void updateTrigger(RoutingContext routing) {
         updateTrigger(routing, false);
@@ -880,9 +878,9 @@ public class TriggersHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Group Trigger updated.", response = Trigger.class),
-            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ApiError.class),
-            @DocResponse(code = 404, message = "Trigger not found.", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 404, message = "Trigger not found.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void updateGroupTrigger(RoutingContext routing) {
         updateTrigger(routing, true);
@@ -891,7 +889,7 @@ public class TriggersHandler {
     void updateTrigger(RoutingContext routing, boolean isGroup) {
         routing.vertx()
                 .executeBlocking(future -> {
-                    String tenantId = checkTenant(routing);
+                    String tenantId = ResponseUtil.checkTenant(routing);
                     String json = routing.getBodyAsString();
                     String triggerId = routing.request().getParam("triggerId");
                     String groupId = routing.request().getParam("groupId");
@@ -900,13 +898,13 @@ public class TriggersHandler {
                         trigger = fromJson(json, Trigger.class);
                     } catch (Exception e) {
                         log.errorf("Error parsing Trigger json: %s. Reason: %s", json, e.toString());
-                        throw new BadRequestException(e.toString(), e);
+                        throw new ResponseUtil.BadRequestException(e.toString(), e);
                     }
                     if (trigger != null && !isEmpty(triggerId)) {
                         trigger.setId(isGroup ? groupId : triggerId);
                     }
-                    if (!checkTags(trigger)) {
-                        throw new BadRequestException("Tags " + trigger.getTags() + " must be non empty.");
+                    if (!ResponseUtil.checkTags(trigger)) {
+                        throw new ResponseUtil.BadRequestException("Tags " + trigger.getTags() + " must be non empty.");
                     }
                     try {
                         if (isGroup) {
@@ -919,12 +917,12 @@ public class TriggersHandler {
                     } catch (NotFoundException e) {
                         throw new NotFoundException(e.getMessage());
                     } catch (IllegalArgumentException e) {
-                        throw new BadRequestException("Bad arguments: " + e.getMessage());
+                        throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
                     } catch (Exception e) {
                         log.debug(e.getMessage(), e);
-                        throw new InternalServerException(e.toString());
+                        throw new ResponseUtil.InternalServerException(e.toString());
                     }
-                }, res -> result(routing, res));
+                }, res -> ResponseUtil.result(routing, res));
     }
 
     @DocPath(method = PUT,
@@ -936,13 +934,13 @@ public class TriggersHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Trigger updated.", response = Trigger.class),
-            @DocResponse(code = 404, message = "Trigger not found.", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 404, message = "Trigger not found.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void orphanMemberTrigger(RoutingContext routing) {
         routing.vertx()
                 .executeBlocking(future -> {
-                    String tenantId = checkTenant(routing);
+                    String tenantId = ResponseUtil.checkTenant(routing);
                     String memberId = routing.request().getParam("memberId");
                     try {
                         Trigger child = definitionsService.orphanMemberTrigger(tenantId, memberId);
@@ -951,12 +949,12 @@ public class TriggersHandler {
                     } catch (NotFoundException e) {
                         throw new ResponseUtil.NotFoundException(e.getMessage());
                     } catch (IllegalArgumentException e) {
-                        throw new BadRequestException("Bad arguments: " + e.getMessage());
+                        throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
                     } catch (Exception e) {
                         log.debug(e.getMessage(), e);
-                        throw new InternalServerException(e.toString());
+                        throw new ResponseUtil.InternalServerException(e.toString());
                     }
-                }, res -> result(routing, res));
+                }, res -> ResponseUtil.result(routing, res));
     }
 
     @DocPath(method = PUT,
@@ -974,9 +972,9 @@ public class TriggersHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Dampening Updated.", response = Dampening.class),
-            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ApiError.class),
-            @DocResponse(code = 404, message = "No Dampening Found.", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 404, message = "No Dampening Found.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void updateDampening(RoutingContext routing) {
         updateDampening(routing, false);
@@ -997,9 +995,9 @@ public class TriggersHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Dampening Updated.", response = Dampening.class),
-            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ApiError.class),
-            @DocResponse(code = 404, message = "No Dampening Found.", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 404, message = "No Dampening Found.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void updateGroupDampening(RoutingContext routing) {
         updateDampening(routing, true);
@@ -1008,7 +1006,7 @@ public class TriggersHandler {
     void updateDampening(RoutingContext routing, boolean isGroup) {
         routing.vertx()
                 .executeBlocking(future -> {
-                    String tenantId = checkTenant(routing);
+                    String tenantId = ResponseUtil.checkTenant(routing);
                     String json = routing.getBodyAsString();
                     String triggerId = routing.request().getParam("triggerId");
                     String groupId = routing.request().getParam("groupId");
@@ -1018,21 +1016,21 @@ public class TriggersHandler {
                         dampening = fromJson(json, Dampening.class);
                     } catch (Exception e) {
                         log.errorf("Error parsing Dampening json: %s. Reason: %s", json, e.toString());
-                        throw new BadRequestException(e.toString());
+                        throw new ResponseUtil.BadRequestException(e.toString());
                     }
                     Dampening found;
                     try {
                         found = definitionsService.getDampening(tenantId, dampeningId);
                     } catch (Exception e) {
                         log.debug(e.getMessage(), e);
-                        throw new InternalServerException(e.toString());
+                        throw new ResponseUtil.InternalServerException(e.toString());
                     }
                     if (found == null) {
                         throw new ResponseUtil.NotFoundException("No dampening found for dampeningId: " + dampeningId);
                     }
                     try {
                         dampening.setTriggerId(isGroup ? groupId : triggerId);
-                        Dampening d = getCleanDampening(dampening);
+                        Dampening d = ResponseUtil.getCleanDampening(dampening);
                         log.debugf("Dampening: %s", d);
                         if (isGroup) {
                             definitionsService.updateGroupDampening(tenantId, d);
@@ -1041,12 +1039,12 @@ public class TriggersHandler {
                         }
                         future.complete(d);
                     } catch (IllegalArgumentException e) {
-                        throw new BadRequestException("Bad arguments: " + e.getMessage());
+                        throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
                     } catch (Exception e) {
                         log.debug(e.getMessage(), e);
-                        throw new InternalServerException(e.toString());
+                        throw new ResponseUtil.InternalServerException(e.toString());
                     }
-                }, res -> result(routing, res));
+                }, res -> ResponseUtil.result(routing, res));
     }
 
     @DocPath(method = PUT,
@@ -1060,13 +1058,13 @@ public class TriggersHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Trigger updated.", response = Trigger.class),
-            @DocResponse(code = 404, message = "Trigger not found.", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 404, message = "Trigger not found.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void unorphanMemberTrigger(RoutingContext routing) {
         routing.vertx()
                 .executeBlocking(future -> {
-                    String tenantId = checkTenant(routing);
+                    String tenantId = ResponseUtil.checkTenant(routing);
                     String json = routing.getBodyAsString();
                     String memberId = routing.request().getParam("memberId");
                     UnorphanMemberInfo unorphanMemberInfo;
@@ -1074,10 +1072,10 @@ public class TriggersHandler {
                         unorphanMemberInfo = fromJson(json, UnorphanMemberInfo.class);
                     } catch (Exception e) {
                         log.errorf("Error parsing UnorphanMemberInfo json: %s. Reason: %s", json, e.toString());
-                        throw new BadRequestException(e.toString());
+                        throw new ResponseUtil.BadRequestException(e.toString());
                     }
-                    if (!checkTags(unorphanMemberInfo)) {
-                        throw new BadRequestException("Tags " + unorphanMemberInfo.getMemberTags() + " must be non empty.");
+                    if (!ResponseUtil.checkTags(unorphanMemberInfo)) {
+                        throw new ResponseUtil.BadRequestException("Tags " + unorphanMemberInfo.getMemberTags() + " must be non empty.");
                     }
                     try {
                         Trigger child = definitionsService.unorphanMemberTrigger(tenantId, memberId,
@@ -1089,12 +1087,12 @@ public class TriggersHandler {
                     } catch (NotFoundException e) {
                         throw new ResponseUtil.NotFoundException(e.getMessage());
                     } catch (IllegalArgumentException e) {
-                        throw new BadRequestException("Bad arguments: " + e.getMessage());
+                        throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
                     } catch (Exception e) {
                         log.debug(e.getMessage(), e);
-                        throw new InternalServerException(e.toString());
+                        throw new ResponseUtil.InternalServerException(e.toString());
                     }
-                }, res -> result(routing, res));
+                }, res -> ResponseUtil.result(routing, res));
     }
 
     @DocPath(method = PUT,
@@ -1110,14 +1108,14 @@ public class TriggersHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Condition Set created.", response = Condition.class, responseContainer = "List"),
-            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ApiError.class),
-            @DocResponse(code = 404, message = "Trigger not found.", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 404, message = "Trigger not found.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void setAllConditions(RoutingContext routing) {
         routing.vertx()
                 .executeBlocking(future -> {
-                    String tenantId = checkTenant(routing);
+                    String tenantId = ResponseUtil.checkTenant(routing);
                     String json = routing.getBodyAsString();
                     String triggerId = routing.request().getParam("triggerId");
                     Collection<Condition> conditions;
@@ -1125,7 +1123,7 @@ public class TriggersHandler {
                         conditions = collectionFromJson(json, Condition.class);
                     } catch (Exception e) {
                         log.errorf("Error parsing Condition json: %s. Reason: %s", json, e.toString());
-                        throw new BadRequestException(e.toString());
+                        throw new ResponseUtil.BadRequestException(e.toString());
                     }
                     try {
                         Collection<Condition> updatedConditions = definitionsService.setAllConditions(tenantId,
@@ -1135,12 +1133,12 @@ public class TriggersHandler {
                     } catch (NotFoundException e) {
                         throw new ResponseUtil.NotFoundException(e.getMessage());
                     } catch (IllegalArgumentException e) {
-                        throw new BadRequestException("Bad arguments: " + e.getMessage());
+                        throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
                     } catch (Exception e) {
                         log.debug(e.getMessage(), e);
-                        throw new InternalServerException(e.toString());
+                        throw new ResponseUtil.InternalServerException(e.toString());
                     }
-                }, res -> result(routing, res));
+                }, res -> ResponseUtil.result(routing, res));
     }
 
     @DocPath(method = PUT,
@@ -1159,14 +1157,14 @@ public class TriggersHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Condition Set created.", response = Condition.class, responseContainer = "List"),
-            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ApiError.class),
-            @DocResponse(code = 404, message = "Trigger not found.", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 404, message = "Trigger not found.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void setConditions(RoutingContext routing) {
         routing.vertx()
                 .executeBlocking(future -> {
-                    String tenantId = checkTenant(routing);
+                    String tenantId = ResponseUtil.checkTenant(routing);
                     String json = routing.getBodyAsString();
                     String triggerId = routing.request().getParam("triggerId");
                     String triggerMode = routing.request().getParam("triggerMode");
@@ -1175,13 +1173,13 @@ public class TriggersHandler {
                         conditions = collectionFromJson(json, Condition.class);
                     } catch (Exception e) {
                         log.errorf("Error parsing Condition json: %s. Reason: %s", json, e.toString());
-                        throw new BadRequestException(e.toString());
+                        throw new ResponseUtil.BadRequestException(e.toString());
                     }
                     Mode mode = Mode.valueOf(triggerMode.toUpperCase());
                     for (Condition condition : conditions) {
                         condition.setTriggerId(triggerId);
                         if (condition.getTriggerMode() == null || !condition.getTriggerMode().equals(mode)) {
-                            throw new BadRequestException(
+                            throw new ResponseUtil.BadRequestException(
                                     "Condition: " + condition + " has a different triggerMode [" + triggerMode + "]");
                         }
                     }
@@ -1193,12 +1191,12 @@ public class TriggersHandler {
                     } catch (NotFoundException e) {
                         throw new ResponseUtil.NotFoundException(e.getMessage());
                     } catch (IllegalArgumentException e) {
-                        throw new BadRequestException("Bad arguments: " + e.getMessage());
+                        throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
                     } catch (Exception e) {
                         log.debug(e.getMessage(), e);
-                        throw new InternalServerException(e.toString());
+                        throw new ResponseUtil.InternalServerException(e.toString());
                     }
-                }, res -> result(routing, res));
+                }, res -> ResponseUtil.result(routing, res));
     }
 
     @DocPath(method = PUT,
@@ -1215,15 +1213,15 @@ public class TriggersHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Group Condition Set created.", response = Condition.class, responseContainer = "List"),
-            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ApiError.class),
-            @DocResponse(code = 404, message = "Trigger not found.", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 404, message = "Trigger not found.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     @SuppressWarnings("unchecked")
     public void setGroupConditions(RoutingContext routing) {
         routing.vertx()
                 .executeBlocking(future -> {
-                    String tenantId = checkTenant(routing);
+                    String tenantId = ResponseUtil.checkTenant(routing);
                     String json = routing.getBodyAsString();
                     String groupId = routing.request().getParam("groupId");
                     String triggerMode = routing.request().getParam("triggerMode");
@@ -1232,18 +1230,18 @@ public class TriggersHandler {
                         groupConditionsInfo = fromJson(json, GroupConditionsInfo.class);
                     } catch (Exception e) {
                         log.errorf("Error parsing GroupConditionsInfo json: %s. Reason: %s", json, e.toString());
-                        throw new BadRequestException(e.toString());
+                        throw new ResponseUtil.BadRequestException(e.toString());
                     }
                     Collection<Condition> updatedConditions = new HashSet<>();
                     if (groupConditionsInfo == null) {
-                        throw new BadRequestException("GroupConditionsInfo must be non null.");
+                        throw new ResponseUtil.BadRequestException("GroupConditionsInfo must be non null.");
                     }
                     if (groupConditionsInfo.getConditions() == null) {
                         groupConditionsInfo.setConditions(Collections.EMPTY_LIST);
                     }
                     for (Condition condition : groupConditionsInfo.getConditions()) {
                         if (condition == null) {
-                            throw new BadRequestException("GroupConditionsInfo must have non null conditions: " + groupConditionsInfo);
+                            throw new ResponseUtil.BadRequestException("GroupConditionsInfo must have non null conditions: " + groupConditionsInfo);
                         }
                         condition.setTriggerId(groupId);
                     }
@@ -1263,10 +1261,10 @@ public class TriggersHandler {
                         } catch (NotFoundException e) {
                             throw new ResponseUtil.NotFoundException(e.getMessage());
                         } catch (IllegalArgumentException e) {
-                            throw new BadRequestException("Bad arguments: " + e.getMessage());
+                            throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
                         } catch (Exception e) {
                             log.debug(e.getMessage(), e);
-                            throw new InternalServerException(e.toString());
+                            throw new ResponseUtil.InternalServerException(e.toString());
                         }
                         log.debugf("Conditions: %s", updatedConditions);
                         future.complete(updatedConditions);
@@ -1275,11 +1273,11 @@ public class TriggersHandler {
                     Mode mode = Mode.valueOf(triggerMode.toUpperCase());
                     for (Condition condition : groupConditionsInfo.getConditions()) {
                         if (condition == null) {
-                            throw new BadRequestException("GroupConditionsInfo must have non null conditions: " + groupConditionsInfo);
+                            throw new ResponseUtil.BadRequestException("GroupConditionsInfo must have non null conditions: " + groupConditionsInfo);
                         }
                         condition.setTriggerId(groupId);
                         if (condition.getTriggerMode() == null || !condition.getTriggerMode().equals(mode)) {
-                            throw new BadRequestException("Condition: " + condition + " has a different triggerMode [" + triggerMode + "]");
+                            throw new ResponseUtil.BadRequestException("Condition: " + condition + " has a different triggerMode [" + triggerMode + "]");
                         }
                     }
                     try {
@@ -1291,12 +1289,12 @@ public class TriggersHandler {
                     } catch (NotFoundException e) {
                         throw new ResponseUtil.NotFoundException(e.getMessage());
                     } catch (IllegalArgumentException e) {
-                        throw new BadRequestException("Bad arguments: " + e.getMessage());
+                        throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
                     } catch (Exception e) {
                         log.debug(e.getMessage(), e);
-                        throw new InternalServerException(e.toString());
+                        throw new ResponseUtil.InternalServerException(e.toString());
                     }
-                }, res -> result(routing, res));
+                }, res -> ResponseUtil.result(routing, res));
     }
 
     @DocPath(method = PUT,
@@ -1314,9 +1312,9 @@ public class TriggersHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Group Condition Set created.", response = Condition.class, responseContainer = "List"),
-            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ApiError.class),
-            @DocResponse(code = 404, message = "Trigger not found.", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 404, message = "Trigger not found.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void setGroupConditionsTriggerMode(RoutingContext routing) {
         setGroupConditions(routing);
@@ -1334,9 +1332,9 @@ public class TriggersHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Triggers updated."),
-            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ApiError.class),
-            @DocResponse(code = 404, message = "Trigger not found", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 404, message = "Trigger not found", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void setTriggersEnabled(RoutingContext routingContext) {
         setTriggersEnabled(routingContext, false);
@@ -1354,9 +1352,9 @@ public class TriggersHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Group Triggers updated."),
-            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ApiError.class),
-            @DocResponse(code = 404, message = "Group Trigger not found", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 404, message = "Group Trigger not found", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void setGroupTriggersEnabled(RoutingContext routingContext) {
         setTriggersEnabled(routingContext, true);
@@ -1365,7 +1363,7 @@ public class TriggersHandler {
     void setTriggersEnabled(RoutingContext routing, boolean isGroup) {
         routing.vertx()
                 .executeBlocking(future -> {
-                    String tenantId = checkTenant(routing);
+                    String tenantId = ResponseUtil.checkTenant(routing);
                     try {
                         String triggerIds = null;
                         Boolean enabled = null;
@@ -1376,10 +1374,10 @@ public class TriggersHandler {
                             enabled = Boolean.valueOf(routing.request().params().get(PARAM_ENABLED));
                         }
                         if (isEmpty(triggerIds)) {
-                            throw new BadRequestException("TriggerIds must be non empty.");
+                            throw new ResponseUtil.BadRequestException("TriggerIds must be non empty.");
                         }
                         if (null == enabled) {
-                            throw new BadRequestException("Enabled must be non-empty.");
+                            throw new ResponseUtil.BadRequestException("Enabled must be non-empty.");
                         }
                         if (isGroup) {
                             definitionsService.updateGroupTriggerEnablement(tenantId, triggerIds, enabled);
@@ -1390,12 +1388,12 @@ public class TriggersHandler {
                     } catch (NotFoundException e) {
                         throw new ResponseUtil.NotFoundException(e.getMessage());
                     } catch (IllegalArgumentException e) {
-                        throw new BadRequestException("Bad arguments: " + e.getMessage());
+                        throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
                     } catch (Exception e) {
                         log.debug(e.getMessage(), e);
-                        throw new InternalServerException(e.toString());
+                        throw new ResponseUtil.InternalServerException(e.toString());
                     }
-                }, res -> result(routing, res));
+                }, res -> ResponseUtil.result(routing, res));
     }
 
     TriggersCriteria buildCriteria(MultiMap params) {

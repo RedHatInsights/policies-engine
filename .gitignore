@@ -1,5 +1,40 @@
-target/
-.iml
+# Eclipse
+.project
+.classpath
+.settings/
+bin/
+
+# IntelliJ
 .idea
-.ipr
-engine.iml
+*.ipr
+*.iml
+*.iws
+
+# NetBeans
+nb-configuration.xml
+
+# Visual Studio Code
+.vscode
+
+# OSX
+.DS_Store
+
+# Vim
+*.swp
+*.swo
+
+# patch
+*.orig
+*.rej
+
+# Emacs
+*~
+\#*\#
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+release.properties
+.mvn/

@@ -14,9 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hawkular.alerts.handlers;
+package com.redhat.cloud.custompolicies.engine.handlers;
 
 
+import com.redhat.cloud.custompolicies.engine.handlers.util.ResponseUtil;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.Router;
@@ -29,8 +30,6 @@ import org.hawkular.alerts.api.model.paging.Page;
 import org.hawkular.alerts.api.model.paging.Pager;
 import org.hawkular.alerts.api.services.AlertsCriteria;
 import org.hawkular.alerts.api.services.AlertsService;
-import org.hawkular.alerts.handlers.util.ResponseUtil;
-import org.hawkular.alerts.handlers.util.ResponseUtil.*;
 import org.hawkular.commons.log.MsgLogger;
 import org.hawkular.commons.log.MsgLogging;
 
@@ -45,7 +44,6 @@ import static org.hawkular.alerts.api.doc.DocConstants.*;
 import static org.hawkular.alerts.api.json.JsonUtil.collectionFromJson;
 import static org.hawkular.alerts.api.json.JsonUtil.toJson;
 import static org.hawkular.alerts.api.util.Util.isEmpty;
-import static org.hawkular.alerts.handlers.util.ResponseUtil.*;
 
 /**
  * @author Jay Shaughnessy
@@ -101,7 +99,7 @@ public class AlertsHandler {
                 PARAM_END_STATUS_TIME,
                 PARAM_THIN);
         queryParamValidationMap.put(FIND_ALERTS, new HashSet<>(ALERTS_CRITERIA));
-        queryParamValidationMap.get(FIND_ALERTS).addAll(PARAMS_PAGING);
+        queryParamValidationMap.get(FIND_ALERTS).addAll(ResponseUtil.PARAMS_PAGING);
         queryParamValidationMap.put(WATCH_ALERTS, new HashSet<>(ALERTS_CRITERIA));
         queryParamValidationMap.get(WATCH_ALERTS).add(PARAM_WATCH_INTERVAL);
         queryParamValidationMap.put(DELETE_ALERTS, new HashSet<>(ALERTS_CRITERIA));
@@ -205,27 +203,27 @@ public class AlertsHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Successfully fetched list of alerts.", response = Alert.class, responseContainer = "List"),
-            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void findAlerts(RoutingContext routing) {
         routing.vertx()
                 .executeBlocking(future -> {
-                    String tenantId = checkTenant(routing);
+                    String tenantId = ResponseUtil.checkTenant(routing);
                     try {
-                        checkForUnknownQueryParams(routing.request().params(), queryParamValidationMap.get(FIND_ALERTS));
-                        Pager pager = extractPaging(routing.request().params());
+                        ResponseUtil.checkForUnknownQueryParams(routing.request().params(), queryParamValidationMap.get(FIND_ALERTS));
+                        Pager pager = ResponseUtil.extractPaging(routing.request().params());
                         AlertsCriteria criteria = buildCriteria(routing.request().params());
                         Page<Alert> alertPage = alertsService.getAlerts(tenantId, criteria, pager);
                         log.debugf("Alerts: %s", alertPage);
                         future.complete(alertPage);
                     } catch (IllegalArgumentException e) {
-                        throw new BadRequestException("Bad arguments: " + e.getMessage());
+                        throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
                     } catch (Exception e) {
                         log.debug(e.getMessage(), e);
-                        throw new InternalServerException(e.toString());
+                        throw new ResponseUtil.InternalServerException(e.toString());
                     }
-                }, res -> result(routing, res));
+                }, res -> ResponseUtil.result(routing, res));
     }
 
     @DocPath(method = GET,
@@ -312,14 +310,14 @@ public class AlertsHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Stream of alerts.", response = Alert.class),
-            @DocResponse(code = 200, message = "Errors will close the stream. Description is sent before stream is closed.", response = ApiError.class)
+            @DocResponse(code = 200, message = "Errors will close the stream. Description is sent before stream is closed.", response = ResponseUtil.ApiError.class)
     })
     public void watchAlerts(RoutingContext routing) {
-        String tenantId = checkTenant(routing);
+        String tenantId = ResponseUtil.checkTenant(routing);
         try {
-            checkForUnknownQueryParams(routing.request().params(), queryParamValidationMap.get(WATCH_ALERTS));
+            ResponseUtil.checkForUnknownQueryParams(routing.request().params(), queryParamValidationMap.get(WATCH_ALERTS));
         } catch (IllegalArgumentException e) {
-            badRequest(routing, e.getMessage());
+            ResponseUtil.badRequest(routing, e.getMessage());
             return;
         }
         AlertsCriteria criteria = buildCriteria(routing.request().params());
@@ -328,8 +326,8 @@ public class AlertsHandler {
             watchInterval = Long.valueOf(routing.request().params().get(PARAM_WATCH_INTERVAL));
         }
         routing.response()
-                .putHeader(ACCEPT, ResponseUtil.APPLICATION_JSON)
-                .putHeader(CONTENT_TYPE, ResponseUtil.APPLICATION_JSON)
+                .putHeader(ResponseUtil.ACCEPT, ResponseUtil.APPLICATION_JSON)
+                .putHeader(ResponseUtil.CONTENT_TYPE, ResponseUtil.APPLICATION_JSON)
                 .setChunked(true)
                 .setStatusCode(OK.code());
 
@@ -360,13 +358,13 @@ public class AlertsHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Alerts tagged successfully."),
-            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void addTags(RoutingContext routing) {
         routing.vertx()
                 .executeBlocking(future -> {
-                    String tenantId = checkTenant(routing);
+                    String tenantId = ResponseUtil.checkTenant(routing);
                     String alertIds = null;
                     String tags = null;
                     if (routing.request().params().get(PARAM_ALERT_IDS) != null) {
@@ -376,20 +374,20 @@ public class AlertsHandler {
                         tags = routing.request().params().get(PARAM_TAGS);
                     }
                     if (isEmpty(alertIds) || isEmpty(tags)) {
-                        throw new BadRequestException("AlertIds and Tags required for adding tags");
+                        throw new ResponseUtil.BadRequestException("AlertIds and Tags required for adding tags");
                     }
                     try {
                         List<String> alertIdList = Arrays.asList(alertIds.split(","));
-                        Map<String, String> tagsMap = parseTags(tags);
+                        Map<String, String> tagsMap = ResponseUtil.parseTags(tags);
                         alertsService.addAlertTags(tenantId, alertIdList, tagsMap);
                         log.debugf("Tagged alertIds:%s, %s", alertIdList, tagsMap);
                         future.complete(tags);
                     } catch (IllegalArgumentException e) {
-                        throw new BadRequestException("Bad arguments: " + e.getMessage());
+                        throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
                     } catch (Exception e) {
-                        throw new InternalServerException(e.toString());
+                        throw new ResponseUtil.InternalServerException(e.toString());
                     }
-                }, res -> result(routing, res));
+                }, res -> ResponseUtil.result(routing, res));
     }
 
     @DocPath(method = DELETE,
@@ -405,13 +403,13 @@ public class AlertsHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Tags deleted successfully."),
-            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void removeTags(RoutingContext routing) {
         routing.vertx()
                 .executeBlocking(future -> {
-                    String tenantId = checkTenant(routing);
+                    String tenantId = ResponseUtil.checkTenant(routing);
                     String alertIds = null;
                     String tagNames = null;
                     if (routing.request().params().get(PARAM_ALERT_IDS) != null) {
@@ -421,7 +419,7 @@ public class AlertsHandler {
                         tagNames = routing.request().params().get(PARAM_TAG_NAMES);
                     }
                     if (isEmpty(alertIds) || isEmpty(tagNames)) {
-                        throw new BadRequestException("AlertIds and Tags required for removing tags");
+                        throw new ResponseUtil.BadRequestException("AlertIds and Tags required for removing tags");
                     }
                     try {
                         Collection<String> ids = Arrays.asList(alertIds.split(","));
@@ -430,11 +428,11 @@ public class AlertsHandler {
                         log.debugf("Untagged alertIds:%s, %s", ids, tags);
                         future.complete(tags);
                     } catch (IllegalArgumentException e) {
-                        throw new BadRequestException("Bad arguments: " + e.getMessage());
+                        throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
                     } catch (Exception e) {
-                        throw new InternalServerException(e.toString());
+                        throw new ResponseUtil.InternalServerException(e.toString());
                     }
-                }, res -> result(routing, res));
+                }, res -> ResponseUtil.result(routing, res));
     }
 
     @DocPath(method = PUT,
@@ -451,13 +449,13 @@ public class AlertsHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Alerts Acknowledged invoked successfully."),
-            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void ackAlerts(RoutingContext routing) {
         routing.vertx()
                 .executeBlocking(future -> {
-                    String tenantId = checkTenant(routing);
+                    String tenantId = ResponseUtil.checkTenant(routing);
                     String alertIds = null;
                     String ackBy = null;
                     String ackNotes = null;
@@ -471,18 +469,18 @@ public class AlertsHandler {
                         ackNotes = routing.request().params().get(PARAM_ACK_NOTES);
                     }
                     if (isEmpty(alertIds)) {
-                        throw new BadRequestException("AlertIds required for ack");
+                        throw new ResponseUtil.BadRequestException("AlertIds required for ack");
                     }
                     try {
                         alertsService.ackAlerts(tenantId, Arrays.asList(alertIds.split(",")), ackBy, ackNotes);
                         log.debugf("Acked alertIds: %s", alertIds);
                         future.complete(alertIds);
                     } catch (IllegalArgumentException e) {
-                        throw new BadRequestException("Bad arguments: " + e.getMessage());
+                        throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
                     } catch (Exception e) {
-                        throw new InternalServerException(e.toString());
+                        throw new ResponseUtil.InternalServerException(e.toString());
                     }
-                }, res -> result(routing, res));
+                }, res -> ResponseUtil.result(routing, res));
     }
 
     @DocPath(method = DELETE,
@@ -556,33 +554,33 @@ public class AlertsHandler {
                     description = "Return only thin alerts, do not include: evalSets, resolvedEvalSets.")
     })
     @DocResponses(value = {
-            @DocResponse(code = 200, message = "Success, Alerts deleted.", response = ApiDeleted.class),
-            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 200, message = "Success, Alerts deleted.", response = ResponseUtil.ApiDeleted.class),
+            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void deleteAlerts(RoutingContext routing) {
         routing.vertx()
                 .executeBlocking(future -> {
-                    String tenantId = checkTenant(routing);
+                    String tenantId = ResponseUtil.checkTenant(routing);
                     AlertsCriteria criteria = buildCriteria(routing.request().params());
                     String alertId = routing.request().getParam(PARAM_ALERT_ID);
                     criteria.setAlertId(alertId);
                     int numDeleted;
                     try {
-                        checkForUnknownQueryParams(routing.request().params(), queryParamValidationMap.get(DELETE_ALERTS));
+                        ResponseUtil.checkForUnknownQueryParams(routing.request().params(), queryParamValidationMap.get(DELETE_ALERTS));
                         numDeleted = alertsService.deleteAlerts(tenantId, criteria);
                         log.debugf("Alerts deleted: %s", numDeleted);
                     } catch (IllegalArgumentException e) {
-                        throw new BadRequestException("Bad arguments: " + e.getMessage());
+                        throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
                     } catch (Exception e) {
                         log.debug(e.getMessage(), e);
-                        throw new InternalServerException(e.toString());
+                        throw new ResponseUtil.InternalServerException(e.toString());
                     }
                     if (numDeleted <= 0 && alertId != null) {
-                        throw new NotFoundException("Alert " + alertId + " doesn't exist for delete");
+                        throw new ResponseUtil.NotFoundException("Alert " + alertId + " doesn't exist for delete");
                     }
-                    future.complete(new ApiDeleted(numDeleted));
-                }, res -> result(routing, res));
+                    future.complete(new ResponseUtil.ApiDeleted(numDeleted));
+                }, res -> ResponseUtil.result(routing, res));
     }
 
     @DocPath(method = DELETE,
@@ -593,10 +591,10 @@ public class AlertsHandler {
                     description = "Alert id to be deleted.")
     })
     @DocResponses(value = {
-            @DocResponse(code = 200, message = "Success, Alerts deleted.", response = ApiDeleted.class),
-            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters", response = ApiError.class),
-            @DocResponse(code = 404, message = "Alert not found.", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 200, message = "Success, Alerts deleted.", response = ResponseUtil.ApiDeleted.class),
+            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 404, message = "Alert not found.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void deleteAlert(RoutingContext routing) {
         // Sharing same implementation but having a different method to document a different endpoint
@@ -617,13 +615,13 @@ public class AlertsHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Alerts Resolution invoked successfully."),
-            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void resolveAlerts(RoutingContext routing) {
         routing.vertx()
                 .executeBlocking(future -> {
-                    String tenantId = checkTenant(routing);
+                    String tenantId = ResponseUtil.checkTenant(routing);
                     String alertIds = null;
                     String resolvedBy = null;
                     String resolvedNotes = null;
@@ -641,18 +639,18 @@ public class AlertsHandler {
                         resolvedNotes = routing.request().params().get(PARAM_RESOLVED_NOTES);
                     }
                     if (isEmpty(alertIds)) {
-                        throw new BadRequestException("AlertIds required for resolve");
+                        throw new ResponseUtil.BadRequestException("AlertIds required for resolve");
                     }
                     try {
                         alertsService.resolveAlerts(tenantId, Arrays.asList(alertIds.split(",")), resolvedBy, resolvedNotes, null);
                         log.debugf("Resolved alertIds: ", alertIds);
                         future.complete(alertIds);
                     } catch (IllegalArgumentException e) {
-                        throw new BadRequestException("Bad arguments: " + e.getMessage());
+                        throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
                     } catch (Exception e) {
-                        throw new InternalServerException(e.toString());
+                        throw new ResponseUtil.InternalServerException(e.toString());
                     }
-                }, res -> result(routing, res));
+                }, res -> ResponseUtil.result(routing, res));
     }
 
     @DocPath(method = PUT,
@@ -668,8 +666,8 @@ public class AlertsHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Alerts Resolution invoked successfully."),
-            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void resolveAlert(RoutingContext routing) {
         resolveAlerts(routing);
@@ -684,23 +682,23 @@ public class AlertsHandler {
     )
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, data added."),
-            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void sendData(RoutingContext routing) {
         routing.vertx()
                 .executeBlocking(future -> {
-                    String tenantId = checkTenant(routing);
+                    String tenantId = ResponseUtil.checkTenant(routing);
                     String json = routing.getBodyAsString();
                     Collection<Data> datums;
                     try {
                         datums = collectionFromJson(json, Data.class);
                     } catch (Exception e) {
                         log.errorf("Error parsing Datums json: %s. Reason: %s", json, e.toString());
-                        throw new BadRequestException(e.toString());
+                        throw new ResponseUtil.BadRequestException(e.toString());
                     }
                     if (isEmpty(datums)) {
-                        throw new BadRequestException("Data is empty");
+                        throw new ResponseUtil.BadRequestException("Data is empty");
                     }
                     try {
                         datums.stream().forEach(d -> d.setTenantId(tenantId));
@@ -708,11 +706,11 @@ public class AlertsHandler {
                         log.debugf("Datums: %s", datums);
                         future.complete();
                     } catch (IllegalArgumentException e) {
-                        throw new BadRequestException("Bad arguments: " + e.getMessage());
+                        throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
                     } catch (Exception e) {
-                        throw new InternalServerException(e.toString());
+                        throw new ResponseUtil.InternalServerException(e.toString());
                     }
-                }, res -> result(routing, res));
+                }, res -> ResponseUtil.result(routing, res));
     }
 
     @DocPath(method = PUT,
@@ -726,13 +724,13 @@ public class AlertsHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Alert found.", response = Alert.class),
-            @DocResponse(code = 404, message = "Alert not found.", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class),
+            @DocResponse(code = 404, message = "Alert not found.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class),
     })
     public void getAlert(RoutingContext routing) {
         routing.vertx()
                 .executeBlocking(future -> {
-                    String tenantId = checkTenant(routing);
+                    String tenantId = ResponseUtil.checkTenant(routing);
                     boolean thin = false;
                     String alertId = routing.request().getParam("alertId");
                     if (routing.request().params().get(PARAM_THIN) != null) {
@@ -743,16 +741,16 @@ public class AlertsHandler {
                         found = alertsService.getAlert(tenantId, alertId, thin);
                         log.debugf("Alert: ", found);
                     } catch (IllegalArgumentException e) {
-                        throw new BadRequestException("Bad arguments: " + e.getMessage());
+                        throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
                     } catch (Exception e) {
                         log.debug(e.getMessage(), e);
-                        throw new InternalServerException(e.toString());
+                        throw new ResponseUtil.InternalServerException(e.toString());
                     }
                     if (found == null) {
-                        throw new NotFoundException("alertId: " + alertId + " not found");
+                        throw new ResponseUtil.NotFoundException("alertId: " + alertId + " not found");
                     }
                     future.complete(found);
-                }, res -> result(routing, res));
+                }, res -> ResponseUtil.result(routing, res));
     }
 
     @DocPath(method = PUT,
@@ -769,18 +767,18 @@ public class AlertsHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Alert Acknowledged invoked successfully."),
-            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void ackAlert(RoutingContext routing) {
         routing.vertx()
                 .executeBlocking(future -> {
-                    String tenantId = checkTenant(routing);
+                    String tenantId = ResponseUtil.checkTenant(routing);
                     String ackBy = null;
                     String ackNotes = null;
                     String alertId = routing.request().getParam("alertId");
                     if (isEmpty(alertId)) {
-                        throw new BadRequestException("AlertId required for ack");
+                        throw new ResponseUtil.BadRequestException("AlertId required for ack");
                     }
                     if (routing.request().params().get(PARAM_ACK_BY) != null) {
                         ackBy = routing.request().params().get(PARAM_ACK_BY);
@@ -793,12 +791,12 @@ public class AlertsHandler {
                         log.debugf("Ack AlertId: ", alertId);
                         future.complete(ackBy);
                     } catch (IllegalArgumentException e) {
-                        throw new BadRequestException("Bad arguments: " + e.getMessage());
+                        throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
                     } catch (Exception e) {
                         log.debug(e.getMessage(), e);
-                        throw new InternalServerException(e.toString());
+                        throw new ResponseUtil.InternalServerException(e.toString());
                     }
-                }, res -> result(routing, res));
+                }, res -> ResponseUtil.result(routing, res));
     }
 
     @DocPath(method = PUT,
@@ -815,18 +813,18 @@ public class AlertsHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Alert note added successfully."),
-            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void addAlertNote(RoutingContext routing) {
         routing.vertx()
                 .executeBlocking(future -> {
-                    String tenantId = checkTenant(routing);
+                    String tenantId = ResponseUtil.checkTenant(routing);
                     String user = null;
                     String text = null;
                     String alertId = routing.request().getParam("alertId");
                     if (isEmpty(alertId)) {
-                        throw new BadRequestException("AlertId required for adding notes");
+                        throw new ResponseUtil.BadRequestException("AlertId required for adding notes");
                     }
                     if (routing.request().params().get(PARAM_USER) != null) {
                         user = routing.request().params().get(PARAM_USER);
@@ -839,12 +837,12 @@ public class AlertsHandler {
                         log.debugf("Noted AlertId: ", alertId);
                         future.complete(user);
                     } catch (IllegalArgumentException e) {
-                        throw new BadRequestException("Bad arguments: " + e.getMessage());
+                        throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
                     } catch (Exception e) {
                         log.debug(e.getMessage(), e);
-                        throw new InternalServerException(e.toString());
+                        throw new ResponseUtil.InternalServerException(e.toString());
                     }
-                }, res -> result(routing, res));
+                }, res -> ResponseUtil.result(routing, res));
     }
 
     public static AlertsCriteria buildCriteria(MultiMap params) {
@@ -890,7 +888,7 @@ public class AlertsHandler {
         }
         String unifiedTagQuery;
         if (!isEmpty(tags)) {
-            unifiedTagQuery = parseTagQuery(parseTags(tags));
+            unifiedTagQuery = ResponseUtil.parseTagQuery(ResponseUtil.parseTags(tags));
         } else {
             unifiedTagQuery = tagQuery;
         }

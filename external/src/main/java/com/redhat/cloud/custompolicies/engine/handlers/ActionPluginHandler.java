@@ -14,15 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hawkular.alerts.handlers;
+package com.redhat.cloud.custompolicies.engine.handlers;
 
+import com.redhat.cloud.custompolicies.engine.handlers.util.ResponseUtil;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
-import org.hawkular.alerts.actions.QuarkusActionPluginRegister;
+import com.redhat.cloud.custompolicies.engine.actions.QuarkusActionPluginRegister;
 import org.hawkular.alerts.api.doc.*;
 import org.hawkular.alerts.api.services.DefinitionsService;
-import org.hawkular.alerts.handlers.util.ResponseUtil;
-import org.hawkular.alerts.handlers.util.ResponseUtil.ApiError;
 import org.hawkular.commons.log.MsgLogger;
 import org.hawkular.commons.log.MsgLogging;
 
@@ -60,7 +59,7 @@ public class ActionPluginHandler {
             name = "Find all action plugins.")
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Successfully fetched list of actions plugins.", response = String.class, responseContainer = "List"),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void findActionPlugins(RoutingContext routing) {
         routing.vertx()
@@ -88,8 +87,8 @@ public class ActionPluginHandler {
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Action Plugin found.", response = String.class, responseContainer = "List"),
-            @DocResponse(code = 404, message = "Action Plugin not found.", response = ApiError.class),
-            @DocResponse(code = 500, message = "Internal server error.", response = ApiError.class)
+            @DocResponse(code = 404, message = "Action Plugin not found.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void getActionPlugin(RoutingContext routing) {
         String actionPlugin = routing.request().getParam("actionPlugin");

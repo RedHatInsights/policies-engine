@@ -1,10 +1,10 @@
-package com.redhat.cloud.custompolicies;
+package com.redhat.cloud.custompolicies.engine;
 
 import io.quarkus.runtime.StartupEvent;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.hawkular.alerts.AlertsStandalone;
-import org.hawkular.alerts.actions.QuarkusActionPluginRegister;
+import com.redhat.cloud.custompolicies.engine.actions.QuarkusActionPluginRegister;
 import org.hawkular.alerts.api.services.ActionsService;
 import org.hawkular.alerts.api.services.AlertsService;
 import org.hawkular.alerts.api.services.DefinitionsService;
