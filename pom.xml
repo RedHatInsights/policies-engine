@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-    Copyright 2015-2017 Red Hat, Inc. and/or its affiliates
+    Copyright 2019 Red Hat, Inc. and/or its affiliates
     and other contributors as indicated by the @author tags.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,6 +29,7 @@
 
   <name>Custom Policies Engine</name>
   <description>Processing engine for Custom Policies service</description>
+  <inceptionYear>2019</inceptionYear>
   <organization>
     <name>Red Hat, Inc.</name>
     <url>http://redhat.com/</url>
@@ -89,7 +90,7 @@
 
     <!-- license-maven-plugin -->
     <!-- TODO Are these required? If, port away from requiring hawkular-builds-tools -->
-    <version.com.mycila.license-maven-plugin>2.11</version.com.mycila.license-maven-plugin>
+    <version.com.mycila.license-maven-plugin>3.0</version.com.mycila.license-maven-plugin>
     <license.headerTemplatePath>hawkular-license/jboss-apache-2-template.txt</license.headerTemplatePath>
     <license.failIfMissing>true</license.failIfMissing>
     <license.failIfUnknown>true</license.failIfUnknown>
@@ -185,6 +186,7 @@
         <groupId>com.mycila</groupId>
         <artifactId>license-maven-plugin</artifactId>
         <configuration>
+<!--          <header>com/mycila/maven/plugin/license/templates/APACHE-2.txt</header>-->
           <header>${license.headerTemplatePath}</header>
           <excludes combine.children="append">
             <exclude>**/.bowerrc</exclude>
@@ -208,6 +210,8 @@
             <exclude>mvnw.cmd</exclude>
             <exclude>**/*.rules</exclude>
             <exclude>**/*.tokens</exclude>
+            <exclude>**/*.interp</exclude>
+            <exclude>src/main/docker/Dockerfile.*</exclude>
           </excludes>
           <mapping>
             <conf>SCRIPT_STYLE</conf>
