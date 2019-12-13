@@ -1,0 +1,667 @@
+/*
+ * Copyright 2019 Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.hawkular.alerts.engine.rules
+
+import org.hawkular.alerts.api.model.action.Action;
+import org.hawkular.alerts.api.model.condition.AvailabilityCondition;
+import org.hawkular.alerts.api.model.condition.AvailabilityConditionEval;
+import org.hawkular.alerts.api.model.condition.ConditionEval;
+import org.hawkular.alerts.api.model.condition.Condition;
+import org.hawkular.alerts.api.model.condition.CompareCondition;
+import org.hawkular.alerts.api.model.condition.CompareConditionEval;
+import org.hawkular.alerts.api.model.condition.ExternalCondition;
+import org.hawkular.alerts.api.model.condition.ExternalConditionEval;
+import org.hawkular.alerts.api.model.condition.EventCondition;
+import org.hawkular.alerts.api.model.condition.EventConditionEval;
+import org.hawkular.alerts.api.model.condition.MissingCondition;
+import org.hawkular.alerts.api.model.condition.MissingConditionEval;
+import org.hawkular.alerts.api.model.condition.NelsonCondition;
+import org.hawkular.alerts.api.model.condition.NelsonConditionEval;
+import org.hawkular.alerts.api.model.condition.StringCondition;
+import org.hawkular.alerts.api.model.condition.StringConditionEval;
+import org.hawkular.alerts.api.model.condition.ThresholdCondition;
+import org.hawkular.alerts.api.model.condition.ThresholdConditionEval;
+import org.hawkular.alerts.api.model.condition.ThresholdRangeCondition;
+import org.hawkular.alerts.api.model.condition.ThresholdRangeConditionEval;
+import org.hawkular.alerts.api.model.condition.RateCondition;
+import org.hawkular.alerts.api.model.condition.RateConditionEval;
+import org.hawkular.alerts.api.model.dampening.Dampening;
+import org.hawkular.alerts.api.model.dampening.Dampening.Type;
+import org.hawkular.alerts.api.model.data.Data;
+import org.hawkular.alerts.api.model.event.Alert;
+import org.hawkular.alerts.api.model.event.Event;
+import org.hawkular.alerts.api.model.event.EventType;
+import org.hawkular.alerts.api.model.trigger.Match;
+import org.hawkular.alerts.api.model.trigger.Mode;
+import org.hawkular.alerts.api.model.trigger.Trigger;
+import org.hawkular.alerts.api.model.trigger.TriggerAction;
+import org.hawkular.alerts.api.services.ActionsService;
+import org.hawkular.alerts.engine.util.CompareData;
+import org.hawkular.alerts.engine.util.MissingState;
+import org.hawkular.alerts.engine.util.NelsonData;
+import org.hawkular.alerts.engine.util.RateData;
+import org.hawkular.commons.log.MsgLogger;
+
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.List;
+import java.util.Map;
+import org.hawkular.alerts.engine.util.ActionsValidator
+import org.hawkular.alerts.engine.util.MissingState;
+
+global MsgLogger log;
+global ActionsService actions;
+global List alerts;
+global List events;
+global Set pendingTimeouts;
+global Map autoResolvedTriggers;
+global Set disabledTriggers;
+
+////// CONDITION MATCHING
+//
+// To perform dampening it is important not only to record positive condition evaluations but also false
+// evaluations.  True evals will contribute to an alert firing. And for default dampening (1 consecutive condition set
+// match) it is enough to fire the trigger.  But negative evals also contribute to dampening, resetting strict
+// dampening, and potentially resetting relaxed dampening.  So, each defined Condition will be evaluated when its
+// relevant Data facts are present in working memory , generating a ConditionEval fact which will then be applied
+// to the relevant Dampening fact.
+//
+// Data facts will be applied to all relevant Condition evals, and then will be retracted (using rule complexity
+// to fire the retract rule after the condition evals).
+//
+// It is a precondition that all Triggers in working memory are enabled (i.e. enabled == true ).
+
+// ConditionEval rules
+
+rule Threshold
+    when 
+        $t : Trigger( $tenantId : tenantId, $tid : id, $tmode : mode, $tsource : source )
+        $c : ThresholdCondition ( tenantId == $tenantId, triggerId == $tid, triggerMode == $tmode, $did : dataId )
+        $d : Data( tenantId == $tenantId, source == $tsource, id == $did )
+    then
+        ThresholdConditionEval ce = new ThresholdConditionEval($c, $d);
+        if (log != null && log.isDebugEnabled()) {
+            log.debugf("Threshold Eval: %s %s", (ce.isMatch() ? "Match!" : "no match "), ce.getDisplayString());
+        }
+        insert( ce );
+end
+
+rule ThresholdRange
+    when 
+        $t : Trigger( $tenantId : tenantId, $tid : id, $tmode : mode, $tsource : source )
+        $c : ThresholdRangeCondition ( tenantId == $tenantId, triggerId == $tid, triggerMode == $tmode, $did : dataId )
+        $d : Data( tenantId == $tenantId, source == $tsource, id == $did )
+    then
+        ThresholdRangeConditionEval ce = new ThresholdRangeConditionEval($c, $d);
+        if (log != null && log.isDebugEnabled()) {
+            log.debugf("ThresholdRange Eval: %s %s", (ce.isMatch() ? "Match!" : "no match"), ce.getDisplayString());
+        }
+        insert( ce );
+end
+
+// CompareCondition is a bit different because it involves two dataIds in one condition evaluation.  For example,
+// Heapused > 80% Heapmax.  The original implementation required that the two necessary Data facts (Heapused and
+// Heapmax) both be supplied in the same engine firing.  This proved to be an unrealistic constraint as, we needed
+// to allow Heapused and Heapmax Data facts to be supplied on different schedules.  The updated semantic is to
+// perform CompareCondition evaluations using the two most recent values for the relevant dataIds, holding data
+// across engine firings as needed.  So, if Heapused is reported every 30 seconds and Heapmax every 5 minutes, we'll
+// hold and update Heapused until we have a Heapmax value for comparison.  After that we'll update each as they
+// arrive, performing comparisons on each update.  We use CompareData as the special Fact to hold relevant data
+// across engine firings.
+rule ProvideCompareData1
+    when
+        $t : Trigger( $tenantId : tenantId, $tid : id, $tmode : mode, $tsource : source )
+        $c : CompareCondition( tenantId == $tenantId, triggerId == $tid, triggerMode == $tmode, $d1id : dataId )
+        $d : Data( tenantId == $tenantId, source == $tsource, id == $d1id )
+        not  CompareData( data.tenantId == $tenantId, data.source == $tsource, data.id == $d1id )
+    then
+        CompareData compareData = new CompareData( $d );
+        if (log != null && log.isDebugEnabled()) {
+            log.debugf("ProvideCompareData1: %s", compareData);
+        }
+        insert( compareData );
+end
+
+rule ProvideCompareData2
+    when
+        $t : Trigger( $tenantId : tenantId, $tid : id, $tmode : mode, $tsource : source )
+        $c : CompareCondition( tenantId == $tenantId, triggerId == $tid, triggerMode == $tmode, $d2id : data2Id )
+        $d : Data( tenantId == $tenantId, source == $tsource, id == $d2id )
+        not  CompareData( data.tenantId == $tenantId, data.source == $tsource, data.id == $d2id )
+    then
+        CompareData compareData = new CompareData( $d );
+        if (log != null && log.isDebugEnabled()) {
+            log.debugf("ProvideCompareData2: %s", compareData);
+        }
+        insert( compareData );
+end
+
+// Use a higher salience here to ensure that CompareData is always updated before Compare performs the evaluation
+rule UpdateCompareData
+    salience 100
+    when
+        $cd : CompareData( $tenantId : data.tenantId, $tsource : data.source, $did : data.id, $ts : data.timestamp )
+        $d  : Data( tenantId == $tenantId, source == $tsource, id == $did, timestamp > $ts )
+    then
+        retract( $cd )
+
+        CompareData compareData = new CompareData( $d );
+        if (log != null && log.isDebugEnabled()) {
+            log.debugf("UpdateCompareData: %s -> %s", $cd, compareData);
+        }
+        insert( compareData );
+end
+
+rule Compare
+    when 
+        $t   : Trigger( $tenantId : tenantId, $tid : id, $tmode : mode, $tsource : source )
+        $c   : CompareCondition ( tenantId == $tenantId, triggerId == $tid, triggerMode == $tmode,
+                                  $d1id : dataId, $d2id : data2Id )
+        $cd1 : CompareData( data.tenantId == $tenantId, data.source == $tsource, data.id == $d1id )
+        $cd2 : CompareData( data.tenantId == $tenantId, data.source == $tsource, data.id == $d2id )
+    then
+        CompareConditionEval ce = new CompareConditionEval($c, $cd1.data, $cd2.data);
+        if (log != null && log.isDebugEnabled()) {
+            log.debugf("Compare Eval: %s %s", (ce.isMatch() ? "Match!" : "no match "), ce.getDisplayString());
+        }
+        insert( ce );
+end
+
+rule Availability
+    when 
+        $t : Trigger( $tenantId : tenantId, $tid : id, $tmode : mode, $tsource : source )
+        $c : AvailabilityCondition ( tenantId == $tenantId, triggerId == $tid, triggerMode == $tmode, $did : dataId )
+        $d : Data( tenantId == $tenantId, source == $tsource, id == $did )
+    then
+        AvailabilityConditionEval ce = new AvailabilityConditionEval($c, $d);
+        if (log != null && log.isDebugEnabled()) {
+            log.debugf("Availability Eval: %s %s", (ce.isMatch() ? "Match!" : "no match"), ce.getDisplayString());
+        }
+        insert( ce );
+end
+
+rule String
+    when 
+        $t : Trigger( $tenantId : tenantId, $tid : id, $tmode : mode, $tsource : source )
+        $c : StringCondition ( tenantId == $tenantId, triggerId == $tid, triggerMode == $tmode, $did : dataId )
+        $d : Data( tenantId == $tenantId, source == $tsource, id == $did )
+    then
+        StringConditionEval ce = new StringConditionEval($c, $d);
+        if (log != null && log.isDebugEnabled()) {
+            log.debugf("String Eval: %s %s", (ce.isMatch() ? "Match!" : "no match"), ce.getDisplayString());
+        }
+        insert( ce );
+end
+
+rule ExternalData
+    when 
+        $t : Trigger( $tenantId : tenantId, $tid : id, $tmode : mode, $tsource : source )
+        $c : ExternalCondition ( tenantId == $tenantId, triggerId == $tid, triggerMode == $tmode, $did : dataId )
+        $d : Data( tenantId == $tenantId, source == $tsource, id == $did )
+    then
+        ExternalConditionEval ce = new ExternalConditionEval($c, $d);
+        if (log != null && log.isDebugEnabled()) {
+            log.debugf("ExternalData Eval: %s %s", (ce.isMatch() ? "Match!" : "no match"), ce.getDisplayString());
+        }
+        insert( ce );
+end
+
+rule ExternalEvent
+    when
+        $t : Trigger( $tenantId : tenantId, $tid : id, $tmode : mode, $tsource : source )
+        $c : ExternalCondition ( tenantId == $tenantId, triggerId == $tid, triggerMode == $tmode, $did : dataId  )
+        $d : Event( tenantId == $tenantId, dataSource == $tsource, dataId == $did )
+    then
+        ExternalConditionEval ce = new ExternalConditionEval($c, $d);
+        if (log != null && log.isDebugEnabled()) {
+            log.debugf("ExternalEvent Eval: %s %s", (ce.isMatch() ? "Match!" : "no match"), ce.getDisplayString());
+        }
+        insert( ce );
+end
+
+rule Event
+    when
+        $t : Trigger( $tenantId : tenantId, $tid : id, $tmode : mode, $tsource : source )
+        $c : EventCondition ( tenantId == $tenantId, triggerId == $tid, triggerMode == $tmode, $did : dataId )
+        $d : Event( tenantId == $tenantId, dataSource == $tsource, dataId == $did )
+    then
+        EventConditionEval ce = new EventConditionEval($c, $d);
+        if (log != null) {
+            log.infof("Event Eval: %s %s", (ce.isMatch() ? "Match!" : "no match"), ce.getDisplayString());
+        }
+        insert( ce );
+end
+
+// RateCondition is a bit different in that it calculates rate of change between the previous and most current
+// value of the same dataId and performs an evaluation against that computed value.  The previous value is
+// stored as a RateData fact. This rule initializes the RateData fact to the current value. It will be used
+// when the next datum for dataId arrives in working memory.
+rule ProvideInitialRateData
+    when
+        $t : Trigger( $tenantId : tenantId, $tid : id, $tmode : mode, $tsource : source )
+        $c : RateCondition ( tenantId == $tenantId, triggerId == $tid, triggerMode == $tmode, $did : dataId )
+        $d : Data( tenantId == $tenantId, source == $tsource, id == $did )
+        not  RateData( data.tenantId == $tenantId, data.source == $tsource, data.id == $did )
+    then
+        RateData rateData = new RateData( $d );
+        if (log != null && log.isDebugEnabled()) {
+            log.debugf("ProvideInitialRateData: %s", rateData);
+        }
+        insert( rateData );
+end
+
+// Given previous and current data for a given dataId, perform a RateCondition evaluation.
+rule Rate
+    when
+        $t  : Trigger( $tenantId : tenantId, $tid : id, $tmode : mode, $tsource : source )
+        $c  : RateCondition ( tenantId == $tenantId, triggerId == $tid, triggerMode == $tmode, $did : dataId )
+        $d  : Data( tenantId == $tenantId, source == $tsource, id == $did, $dt : timestamp )
+        $rd : RateData( data.tenantId == $tenantId, data.source == $tsource, data.id == $did, data.timestamp < $dt )
+    then
+        RateConditionEval ce = new RateConditionEval($c, $d, $rd.getData());
+        if (log != null && log.isDebugEnabled()) {
+            log.debugf("Rate Eval: %s %s", (ce.isMatch() ? "Match!" : "no match"), ce.getDisplayString());
+        }
+        insert( ce );
+end
+
+// NelsonCondition is a bit different (but somewhat like RateCondition) in that it looks for violations
+// of NelsonRules (https://en.wikipedia.org/wiki/Nelson_rules), as configured by the NelsonCondition.  To do this each
+// NelsonCondition has an associated NelsonData that updates the NelsonRules as data comes in. This rule creates the
+// NelsonData for the NelsonCondition. Note that if the same dataId is used in multiple NelsonConditions we do
+// potentially duplicate the tracking, but this is anticipated to be a corner case and in return we gain the ability
+// to configure sample size on the condition, and we can tie the NelsonData life-cycle to its NelsonCondition.
+rule ProvideInitialNelsonData
+    when
+        $c : NelsonCondition ( $cid : conditionId )
+        not  NelsonData( condition.conditionId == $cid )
+    then
+        NelsonData nelsonData = new NelsonData($c);
+        if (log != null && log.isDebugEnabled()) {
+            log.debugf("ProvideInitialNelsonData: %s", nelsonData);
+        }
+        insert( nelsonData );
+end
+
+// Given current data and a NelsonData for a given dataId, perform a NelsonCondition evaluation.
+rule Nelson
+    when
+        $t  : Trigger( $tenantId : tenantId, $tid : id, $tmode : mode, $tsource : source )
+        $c  : NelsonCondition ( tenantId == $tenantId, triggerId == $tid, triggerMode == $tmode, $did : dataId,
+                                $cid : conditionId )
+        $d  : Data( tenantId == $tenantId, source == $tsource, id == $did )
+        $nd : NelsonData( condition.conditionId == $cid )
+    then
+        $nd.addData($d);
+        NelsonConditionEval ce = new NelsonConditionEval($c, $d, $nd.getViolations(), $nd.getMeanResult(),
+            $nd.getStandardDeviationResult(), $nd.getViolationsData());
+        if (log != null && log.isDebugEnabled()) {
+            log.debugf("Nelson Eval: %s %s", (ce.isMatch() ? "Match!" : "no match"), ce.getDisplayString());
+        }
+        insert( ce );
+end
+
+// Remove the NelsonData for a NelsonCondition which has been removed from working memory
+rule RetractNelsonData
+    when
+        $nd : NelsonData( $cid : condition.conditionId )
+        not   NelsonCondition ( conditionId == $cid )
+    then
+        retract( $nd )
+        if (log != null && log.isDebugEnabled()) {
+            log.debugf("RetractNelsonData: %s", $nd);
+        }
+end
+
+rule UpdateMissingStateFromData
+    when
+        $ms : MissingState( $tenantId : tenantId, $tsource : source, $did : dataId, previousTime < time )
+        $d  : Data( tenantId == $tenantId, source == $tsource, id == $did)
+   then
+        if (log != null && log.isDebugEnabled()) {
+            log.debugf("UpdateMissingStateFromData: %s ", $ms);
+        }
+        // MissingState object is referenced in the AlertsEngineImpl.missingStates set
+        modify( $ms ) {
+            setPreviousTime($d.getTimestamp()),
+            setTime($d.getTimestamp())
+        }
+        // An eval is needed for Dampening
+        MissingConditionEval mce = new MissingConditionEval( $ms.getCondition(), $ms.getPreviousTime(), $ms.getTime());
+        if (log != null && log.isDebugEnabled()) {
+            log.debugf("MissingConditionEval : %s %s", (mce.isMatch() ? "Match!" : "no match"), mce.getDisplayString());
+        }
+        insert( mce );
+end
+
+rule UpdateMissingStateFromEvent
+    when
+        $ms : MissingState( $tenantId : tenantId, $tsource : source, $did : dataId, previousTime < time )
+        $e  : Event( tenantId == $tenantId, dataSource == $tsource, dataId == $did)
+    then
+        if (log != null && log.isDebugEnabled()) {
+            log.debugf("UpdateMissingStateFromEvent: %s ", $ms);
+        }
+        // MissingState object is referenced in the AlertsEngineImpl.missingStates set
+        modify( $ms ) {
+            setPreviousTime($e.getCtime()),
+            setTime($e.getCtime())
+        };
+        // An eval is needed for Dampening
+        MissingConditionEval mce = new MissingConditionEval( $ms.getCondition(), $ms.getPreviousTime(), $ms.getTime());
+        if (log != null && log.isDebugEnabled()) {
+            log.debugf("MissingConditionEval : %s %s", (mce.isMatch() ? "Match!" : "no match"), mce.getDisplayString());
+        }
+        insert( mce );
+end
+
+// Data retraction rules
+// These rules are expected to fire after any Eval rules, due to their simplicity.  Note that Data is not retracted
+// in the (above) rules, that generate ConditionEval facts, because one Datum can generate multiple evals, for different
+// Triggers.
+
+// Replace the previous data with the current data and retract the current data fact. 
+rule RetractProcessedRateData
+    when
+        $rd : RateData( $tenantId : data.tenantId, $dsource : data.source, $did : data.id )
+        $d  : Data( tenantId == $tenantId, source == $dsource, id == $did )
+    then
+        if (log != null && log.isDebugEnabled()) {
+            log.debugf("Retracting %s", $d);
+            log.debugf("Updating %s", $rd);
+        }
+        retract ( $d );
+        modify ( $rd ) {
+            setData( $d )
+        }
+end
+
+rule RetractProcessedData
+    when
+        $d : Data()
+    then
+        if (log != null && log.isDebugEnabled()) {
+            log.debugf("Retracting %s", $d);
+        }
+        retract ( $d );
+end
+
+rule RetractProcessedEvent
+    when
+        $e : Event()
+    then
+        if (log != null && log.isDebugEnabled()) {
+            log.debugf("Retracting %s", $e);
+        }
+        retract ( $e );
+end
+
+////// DAMPENING
+//
+// Dampening defines for each trigger how the number of positive, negative, and total evaluations determine
+// whether a trigger fires.  Additionally, there may be a constraint on the period of time involved in the
+// evaluations.
+//
+// Dampening is optionally defined for a Trigger.  If not defined then default dampening will be applied for uniformity
+// of processing.  Default dampening is basically handled as STRICT( 1 ).  Meaning 1 positive, consecutive evaluation
+// is required for the trigger to fire.  In other words, if the conditions match, the trigger fires.
+//
+// So, there is one Dampening fact for each Trigger fact.  And it is continually updated given each relevant condition
+// set evaluation for the trigger.
+//
+// The Dampening fact is updated on each condition evaluation and then the ConditionEvaluation fact is retracted
+// from working memory.  For single-condition triggers it is fairly straightforward; each condition evaluation results
+// in a dampening evaluation.
+//
+// Understanding multi-condition Trigger evaluation is important.  ConditionEvals are generated when the relevant Data
+// appears in working memory.  Data for specific DataIds can appear at different rates. There can be several more
+// ConditionEvals for DataId X than for DataId Y, or even before we have a single eval for DataId Y.  Our approach is
+// chosen for two reasons: simplicity of understanding, and the general desire for recency in alerting.  For 
+// *multi-condition* Trigger evaluations we test only tuples containing the most recent evaluation of each condition.
+//
+// For example, consider an ALL-match Trigger T with two conditions, (X > 100) and (Y > 200), and dampening Strict(2).
+// Now assume Data arrives like this:
+//     t1, X=125
+//     t2, X=50
+//     t3, Y=300
+//     t4, X=110
+//     t5, Y=150
+// The t1 condition eval of X=125 will be superseded by the t2 condition eval of X=50. When Y is finally reported at
+// t3, the tuple tested for T is (X=50, Y=300). The dampening eval is false because the X condition (50 > 100) is
+// false. At t4 we test the tuple (X=110, Y=300). The dampening eval is true because both conditions are met.  T does
+// not fire because we need two consecutive true tuples. At t5 the condition eval of Y=300 will be superseded by
+// Y=150, the tuple (X=110, Y=150) will evaluate to false.  T will not fire, the dampening will reset.
+//
+// Now assume T were an ANY-match trigger. For ANY-match we still use a tuple with the most recent evaluation for each
+// condition. But, we don't need an evaluation for every condition, and we only need one condition eval to be true in
+// order to satisfy the T.  The t1 evaluation of (x=125, Y=N/A) is true because the X condition is true. We can ignore
+// the Y condition.  T does not fire because we need two consecutive true tuples.  The t2 evaluation of (x=50, Y=N/A)
+// is false. T does not fire, the dampening is reset.  The t3 evaluation of (x=50, Y=300) is true because the Y
+// condition is true. T does not fire because we need two consecutive true tuples.  The t4 evaluation of (x=110, Y=300)
+// is true in both ways.  T fires and the dampening is reset. The t5 evaluation of (x=110, Y=150) is true because the
+// X condtion is again true, and so on...
+//
+// Given the above approach to matching, we must hold onto the most recent evaluation of each condition used in
+// a multi-condition Trigger.  What is important to understand is the most recent evaluation of each condition
+// is held inside the relevant Dampening record and not as a Fact in working memory.  That allows us to have very
+// simple processing here in the rules.  We just take every condition evaluation, have the required dampening
+// Fact process it, and then retract the ConditionEvaluation.
+//
+// Finally, it is important to note that the examples above assume discrete firings of the engine for the different
+// times data is sent in.  In other words, for a multi-condition trigger only one ConditionEval is processed per
+// engine execution.  But it is quite possible that the data supplied to a single engine execution results in multiple
+// ConditionEvals for a single trigger.  To ensure dampening is evaluated with all of the most recent evaluations
+// they must all be supplied. In this case dampening must be supplied with the set of relevant ConditionEvals to ensure
+// we are using the most recent evaluation for each condition.
+//
+
+// Dampening update rules
+
+rule ProvideDefaultDampening
+    when
+        $t : Trigger( $tenantId : tenantId, $tid : id, $tmode : mode )
+        not Dampening( tenantId == $tenantId, triggerId == $tid, triggerMode == $tmode )
+    then
+        if (log != null && log.isDebugEnabled()) {
+            log.debugf("Adding default %s dampening for trigger! %s", $tmode, $t.getId());
+        }
+        Dampening d = Dampening.forStrict( $tenantId, $tid, $tmode, 1 );
+        insert( d );
+end
+
+// Group all of the ConditionEvals for a trigger (1 or more) as a Set, and update the trigger's dampening
+rule DampenTrigger
+    when
+        $t   : Trigger( $tenantId : tenantId, $tid : id, $tmode : mode )
+        $d   : Dampening( tenantId == $tenantId, triggerId == $tid, triggerMode == $tmode, satisfied == false )
+        not    Data( )
+        not    Event( )
+        $ces : Set( size > 0 )
+               from accumulate(
+                   $ce: ConditionEval ( tenantId == $tenantId,  triggerId == $tid ),
+                   collectSet( $ce )
+               )
+    then
+        $ces.stream().forEach(ce -> retract(ce));
+        retract( $d );
+
+        $d.perform( $t.getMatch(), $ces );
+
+        insert( $d );
+
+        if (log != null && log.isDebugEnabled()) {
+            log.debugf( "DampenTrigger %s using [match=%s] %s", $d, $t.getMatch(), $d.getCurrentEvals() );
+            log.debugf( "Retracted %s", $ces );
+        }
+end
+
+// Dampening with STRICT_TIMEOUT
+// Because we are not running the engine in Stream/CEP mode and instead use discrete rulebase executions, we
+// can not perform temporal reasoning inside the rules.  So, to perform timeouts we "post" STRICT_TIMEOUT
+// Dampening records when the timer should start, so that the timeouts  can be checked externally.  We remove
+// timeouts when the dampening is reset.
+rule DampeningTimeoutAdd
+    when
+        $d   : Dampening( type == Type.STRICT_TIMEOUT, numTrueEvals == 1, satisfied == false )
+    then
+        if (log != null && log.isDebugEnabled()) {
+            log.debugf( "DampeningTimeoutAdd %s", $d );
+        }
+        pendingTimeouts.add( $d );
+end 
+
+// TODO: does this rule fire too often? It may fire each time the condition set is evaluates to false. Although,
+//       it is fairly lightweight. 
+rule DampeningTimeoutRemove
+    when
+        $d   : Dampening( type == Type.STRICT_TIMEOUT, numTrueEvals == 0, satisfied == false )
+    then
+        if (log != null && log.isDebugEnabled()) {
+            log.debugf( "DampeningTimeoutRemove %s", $d );
+        }
+        pendingTimeouts.remove( $d );
+end 
+
+
+
+////// EVENT GENERATION / TRIGGER MODE HANDLING
+
+// If a Trigger's FIRE mode Dampening is satisfied, then the Trigger fires and generates an Alert.  The Trigger's
+// FIRE mode Dampening fact is then reset and updated in working memory, ready to again track evals for the Trigger.
+// If the Trigger has safety mode enabled then we toggle the Trigger to SAFETY mode and it can not fire again
+// until the safety mode Dampening is satisfied and the Trigger returns to FIRE mode.
+rule AlertOnSatisfiedDampening
+    when
+        $t  : Trigger( mode == Mode.FIRING, $tenantId : tenantId, $tid : id )
+        $d  : Dampening( triggerMode == Mode.FIRING, tenantId == $tenantId, triggerId == $tid, satisfied == true )
+    then
+        Event newEvent;
+
+        // Only some triggers generate an alert
+        if ($t.getEventType() == EventType.ALERT) {
+            if (log != null && log.isDebugEnabled()) {
+                log.debugf("Alert! Dampening Satisfied! %s", $d.log());
+            }
+
+            newEvent = new Alert( $t.getTenantId(), $t, $d, $d.getSatisfyingEvals() );
+            // Adding an Alert will implicitly add the related Event
+            alerts.add((Alert)newEvent);
+
+        } else {
+            if (log != null && log.isDebugEnabled() && $t.getEventType() == EventType.EVENT) {
+                log.debugf("Event! Dampening Satisfied! %s", $d.log());
+            }
+
+            newEvent = new Event( $t.getTenantId(), $t, $d, $d.getSatisfyingEvals() );
+            events.add(newEvent);
+        }
+
+        // We insert the generated events on the firing cycles to allow chained conditions
+        insert( newEvent );
+
+        if (actions != null) {
+            actions.send($t, newEvent);
+        }
+
+        retract( $d );
+        $d.reset();
+        insert( $d );
+
+        if ($t.isAutoResolve()) {
+            log.debugf("Setting Trigger to AutoResolve Mode! %s", $t);
+            modify($t) {
+               setMode(Mode.AUTORESOLVE)
+            }
+        } else if ($t.isAutoDisable()) {
+            if (log != null && log.isDebugEnabled()) {
+                log.debugf("Setting Trigger Disabled! %s", $t);
+            }
+
+            // the autoDisable trigger handling will result in a trigger reload, so we can just retract the
+            // current definition. And given that it will be disabled, it actually will not get loaded.
+            disabledTriggers.add( $t );
+
+            retract( $t );
+
+        } else {
+            if (log != null && log.isDebugEnabled()) {
+                log.debugf("Trigger remains in Firing mode, AutoDisable and AutoResolve not set. %s", $t);
+            }
+        }
+end
+
+
+rule SetFiringModeOnSatisfiedDampening
+    when
+        $t  : Trigger( mode == Mode.AUTORESOLVE, $tenantId : tenantId, $tid : id )
+        $d  : Dampening( triggerMode == Mode.AUTORESOLVE, tenantId == $tenantId, triggerId == $tid, satisfied == true )
+    then
+        if (log != null && log.isDebugEnabled()) {
+            log.debugf("SetFiringModeOnSatisfiedDampening! %s", $d.log());
+        }
+
+        // the autoResolved trigger handling will result in a trigger reload, so we can just retract the
+        // current definition. We set it to FIRING mode but that is mainly a cosmetic change and affects
+        // only the Trigger instance placed into autoResolvedTriggers.
+        $t.setMode(Mode.FIRING);
+        autoResolvedTriggers.put( $t, $d.getSatisfyingEvals() );
+
+        retract( $t );
+end
+
+
+////// TRIGGER RETRACTION CLEANUP
+
+// If a trigger is retracted these rules will ensure all associated facts are removed. This only assures
+// a clean working memory if the trigger is retracted while rules are firing. If a Trigger fact is removed via
+// the API while the rule-base is not firing, then these rules don't fire and manual cleanup may be necessary.
+
+rule retractOrphanDampening
+    when
+        $d : Dampening( $tenantId : tenantId, $tid : triggerId )
+        not  Trigger( tenantId == $tenantId, id == $tid )
+    then
+        retract( $d )
+
+        if (log != null && log.isDebugEnabled()) {
+            log.debugf("Retract Dampening with no Trigger. %s", $d);
+        }
+end
+
+rule retractOrphanCondition
+    when
+        $c : Condition( $tenantId : tenantId, $tid : triggerId )
+        not Trigger( tenantId == $tenantId, id == $tid )
+    then
+        retract( $c )
+
+        if (log != null && log.isDebugEnabled()) {
+            log.debugf("Retract Condition with no Trigger. %s", $c);
+        }
+end
+
+rule retractOrphanMissingState
+    when
+        $s : MissingState( $tenantId : tenantId, $tid : triggerId )
+        not Trigger( tenantId == $tenantId, id == $tid )
+    then
+        retract( $s )
+
+        if (log != null && log.isDebugEnabled()) {
+            log.debugf("Retract MissingState with no Trigger. %s", $s);
+        }
+end

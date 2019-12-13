@@ -1,22 +1,147 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<!--
+
+    Copyright 2019 Red Hat, Inc. and/or its affiliates
+    and other contributors as indicated by the @author tags.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.redhat.cloud.custompolicies</groupId>
-  <artifactId>engine</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <artifactId>custom-policies-engine</artifactId>
+  <version>2.1.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+
+
+  <name>Custom Policies Engine</name>
+  <description>Processing engine for Custom Policies service</description>
+  <inceptionYear>2019</inceptionYear>
+  <organization>
+    <name>Red Hat, Inc.</name>
+    <url>http://redhat.com/</url>
+  </organization>
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <distribution>repo</distribution>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
+    </license>
+  </licenses>
+
+  <!--
+  API: jackson, junit
+  Commons: version.org.jboss.logging, version.org.infinispan.wildfly, version.org.jboss.logging.jboss-logging-tools, slf4j
+  Engine: version.org.drools, commons-math3 (Nelson vain), antlr (tags), jackson, version.org.infinispan.wildfly, version.org.apache.logging.log4j (test), junit
+  -->
 
   <properties>
-    <compiler-plugin.version>3.8.1</compiler-plugin.version>
+    <!-- Maven related -->
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
-    <maven.compiler.parameters>true</maven.compiler.parameters>
-
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <quarkus.version>1.0.0.Final</quarkus.version>
-    <surefire-plugin.version>2.22.1</surefire-plugin.version>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <version.maven-patch-plugin>1.2</version.maven-patch-plugin>
+    <!-- Verify if necessary -->
+    <version.org.apache.maven.plugins.maven-antrun-plugin>1.8</version.org.apache.maven.plugins.maven-antrun-plugin>
+    <version.org.apache.maven.plugins.maven-failsafe-plugin>2.19.1</version.org.apache.maven.plugins.maven-failsafe-plugin>
+    <version.org.apache.maven.plugins.maven-surefire-plugin>2.22.1</version.org.apache.maven.plugins.maven-surefire-plugin>
+    <version.org.apache.maven.plugins.maven-jar-plugin>3.0.2</version.org.apache.maven.plugins.maven-jar-plugin>
+    <version.org.apache.maven.plugins.maven-resources-plugin>3.0.2</version.org.apache.maven.plugins.maven-resources-plugin>
+
+    <!-- Rest of them -->
+    <version.junit>4.12</version.junit> <!-- Quarkus module uses JUnit 5 -->
+    <version.log4j>1.2.17</version.log4j>
+    <version.org.antlr>4.7.2</version.org.antlr>
+    <version.org.apache.commons.commons-math3>3.4.1</version.org.apache.commons.commons-math3>
+    <version.org.apache.logging.log4j>2.8.1</version.org.apache.logging.log4j>
+    <version.org.drools>6.4.0.Final</version.org.drools>
+    <version.org.slf4j>1.7.2</version.org.slf4j>
+    <version.com.google.guava>28.1-jre</version.com.google.guava>
+    <distribution.name>hawkular-alerting</distribution.name>
+
+    <version.com.fasterxml.jackson>2.10.1</version.com.fasterxml.jackson>
+
+    <!-- Wildfly to Quarkus related stuff to be ported / removed -->
+    <version.org.hibernate>5.10.7.Final</version.org.hibernate>
+    <version.org.infinispan>10.0.1.Final</version.org.infinispan>
+    <version.org.jboss.logging>3.3.1.Final</version.org.jboss.logging>
+    <version.org.jboss.logging.jboss-logging-tools>2.0.2.Final</version.org.jboss.logging.jboss-logging-tools>
+
+    <!-- Quarkus -->
+    <quarkus.version>1.0.1.Final</quarkus.version>
+
+    <!-- hawkular-build-tools are used by both maven-checkstyle-plugin and license-plugin -->
+    <!-- TODO Remove dependency to Hawkular builds tools -->
+    <version.org.hawkular.hawkular-build-tools>17</version.org.hawkular.hawkular-build-tools>
+
+    <!-- license-maven-plugin -->
+    <!-- TODO Are these required? If, port away from requiring hawkular-builds-tools -->
+    <version.com.mycila.license-maven-plugin>3.0</version.com.mycila.license-maven-plugin>
+    <license.headerTemplatePath>hawkular-license/jboss-apache-2-template.txt</license.headerTemplatePath>
+    <license.failIfMissing>true</license.failIfMissing>
+    <license.failIfUnknown>true</license.failIfUnknown>
+
+    <!-- Checkstyle and maven-checkstyle-plugin -->
+    <version.maven-checkstyle-plugin>2.17</version.maven-checkstyle-plugin>
+    <version.com.puppycrawl.tools.checkstyle>6.8</version.com.puppycrawl.tools.checkstyle>
+    <!-- the default value pointing at checkstyle.xml in hawkular-build-tools -->
+    <checkstyle.configLocation>hawkular-checkstyle/checkstyle.xml</checkstyle.configLocation>
+    <checkstyle.consoleOutput>true</checkstyle.consoleOutput>
+    <checkstyle.failOnError>true</checkstyle.failOnError>
+    <hawkular.checkstyle.includes>
+      src/**/*.java,
+      *.xml,
+      src/**/*.xml,
+      src/**/*.js,
+      *.adoc,
+      src/**/*.adoc,
+      *.conf,
+      src/**/*.conf,
+      src/**/*.css,
+      Dockerfile,
+      src/**/Dockerfile,
+      src/**/*.groovy,
+      *.html,
+      src/**/*.html,
+      src/**/*.json,
+      src/**/*.js.map,
+      *.md,
+      src/**/*.md,
+      *.properties,
+      src/**/*.properties,
+      *.sh,
+      src/**/*.sh,
+      *.txt,
+      src/**/*.txt,
+      *.yml,
+      src/**/*.yml,
+      src/**/*.xsl,
+      src/**/*.yaml,
+    </hawkular.checkstyle.includes>
+    <hawkular.checkstyle.excludes>
+      release.properties,
+      **/*.d.ts,
+      **/vendor/*.js,
+    </hawkular.checkstyle.excludes>
+    <!-- the default value pointing at suppressions.xml in hawkular-build-tools -->
+    <checkstyle.suppressions.file>hawkular-checkstyle/suppressions.xml</checkstyle.suppressions.file>
+
+    <!-- XML Plugin -->
+    <version.org.codehaus.mojo.xml-maven-plugin>1.0.1</version.org.codehaus.mojo.xml-maven-plugin>
   </properties>
 
   <dependencyManagement>
@@ -30,170 +155,201 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
-  <dependencies>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-resteasy</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-resteasy-jsonb</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-rest-client</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-smallrye-reactive-messaging-kafka</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-hibernate-orm-panache</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-smallrye-metrics</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-hibernate-validator</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-jdbc-postgresql</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-smallrye-openapi</artifactId>
-    </dependency>
 
-
-    <!-- Testdependencies-->
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-junit5</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jboss.resteasy</groupId>
-      <artifactId>resteasy-client</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.rest-assured</groupId>
-      <artifactId>rest-assured</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.awaitility</groupId>
-      <artifactId>awaitility</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.testcontainers</groupId>
-      <artifactId>kafka</artifactId>
-      <version>1.12.3</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.testcontainers</groupId>
-      <artifactId>postgresql</artifactId>
-      <version>1.12.3</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.testcontainers</groupId>
-      <artifactId>junit-jupiter</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.liquibase</groupId>
-      <artifactId>liquibase-core</artifactId>
-      <version>3.8.0</version>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
   <build>
+
+    <pluginManagement>
+      <plugins>
+
+        <plugin>
+          <groupId>com.mycila</groupId>
+          <artifactId>license-maven-plugin</artifactId>
+          <version>${version.com.mycila.license-maven-plugin}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-checkstyle-plugin</artifactId>
+          <version>${version.maven-checkstyle-plugin}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>xml-maven-plugin</artifactId>
+          <version>${version.org.codehaus.mojo.xml-maven-plugin}</version>
+        </plugin>
+
+      </plugins>
+    </pluginManagement>
+
     <plugins>
+
       <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>${compiler-plugin.version}</version>
-      </plugin>
-      <plugin>
-        <groupId>io.quarkus</groupId>
-        <artifactId>quarkus-maven-plugin</artifactId>
-        <version>${quarkus.version}</version>
+        <groupId>com.mycila</groupId>
+        <artifactId>license-maven-plugin</artifactId>
         <configuration>
-          <debug>5006</debug>
-          <suspend>false</suspend>
+<!--          <header>com/mycila/maven/plugin/license/templates/APACHE-2.txt</header>-->
+          <header>${license.headerTemplatePath}</header>
+          <excludes combine.children="append">
+            <exclude>**/.bowerrc</exclude>
+            <exclude>**/.jshintrc</exclude>
+            <exclude>**/LICENSE</exclude>
+            <exclude>**/README</exclude>
+            <exclude>**/README.*</exclude>
+            <exclude>**/.travis.force.build</exclude>
+            <exclude>**/*.adoc</exclude>
+            <exclude>**/*.d.ts</exclude>
+            <exclude>**/*.eot</exclude>
+            <exclude>**/*.otf</exclude>
+            <exclude>**/*.ttf</exclude>
+            <exclude>**/*.svg</exclude>
+            <exclude>**/*.woff</exclude>
+            <exclude>**/*.html</exclude>
+            <exclude>**/*.htm</exclude>
+            <exclude>.mvn/jvm.config</exclude>
+            <exclude>.mvn/maven.config</exclude>
+            <exclude>mvnw</exclude>
+            <exclude>mvnw.cmd</exclude>
+            <exclude>**/*.rules</exclude>
+            <exclude>**/*.tokens</exclude>
+            <exclude>**/*.interp</exclude>
+            <exclude>src/main/docker/Dockerfile.*</exclude>
+          </excludes>
+          <mapping>
+            <conf>SCRIPT_STYLE</conf>
+            <css>SLASHSTAR_STYLE</css>
+            <Dockerfile>SCRIPT_STYLE</Dockerfile>
+            <drl>SLASHSTAR_STYLE</drl>
+            <g4>SLASHSTAR_STYLE</g4>
+            <groovy>SLASHSTAR_STYLE</groovy>
+            <java>SLASHSTAR_STYLE</java>
+            <yaml>SCRIPT_STYLE</yaml>
+            <yml>SCRIPT_STYLE</yml>
+          </mapping>
         </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>com.mycila</groupId>
+            <artifactId>license-maven-plugin-git</artifactId>
+            <version>${version.com.mycila.license-maven-plugin}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.hawkular</groupId>
+            <artifactId>hawkular-build-tools</artifactId>
+            <version>${version.org.hawkular.hawkular-build-tools}</version>
+          </dependency>
+        </dependencies>
         <executions>
           <execution>
+            <phase>verify</phase>
             <goals>
-              <goal>build</goal>
+              <goal>check</goal>
             </goals>
           </execution>
         </executions>
       </plugin>
+
       <plugin>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>${surefire-plugin.version}</version>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
         <configuration>
-          <systemProperties>
-            <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
-          </systemProperties>
+          <configLocation>${checkstyle.configLocation}</configLocation>
+          <consoleOutput>${checkstyle.consoleOutput}</consoleOutput>
+          <failsOnError>${checkstyle.failOnError}</failsOnError>
+          <!-- Make includes relative to ${basedir} -->
+          <sourceDirectory>${basedir}</sourceDirectory>
+          <!-- in <includes>, it is necessary to avoid using an item-initial **/ wildcard
+               which pulls in also files from all submodules and target folders. We do not want
+               that. We rather have to name specific root folder patterns like *.extension
+               or directory/**/*.extension -->
+          <includes>${hawkular.checkstyle.includes}</includes>
+          <excludes>${hawkular.checkstyle.excludes}</excludes>
+          <!-- to override in a submodule, just redefine the checkstyle.suppressions.file property
+               in the given submodule's pom -->
+          <suppressionsLocation>${checkstyle.suppressions.file}</suppressionsLocation>
+          <useFile />
         </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>com.puppycrawl.tools</groupId>
+            <artifactId>checkstyle</artifactId>
+            <version>${version.com.puppycrawl.tools.checkstyle}</version>
+            <exclusions>
+              <exclusion>
+                <groupId>com.sun</groupId>
+                <artifactId>tools</artifactId>
+              </exclusion>
+            </exclusions>
+          </dependency>
+          <dependency>
+            <groupId>org.hawkular</groupId>
+            <artifactId>hawkular-build-tools</artifactId>
+            <version>${version.org.hawkular.hawkular-build-tools}</version>
+          </dependency>
+        </dependencies>
+        <executions>
+          <execution>
+            <id>check-style</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
+
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>xml-maven-plugin</artifactId>
+        <!-- *.xml and *.xsl are included by default -->
+        <executions>
+          <execution>
+            <id>xml-check-format</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>check-format</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
     </plugins>
+
   </build>
+
   <profiles>
+
     <profile>
-      <id>native</id>
+      <id>default</id>
       <activation>
-        <property>
-          <name>native</name>
-        </property>
+        <activeByDefault>true</activeByDefault>
       </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-maven-plugin</artifactId>
-            <version>${quarkus.version}</version>
-            <executions>
-              <execution>
-                <goals>
-                  <goal>native-image</goal>
-                </goals>
-                <configuration>
-                  <enableHttpUrlHandler>true</enableHttpUrlHandler>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <artifactId>maven-failsafe-plugin</artifactId>
-            <version>${surefire-plugin.version}</version>
-            <executions>
-              <execution>
-                <goals>
-                  <goal>integration-test</goal>
-                  <goal>verify</goal>
-                </goals>
-                <configuration>
-                  <systemProperties>
-                    <native.image.path>${project.build.directory}/${project.build.finalName}-runner</native.image.path>
-                  </systemProperties>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
+      <properties>
+        <checkstyle.skip>true</checkstyle.skip>
+        <license.skip>true</license.skip>
+        <xml.skip>true</xml.skip>
+      </properties>
+      <modules>
+        <module>api</module>
+        <module>commons</module>
+        <module>engine</module>
+        <module>external</module>
+      </modules>
+    </profile>
+
+    <profile>
+      <id>check</id>
+      <properties>
+        <checkstyle.skip>false</checkstyle.skip>
+        <license.skip>false</license.skip>
+        <xml.skip>false</xml.skip>
+      </properties>
+      <modules>
+        <module>api</module>
+        <module>commons</module>
+        <module>engine</module>
+        <module>external</module>
+      </modules>
     </profile>
 
   </profiles>
-
 
 </project>

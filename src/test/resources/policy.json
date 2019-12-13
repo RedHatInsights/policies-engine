@@ -1,8 +1,0 @@
-{ "id":0,
-  "customerid":"1",
-  "description":"Another test",
-  "is_enabled":true,
-  "name":"3rd policy",
-  "conditions":"\"rhelversion\" >= \"8\"",
-  "actions": "EMAIL roadrunner@acme.org"
-}

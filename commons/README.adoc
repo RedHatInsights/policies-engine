@@ -1,0 +1,5 @@
+== Note
+
+This module is likely to be deprecated and replaced with the Quarkus implementations of Infinispan instantation and management as well as logging and configuration.
+
+Please don't add new stuff to this module.
