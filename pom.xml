@@ -57,6 +57,10 @@
 
     <version.com.fasterxml.jackson>2.10.1</version.com.fasterxml.jackson>
 
+    <!-- Used for openapi docs and itests -->
+    <version.org.codehaus.groovy>2.5.8</version.org.codehaus.groovy>
+    <version.org.codehaus.gmavenplus>1.8.1</version.org.codehaus.gmavenplus>
+
     <!-- Wildfly to Quarkus related stuff to be ported / removed -->
     <version.org.hibernate>5.10.7.Final</version.org.hibernate>
     <version.org.infinispan>10.0.1.Final</version.org.infinispan>
