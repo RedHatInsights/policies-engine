@@ -2,6 +2,7 @@ package org.hawkular.alerts.api.model.condition;
 
 import static org.hawkular.alerts.api.model.trigger.Mode.FIRING;
 
+import java.util.Locale;
 import org.hawkular.alerts.api.doc.DocModel;
 import org.hawkular.alerts.api.doc.DocModelProperty;
 import org.hawkular.alerts.api.model.trigger.Mode;
@@ -167,7 +168,8 @@ public class CompareCondition extends Condition {
     public void updateDisplayString() {
         String operator = null == this.operator ? null : this.operator.name();
         Double data2Multiplier = (null == this.data2Multiplier) ? 0.0 : this.data2Multiplier;
-        String s = String.format("%s %s %.2f%% %s", this.dataId, operator, (100 * data2Multiplier), this.data2Id);
+        String s = String.format(Locale.US, "%s %s %.2f%% %s", this.dataId, operator, (100 * data2Multiplier),
+                                 this.data2Id);
         setDisplayString(s);
     }
 

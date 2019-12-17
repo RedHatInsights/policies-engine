@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import org.hawkular.alerts.api.json.JacksonDeserializer;
@@ -69,6 +70,7 @@ public class JsonTest {
     @Before
     public void before() {
         objectMapper = new ObjectMapper();
+        objectMapper.setLocale(Locale.US);
     }
 
     @Test

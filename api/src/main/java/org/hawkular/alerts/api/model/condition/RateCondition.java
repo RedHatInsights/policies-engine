@@ -1,5 +1,6 @@
 package org.hawkular.alerts.api.model.condition;
 
+import java.util.Locale;
 import org.hawkular.alerts.api.doc.DocModel;
 import org.hawkular.alerts.api.doc.DocModelProperty;
 import org.hawkular.alerts.api.model.trigger.Mode;
@@ -250,7 +251,8 @@ public class RateCondition extends Condition {
         String direction = null == this.direction ? null : this.direction.name();
         String operator = null == this.operator ? null : this.operator.name();
         String period = null == this.period ? null : this.period.name();
-        String s = String.format("%s %s %s %.2f per %s", this.dataId, direction, operator, this.threshold, period);
+        String s = String.format(Locale.US, "%s %s %s %.2f per %s", this.dataId, direction, operator, this.threshold,
+                                 period);
         setDisplayString(s);
     }
 

@@ -1,5 +1,6 @@
 package org.hawkular.alerts.api.model.condition;
 
+import java.util.Locale;
 import org.hawkular.alerts.api.doc.DocModel;
 import org.hawkular.alerts.api.doc.DocModelProperty;
 import org.hawkular.alerts.api.model.trigger.Mode;
@@ -234,7 +235,8 @@ public class ThresholdRangeCondition extends Condition {
     public void updateDisplayString() {
         String operatorLow = null == this.operatorLow ? null : this.operatorLow.getLow();
         String operatorHigh = null == this.operatorHigh ? null : this.operatorHigh.getHigh();
-        String s = String.format("%s %s %s%.2f , %.2f%s", this.dataId, (isInRange() ? "in" : "not in"), operatorLow,
+        String s = String.format(Locale.US, "%s %s %s%.2f , %.2f%s", this.dataId, (isInRange() ? "in" : "not in"),
+                                 operatorLow,
                 this.thresholdLow, this.thresholdHigh, operatorHigh);
         setDisplayString(s);
     }
