@@ -1,5 +1,6 @@
 package org.hawkular.alerts.api.model.condition;
 
+import java.util.Locale;
 import org.hawkular.alerts.api.doc.DocModel;
 import org.hawkular.alerts.api.doc.DocModelProperty;
 import org.hawkular.alerts.api.model.trigger.Mode;
@@ -143,7 +144,7 @@ public class ThresholdCondition extends Condition {
     @Override
     public void updateDisplayString() {
         String operator = null == this.operator ? null : this.operator.name();
-        String s = String.format("%s %s %.2f", this.dataId, operator, this.threshold);
+        String s = String.format(Locale.US, "%s %s %.2f", this.dataId, operator, this.threshold);
         setDisplayString(s);
     }
 
