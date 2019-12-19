@@ -191,7 +191,8 @@ public class TriggersHandler {
             notes = "Return created full trigger.")
     @DocParameters(value = {
             @DocParameter(required = true, body = true, type = FullTrigger.class,
-                    description = "FullTrigger (trigger, dampenings, conditions) to be created.")
+                    description = "FullTrigger (trigger, dampenings, conditions) to be created."),
+            @DocParameter(name = "dry", type = Boolean.class, description = "Process the trigger (validate), but do not store it.")
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, FullTrigger created.", response = FullTrigger.class),
@@ -203,6 +204,7 @@ public class TriggersHandler {
                 .executeBlocking(future -> {
                     String tenantId = ResponseUtil.checkTenant(routing);
                     String json = routing.getBodyAsString();
+                    Boolean dryRun = Boolean.valueOf(routing.request().getParam("dry"));
                     FullTrigger fullTrigger;
                     try {
                         fullTrigger = fromJson(json, FullTrigger.class);
@@ -236,7 +238,9 @@ public class TriggersHandler {
                         throw new ResponseUtil.BadRequestException("Tags " + trigger.getTags() + " must be non empty.");
                     }
                     try {
-                        definitionsService.createFullTrigger(tenantId, fullTrigger);
+                        if(!dryRun) {
+                            definitionsService.createFullTrigger(tenantId, fullTrigger);
+                        }
                         future.complete(fullTrigger);
 
                     } catch (IllegalArgumentException e) {
@@ -256,7 +260,8 @@ public class TriggersHandler {
             @DocParameter(name = "triggerId", required = true, path = true,
                     description = "Trigger definition id to be updated."),
             @DocParameter(required = true, body = true, type = FullTrigger.class,
-                    description = "FullTrigger (trigger, dampenings, conditions) to be created.")
+                    description = "FullTrigger (trigger, dampenings, conditions) to be created."),
+            @DocParameter(name = "dry", type = Boolean.class, description = "Process the trigger (validate), but do not store it.")
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, FullTrigger updated.", response = FullTrigger.class),
@@ -269,6 +274,7 @@ public class TriggersHandler {
                     String tenantId = ResponseUtil.checkTenant(routing);
                     String json = routing.getBodyAsString();
                     String triggerId = routing.request().getParam("triggerId");
+                    Boolean dryRun = Boolean.valueOf(routing.request().getParam("dry"));
                     FullTrigger fullTrigger;
                     Trigger trigger;
                     try {
@@ -290,7 +296,9 @@ public class TriggersHandler {
                                 "Tags " + trigger.getTags() + " must be non empty.");
                     }
                     try {
-                        definitionsService.updateFullTrigger(tenantId, fullTrigger);
+                        if(!dryRun) {
+                            definitionsService.updateFullTrigger(tenantId, fullTrigger);
+                        }
                         log.debugf("FullTrigger: %s", fullTrigger);
                         future.complete();
                     } catch (NotFoundException e) {

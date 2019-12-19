@@ -217,6 +217,11 @@ public abstract class Condition implements Serializable {
         return type;
     }
 
+    /**
+     * Validate throws IllegalArgumentExceptions if the condition is not valid
+     */
+    public void validate() {}
+
     @Override
     public int hashCode() {
         final int prime = 31;

@@ -13,8 +13,13 @@ import java.util.BitSet;
 
 public class ExprParser extends ExpressionBaseListener implements ANTLRErrorListener {
     boolean error = false;
+    String errorMsg = null;
 
-    public boolean parse(String expression) {
+    public void validate(String expression) {
+        parse(expression);
+    }
+
+    public void parse(String expression) {
         CharStream cs = CharStreams.fromString(expression);
         ExpressionLexer lexer = new ExpressionLexer(cs);
         lexer.removeErrorListeners();
@@ -27,13 +32,15 @@ public class ExprParser extends ExpressionBaseListener implements ANTLRErrorList
         ParseTree parseTree = parser.expression();
         ParseTreeWalker.DEFAULT.walk(this, parseTree);
 
-        return !error;
+        if(error) {
+            throw new IllegalArgumentException(errorMsg);
+        }
     }
 
     @Override
     public void syntaxError(Recognizer<?, ?> recognizer, Object o, int line, int charPos, String msg, RecognitionException e) {
-        System.out.printf("Error: %s at line %d position %d\n", msg, line, charPos);
         error = true;
+        errorMsg = String.format("Error: %s at line %d position %d\n", msg, line, charPos);
     }
 
     @Override

@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import com.redhat.cloud.custompolicies.api.model.condition.expression.ExprParser;
 import org.hawkular.alerts.api.doc.DocModel;
 import org.hawkular.alerts.api.doc.DocModelProperty;
 import org.hawkular.alerts.api.model.event.Event;
@@ -106,7 +107,7 @@ public class EventCondition extends Condition {
 
     @DocModelProperty(description = "Event expression used for this condition.",
             position = 0,
-            required = true)
+            required = false)
     @JsonInclude
     private String expression;
 
@@ -409,6 +410,14 @@ public class EventCondition extends Condition {
             return false;
         }
         return false;
+    }
+
+    @Override
+    public void validate() {
+        if(this.expr != null && !expr.isEmpty()) {
+            ExprParser parser = new ExprParser();
+            parser.validate(this.expr);
+        }
     }
 
     @Override
