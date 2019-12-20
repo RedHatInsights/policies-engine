@@ -8,19 +8,13 @@ import org.antlr.v4.runtime.atn.ATNConfigSet;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.math.BigDecimal;
 import java.util.BitSet;
 import java.util.Map;
 
 public class ExprParser extends ExpressionBaseVisitor<Boolean> {
-    private String expression;
-    ThrowingErrorHandler errorListener;
 
-    public ExprParser(Map<String, String> facts, String expression) {
-        this.expression = expression;
-        errorListener = new ThrowingErrorHandler();
-    }
-
-    static ExpressionParser createParser(String expression, ANTLRErrorListener errorListener) {
+    static ParseTree createParserTree(String expression, ANTLRErrorListener errorListener) {
         CharStream cs = CharStreams.fromString(expression);
         ExpressionLexer lexer = new ExpressionLexer(cs);
         lexer.removeErrorListeners();
@@ -31,20 +25,19 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
         parser.removeErrorListeners();
         parser.addErrorListener(errorListener);
 
-        return parser;
+        return parser.expression();
     }
 
     public static void validate(String expression) {
         ThrowingErrorHandler errorListener = new ThrowingErrorHandler();
-        ExpressionParser parser = createParser(expression, errorListener);
-        parser.expression();
+        createParserTree(expression, errorListener);
     }
 
-    public boolean evaluate() {
-        ExpressionParser parser = createParser(expression, errorListener);
-        ParseTree parseTree = parser.expression();
-        Boolean visit = this.visit(parseTree);
-        return visit;
+    public static boolean evaluate(Map<String, String> facts, String expression) {
+        ThrowingErrorHandler errorListener = new ThrowingErrorHandler();
+        ParseTree parseTree = createParserTree(expression, errorListener);
+        ExprVisitor visitor = new ExprVisitor(facts);
+        return visitor.visit(parseTree);
     }
 
     private static class ThrowingErrorHandler implements ANTLRErrorListener {
@@ -73,92 +66,133 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
 
     // ExpressionBaseVisitor
 
-    @Override
-    public Boolean visitObject(ExpressionParser.ObjectContext ctx) {
-        if(ctx.expr() != null) {
-            System.out.println("VISIT ctx.expr()");
-            return visitExpr(ctx.expr());
+    static class ExprVisitor extends ExpressionBaseVisitor<Boolean> {
+        private Map<String, String> facts;
+
+        ExprVisitor(Map<String, String> facts) {
+            this.facts = facts;
         }
 
-        if(ctx.logical_operator() != null) {
-            System.out.println("VISIT ctx.logical_operator()");
-            ExpressionParser.Logical_operatorContext op = ctx.logical_operator();
-            ExpressionParser.ObjectContext left = ctx.object(0);
-            ExpressionParser.ObjectContext right = ctx.object(1);
+        @Override
+        public Boolean visitExpression(ExpressionParser.ExpressionContext ctx) {
+            if(ctx.object() != null) {
+                return visitObject(ctx.object());
+            }
+            return super.visitExpression(ctx);
+        }
 
-            if(op.AND() != null) {
-                return visitObject(left) && visitObject(right);
-            } else if (op.OR() != null) {
-
+        @Override
+        public Boolean visitObject(ExpressionParser.ObjectContext ctx) {
+            System.out.println("visitObject called");
+            if(ctx.expr() != null) {
+                return visitExpr(ctx.expr());
             }
 
-            return visitObject(left);
-        }
-        return super.visitObject(ctx);
-    }
+            if(ctx.logical_operator() != null) {
+                System.out.println("VISIT ctx.logical_operator()");
+                ExpressionParser.Logical_operatorContext op = ctx.logical_operator();
+                ExpressionParser.ObjectContext left = ctx.object(0);
+                ExpressionParser.ObjectContext right = ctx.object(1);
 
-    /**
-     * @param ctx Expr from left or right
-     * @return Return boolean if the comparison was successful
-     */
-    @Override
-    public Boolean visitExpr(ExpressionParser.ExprContext ctx) {
-        System.out.println("visitExpr");
-        System.out.println(ctx.toString());
-        String key = null;
-        String strValue = null;
-        Long longVal = null;
-        Double doubleVal = null;
-
-        ExpressionParser.ValueContext value = ctx.value();
-
-        // This is the factKey
-        if(ctx.key() != null) {
-            key = ctx.key().SIMPLETEXT().getSymbol().getText();
-        }
-
-        // Fact comparison value
-        if(value != null) {
-            if(value.STRING() != null) {
-                // This is String value
-                strValue = value.STRING().getSymbol().getText();
-            } else if(value.SIMPLETEXT() != null) {
-                strValue = value.SIMPLETEXT().getSymbol().getText();
-            } else if(value.numerical_value() != null) {
-                if(value.numerical_value().FLOAT() != null) {
-                    doubleVal = Double.valueOf(value.numerical_value().FLOAT().getSymbol().getText());
-                } else if(value.numerical_value().INTEGER() != null) {
-                    longVal = Long.valueOf(value.numerical_value().INTEGER().getSymbol().getText());
+                if(op.AND() != null) {
+                    return visitObject(left) && visitObject(right);
+                } else if (op.OR() != null) {
+                    return visitObject(left) || visitObject(right);
                 }
+
+                return false;
             }
+            return false;
         }
 
-        // Exact matches for Strings
-        if(ctx.boolean_operator() != null) {
-            final ExpressionParser.Boolean_operatorContext op = ctx.boolean_operator();
-            if(op.EQUAL() != null) {
-                System.out.println("Entering EQUAL comparison");
-            } else if(op.NOTEQUAL() != null) {
-                System.out.println("Entering NOTEQUAL comparison");
+        /**
+         * @param ctx Expr from left or right
+         * @return Return boolean if the comparison was successful
+         */
+        @Override
+        public Boolean visitExpr(ExpressionParser.ExprContext ctx) {
+            System.out.println("visitExpr called");
+            String key = null;
+            String strValue = null;
+            BigDecimal decimalValue = null;
+
+            ExpressionParser.ValueContext value = ctx.value();
+
+            // This is the factKey
+            if(ctx.key() != null) {
+                key = ctx.key().SIMPLETEXT().getSymbol().getText();
+            } else {
+                return false;
             }
-        }
 
-        // These need to be integers or doubles
-        if(ctx.compare_operator() != null) {
-            ExpressionParser.Compare_operatorContext op = ctx.compare_operator();
-            if(op.GT() != null) {
-
-            } else if(op.GTE() != null) {
-
-            } else if(op.LT() != null) {
-
-            } else if(op.LTE() != null) {
-
+            final String targetValueStr = facts.get(key);
+            if(targetValueStr == null) {
+                return false;
             }
+
+            BigDecimal targetValueDecimal = null;
+
+            // Fact comparison value
+            try {
+                if(value != null) {
+                    if(value.STRING() != null) {
+                        // This is String value
+                        strValue = value.STRING().getSymbol().getText();
+                        strValue = strValue.replaceAll("^(['\"])(.*)\\1$", "$2");
+                    } else if(value.SIMPLETEXT() != null) {
+                        strValue = value.SIMPLETEXT().getSymbol().getText();
+                        strValue = strValue.replaceAll("^(['\"])(.*)\\1$", "$2");
+                    } else if(value.numerical_value() != null) {
+                        if(value.numerical_value().FLOAT() != null) {
+                            decimalValue = new BigDecimal(Double.parseDouble(value.numerical_value().FLOAT().getSymbol().getText()));
+                        } else if(value.numerical_value().INTEGER() != null) {
+                            decimalValue = new BigDecimal(Long.parseLong(value.numerical_value().INTEGER().getSymbol().getText()));
+                        }
+                        targetValueDecimal = new BigDecimal(targetValueStr);
+                    }
+                } else {
+                    return false;
+                }
+            } catch(NumberFormatException e) {
+                return false;
+            }
+
+            // Equality checks
+            if(ctx.boolean_operator() != null) {
+                final ExpressionParser.Boolean_operatorContext op = ctx.boolean_operator();
+                boolean compareResult = false;
+                if(decimalValue != null) {
+                    compareResult = decimalValue.compareTo(targetValueDecimal) == 0;
+                } else if(strValue != null) {
+                    compareResult = targetValueStr.equals(strValue);
+                }
+
+                if(op.EQUAL() != null) {
+                    return compareResult;
+                } else if(op.NOTEQUAL() != null) {
+                    return !compareResult;
+                }
+
+                return false;
+            }
+
+            // These need to be integers or doubles
+            if(ctx.compare_operator() != null) {
+                ExpressionParser.Compare_operatorContext op = ctx.compare_operator();
+                if(op.GT() != null) {
+                    return decimalValue.compareTo(targetValueDecimal) > 0;
+                } else if(op.GTE() != null) {
+                    return decimalValue.compareTo(targetValueDecimal) >= 0;
+                } else if(op.LT() != null) {
+                    return decimalValue.compareTo(targetValueDecimal) < 0;
+                } else if(op.LTE() != null) {
+                    return decimalValue.compareTo(targetValueDecimal) <= 0;
+                }
+
+                return false;
+            }
+
+            return false;
         }
-
-        System.out.printf("key: %s ; value: %s\n", key, value);
-
-        return super.visitExpr(ctx);
     }
 }
