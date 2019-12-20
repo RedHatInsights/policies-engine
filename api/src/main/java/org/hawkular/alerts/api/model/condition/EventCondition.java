@@ -416,8 +416,6 @@ public class EventCondition extends Condition {
     public void validate() {
         if(this.expr != null && !expr.isEmpty()) {
             ExprParser.validate(this.expr);
-//            ExprParser parser = new ExprParser();
-//            parser.validate(this.expr);
         }
     }
 

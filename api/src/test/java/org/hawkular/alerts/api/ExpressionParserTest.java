@@ -13,8 +13,8 @@ import static org.junit.Assert.assertTrue;
 public class ExpressionParserTest {
 
     @Test
-    public void testParens2() {
-        String expr = "true AND (\"cores\" == 1  OR \"rhelversion\" > \"8\")";
+    public void testVerifyEventParsing() {
+        String expr = "(cores = 1  OR rhelversion > 8)";
 
         EventCondition cond = new EventCondition();
         cond.setExpr(expr);
