@@ -101,6 +101,10 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
 
                 return false;
             }
+
+            if(ctx.object() != null && ctx.object().size() == 1) {
+                return visitObject(ctx.object(0));
+            }
             return false;
         }
 
