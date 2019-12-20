@@ -47,13 +47,14 @@ array
   ;
 
 value
- : NUMBER
+ : numerical_value
  | SIMPLETEXT
  | STRING
  ;
 
 numerical_value
-  : NUMBER
+  : INTEGER
+  | FLOAT
   ;
 
 key
@@ -79,8 +80,8 @@ IN: I N;
 // Needs maybe INTEGER OR FLOAT? Use fragments?
 //NUMBER : [0-9.]+ ;
 
-NUMBER : DIGIT ('.' DIGIT)? ;
-DIGIT : [0-9]+ ;
+FLOAT : INTEGER '.' INTEGER ;
+INTEGER : [0-9]+ ;
 
 SIMPLETEXT  : [a-zA-Z_0-9.][\-a-zA-Z_0-9.]* ;
 STRING :  '\'' ( ESC | ~('\\'|'\'') )* '\''
@@ -122,4 +123,4 @@ fragment X: [xX];
 fragment Y: [yY];
 fragment Z: [zZ];
 
-fragment NEG_OP: '~';
+fragment NEG_OP: '!';

@@ -18,7 +18,7 @@ public class ExpressionParser extends Parser {
 		new PredictionContextCache();
 	public static final int
 		T__0=1, T__1=2, T__2=3, T__3=4, T__4=5, OR=6, AND=7, NOT=8, EQUAL=9, NOTEQUAL=10, 
-		GT=11, GTE=12, LT=13, LTE=14, IN=15, NUMBER=16, DIGIT=17, SIMPLETEXT=18, 
+		GT=11, GTE=12, LT=13, LTE=14, IN=15, FLOAT=16, INTEGER=17, SIMPLETEXT=18, 
 		STRING=19, WS=20;
 	public static final int
 		RULE_expression = 0, RULE_object = 1, RULE_expr = 2, RULE_logical_operator = 3, 
@@ -43,7 +43,7 @@ public class ExpressionParser extends Parser {
 	private static String[] makeSymbolicNames() {
 		return new String[] {
 			null, null, null, null, null, null, "OR", "AND", "NOT", "EQUAL", "NOTEQUAL", 
-			"GT", "GTE", "LT", "LTE", "IN", "NUMBER", "DIGIT", "SIMPLETEXT", "STRING", 
+			"GT", "GTE", "LT", "LTE", "IN", "FLOAT", "INTEGER", "SIMPLETEXT", "STRING", 
 			"WS"
 		};
 	}
@@ -666,7 +666,9 @@ public class ExpressionParser extends Parser {
 	}
 
 	public static class ValueContext extends ParserRuleContext {
-		public TerminalNode NUMBER() { return getToken(ExpressionParser.NUMBER, 0); }
+		public Numerical_valueContext numerical_value() {
+			return getRuleContext(Numerical_valueContext.class,0);
+		}
 		public TerminalNode SIMPLETEXT() { return getToken(ExpressionParser.SIMPLETEXT, 0); }
 		public TerminalNode STRING() { return getToken(ExpressionParser.STRING, 0); }
 		public ValueContext(ParserRuleContext parent, int invokingState) {
@@ -691,20 +693,34 @@ public class ExpressionParser extends Parser {
 	public final ValueContext value() throws RecognitionException {
 		ValueContext _localctx = new ValueContext(_ctx, getState());
 		enterRule(_localctx, 16, RULE_value);
-		int _la;
 		try {
-			enterOuterAlt(_localctx, 1);
-			{
-			setState(85);
-			_la = _input.LA(1);
-			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << NUMBER) | (1L << SIMPLETEXT) | (1L << STRING))) != 0)) ) {
-			_errHandler.recoverInline(this);
-			}
-			else {
-				if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
-				_errHandler.reportMatch(this);
-				consume();
-			}
+			setState(88);
+			_errHandler.sync(this);
+			switch (_input.LA(1)) {
+			case FLOAT:
+			case INTEGER:
+				enterOuterAlt(_localctx, 1);
+				{
+				setState(85);
+				numerical_value();
+				}
+				break;
+			case SIMPLETEXT:
+				enterOuterAlt(_localctx, 2);
+				{
+				setState(86);
+				match(SIMPLETEXT);
+				}
+				break;
+			case STRING:
+				enterOuterAlt(_localctx, 3);
+				{
+				setState(87);
+				match(STRING);
+				}
+				break;
+			default:
+				throw new NoViableAltException(this);
 			}
 		}
 		catch (RecognitionException re) {
@@ -719,7 +735,8 @@ public class ExpressionParser extends Parser {
 	}
 
 	public static class Numerical_valueContext extends ParserRuleContext {
-		public TerminalNode NUMBER() { return getToken(ExpressionParser.NUMBER, 0); }
+		public TerminalNode INTEGER() { return getToken(ExpressionParser.INTEGER, 0); }
+		public TerminalNode FLOAT() { return getToken(ExpressionParser.FLOAT, 0); }
 		public Numerical_valueContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -742,11 +759,20 @@ public class ExpressionParser extends Parser {
 	public final Numerical_valueContext numerical_value() throws RecognitionException {
 		Numerical_valueContext _localctx = new Numerical_valueContext(_ctx, getState());
 		enterRule(_localctx, 18, RULE_numerical_value);
+		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(87);
-			match(NUMBER);
+			setState(90);
+			_la = _input.LA(1);
+			if ( !(_la==FLOAT || _la==INTEGER) ) {
+			_errHandler.recoverInline(this);
+			}
+			else {
+				if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+				_errHandler.reportMatch(this);
+				consume();
+			}
 			}
 		}
 		catch (RecognitionException re) {
@@ -787,7 +813,7 @@ public class ExpressionParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(89);
+			setState(92);
 			match(SIMPLETEXT);
 			}
 		}
@@ -818,29 +844,30 @@ public class ExpressionParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\26^\4\2\t\2\4\3\t"+
+		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\26a\4\2\t\2\4\3\t"+
 		"\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13\t\13\4"+
 		"\f\t\f\3\2\3\2\3\2\3\3\3\3\3\3\3\3\3\3\3\3\5\3\"\n\3\3\3\3\3\3\3\3\3\7"+
 		"\3(\n\3\f\3\16\3+\13\3\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4"+
 		"\3\4\3\4\3\4\5\4<\n\4\3\5\3\5\3\6\3\6\3\7\3\7\3\b\3\b\3\b\5\bG\n\b\3\t"+
 		"\3\t\3\t\3\t\7\tM\n\t\f\t\16\tP\13\t\3\t\3\t\3\t\3\t\5\tV\n\t\3\n\3\n"+
-		"\3\13\3\13\3\f\3\f\3\f\2\3\4\r\2\4\6\b\n\f\16\20\22\24\26\2\6\3\2\b\t"+
-		"\3\2\13\f\3\2\r\20\4\2\22\22\24\25\2[\2\30\3\2\2\2\4!\3\2\2\2\6;\3\2\2"+
-		"\2\b=\3\2\2\2\n?\3\2\2\2\fA\3\2\2\2\16F\3\2\2\2\20U\3\2\2\2\22W\3\2\2"+
-		"\2\24Y\3\2\2\2\26[\3\2\2\2\30\31\5\4\3\2\31\32\7\2\2\3\32\3\3\2\2\2\33"+
-		"\34\b\3\1\2\34\"\5\6\4\2\35\36\7\3\2\2\36\37\5\4\3\2\37 \7\4\2\2 \"\3"+
-		"\2\2\2!\33\3\2\2\2!\35\3\2\2\2\")\3\2\2\2#$\f\3\2\2$%\5\b\5\2%&\5\4\3"+
-		"\4&(\3\2\2\2\'#\3\2\2\2(+\3\2\2\2)\'\3\2\2\2)*\3\2\2\2*\5\3\2\2\2+)\3"+
-		"\2\2\2,<\5\26\f\2-.\7\n\2\2.<\5\26\f\2/\60\5\26\f\2\60\61\5\n\6\2\61\62"+
-		"\5\22\n\2\62<\3\2\2\2\63\64\5\26\f\2\64\65\5\f\7\2\65\66\5\24\13\2\66"+
-		"<\3\2\2\2\678\5\26\f\289\5\16\b\29:\5\20\t\2:<\3\2\2\2;,\3\2\2\2;-\3\2"+
-		"\2\2;/\3\2\2\2;\63\3\2\2\2;\67\3\2\2\2<\7\3\2\2\2=>\t\2\2\2>\t\3\2\2\2"+
-		"?@\t\3\2\2@\13\3\2\2\2AB\t\4\2\2B\r\3\2\2\2CG\7\21\2\2DE\7\n\2\2EG\7\21"+
-		"\2\2FC\3\2\2\2FD\3\2\2\2G\17\3\2\2\2HI\7\5\2\2IN\5\22\n\2JK\7\6\2\2KM"+
-		"\5\22\n\2LJ\3\2\2\2MP\3\2\2\2NL\3\2\2\2NO\3\2\2\2OQ\3\2\2\2PN\3\2\2\2"+
-		"QR\7\7\2\2RV\3\2\2\2ST\7\5\2\2TV\7\7\2\2UH\3\2\2\2US\3\2\2\2V\21\3\2\2"+
-		"\2WX\t\5\2\2X\23\3\2\2\2YZ\7\22\2\2Z\25\3\2\2\2[\\\7\24\2\2\\\27\3\2\2"+
-		"\2\b!);FNU";
+		"\3\n\5\n[\n\n\3\13\3\13\3\f\3\f\3\f\2\3\4\r\2\4\6\b\n\f\16\20\22\24\26"+
+		"\2\6\3\2\b\t\3\2\13\f\3\2\r\20\3\2\22\23\2`\2\30\3\2\2\2\4!\3\2\2\2\6"+
+		";\3\2\2\2\b=\3\2\2\2\n?\3\2\2\2\fA\3\2\2\2\16F\3\2\2\2\20U\3\2\2\2\22"+
+		"Z\3\2\2\2\24\\\3\2\2\2\26^\3\2\2\2\30\31\5\4\3\2\31\32\7\2\2\3\32\3\3"+
+		"\2\2\2\33\34\b\3\1\2\34\"\5\6\4\2\35\36\7\3\2\2\36\37\5\4\3\2\37 \7\4"+
+		"\2\2 \"\3\2\2\2!\33\3\2\2\2!\35\3\2\2\2\")\3\2\2\2#$\f\3\2\2$%\5\b\5\2"+
+		"%&\5\4\3\4&(\3\2\2\2\'#\3\2\2\2(+\3\2\2\2)\'\3\2\2\2)*\3\2\2\2*\5\3\2"+
+		"\2\2+)\3\2\2\2,<\5\26\f\2-.\7\n\2\2.<\5\26\f\2/\60\5\26\f\2\60\61\5\n"+
+		"\6\2\61\62\5\22\n\2\62<\3\2\2\2\63\64\5\26\f\2\64\65\5\f\7\2\65\66\5\24"+
+		"\13\2\66<\3\2\2\2\678\5\26\f\289\5\16\b\29:\5\20\t\2:<\3\2\2\2;,\3\2\2"+
+		"\2;-\3\2\2\2;/\3\2\2\2;\63\3\2\2\2;\67\3\2\2\2<\7\3\2\2\2=>\t\2\2\2>\t"+
+		"\3\2\2\2?@\t\3\2\2@\13\3\2\2\2AB\t\4\2\2B\r\3\2\2\2CG\7\21\2\2DE\7\n\2"+
+		"\2EG\7\21\2\2FC\3\2\2\2FD\3\2\2\2G\17\3\2\2\2HI\7\5\2\2IN\5\22\n\2JK\7"+
+		"\6\2\2KM\5\22\n\2LJ\3\2\2\2MP\3\2\2\2NL\3\2\2\2NO\3\2\2\2OQ\3\2\2\2PN"+
+		"\3\2\2\2QR\7\7\2\2RV\3\2\2\2ST\7\5\2\2TV\7\7\2\2UH\3\2\2\2US\3\2\2\2V"+
+		"\21\3\2\2\2W[\5\24\13\2X[\7\24\2\2Y[\7\25\2\2ZW\3\2\2\2ZX\3\2\2\2ZY\3"+
+		"\2\2\2[\23\3\2\2\2\\]\t\5\2\2]\25\3\2\2\2^_\7\24\2\2_\27\3\2\2\2\t!);"+
+		"FNUZ";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {
