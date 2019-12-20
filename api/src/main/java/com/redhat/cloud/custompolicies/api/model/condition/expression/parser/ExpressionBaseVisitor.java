@@ -73,14 +73,14 @@ public class ExpressionBaseVisitor<T> extends AbstractParseTreeVisitor<T> implem
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitValue(ExpressionParser.ValueContext ctx) { return visitChildren(ctx); }
+	@Override public T visitNumerical_value(ExpressionParser.Numerical_valueContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitNumerical_value(ExpressionParser.Numerical_valueContext ctx) { return visitChildren(ctx); }
+	@Override public T visitValue(ExpressionParser.ValueContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *

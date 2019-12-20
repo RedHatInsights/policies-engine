@@ -7,6 +7,7 @@ import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.atn.ATNConfigSet;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.math.BigDecimal;
 import java.util.BitSet;
@@ -83,13 +84,11 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
 
         @Override
         public Boolean visitObject(ExpressionParser.ObjectContext ctx) {
-            System.out.println("visitObject called");
             if(ctx.expr() != null) {
                 return visitExpr(ctx.expr());
             }
 
             if(ctx.logical_operator() != null) {
-                System.out.println("VISIT ctx.logical_operator()");
                 ExpressionParser.Logical_operatorContext op = ctx.logical_operator();
                 ExpressionParser.ObjectContext left = ctx.object(0);
                 ExpressionParser.ObjectContext right = ctx.object(1);
@@ -111,7 +110,6 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
          */
         @Override
         public Boolean visitExpr(ExpressionParser.ExprContext ctx) {
-            System.out.println("visitExpr called");
             String key = null;
             String strValue = null;
             BigDecimal decimalValue = null;
@@ -125,50 +123,54 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
                 return false;
             }
 
-            if(!facts.containsKey(key)) {
+            final Object targetValue = facts.get(key);
+            if(targetValue == null) {
+                // Doesn't matter if the key exists or not - the value will not match
                 return false;
             }
-            final Object targetValue = facts.get(key);
-            String targetValueStr = null;
 
+            String targetValueStr = null;
             BigDecimal targetValueDecimal = null;
 
             // Fact comparison value
             try {
+                TerminalNode number = null;
                 if(value != null) {
-                    if(value.STRING() != null || value.SIMPLETEXT() != null) {
+                    if (value.STRING() != null || value.SIMPLETEXT() != null) {
                         // This is String value
-                        if(value.STRING() != null) {
+                        if (value.STRING() != null) {
                             strValue = value.STRING().getSymbol().getText();
-                        } else if(value.SIMPLETEXT() != null) {
+                        } else if (value.SIMPLETEXT() != null) {
                             strValue = value.SIMPLETEXT().getSymbol().getText();
                         }
                         strValue = strValue.replaceAll("^(['\"])(.*)\\1$", "$2");
                         targetValueStr = targetValue.toString();
-                    } else if(value.numerical_value() != null) {
-                        if(value.numerical_value().FLOAT() != null) {
-                            decimalValue = new BigDecimal(Double.parseDouble(value.numerical_value().FLOAT().getSymbol().getText()));
-                        } else if(value.numerical_value().INTEGER() != null) {
-                            decimalValue = new BigDecimal(Long.parseLong(value.numerical_value().INTEGER().getSymbol().getText()));
-                        }
-
-                        // Convert to BigDecimal supported types
-                        if(targetValue instanceof Long) {
-                            targetValueDecimal = new BigDecimal((Long) targetValue);
-                        } else if(targetValue instanceof Double) {
-                            targetValueDecimal = new BigDecimal((Double) targetValue);
-                        } else if(targetValue instanceof Float) {
-                            targetValueDecimal = new BigDecimal((Float) targetValue);
-                        } else if(targetValue instanceof Integer) {
-                            targetValueDecimal = new BigDecimal((Integer) targetValue);
-                        } else {
-                            return false;
-                        }
                     }
-                } else {
-                    return false;
+                    if(value.NUMBER() != null) {
+                        number = value.NUMBER();
+                    }
+                } else if(ctx.numerical_value() != null) {
+                    number = ctx.numerical_value().NUMBER();
+                }
+
+                if(number != null) {
+                    decimalValue = new BigDecimal(number.getSymbol().getText());
+
+                    // Convert to BigDecimal supported types
+                    if(targetValue instanceof Long) {
+                        targetValueDecimal = new BigDecimal((Long) targetValue);
+                    } else if(targetValue instanceof Double) {
+                        targetValueDecimal = BigDecimal.valueOf((Double) targetValue);
+                    } else if(targetValue instanceof Float) {
+                        targetValueDecimal = BigDecimal.valueOf((Float) targetValue);
+                    } else if(targetValue instanceof Integer) {
+                        targetValueDecimal = new BigDecimal((Integer) targetValue);
+                    } else {
+                        return false;
+                    }
                 }
             } catch(NumberFormatException e) {
+                e.printStackTrace();
                 return false;
             }
 
@@ -193,15 +195,18 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
 
             // These need to be integers or doubles
             if(ctx.compare_operator() != null) {
+                if(decimalValue == null) {
+                    return false;
+                }
                 ExpressionParser.Compare_operatorContext op = ctx.compare_operator();
                 if(op.GT() != null) {
-                    return decimalValue.compareTo(targetValueDecimal) > 0;
-                } else if(op.GTE() != null) {
-                    return decimalValue.compareTo(targetValueDecimal) >= 0;
-                } else if(op.LT() != null) {
                     return decimalValue.compareTo(targetValueDecimal) < 0;
-                } else if(op.LTE() != null) {
+                } else if(op.GTE() != null) {
                     return decimalValue.compareTo(targetValueDecimal) <= 0;
+                } else if(op.LT() != null) {
+                    return decimalValue.compareTo(targetValueDecimal) > 0;
+                } else if(op.LTE() != null) {
+                    return decimalValue.compareTo(targetValueDecimal) >= 0;
                 }
 
                 return false;

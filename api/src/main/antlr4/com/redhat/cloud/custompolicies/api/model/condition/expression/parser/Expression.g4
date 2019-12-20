@@ -46,16 +46,16 @@ array
   | '[' ']' // empty array
   ;
 
+numerical_value
+  : NUMBER
+  ;
+
 value
- : numerical_value
+ : NUMBER
  | SIMPLETEXT
  | STRING
  ;
 
-numerical_value
-  : INTEGER
-  | FLOAT
-  ;
 
 key
  : SIMPLETEXT
@@ -69,16 +69,18 @@ EQUAL: '=';
 NOTEQUAL: '!=';
 
 // Allow only for numbers
-GT : '>';
-GTE : '>=';
-LT : '<';
-LTE : '<=';
+GT: '>';
+GTE: '>=';
+LT: '<';
+LTE: '<=';
 
 // Allow only for array?
 IN: I N;
 
 // Needs maybe INTEGER OR FLOAT? Use fragments?
 //NUMBER : [0-9.]+ ;
+
+NUMBER : INTEGER ('.' INTEGER)? ;
 
 FLOAT : INTEGER '.' INTEGER ;
 INTEGER : [0-9]+ ;
