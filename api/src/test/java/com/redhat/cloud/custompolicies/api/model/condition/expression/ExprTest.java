@@ -2,78 +2,79 @@ package com.redhat.cloud.custompolicies.api.model.condition.expression;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 
 public class ExprTest {
 
     @Test
     public void testSimple() {
-        ExprParser exprParser = new ExprParser();
         // Extra whitespace is intentional
         String expr = "(cores = 1  OR rhelversion > 8)";
-        exprParser.parse(expr);
+        ExprParser.validate(expr);
 
-        exprParser = new ExprParser();
         expr = "cores = 1 OR rhelversion > 8";
-        exprParser.parse(expr);
+        ExprParser.validate(expr);
 
         try {
-            exprParser = new ExprParser();
             expr = "(cores = 1  OR rhelversion > 8";
-            exprParser.parse(expr);
+            ExprParser.validate(expr);
             fail();
         } catch(IllegalArgumentException e) { }
     }
 
     @Test
     public void testEquals() {
-        ExprParser exprParser = new ExprParser();
         String expr = "(cores = 1 OR rhelversion = \"auto\")";
-        exprParser.parse(expr);
+        ExprParser.validate(expr);
 
-        exprParser = new ExprParser();
         expr = "cores = 1 AND rhelversion = 'auto'";
-        exprParser.parse(expr);
+        ExprParser.validate(expr);
     }
 
     @Test
     public void testOnlyNumbersForCompares() {
-        ExprParser exprParser = new ExprParser();
         String expr = "(process_time > 8 AND machines <= 7) OR (cores >= 2 OR day > 1)";
-        exprParser.parse(expr);
+        ExprParser.validate(expr);
 
         try {
-            exprParser = new ExprParser();
             expr = "cores >= 'home'";
-            exprParser.parse(expr);
+            ExprParser.validate(expr);
             fail();
         } catch(IllegalArgumentException e) { }
 
-        exprParser = new ExprParser();
         expr = "reserved_cores >= 1.7";
-        exprParser.parse(expr);
+        ExprParser.validate(expr);
     }
 
     @Test
     public void testCaseInsensitivityOperators() {
-        ExprParser exprParser = new ExprParser();
         String expr = "(process_time > 8 and machines <= 7) or (cores >= 2 or day > 1)";
-        exprParser.parse(expr);
+        ExprParser.validate(expr);
     }
 
     @Test
     public void testQuotes() {
-        ExprParser exprParser = new ExprParser();
         String expr = "machine_name = 'localhost' AND brand = \"RedHat\"";
-        exprParser.parse(expr);
+        ExprParser.validate(expr);
 
         try {
-            exprParser = new ExprParser();
             expr = "machine_name = 'home";
-            exprParser.parse(expr);
+            ExprParser.validate(expr);
             fail();
         } catch(IllegalArgumentException e) { }
+    }
 
+    @Test
+    public void testParsingHelper() {
+        String expr = "machine_name = 'localhost' AND brand = \"RedHat\"";
+//                " AND a = 1";
+        ExprParser.validate(expr);
+    }
+
+    @Test
+    public void theSimplestCase() {
+        String expr = "a = 1.4";
+        ExprParser.validate(expr);
     }
 
 //    @Test
@@ -81,6 +82,6 @@ public class ExprTest {
 //        // Not supported yet
 //        ExprParser exprParser = new ExprParser();
 //        String expr = "not (machine_name = 'localhost' OR cores > 9)";
-//        assertTrue(exprParser.parse(expr));
+//        assertTrue(exprParser.evaluate(expr));
 //    }
 }

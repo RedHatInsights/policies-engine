@@ -415,8 +415,9 @@ public class EventCondition extends Condition {
     @Override
     public void validate() {
         if(this.expr != null && !expr.isEmpty()) {
-            ExprParser parser = new ExprParser();
-            parser.validate(this.expr);
+            ExprParser.validate(this.expr);
+//            ExprParser parser = new ExprParser();
+//            parser.validate(this.expr);
         }
     }
 
