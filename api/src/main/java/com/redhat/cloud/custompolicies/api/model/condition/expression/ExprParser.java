@@ -33,7 +33,7 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
         createParserTree(expression, errorListener);
     }
 
-    public static boolean evaluate(Map<String, String> facts, String expression) {
+    public static boolean evaluate(Map<String, Object> facts, String expression) {
         ThrowingErrorHandler errorListener = new ThrowingErrorHandler();
         ParseTree parseTree = createParserTree(expression, errorListener);
         ExprVisitor visitor = new ExprVisitor(facts);
@@ -67,9 +67,9 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
     // ExpressionBaseVisitor
 
     static class ExprVisitor extends ExpressionBaseVisitor<Boolean> {
-        private Map<String, String> facts;
+        private Map<String, Object> facts;
 
-        ExprVisitor(Map<String, String> facts) {
+        ExprVisitor(Map<String, Object> facts) {
             this.facts = facts;
         }
 
@@ -125,30 +125,45 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
                 return false;
             }
 
-            final String targetValueStr = facts.get(key);
-            if(targetValueStr == null) {
+            if(!facts.containsKey(key)) {
                 return false;
             }
+            final Object targetValue = facts.get(key);
+            String targetValueStr = null;
 
             BigDecimal targetValueDecimal = null;
 
             // Fact comparison value
             try {
                 if(value != null) {
-                    if(value.STRING() != null) {
+                    if(value.STRING() != null || value.SIMPLETEXT() != null) {
                         // This is String value
-                        strValue = value.STRING().getSymbol().getText();
+                        if(value.STRING() != null) {
+                            strValue = value.STRING().getSymbol().getText();
+                        } else if(value.SIMPLETEXT() != null) {
+                            strValue = value.SIMPLETEXT().getSymbol().getText();
+                        }
                         strValue = strValue.replaceAll("^(['\"])(.*)\\1$", "$2");
-                    } else if(value.SIMPLETEXT() != null) {
-                        strValue = value.SIMPLETEXT().getSymbol().getText();
-                        strValue = strValue.replaceAll("^(['\"])(.*)\\1$", "$2");
+                        targetValueStr = targetValue.toString();
                     } else if(value.numerical_value() != null) {
                         if(value.numerical_value().FLOAT() != null) {
                             decimalValue = new BigDecimal(Double.parseDouble(value.numerical_value().FLOAT().getSymbol().getText()));
                         } else if(value.numerical_value().INTEGER() != null) {
                             decimalValue = new BigDecimal(Long.parseLong(value.numerical_value().INTEGER().getSymbol().getText()));
                         }
-                        targetValueDecimal = new BigDecimal(targetValueStr);
+
+                        // Convert to BigDecimal supported types
+                        if(targetValue instanceof Long) {
+                            targetValueDecimal = new BigDecimal((Long) targetValue);
+                        } else if(targetValue instanceof Double) {
+                            targetValueDecimal = new BigDecimal((Double) targetValue);
+                        } else if(targetValue instanceof Float) {
+                            targetValueDecimal = new BigDecimal((Float) targetValue);
+                        } else if(targetValue instanceof Integer) {
+                            targetValueDecimal = new BigDecimal((Integer) targetValue);
+                        } else {
+                            return false;
+                        }
                     }
                 } else {
                     return false;

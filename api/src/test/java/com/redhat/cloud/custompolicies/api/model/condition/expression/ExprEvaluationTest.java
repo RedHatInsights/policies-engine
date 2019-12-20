@@ -12,9 +12,9 @@ public class ExprEvaluationTest {
 
     @Test
     public void testStrComparisons() {
-        Map<String, String> factMap = new HashMap<>();
+        Map<String, Object> factMap = new HashMap<>();
         factMap.put("a", "b");
-        factMap.put("b", "3");
+        factMap.put("b", 3);
 
         String expr = "a = b";
         assertTrue(ExprParser.evaluate(factMap, expr));
@@ -36,9 +36,9 @@ public class ExprEvaluationTest {
 
     @Test
     public void testImpossibleStrComparisons() {
-        Map<String, String> factMap = new HashMap<>();
+        Map<String, Object> factMap = new HashMap<>();
         factMap.put("a", "b");
-        factMap.put("b", "4");
+        factMap.put("b", 4);
 
         String expr = "a > 3";
         assertFalse(ExprParser.evaluate(factMap, expr));
@@ -51,5 +51,12 @@ public class ExprEvaluationTest {
 
         expr = "a >= 3";
         assertFalse(ExprParser.evaluate(factMap, expr));
+    }
+
+    @Test
+    public void testIntegerComparisons() {
+        Map<String, Object> factMap = new HashMap<>();
+        factMap.put("a", 4);
+        factMap.put("b", 4);
     }
 }
