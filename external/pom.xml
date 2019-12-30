@@ -131,6 +131,7 @@
       <id>docgen</id>
       <properties>
         <restDocDirectory>${project.basedir}/src/main/rest-doc</restDocDirectory>
+        <targetOpenAPIDirectory>${project.basedir}/src/main/resources/META-INF/resources/api/custom-policies/v1.0</targetOpenAPIDirectory>
         <generatedDocDirectory>${project.build.directory}/generated</generatedDocDirectory>
         <classesDirectory>${project.build.directory}/classes</classesDirectory>
       </properties>
@@ -153,7 +154,7 @@
               <properties>
                 <alertingVersion>${project.version}</alertingVersion>
                 <classesDir>${classesDirectory}</classesDir>
-                <generatedFile>${generatedDocDirectory}/generated-doc.json</generatedFile>
+                <generatedFile>${targetOpenAPIDirectory}/openapi.json</generatedFile>
               </properties>
               <scripts>
                 <script>file:///${restDocDirectory}/generate-openapi.groovy</script>
