@@ -3,6 +3,7 @@ package com.redhat.cloud.custompolicies.engine.process;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.hawkular.alerts.api.model.event.Event;
 import org.hawkular.alerts.api.services.AlertsService;
@@ -21,12 +22,17 @@ public class Receiver {
     private static String INSIGHT_ID_FIELD = "insight_id";
     private static String EVENT_TYPE = "type";
 
+    @ConfigProperty(name = "engine.receiver.store-events")
+    boolean storeEvents;
+
     @Inject
     AlertsService alertsService;
 
     @Incoming("kafka-hosts")
     public void process(JsonObject json) {
         // This process should potentially be in external system
+
+        // TODO Remember to correctly map data_id, otherwise duplication removal will filter most of the data.
 
         String tenantId = json.getString(TENANT_ID);
         String insightsId = json.getString(INSIGHT_ID_FIELD);
@@ -52,13 +58,13 @@ public class Receiver {
         event.setContext(contextMap);
 
         try {
-            System.out.println("Event: "+ event.toString());
-
-            LOGGER.info("Received event from Kafka queue");
-            // TODO Use sendEvents if we don't want to store them
             List<Event> eventList = new ArrayList<>(1);
             eventList.add(event);
-            alertsService.addEvents(eventList);
+            if(storeEvents) {
+                alertsService.addEvents(eventList);
+            } else {
+                alertsService.sendEvents(eventList);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }

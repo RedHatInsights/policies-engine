@@ -54,7 +54,6 @@ import org.hawkular.alerts.api.services.DefinitionsEvent.Type;
 import org.hawkular.alerts.api.services.DefinitionsListener;
 import org.hawkular.alerts.api.services.DefinitionsService;
 import org.hawkular.alerts.api.services.DistributedListener;
-import org.hawkular.alerts.api.services.PropertiesService;
 import org.hawkular.alerts.api.services.TriggersCriteria;
 import org.hawkular.alerts.cache.IspnCacheManager;
 import org.hawkular.alerts.engine.impl.AlertsContext;
@@ -84,8 +83,6 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
 
     AlertsContext alertsContext;
 
-    PropertiesService properties;
-
     Cache<String, Object> backend;
 
     QueryFactory queryFactory;
@@ -108,10 +105,6 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
 
     public void setAlertsContext(AlertsContext alertsContext) {
         this.alertsContext = alertsContext;
-    }
-
-    public void setProperties(PropertiesService properties) {
-        this.properties = properties;
     }
 
     @Override

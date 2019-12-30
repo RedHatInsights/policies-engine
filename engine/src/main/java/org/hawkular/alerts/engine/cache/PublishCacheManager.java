@@ -1,23 +1,23 @@
 package org.hawkular.alerts.engine.cache;
 
-import static org.hawkular.alerts.api.services.DefinitionsEvent.Type.TRIGGER_CONDITION_CHANGE;
-import static org.hawkular.alerts.api.services.DefinitionsEvent.Type.TRIGGER_REMOVE;
-import static org.hawkular.alerts.api.util.Util.isEmpty;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.hawkular.alerts.api.model.condition.CompareCondition;
+import org.hawkular.alerts.api.model.condition.Condition;
+import org.hawkular.alerts.api.model.trigger.TriggerKey;
+import org.hawkular.alerts.api.services.DefinitionsService;
+import org.hawkular.alerts.filter.CacheKey;
+import org.hawkular.alerts.log.AlertingLogger;
+import org.hawkular.commons.log.MsgLogging;
+import org.infinispan.Cache;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.hawkular.alerts.api.model.condition.CompareCondition;
-import org.hawkular.alerts.api.model.condition.Condition;
-import org.hawkular.alerts.api.model.trigger.TriggerKey;
-import org.hawkular.alerts.api.services.DefinitionsService;
-import org.hawkular.alerts.api.services.PropertiesService;
-import org.hawkular.alerts.filter.CacheKey;
-import org.hawkular.alerts.log.AlertingLogger;
-import org.hawkular.commons.log.MsgLogging;
-import org.infinispan.Cache;
+import static org.hawkular.alerts.api.services.DefinitionsEvent.Type.TRIGGER_CONDITION_CHANGE;
+import static org.hawkular.alerts.api.services.DefinitionsEvent.Type.TRIGGER_REMOVE;
+import static org.hawkular.alerts.api.util.Util.isEmpty;
 
 /**
  * Manages the cache of globally active dataIds. Incoming Data and Events with Ids not in the cache will be filtered
@@ -35,14 +35,13 @@ import org.infinispan.Cache;
 public class PublishCacheManager {
     private final AlertingLogger log = MsgLogging.getMsgLogger(AlertingLogger.class, PublishCacheManager.class);
 
-    private static final String DISABLE_PUBLISH_FILTERING_PROP = "hawkular-alerts.disable-publish-filtering";
-    private static final String DISABLE_PUBLISH_FILTERING_ENV = "DISABLE_PUBLISH_FILTERING";
-    private static final String RESET_PUBLISH_CACHE_PROP = "hawkular-alerts.reset-publish-cache";
-    private static final String RESET_PUBLISH_CACHE_ENV = "RESET_PUBLISH_CACHE";
-
-    PropertiesService properties;
-
     DefinitionsService definitions;
+
+    @ConfigProperty(name = "engine.cache.disable-publish-filtering", defaultValue = "false")
+    boolean disablePublish;
+
+    @ConfigProperty(name = "engine.cache.reset-publish-cache", defaultValue = "true")
+    boolean resetCache;
 
     // It stores a list of dataIds used per key (tenantId, triggerId).
     private Cache<TriggerKey, Set<String>> publishDataIdsCache;
@@ -50,10 +49,6 @@ public class PublishCacheManager {
     // It stores a list of triggerIds used per key (tenantId, dataId).
     // This cache is used by CacheClient to check which dataIds are published and forwarded from metrics.
     private Cache<CacheKey, Set<String>> publishCache;
-
-    public void setProperties(PropertiesService properties) {
-        this.properties = properties;
-    }
 
     public void setDefinitions(DefinitionsService definitions) {
         this.definitions = definitions;
@@ -68,10 +63,6 @@ public class PublishCacheManager {
     }
 
     public void init() {
-        boolean disablePublish = Boolean.parseBoolean(properties.getProperty(DISABLE_PUBLISH_FILTERING_PROP,
-                DISABLE_PUBLISH_FILTERING_ENV, "false"));
-        boolean resetCache = Boolean.parseBoolean(properties.getProperty(RESET_PUBLISH_CACHE_PROP,
-                RESET_PUBLISH_CACHE_ENV, "true"));
         if (!disablePublish) {
             if (resetCache) {
                 log.warnClearPublishCache();

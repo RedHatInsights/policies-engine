@@ -1,5 +1,6 @@
 package org.hawkular.alerts;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.hawkular.alerts.api.services.ActionsService;
 import org.hawkular.alerts.api.services.AlertsService;
 import org.hawkular.alerts.api.services.DefinitionsService;
@@ -14,7 +15,6 @@ import org.hawkular.alerts.engine.impl.ispn.IspnDefinitionsServiceImpl;
 import org.hawkular.alerts.filter.CacheClient;
 import org.hawkular.commons.log.MsgLogger;
 import org.hawkular.commons.log.MsgLogging;
-import org.hawkular.commons.properties.HawkularProperties;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.query.Search;
 import org.infinispan.query.SearchManager;
@@ -29,14 +29,10 @@ import java.util.concurrent.Executors;
  */
 public class AlertsStandalone {
     private static final MsgLogger log = MsgLogging.getMsgLogger(AlertsStandalone.class);
-    private static final String ISPN_BACKEND_REINDEX = "hawkular-alerts.backend-reindex";
-    private static final String ISPN_BACKEND_REINDEX_DEFAULT = "false";
     private static ExecutorService executor;
-    private static boolean ispnReindex;
 
-    private boolean distributed;
-
-//    private AlertsThreadFactory threadFactory;
+    @ConfigProperty(name = "engine.backend.ispn.reindex", defaultValue = "false")
+    private boolean ispnReindex;
 
     private ActionsCacheManager actionsCacheManager;
     private AlertsContext alertsContext;
@@ -52,14 +48,11 @@ public class AlertsStandalone {
     private IspnDefinitionsServiceImpl ispnDefinitions;
     private StatusServiceImpl status;
     private PartitionManagerImpl partitionManager;
-    private PropertiesServiceImpl properties;
     private PublishCacheManager publishCacheManager;
 
     public AlertsStandalone() {
-        distributed = IspnCacheManager.isDistributed();
         cacheManager = IspnCacheManager.getCacheManager();
 
-//        threadFactory = new AlertsThreadFactory();
         if (executor == null) {
             executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         }
@@ -67,7 +60,6 @@ public class AlertsStandalone {
         dataIdCache = new CacheClient();
         rules = new DroolsRulesEngineImpl();
         engine = new AlertsEngineImpl();
-        properties = new PropertiesServiceImpl();
         alertsContext = new AlertsContext();
         partitionManager = new PartitionManagerImpl();
         status = new StatusServiceImpl();
@@ -78,9 +70,8 @@ public class AlertsStandalone {
         publishCacheManager = new PublishCacheManager();
 
         log.info("Hawkular Alerting uses Infinispan backend");
-        ispnReindex = HawkularProperties.getProperty(ISPN_BACKEND_REINDEX, ISPN_BACKEND_REINDEX_DEFAULT).equals("true");
 
-        if (ispnReindex) {
+        if (this.ispnReindex) {
             log.info("Hawkular Alerting started with hawkular-alerts.backend-reindex=true");
             log.info("Reindexing Ispn [backend] started.");
             long startReindex = System.currentTimeMillis();
@@ -103,11 +94,9 @@ public class AlertsStandalone {
         ispnAlerts.setAlertsEngine(engine);
         ispnAlerts.setDefinitionsService(ispnDefinitions);
         ispnAlerts.setIncomingDataManager(incoming);
-        ispnAlerts.setProperties(properties);
 
         ispnDefinitions.setAlertsEngine(engine);
         ispnDefinitions.setAlertsContext(alertsContext);
-        ispnDefinitions.setProperties(properties);
 
 
         actionsCacheManager.setDefinitions(ispnDefinitions);
@@ -140,7 +129,6 @@ public class AlertsStandalone {
         actionsCacheManager.setGlobalActionsCache(cacheManager.getCache("globalActions"));
 
         publishCacheManager.setDefinitions(ispnDefinitions);
-        publishCacheManager.setProperties(properties);
         publishCacheManager.setPublishCache(cacheManager.getCache("publish"));
         publishCacheManager.setPublishDataIdsCache(cacheManager.getCache("dataIds"));
 

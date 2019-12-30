@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.hawkular.alerts.api.model.condition.CompareCondition;
 import org.hawkular.alerts.api.model.condition.Condition;
 import org.hawkular.alerts.api.model.data.Data;
@@ -18,7 +19,6 @@ import org.hawkular.alerts.api.services.DefinitionsEvent;
 import org.hawkular.alerts.api.services.DefinitionsService;
 import org.hawkular.commons.log.MsgLogger;
 import org.hawkular.commons.log.MsgLogging;
-import org.hawkular.commons.properties.HawkularProperties;
 
 /**
  * A helper class to keep track of DataDrivenGroup
@@ -32,7 +32,8 @@ public class DataDrivenGroupCacheManager {
     private static final String DATA_DRIVEN_TRIGGERS_ENABLED = "hawkular-alerts.data-driven-triggers-enabled";
     private static final String DATA_DRIVEN_TRIGGERS_ENABLED_DEFAULT = "true";
 
-    private boolean dataDrivenTriggersEnabled;
+    @ConfigProperty(name = "engine.data-driven-triggers-enabled")
+    boolean dataDrivenTriggersEnabled;
 
     // The sources with member triggers for the dataId.
     // - null if dataId is not used in a group trigger condition
@@ -51,10 +52,7 @@ public class DataDrivenGroupCacheManager {
     }
 
     public void init() {
-        dataDrivenTriggersEnabled = new Boolean(HawkularProperties.getProperty(DATA_DRIVEN_TRIGGERS_ENABLED,
-                DATA_DRIVEN_TRIGGERS_ENABLED_DEFAULT));
-
-        log.infof("Data-driven Group Triggers enabled: %s", dataDrivenTriggersEnabled);
+        log.debugf("Data-driven Group Triggers enabled: %s", dataDrivenTriggersEnabled);
 
         if (dataDrivenTriggersEnabled) {
 
