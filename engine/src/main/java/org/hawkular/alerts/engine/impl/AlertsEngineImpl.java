@@ -16,6 +16,7 @@ import java.util.TimerTask;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.hawkular.alerts.api.model.condition.CompareCondition;
 import org.hawkular.alerts.api.model.condition.Condition;
 import org.hawkular.alerts.api.model.condition.ConditionEval;
@@ -42,7 +43,6 @@ import org.hawkular.alerts.engine.service.RulesEngine;
 import org.hawkular.alerts.engine.util.MissingState;
 import org.hawkular.alerts.log.AlertingLogger;
 import org.hawkular.commons.log.MsgLogging;
-import org.hawkular.commons.properties.HawkularProperties;
 
 /**
  * Implementation for {@link org.hawkular.alerts.api.services.AlertsService}.
@@ -58,18 +58,11 @@ import org.hawkular.commons.properties.HawkularProperties;
 public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener, PartitionDataListener {
     private final AlertingLogger log = MsgLogging.getMsgLogger(AlertingLogger.class, AlertsEngineImpl.class);
 
-    /*
-        ENGINE_DELAY defined in milliseconds
-     */
-    private static final String ENGINE_DELAY = "hawkular-alerts.engine-delay";
+    @ConfigProperty(name = "engine.alerts.engine-delay")
+    int delay;
 
-    /*
-        ENGINE_PERIOD defined in milliseconds
-     */
-    private static final String ENGINE_PERIOD = "hawkular-alerts.engine-period";
-
-    private int delay;
-    private int period;
+    @ConfigProperty(name = "engine.alerts.engine-period")
+    int period;
 
     private TreeSet<Data> pendingData;
     private TreeSet<Event> pendingEvents;
@@ -92,10 +85,8 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
     private AlertsEngineCache alertsEngineCache = null;
     boolean distributed = false;
 
-    private static final String ENGINE_EXTENSIONS = "hawkular-alerts.engine-extensions";
-    private static final String ENGINE_EXTENSIONS_ENV = "ENGINE_EXTENSIONS";
-    private static final String ENGINE_EXTENSIONS_DEFAULT = "true";
-    private boolean engineExtensions;
+    @ConfigProperty(name = "engine.alerts.engine-extensions")
+    boolean engineExtensions;
 
     RulesEngine rules;
 
@@ -122,11 +113,6 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
         missingStates = new HashSet<>();
 
         wakeUpTimer = new Timer("AlertsEngineImpl-Timer");
-
-        delay = new Integer(HawkularProperties.getProperty(ENGINE_DELAY, "1000"));
-        period = new Integer(HawkularProperties.getProperty(ENGINE_PERIOD, "2000"));
-        engineExtensions = Boolean.parseBoolean(HawkularProperties.getProperty(ENGINE_EXTENSIONS, ENGINE_EXTENSIONS_ENV,
-                ENGINE_EXTENSIONS_DEFAULT));
     }
 
     public RulesEngine getRules() {
@@ -498,12 +484,7 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
 
     private TreeSet<Data> filterIncomingDataForNode(TreeSet<Data> data) {
         TreeSet<Data> filteredData = new TreeSet<>(data);
-        for (Iterator<Data> i = filteredData.iterator(); i.hasNext();) {
-            Data d = i.next();
-            if (!alertsEngineCache.isDataIdActive(d.getTenantId(), d.getId())) {
-                i.remove();
-            }
-        }
+        filteredData.removeIf(d -> !alertsEngineCache.isDataIdActive(d.getTenantId(), d.getId()));
         return filteredData;
     }
 
@@ -552,12 +533,7 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
 
     private TreeSet<Event> filterIncomingEventsForNode(TreeSet<Event> events) {
         TreeSet<Event> filteredEvents = new TreeSet<>(events);
-        for (Iterator<Event> i = filteredEvents.iterator(); i.hasNext();) {
-            Event e = i.next();
-            if (!alertsEngineCache.isDataIdActive(e.getTenantId(), e.getDataId())) {
-                i.remove();
-            }
-        }
+        filteredEvents.removeIf(e -> !alertsEngineCache.isDataIdActive(e.getTenantId(), e.getDataId()));
         return filteredEvents;
     }
 

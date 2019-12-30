@@ -40,7 +40,6 @@ import org.hawkular.alerts.api.services.AlertsCriteria;
 import org.hawkular.alerts.api.services.AlertsService;
 import org.hawkular.alerts.api.services.DefinitionsService;
 import org.hawkular.alerts.api.services.EventsCriteria;
-import org.hawkular.alerts.api.services.PropertiesService;
 import org.hawkular.alerts.cache.IspnCacheManager;
 import org.hawkular.alerts.engine.impl.IncomingDataManagerImpl;
 import org.hawkular.alerts.engine.impl.ispn.model.IspnEvent;
@@ -67,8 +66,6 @@ public class IspnAlertsServiceImpl implements AlertsService {
     ActionsService actionsService;
 
     IncomingDataManager incomingDataManager;
-
-    PropertiesService properties;
 
     Cache<String, Object> backend;
 
@@ -182,10 +179,6 @@ public class IspnAlertsServiceImpl implements AlertsService {
 
     public void setIncomingDataManager(IncomingDataManager incomingDataManager) {
         this.incomingDataManager = incomingDataManager;
-    }
-
-    public void setProperties(PropertiesService properties) {
-        this.properties = properties;
     }
 
     @Override

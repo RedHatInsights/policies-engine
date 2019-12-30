@@ -2,12 +2,12 @@ package org.hawkular.alerts.engine.impl;
 
 import org.drools.core.event.DebugAgendaEventListener;
 import org.drools.core.event.DebugRuleRuntimeEventListener;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.hawkular.alerts.api.model.data.Data;
 import org.hawkular.alerts.api.model.event.Event;
 import org.hawkular.alerts.engine.service.RulesEngine;
 import org.hawkular.commons.log.MsgLogger;
 import org.hawkular.commons.log.MsgLogging;
-import org.hawkular.commons.properties.HawkularProperties;
 import org.kie.api.KieServices;
 import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieSession;
@@ -37,8 +37,11 @@ public class DroolsRulesEngineImpl implements RulesEngine {
     private static final long PERF_BATCHING_THRESHOLD = 3000L; // 3 seconds
     private static final long PERF_FIRING_THRESHOLD = 5000L; // 5 seconds
 
-    private int minReportingIntervalData;
-    private int minReportingIntervalEvents;
+    @ConfigProperty(name = "engine.rules.events.duplicate-filter-time")
+    int minReportingIntervalEvents;
+
+    @ConfigProperty(name = "engine.rules.data.duplicate-filter-time")
+    int minReportingIntervalData;
 
     private KieServices ks;
     private KieContainer kc;
@@ -57,16 +60,6 @@ public class DroolsRulesEngineImpl implements RulesEngine {
             kSession.addEventListener(new DebugAgendaEventListener());
             kSession.addEventListener(new DebugRuleRuntimeEventListener());
         }
-
-        minReportingIntervalData = new Integer(
-                HawkularProperties.getProperty(MIN_REPORTING_INTERVAL_DATA,
-                        MIN_REPORTING_INTERVAL_DATA_ENV,
-                        MIN_REPORTING_INTERVAL_DATA_DEFAULT));
-
-        minReportingIntervalEvents = new Integer(
-                HawkularProperties.getProperty(MIN_REPORTING_INTERVAL_EVENTS,
-                        MIN_REPORTING_INTERVAL_EVENTS_ENV,
-                        MIN_REPORTING_INTERVAL_EVENTS_DEFAULT));
     }
 
     @Override

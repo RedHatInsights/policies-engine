@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.hawkular.alerts.api.model.data.Data;
 import org.hawkular.alerts.api.model.event.Event;
 import org.hawkular.alerts.api.model.trigger.Trigger;
@@ -25,7 +26,6 @@ import org.hawkular.alerts.engine.service.PartitionManager;
 import org.hawkular.alerts.engine.service.PartitionTriggerListener;
 import org.hawkular.alerts.log.AlertingLogger;
 import org.hawkular.commons.log.MsgLogging;
-import org.hawkular.commons.properties.HawkularProperties;
 import org.infinispan.Cache;
 import org.infinispan.context.Flag;
 import org.infinispan.manager.EmbeddedCacheManager;
@@ -78,16 +78,8 @@ import com.google.common.hash.Hashing;
  * @author Lucas Ponce
  */
 public class PartitionManagerImpl implements PartitionManager {
-
-    /**
-     * Used to clean triggers and data cache
-     */
-    private static final String LIFESPAN_PROPERTY = "hawkular-alerts.partition-lifespan";
-    private static final int LIFESPAN = Integer.parseInt(HawkularProperties.getProperty(LIFESPAN_PROPERTY, "100"));
-
-    private static final String ALERTS_DISTRIBUTED = "hawkular-alerts.distributed";
-    private static final String ALERTS_DISTRIBUTED_ENV = "HAWKULAR_ALERTS_DISTRIBUTED";
-    private static final String ALERTS_DISTRIBUTED_DEFAULT = "false";
+    @ConfigProperty(name = "engine.backend.ispn.partition-lifespan")
+    int LIFESPAN;
 
     public static final String BUCKETS = "buckets";
     public static final String PREVIOUS = "previousPartition";

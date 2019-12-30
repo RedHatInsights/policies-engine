@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.hawkular.alerts.api.model.data.Data;
 import org.hawkular.alerts.api.model.event.Event;
 import org.hawkular.alerts.api.services.DefinitionsService;
@@ -18,7 +19,6 @@ import org.hawkular.alerts.engine.service.RulesEngine;
 import org.hawkular.alerts.filter.CacheClient;
 import org.hawkular.commons.log.MsgLogger;
 import org.hawkular.commons.log.MsgLogging;
-import org.hawkular.commons.properties.HawkularProperties;
 
 /**
  * @author Jay Shaughnessy
@@ -27,8 +27,11 @@ import org.hawkular.commons.properties.HawkularProperties;
 public class IncomingDataManagerImpl implements IncomingDataManager {
     private final MsgLogger log = MsgLogging.getMsgLogger(IncomingDataManagerImpl.class);
 
-    private int minReportingIntervalData;
+    @ConfigProperty(name = "engine.rules.events.duplicate-filter-time")
     private int minReportingIntervalEvents;
+
+    @ConfigProperty(name = "engine.rules.data.duplicate-filter-time")
+    private int minReportingIntervalData;
 
     private ExecutorService executor;
 
@@ -66,24 +69,7 @@ public class IncomingDataManagerImpl implements IncomingDataManager {
         this.dataIdCache = dataIdCache;
     }
 
-    public void init() {
-        try {
-            minReportingIntervalData = new Integer(
-                    HawkularProperties.getProperty(RulesEngine.MIN_REPORTING_INTERVAL_DATA,
-                            RulesEngine.MIN_REPORTING_INTERVAL_DATA_ENV,
-                            RulesEngine.MIN_REPORTING_INTERVAL_DATA_DEFAULT));
-
-            minReportingIntervalEvents = new Integer(
-                    HawkularProperties.getProperty(RulesEngine.MIN_REPORTING_INTERVAL_EVENTS,
-                            RulesEngine.MIN_REPORTING_INTERVAL_EVENTS_ENV,
-                            RulesEngine.MIN_REPORTING_INTERVAL_EVENTS_DEFAULT));
-        } catch (Throwable t) {
-            if (log.isDebugEnabled()) {
-                t.printStackTrace();
-            }
-            log.errorf("Failed to initialize: %s", t.getMessage());
-        }
-    }
+    public void init() { }
 
     @Override
     public void bufferData(IncomingData incomingData) {
