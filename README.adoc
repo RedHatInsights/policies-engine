@@ -4,7 +4,7 @@
 [.lead]
 This project contains the execution engine for custom policies. For the user-facing UI-backend see https://github.com/RedHatInsights/custom-policies-ui-backend
 
-This repository contains parts of the Hawkular-Alerts core. It is not interexchangable with the previous maven modules as stuff has been moved around, removed and updated. For old documentation (not necessarily relevant in all parts), see:
+This repository contains parts of the Hawkular-Alerts core. It is not interexchangable with the previous maven modules as stuff has been moved around, removed and modified. For old documentation (not necessarily relevant in all parts), see:
 
 link:http://www.hawkular.org/community/docs/developer-guide/alerts-v2.html[Hawkular Alerting User Guide].
 
@@ -18,16 +18,7 @@ link:http://www.hawkular.org/docs/rest/rest-alerts-v2.html[Hawkular Alerting RES
 
 == Run
 
-See ``external`` module for instructions.
-
-Basically (note, this currently requires Java 1.8):
-
-[source,shell script]
-----
-mvn install
-cd external
-mvn quarkus:dev
-----
+See link:https://github.com/RedHatInsights/custom-policies-engine/tree/master/external[external] module for instructions. Requires Kafka and Java 1.8+.
 
 == License
 
