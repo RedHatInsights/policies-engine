@@ -18,7 +18,16 @@ link:http://www.hawkular.org/docs/rest/rest-alerts-v2.html[Hawkular Alerting RES
 
 == Run
 
-See ``external`` module for instructions
+See ``external`` module for instructions.
+
+Basically (note, this currently requires Java 1.8):
+
+[source,shell script]
+----
+mvn install
+cd external
+mvn quarkus:dev
+----
 
 == License
 
