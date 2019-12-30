@@ -127,5 +127,51 @@
         <quarkus.package.type>native</quarkus.package.type>
       </properties>
     </profile>
+    <profile>
+      <id>docgen</id>
+      <properties>
+        <restDocDirectory>${project.basedir}/src/main/rest-doc</restDocDirectory>
+        <targetOpenAPIDirectory>${project.basedir}/src/main/resources/META-INF/resources/api/custom-policies/v1.0</targetOpenAPIDirectory>
+        <generatedDocDirectory>${project.build.directory}/generated</generatedDocDirectory>
+        <classesDirectory>${project.build.directory}/classes</classesDirectory>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.gmavenplus</groupId>
+            <artifactId>gmavenplus-plugin</artifactId>
+            <dependencies>
+              <dependency>
+              <groupId>org.codehaus.groovy</groupId>
+              <artifactId>groovy-all</artifactId>
+              <!-- any version of Groovy \>= 1.5.0 should work here -->
+              <version>2.4.10</version>
+              <scope>runtime</scope>
+              <type>pom</type>
+              </dependency>
+            </dependencies>
+            <configuration>
+              <properties>
+                <alertingVersion>${project.version}</alertingVersion>
+                <classesDir>${classesDirectory}</classesDir>
+                <generatedFile>${targetOpenAPIDirectory}/openapi.json</generatedFile>
+              </properties>
+              <scripts>
+                <script>file:///${restDocDirectory}/generate-openapi.groovy</script>
+              </scripts>
+            </configuration>
+            <executions>
+              <execution>
+                <id>generate-api-doc</id>
+                <phase>compile</phase>
+                <goals>
+                  <goal>execute</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
 </project>

@@ -301,9 +301,6 @@ public class ActionsHandler {
                     allowableValues = "Comma separated list of actions IDs."),
             @DocParameter(name = "results",
                     description = "Filter out alerts for unspecified result.",
-                    allowableValues = "Comma separated list of action results."),
-            @DocParameter(name = "results",
-                    description = "Filter out alerts for unspecified result.",
                     allowableValues = "Comma separated list of action results.")
     })
     @DocResponses(value = {
