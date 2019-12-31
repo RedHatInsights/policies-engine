@@ -24,12 +24,6 @@
     </license>
   </licenses>
 
-  <!--
-  API: jackson, junit
-  Commons: version.org.jboss.logging, version.org.infinispan.wildfly, version.org.jboss.logging.jboss-logging-tools, slf4j
-  Engine: version.org.drools, commons-math3 (Nelson vain), antlr (tags), jackson, version.org.infinispan.wildfly, version.org.apache.logging.log4j (test), junit
-  -->
-
   <properties>
     <!-- Maven related -->
     <maven.compiler.source>1.8</maven.compiler.source>
@@ -37,7 +31,6 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <version.maven-patch-plugin>1.2</version.maven-patch-plugin>
-    <!-- Verify if necessary -->
     <version.org.apache.maven.plugins.maven-antrun-plugin>1.8</version.org.apache.maven.plugins.maven-antrun-plugin>
     <version.org.apache.maven.plugins.maven-failsafe-plugin>2.19.1</version.org.apache.maven.plugins.maven-failsafe-plugin>
     <version.org.apache.maven.plugins.maven-surefire-plugin>2.22.1</version.org.apache.maven.plugins.maven-surefire-plugin>
@@ -57,9 +50,10 @@
 
     <version.com.fasterxml.jackson>2.10.1</version.com.fasterxml.jackson>
 
-    <!-- Used for openapi docs and itests -->
+    <!-- Used for openapi generation and itests -->
     <version.org.codehaus.groovy>2.5.8</version.org.codehaus.groovy>
     <version.org.codehaus.gmavenplus>1.8.1</version.org.codehaus.gmavenplus>
+    <version.org.codehaus.groovy.modules.http-builder>0.7.1</version.org.codehaus.groovy.modules.http-builder>
 
     <!-- Wildfly to Quarkus related stuff to be ported / removed -->
     <version.org.hibernate>5.10.7.Final</version.org.hibernate>
@@ -68,7 +62,7 @@
     <version.org.jboss.logging.jboss-logging-tools>2.0.2.Final</version.org.jboss.logging.jboss-logging-tools>
 
     <!-- Quarkus -->
-    <quarkus.version>1.0.1.Final</quarkus.version>
+    <quarkus.version>1.1.0.Final</quarkus.version>
   </properties>
 
   <dependencyManagement>

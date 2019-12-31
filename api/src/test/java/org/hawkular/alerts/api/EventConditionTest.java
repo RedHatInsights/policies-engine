@@ -1,15 +1,14 @@
 package org.hawkular.alerts.api;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import org.hawkular.alerts.api.model.condition.EventCondition;
 import org.hawkular.alerts.api.model.event.Event;
 import org.junit.Test;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Jay Shaughnessy
@@ -190,26 +189,5 @@ public class EventConditionTest {
                 "facts.server == 'MyServer', facts.insanity.mylife == 'gone', facts.this.could.go.deep == 'no'");
 
         assertFalse(condition2.match(event1));
-    }
-
-    @Test
-    public void testParsing() {
-        String first = "key";
-        String second = "key.anotherkey";
-        String third = "key.another.yetanother";
-        String fourth = "key.another.yetanother.still";
-
-        System.out.println(Arrays.toString(first.split("\\.", 2)));
-        System.out.println(Arrays.toString(second.split("\\.", 2)));
-        System.out.println(Arrays.toString(third.split("\\.", 2)));
-
-        String[] subMap = fourth.split("\\.", 2);
-
-        while(subMap.length > 1) {
-            subMap = subMap[1].split("\\.", 2);
-            System.out.printf("Checking key: %s\n", subMap[0]);
-        }
-
-        System.out.printf("Ending key: %s\n", subMap[0]);
     }
 }
