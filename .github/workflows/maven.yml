@@ -1,4 +1,4 @@
-name: Java CI
+name: Run with integration tests
 
 on: [push, pull_request]
 
@@ -21,4 +21,4 @@ jobs:
       with:
         java-version: 1.8
     - name: Build with Maven
-      run: mvn -B package --file pom.xml -Pitest -Dhawkular.data=target/hawkular.data
+      run: mvn -B clean install -Pitest -Dhawkular.data=target/hawkular.data
