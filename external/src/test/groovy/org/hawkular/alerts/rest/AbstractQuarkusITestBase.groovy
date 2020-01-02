@@ -45,10 +45,7 @@ abstract class AbstractQuarkusITestBase {
         return "T${TENANT_PREFIX}${TENANT_ID_COUNTER.incrementAndGet()}"
     }
 
-//    static void waitDefinitions() {
-//        Thread.sleep(100)
-//        if (cluster) {
-//            Thread.sleep(500);
-//        }
-//    }
+    static void waitDefinitions() {
+        Thread.sleep(100)
+    }
 }

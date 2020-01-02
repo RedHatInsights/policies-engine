@@ -1393,8 +1393,4 @@ class LifecycleITest extends AbstractQuarkusITestBase {
         assertEquals(200, resp.status)
         assertTrue( resp.data.deleted > 0 )
     }
-
-    static void waitDefinitions() {
-        Thread.sleep(100)
-    }
 }
