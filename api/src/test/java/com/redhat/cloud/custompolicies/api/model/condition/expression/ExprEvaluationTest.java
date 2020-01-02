@@ -151,4 +151,26 @@ public class ExprEvaluationTest {
         expr = "!(a = 'b')";
         assertFalse(ExprParser.evaluate(factMap, expr));
     }
+
+    @Test
+    public void testDefine() {
+        Map<String, Object> factMap = new HashMap<>();
+        factMap.put("a", "b");
+        factMap.put("b", 1);
+
+        String expr = "a";
+        assertTrue(ExprParser.evaluate(factMap, expr));
+
+        expr = "c";
+        assertFalse(ExprParser.evaluate(factMap, expr));
+
+        expr = "(c)";
+        assertFalse(ExprParser.evaluate(factMap, expr));
+
+        expr = "NOT c";
+        assertTrue(ExprParser.evaluate(factMap, expr));
+
+        expr = "a = 'b' AND b";
+        assertTrue(ExprParser.evaluate(factMap, expr));
+    }
 }

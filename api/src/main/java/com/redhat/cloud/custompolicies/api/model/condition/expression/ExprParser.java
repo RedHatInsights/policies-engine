@@ -297,7 +297,8 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
                 }
             }
 
-            return false;
+            // The define only check (negative is thrown out earlier)
+            return true;
         }
     }
 
