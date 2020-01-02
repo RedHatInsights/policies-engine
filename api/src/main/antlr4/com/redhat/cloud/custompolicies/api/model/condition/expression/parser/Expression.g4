@@ -16,6 +16,7 @@ expr
   | NOT key
   | key boolean_operator value
   | key numeric_compare_operator numerical_value
+  | key string_compare_operator array
   | key string_compare_operator value
   | key array_operator array
   ;
@@ -43,7 +44,6 @@ string_compare_operator
 
 array_operator
   : IN
-  | NOT IN
   | CONTAINS
   ;
 

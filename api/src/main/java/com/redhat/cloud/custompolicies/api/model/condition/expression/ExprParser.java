@@ -240,23 +240,45 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
                         }
                     }
                 }
+                if(ctx.array() != null) {
+                    boolean validForAll = true;
+                    for (ExpressionParser.ValueContext valueContext : ctx.array().value()) {
+                        String val = valueToString(valueContext);
+                        validForAll &= targetValueStr.contains(val);
+                    }
+                    return validForAll;
+                }
                 return false;
             }
 
             if(ctx.array_operator() != null) {
                 if(ctx.array() != null) {
                     // We have restricted array values to be strings always
-                    boolean validForAll = true;
-                    for (ExpressionParser.ValueContext valueContext : ctx.array().value()) {
-                        String val = valueToString(valueContext);
-                        if(targetValue instanceof Iterable) {
-                            validForAll &= arrayContains((Iterable) targetValue, val);
-                        } else {
-                            validForAll &= targetValueStr.contains(val);
+                    if(ctx.string_compare_operator() != null) {
+                        if(ctx.string_compare_operator().CONTAINS() != null) {
+                            boolean validForAll = true;
+                            for (ExpressionParser.ValueContext valueContext : ctx.array().value()) {
+                                String val = valueToString(valueContext);
+                                if (targetValue instanceof Iterable) {
+                                    validForAll &= arrayContains((Iterable) targetValue, val);
+                                } else {
+                                    validForAll &= targetValueStr.contains(val);
+                                }
+                            }
+
+                            return validForAll;
                         }
                     }
-
-                    return validForAll;
+                    else if(ctx.array_operator() != null) {
+                        if(ctx.array_operator().IN() != null) {
+                            boolean validForAny = false;
+                            for (ExpressionParser.ValueContext valueContext : ctx.array().value()) {
+                                String val = valueToString(valueContext);
+                                validForAny |= targetValueStr.equals(val);
+                            }
+                            return validForAny;
+                        }
+                    }
                 }
             }
 
@@ -269,7 +291,6 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
         for (Object o : targetValue) {
             anyMatch |= o.toString().equals(matcher);
         }
-
         return anyMatch;
     }
 

@@ -110,4 +110,23 @@ public class ExprEvaluationTest {
         expr = "c = 'b'";
         assertFalse(ExprParser.evaluate(factMap, expr));
     }
+
+    @Test
+    public void testInMatching() {
+        // Negations are NotImplementedYet
+        Map<String, Object> factMap = new HashMap<>();
+        factMap.put("a", "b");
+
+        String expr = "a IN [b, c, d]";
+        assertTrue(ExprParser.evaluate(factMap, expr));
+
+        expr = "a IN [b]";
+        assertTrue(ExprParser.evaluate(factMap, expr));
+
+        expr = "a IN []";
+        assertFalse(ExprParser.evaluate(factMap, expr));
+
+        expr = "a IN [c, d]";
+        assertFalse(ExprParser.evaluate(factMap, expr));
+    }
 }
