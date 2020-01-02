@@ -23,9 +23,7 @@ import java.util.Map;
 
     TODO We might need to compare with version knowledge also (based on the demo), like version >= 5.7.2 or < 3.0.0
     TODO "before/after" requires date understanding also
-    TODO "is defined", "is not defined"
     TODO "is before", "is after"
-    TODO "does not contain" (as in, negatives are necessary)
  */
 
 public class ExprParser extends ExpressionBaseVisitor<Boolean> {
