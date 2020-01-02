@@ -110,11 +110,23 @@ public class ExprValidationTest {
         } catch(IllegalArgumentException e) { }
     }
 
-//    @Test
-//    public void testNegation() {
-//        // Not supported yet
-//        ExprParser exprParser = new ExprParser();
-//        String expr = "not (machine_name = 'localhost' OR cores > 9)";
-//        assertTrue(exprParser.evaluate(expr));
-//    }
+    @Test
+    public void testNegation() {
+        // Not supported yet
+        ExprParser exprParser = new ExprParser();
+        String expr = "not (machine_name = 'localhost' OR cores > 9)";
+        ExprParser.validate(expr);
+
+        expr = "not a = 'b'";
+        ExprParser.validate(expr);
+
+        expr = "not (a = 'b')";
+        ExprParser.validate(expr);
+
+        expr = "(a = 'b') and not (c = 'd' or e > 3)";
+        ExprParser.validate(expr);
+
+        expr = "!(a = 'b')";
+        ExprParser.validate(expr);
+    }
 }

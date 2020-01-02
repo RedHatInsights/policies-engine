@@ -118,6 +118,16 @@ public interface ExpressionListener extends ParseTreeListener {
 	 */
 	void exitValue(ExpressionParser.ValueContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link ExpressionParser#negative_expr}.
+	 * @param ctx the parse tree
+	 */
+	void enterNegative_expr(ExpressionParser.Negative_exprContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ExpressionParser#negative_expr}.
+	 * @param ctx the parse tree
+	 */
+	void exitNegative_expr(ExpressionParser.Negative_exprContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link ExpressionParser#key}.
 	 * @param ctx the parse tree
 	 */

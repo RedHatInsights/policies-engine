@@ -100,6 +100,9 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
         @Override
         public Boolean visitObject(ExpressionParser.ObjectContext ctx) {
             if(ctx.expr() != null) {
+                if(ctx.negative_expr() != null) {
+                    return !visitExpr(ctx.expr());
+                }
                 return visitExpr(ctx.expr());
             }
 
@@ -118,6 +121,9 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
             }
 
             if(ctx.object() != null && ctx.object().size() == 1) {
+                if(ctx.negative_expr() != null) {
+                    return !visitObject(ctx.object(0));
+                }
                 return visitObject(ctx.object(0));
             }
             return false;
@@ -175,11 +181,20 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
                         targetValueDecimal = BigDecimal.valueOf((Float) targetValue);
                     } else if(targetValue instanceof Integer) {
                         targetValueDecimal = new BigDecimal((Integer) targetValue);
+                    } else if(targetValue instanceof String) {
+                        // Do String comparison
+                        targetValueDecimal = null;
                     } else {
                         return false;
                     }
-                    targetValueStr = targetValueDecimal.toString();
+                    if(targetValueDecimal != null) {
+                        targetValueStr = targetValueDecimal.toString();
+                    }
                     strValue = decimalValue.toString();
+                }
+
+                if(targetValueStr == null) {
+                    targetValueStr = targetValue.toString();
                 }
             } catch(NumberFormatException e) {
                 e.printStackTrace();
@@ -190,7 +205,7 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
             if(ctx.boolean_operator() != null) {
                 final ExpressionParser.Boolean_operatorContext op = ctx.boolean_operator();
                 boolean compareResult = false;
-                if(decimalValue != null) {
+                if(decimalValue != null && targetValueDecimal != null) {
                     compareResult = decimalValue.compareTo(targetValueDecimal) == 0;
                 } else if(strValue != null) {
                     compareResult = targetValueStr.equals(strValue);
@@ -207,7 +222,7 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
 
             // These need to be integers or doubles
             if(ctx.numeric_compare_operator() != null) {
-                if(decimalValue == null) {
+                if(decimalValue == null || targetValueDecimal == null) {
                     return false;
                 }
                 ExpressionParser.Numeric_compare_operatorContext op = ctx.numeric_compare_operator();

@@ -77,6 +77,12 @@ public interface ExpressionVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitValue(ExpressionParser.ValueContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link ExpressionParser#negative_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitNegative_expr(ExpressionParser.Negative_exprContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link ExpressionParser#key}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

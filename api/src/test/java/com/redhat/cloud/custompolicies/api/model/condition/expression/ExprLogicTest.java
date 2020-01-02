@@ -48,6 +48,9 @@ public class ExprLogicTest {
 
         expr = "(a = 'c' AND b = 3)";
         assertFalse(ExprParser.evaluate(factMap, expr));
+
+        expr = "(a = 'c')";
+        assertFalse(ExprParser.evaluate(factMap, expr));
     }
 
     @Test
@@ -73,6 +76,38 @@ public class ExprLogicTest {
         assertTrue(ExprParser.evaluate(factMap, expr));
 
         expr = "(((a = 'b') AND (b = 6)) OR (c = '' AND b < 3))";
+        assertFalse(ExprParser.evaluate(factMap, expr));
+    }
+
+    @Test
+    public void testNegativeMultipleOperators() {
+        Map<String, Object> factMap = new HashMap<>();
+        factMap.put("a", "b");
+        factMap.put("b", 3);
+        factMap.put("c", "");
+
+        String expr = "(a = 'b' AND b > 2) OR NOT (c = '' AND b < 3)";
+        assertTrue(ExprParser.evaluate(factMap, expr));
+
+        expr = "((a = 'b' AND b > 2) OR (c = '' AND NOT b > 3))";
+        assertTrue(ExprParser.evaluate(factMap, expr));
+
+        expr = "(a = 'b' AND (b > 2 OR (c = '' AND b < 3)))";
+        assertTrue(ExprParser.evaluate(factMap, expr));
+
+        expr = "(a = 'b' AND (b = 2 OR (c = '' AND b >= 3)))";
+        assertTrue(ExprParser.evaluate(factMap, expr));
+
+        expr = "(((a = 'b') AND NOT (b = 2)) OR (c = '' AND b >= 3))";
+        assertTrue(ExprParser.evaluate(factMap, expr));
+
+        expr = "(((a = 'b') AND (b = 6)) OR (c = '' AND b < 3))";
+        assertFalse(ExprParser.evaluate(factMap, expr));
+
+        expr = "(c = '') AND NOT (b <= 2)";
+        assertTrue(ExprParser.evaluate(factMap, expr));
+
+        expr = "!(c = '' AND a = 'b')";
         assertFalse(ExprParser.evaluate(factMap, expr));
     }
 }

@@ -129,4 +129,26 @@ public class ExprEvaluationTest {
         expr = "a IN [c, d]";
         assertFalse(ExprParser.evaluate(factMap, expr));
     }
+
+    @Test
+    public void testNotMatching() {
+        Map<String, Object> factMap = new HashMap<>();
+        factMap.put("a", "b");
+        factMap.put("b", 1);
+
+        String expr = "NOT (a IN [c, d])";
+        assertTrue(ExprParser.evaluate(factMap, expr));
+
+        expr = "NOT (a != 3)";
+        assertFalse(ExprParser.evaluate(factMap, expr));
+
+        expr = "NOT (b >= 2)";
+        assertTrue(ExprParser.evaluate(factMap, expr));
+
+        expr = "NOT a = 'b'";
+        assertFalse(ExprParser.evaluate(factMap, expr));
+
+        expr = "!(a = 'b')";
+        assertFalse(ExprParser.evaluate(factMap, expr));
+    }
 }

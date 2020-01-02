@@ -6,14 +6,14 @@ expression
   ;
 
 object
-  : expr
+  : negative_expr object
+  | expr
   | '(' object ')'
   | object logical_operator object
   ;
 
 expr
   : key
-  | NOT key
   | key boolean_operator value
   | key numeric_compare_operator numerical_value
   | key string_compare_operator array
@@ -62,6 +62,10 @@ value
  | STRING
  ;
 
+negative_expr
+  : NEG
+  | NOT
+  ;
 
 key
  : SIMPLETEXT
@@ -74,6 +78,7 @@ NOT: N O T;
 EQUAL: '=';
 NOTEQUAL: '!=';
 CONTAINS: C O N T A I N S;
+NEG: NEG_OP;
 
 // Allow only for numbers
 GT: '>';
