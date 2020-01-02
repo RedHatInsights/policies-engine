@@ -41,11 +41,17 @@ public interface ExpressionVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitBoolean_operator(ExpressionParser.Boolean_operatorContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link ExpressionParser#compare_operator}.
+	 * Visit a parse tree produced by {@link ExpressionParser#numeric_compare_operator}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitCompare_operator(ExpressionParser.Compare_operatorContext ctx);
+	T visitNumeric_compare_operator(ExpressionParser.Numeric_compare_operatorContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ExpressionParser#string_compare_operator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitString_compare_operator(ExpressionParser.String_compare_operatorContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link ExpressionParser#array_operator}.
 	 * @param ctx the parse tree

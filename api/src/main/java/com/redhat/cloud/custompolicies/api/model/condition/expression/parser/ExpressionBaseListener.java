@@ -76,13 +76,25 @@ public class ExpressionBaseListener implements ExpressionListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterCompare_operator(ExpressionParser.Compare_operatorContext ctx) { }
+	@Override public void enterNumeric_compare_operator(ExpressionParser.Numeric_compare_operatorContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitCompare_operator(ExpressionParser.Compare_operatorContext ctx) { }
+	@Override public void exitNumeric_compare_operator(ExpressionParser.Numeric_compare_operatorContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterString_compare_operator(ExpressionParser.String_compare_operatorContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitString_compare_operator(ExpressionParser.String_compare_operatorContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

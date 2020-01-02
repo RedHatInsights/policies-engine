@@ -11,7 +11,22 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.math.BigDecimal;
 import java.util.BitSet;
+import java.util.Collection;
 import java.util.Map;
+
+/*
+    TODO: How would we understand:
+        "0:GeoIP-1.5.0-11.el7" type of package versions for greater than, less than?
+        {
+        "name": "RHN Tools .."
+        } for example for contains in installed repository check?
+
+    TODO We might need to compare with version knowledge also (based on the demo), like version >= 5.7.2 or < 3.0.0
+    TODO "before/after" requires date understanding also
+    TODO "is defined", "is not defined"
+    TODO "is before", "is after"
+    TODO "does not contain" (as in, negatives are necessary)
+ */
 
 public class ExprParser extends ExpressionBaseVisitor<Boolean> {
 
@@ -133,23 +148,14 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
                 return false;
             }
 
-            String targetValueStr = null;
+            String targetValueStr = targetValue.toString();
             BigDecimal targetValueDecimal = null;
 
             // Fact comparison value
             try {
                 TerminalNode number = null;
                 if(value != null) {
-                    if (value.STRING() != null || value.SIMPLETEXT() != null) {
-                        // This is String value
-                        if (value.STRING() != null) {
-                            strValue = value.STRING().getSymbol().getText();
-                        } else if (value.SIMPLETEXT() != null) {
-                            strValue = value.SIMPLETEXT().getSymbol().getText();
-                        }
-                        strValue = strValue.replaceAll("^(['\"])(.*)\\1$", "$2");
-                        targetValueStr = targetValue.toString();
-                    }
+                    strValue = valueToString(value);
                     if(value.NUMBER() != null) {
                         number = value.NUMBER();
                     }
@@ -172,6 +178,8 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
                     } else {
                         return false;
                     }
+                    targetValueStr = targetValueDecimal.toString();
+                    strValue = decimalValue.toString();
                 }
             } catch(NumberFormatException e) {
                 e.printStackTrace();
@@ -198,11 +206,11 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
             }
 
             // These need to be integers or doubles
-            if(ctx.compare_operator() != null) {
+            if(ctx.numeric_compare_operator() != null) {
                 if(decimalValue == null) {
                     return false;
                 }
-                ExpressionParser.Compare_operatorContext op = ctx.compare_operator();
+                ExpressionParser.Numeric_compare_operatorContext op = ctx.numeric_compare_operator();
                 if(op.GT() != null) {
                     return decimalValue.compareTo(targetValueDecimal) < 0;
                 } else if(op.GTE() != null) {
@@ -216,7 +224,68 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
                 return false;
             }
 
+            // Operators which support targetArray
+            if(ctx.string_compare_operator() != null) {
+                // If the value is an array, do exact match
+                // If the value is string, do string contains match
+                // What if we're talking about a number..?
+                if(ctx.value() != null) {
+                    // String contains
+                    if(ctx.string_compare_operator().CONTAINS() != null) {
+                        // Repetitive code, refactor at some point when more array operators are known
+                        if(targetValue instanceof Iterable) {
+                            return arrayContains((Iterable) targetValue, strValue);
+                        } else {
+                            return targetValueStr.contains(strValue);
+                        }
+                    }
+                }
+                return false;
+            }
+
+            if(ctx.array_operator() != null) {
+                if(ctx.array() != null) {
+                    // We have restricted array values to be strings always
+                    boolean validForAll = true;
+                    for (ExpressionParser.ValueContext valueContext : ctx.array().value()) {
+                        String val = valueToString(valueContext);
+                        if(targetValue instanceof Iterable) {
+                            validForAll &= arrayContains((Iterable) targetValue, val);
+                        } else {
+                            validForAll &= targetValueStr.contains(val);
+                        }
+                    }
+
+                    return validForAll;
+                }
+            }
+
             return false;
         }
     }
+
+    static boolean arrayContains(Iterable<?> targetValue, String matcher) {
+        boolean anyMatch = false;
+        for (Object o : targetValue) {
+            anyMatch |= o.toString().equals(matcher);
+        }
+
+        return anyMatch;
+    }
+
+    static String valueToString(ExpressionParser.ValueContext value) {
+        String strValue = null;
+        if (value.STRING() != null || value.SIMPLETEXT() != null) {
+            // This is String value
+            if (value.STRING() != null) {
+                strValue = value.STRING().getSymbol().getText();
+            } else if (value.SIMPLETEXT() != null) {
+                strValue = value.SIMPLETEXT().getSymbol().getText();
+            }
+            strValue = strValue.replaceAll("^(['\"])(.*)\\1$", "$2");
+        }
+        return strValue;
+    }
 }
+
+

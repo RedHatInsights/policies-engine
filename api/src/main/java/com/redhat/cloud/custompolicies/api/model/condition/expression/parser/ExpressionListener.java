@@ -58,15 +58,25 @@ public interface ExpressionListener extends ParseTreeListener {
 	 */
 	void exitBoolean_operator(ExpressionParser.Boolean_operatorContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link ExpressionParser#compare_operator}.
+	 * Enter a parse tree produced by {@link ExpressionParser#numeric_compare_operator}.
 	 * @param ctx the parse tree
 	 */
-	void enterCompare_operator(ExpressionParser.Compare_operatorContext ctx);
+	void enterNumeric_compare_operator(ExpressionParser.Numeric_compare_operatorContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link ExpressionParser#compare_operator}.
+	 * Exit a parse tree produced by {@link ExpressionParser#numeric_compare_operator}.
 	 * @param ctx the parse tree
 	 */
-	void exitCompare_operator(ExpressionParser.Compare_operatorContext ctx);
+	void exitNumeric_compare_operator(ExpressionParser.Numeric_compare_operatorContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link ExpressionParser#string_compare_operator}.
+	 * @param ctx the parse tree
+	 */
+	void enterString_compare_operator(ExpressionParser.String_compare_operatorContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ExpressionParser#string_compare_operator}.
+	 * @param ctx the parse tree
+	 */
+	void exitString_compare_operator(ExpressionParser.String_compare_operatorContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link ExpressionParser#array_operator}.
 	 * @param ctx the parse tree

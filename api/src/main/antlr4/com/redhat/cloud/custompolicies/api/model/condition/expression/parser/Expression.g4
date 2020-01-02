@@ -15,7 +15,8 @@ expr
   : key
   | NOT key
   | key boolean_operator value
-  | key compare_operator numerical_value
+  | key numeric_compare_operator numerical_value
+  | key string_compare_operator value
   | key array_operator array
   ;
 
@@ -29,16 +30,21 @@ boolean_operator
   | NOTEQUAL
   ;
 
-compare_operator
+numeric_compare_operator
   : GT
   | GTE
   | LT
   | LTE
   ;
 
+string_compare_operator
+  : CONTAINS
+  ;
+
 array_operator
   : IN
   | NOT IN
+  | CONTAINS
   ;
 
 array
@@ -67,6 +73,7 @@ AND: A N D;
 NOT: N O T;
 EQUAL: '=';
 NOTEQUAL: '!=';
+CONTAINS: C O N T A I N S;
 
 // Allow only for numbers
 GT: '>';
