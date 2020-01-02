@@ -16,6 +16,7 @@ import java.util.TimerTask;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.hawkular.alerts.api.model.condition.CompareCondition;
 import org.hawkular.alerts.api.model.condition.Condition;
@@ -58,10 +59,10 @@ import org.hawkular.commons.log.MsgLogging;
 public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener, PartitionDataListener {
     private final AlertingLogger log = MsgLogging.getMsgLogger(AlertingLogger.class, AlertsEngineImpl.class);
 
-    @ConfigProperty(name = "engine.alerts.engine-delay")
+//    @ConfigProperty(name = "engine.alerts.engine-delay")
     int delay;
 
-    @ConfigProperty(name = "engine.alerts.engine-period")
+//    @ConfigProperty(name = "engine.alerts.engine-period")
     int period;
 
     private TreeSet<Data> pendingData;
@@ -85,7 +86,7 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
     private AlertsEngineCache alertsEngineCache = null;
     boolean distributed = false;
 
-    @ConfigProperty(name = "engine.alerts.engine-extensions")
+//    @ConfigProperty(name = "engine.alerts.engine-extensions")
     boolean engineExtensions;
 
     RulesEngine rules;
@@ -112,6 +113,9 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
         disabledTriggers = new HashSet<>();
         missingStates = new HashSet<>();
 
+        delay = ConfigProvider.getConfig().getValue("engine.alerts.engine-delay", Integer.class);
+        period = ConfigProvider.getConfig().getValue("engine.alerts.engine-period", Integer.class);
+        engineExtensions = ConfigProvider.getConfig().getValue("engine.alerts.engine-extensions", Boolean.class);
         wakeUpTimer = new Timer("AlertsEngineImpl-Timer");
     }
 

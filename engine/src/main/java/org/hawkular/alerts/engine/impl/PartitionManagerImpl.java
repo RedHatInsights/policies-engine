@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.hawkular.alerts.api.model.data.Data;
 import org.hawkular.alerts.api.model.event.Event;
@@ -78,7 +79,7 @@ import com.google.common.hash.Hashing;
  * @author Lucas Ponce
  */
 public class PartitionManagerImpl implements PartitionManager {
-    @ConfigProperty(name = "engine.backend.ispn.partition-lifespan")
+//    @ConfigProperty(name = "engine.backend.ispn.partition-lifespan")
     int LIFESPAN;
 
     public static final String BUCKETS = "buckets";
@@ -173,6 +174,7 @@ public class PartitionManagerImpl implements PartitionManager {
     }
 
     public void init() {
+        LIFESPAN = ConfigProvider.getConfig().getValue("engine.backend.ispn.partition-lifespan", Integer.class);
         if (!distributed) {
             log.infoPartitionManagerDisabled();
         } else {

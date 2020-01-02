@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.hawkular.alerts.api.model.condition.CompareCondition;
 import org.hawkular.alerts.api.model.condition.Condition;
@@ -32,7 +33,7 @@ public class DataDrivenGroupCacheManager {
     private static final String DATA_DRIVEN_TRIGGERS_ENABLED = "hawkular-alerts.data-driven-triggers-enabled";
     private static final String DATA_DRIVEN_TRIGGERS_ENABLED_DEFAULT = "true";
 
-    @ConfigProperty(name = "engine.data-driven-triggers-enabled")
+//    @ConfigProperty(name = "engine.data-driven-triggers-enabled")
     boolean dataDrivenTriggersEnabled;
 
     // The sources with member triggers for the dataId.
@@ -52,6 +53,8 @@ public class DataDrivenGroupCacheManager {
     }
 
     public void init() {
+        dataDrivenTriggersEnabled = ConfigProvider.getConfig().getValue("engine.data-driven-triggers-enabled", Boolean.class);
+
         log.debugf("Data-driven Group Triggers enabled: %s", dataDrivenTriggersEnabled);
 
         if (dataDrivenTriggersEnabled) {
