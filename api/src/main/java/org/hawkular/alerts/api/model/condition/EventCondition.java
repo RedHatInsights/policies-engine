@@ -211,7 +211,7 @@ public class EventCondition extends Condition {
         if (isEmpty(expression) && isEmpty(expr)) {
             return true;
         }
-        if(expr != null) {
+        if(expr != null && !isEmpty(expr)) {
             // Process expr first
             return ExpressionParser.evaluateConditions(value.getFacts(), expr);
         }
