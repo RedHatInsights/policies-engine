@@ -2,6 +2,7 @@ package org.hawkular.alerts.engine.impl;
 
 import org.drools.core.event.DebugAgendaEventListener;
 import org.drools.core.event.DebugRuleRuntimeEventListener;
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.hawkular.alerts.api.model.data.Data;
 import org.hawkular.alerts.api.model.event.Event;
@@ -37,10 +38,10 @@ public class DroolsRulesEngineImpl implements RulesEngine {
     private static final long PERF_BATCHING_THRESHOLD = 3000L; // 3 seconds
     private static final long PERF_FIRING_THRESHOLD = 5000L; // 5 seconds
 
-    @ConfigProperty(name = "engine.rules.events.duplicate-filter-time")
+//    @ConfigProperty(name = "engine.rules.events.duplicate-filter-time")
     int minReportingIntervalEvents;
 
-    @ConfigProperty(name = "engine.rules.data.duplicate-filter-time")
+//    @ConfigProperty(name = "engine.rules.data.duplicate-filter-time")
     int minReportingIntervalData;
 
     private KieServices ks;
@@ -51,10 +52,13 @@ public class DroolsRulesEngineImpl implements RulesEngine {
     TreeSet<Event> pendingEvents = new TreeSet<>();
 
     public DroolsRulesEngineImpl() {
-        log.debug("Creating instance.");
+        log.debug("Creating instance of DroolsRulesEngineImpl.");
         ks = KieServices.Factory.get();
         kc = ks.getKieClasspathContainer();
         kSession = kc.newKieSession(SESSION_NAME);
+
+        minReportingIntervalEvents = ConfigProvider.getConfig().getValue("engine.rules.events.duplicate-filter-time", Integer.class);
+        minReportingIntervalData = ConfigProvider.getConfig().getValue("engine.rules.data.duplicate-filter-time", Integer.class);
 
         if (log.isTraceEnabled()) {
             kSession.addEventListener(new DebugAgendaEventListener());

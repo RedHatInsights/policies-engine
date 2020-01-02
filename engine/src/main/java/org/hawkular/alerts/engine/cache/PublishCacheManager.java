@@ -1,5 +1,6 @@
 package org.hawkular.alerts.engine.cache;
 
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.hawkular.alerts.api.model.condition.CompareCondition;
 import org.hawkular.alerts.api.model.condition.Condition;
@@ -37,10 +38,10 @@ public class PublishCacheManager {
 
     DefinitionsService definitions;
 
-    @ConfigProperty(name = "engine.cache.disable-publish-filtering", defaultValue = "false")
+//    @ConfigProperty(name = "engine.cache.disable-publish-filtering", defaultValue = "false")
     boolean disablePublish;
 
-    @ConfigProperty(name = "engine.cache.reset-publish-cache", defaultValue = "true")
+//    @ConfigProperty(name = "engine.cache.reset-publish-cache", defaultValue = "true")
     boolean resetCache;
 
     // It stores a list of dataIds used per key (tenantId, triggerId).
@@ -63,6 +64,9 @@ public class PublishCacheManager {
     }
 
     public void init() {
+        resetCache = ConfigProvider.getConfig().getValue("engine.cache.reset-publish-cache", Boolean.class);
+        disablePublish = ConfigProvider.getConfig().getValue("engine.cache.disable-publish-filtering", Boolean.class);
+
         if (!disablePublish) {
             if (resetCache) {
                 log.warnClearPublishCache();

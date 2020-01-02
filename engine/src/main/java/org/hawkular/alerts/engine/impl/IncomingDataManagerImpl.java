@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.hawkular.alerts.api.model.data.Data;
 import org.hawkular.alerts.api.model.event.Event;
@@ -27,10 +28,10 @@ import org.hawkular.commons.log.MsgLogging;
 public class IncomingDataManagerImpl implements IncomingDataManager {
     private final MsgLogger log = MsgLogging.getMsgLogger(IncomingDataManagerImpl.class);
 
-    @ConfigProperty(name = "engine.rules.events.duplicate-filter-time")
+//    @ConfigProperty(name = "engine.rules.events.duplicate-filter-time")
     private int minReportingIntervalEvents;
 
-    @ConfigProperty(name = "engine.rules.data.duplicate-filter-time")
+//    @ConfigProperty(name = "engine.rules.data.duplicate-filter-time")
     private int minReportingIntervalData;
 
     private ExecutorService executor;
@@ -69,7 +70,10 @@ public class IncomingDataManagerImpl implements IncomingDataManager {
         this.dataIdCache = dataIdCache;
     }
 
-    public void init() { }
+    public void init() {
+        minReportingIntervalEvents = ConfigProvider.getConfig().getValue("engine.rules.events.duplicate-filter-time", Integer.class);
+        minReportingIntervalData = ConfigProvider.getConfig().getValue("engine.rules.data.duplicate-filter-time", Integer.class);
+    }
 
     @Override
     public void bufferData(IncomingData incomingData) {

@@ -1,5 +1,6 @@
 package org.hawkular.alerts.engine;
 
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.hawkular.alerts.api.services.ActionsService;
 import org.hawkular.alerts.api.services.AlertsService;
@@ -34,7 +35,7 @@ public class StandaloneAlerts {
     private static StandaloneAlerts instance;
     private static ExecutorService executor;
 
-    @ConfigProperty(name = "engine.backend.ispn.reindex", defaultValue = "false")
+//    @ConfigProperty(name = "engine.backend.ispn.reindex", defaultValue = "false")
     private boolean ispnReindex;
 
     private boolean distributed;
@@ -79,6 +80,7 @@ public class StandaloneAlerts {
         publishCacheManager = new PublishCacheManager();
 
         log.info("Hawkular Alerting uses Infinispan backend");
+        ispnReindex = ConfigProvider.getConfig().getValue("engine.backend.ispn.reindex", Boolean.class);
 
         if (ispnReindex) {
             log.info("Hawkular Alerting started with hawkular-alerts.backend-reindex=true");
