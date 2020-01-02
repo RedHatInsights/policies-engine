@@ -580,7 +580,7 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
                 TreeSet<Data> newData = getAndClearPendingData();
                 TreeSet<Event> newEvents = getAndClearPendingEvents();
 
-                log.infof("Executing rules engine on %s datums, %s events, %s dampening timeouts.", newData.size(),
+                log.debugf("Executing rules engine on %s datums, %s events, %s dampening timeouts.", newData.size(),
                         newEvents.size(), numTimeouts);
 
                 try {
@@ -620,6 +620,7 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
                     log.debugf("Error on rules processing: %s", e);
                     log.errorProcessingRules(e.getMessage());
                 } finally {
+                    // TODO Is this thread safe?
                     alerts.clear();
                     events.clear();
                 }
