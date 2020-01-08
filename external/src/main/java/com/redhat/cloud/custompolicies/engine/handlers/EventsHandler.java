@@ -82,8 +82,6 @@ public class EventsHandler {
 
     @PostConstruct
     public void init(@Observes Router router) {
-        log.info("init PostConstruct was called");
-//    public void initRoutes(String baseUrl, Router router) {
         String path = "/hawkular/alerts/events";
         router.route().handler(BodyHandler.create());
         router.post(path).handler(this::createEvent);
@@ -120,8 +118,6 @@ public class EventsHandler {
                     try {
                         event = fromJson(json, Event.class);
                     } catch (Exception e) {
-//                        // log.errorf"Error parsing Event json: %s. Reason: %s", json, e.toString());
-                        e.printStackTrace();
                         throw new ResponseUtil.BadRequestException(e.toString());
                     }
                     if (event == null) {
@@ -150,10 +146,7 @@ public class EventsHandler {
                         throw new ResponseUtil.BadRequestException("Event with ID [" + event.getId() + "] exists.");
                     }
 
-                    System.out.println("Event: "+ event.toString());
-
                     try {
-                        System.out.println("Storing to: " + alertsService.toString());
                         alertsService.addEvents(Collections.singletonList(event));
                         future.complete(event);
                     } catch (IllegalArgumentException e) {
@@ -196,7 +189,6 @@ public class EventsHandler {
                     }
                     try {
                         events.stream().forEach(ev -> ev.setTenantId(tenantId));
-                        System.out.println("Events: "+ events.toString());
                         alertsService.sendEvents(events);
                         // log.debugf(Events: ", events);
                         future.complete(events);

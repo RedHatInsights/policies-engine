@@ -224,8 +224,8 @@ rule Event
         $d : Event( tenantId == $tenantId, dataSource == $tsource, dataId == $did )
     then
         EventConditionEval ce = new EventConditionEval($c, $d);
-        if (log != null) {
-            log.infof("Event Eval: %s %s", (ce.isMatch() ? "Match!" : "no match"), ce.getDisplayString());
+        if (log != null && log.isDebugEnabled()) {
+            log.debugf("Event Eval: %s %s", (ce.isMatch() ? "Match!" : "no match"), ce.getDisplayString());
         }
         insert( ce );
 end
