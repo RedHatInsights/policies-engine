@@ -1,19 +1,19 @@
 package org.hawkular.alerts.api.model.condition;
 
-import static org.hawkular.alerts.api.util.Util.isEmpty;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.redhat.cloud.custompolicies.api.model.condition.expression.ExprParser;
+import com.redhat.cloud.custompolicies.api.model.condition.expression.parser.ExpressionParser;
+import org.hawkular.alerts.api.doc.DocModel;
+import org.hawkular.alerts.api.doc.DocModelProperty;
+import org.hawkular.alerts.api.model.event.Event;
+import org.hawkular.alerts.api.model.trigger.Mode;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import com.redhat.cloud.custompolicies.api.model.condition.expression.ExprParser;
-import org.hawkular.alerts.api.doc.DocModel;
-import org.hawkular.alerts.api.doc.DocModelProperty;
-import org.hawkular.alerts.api.model.event.Event;
-import org.hawkular.alerts.api.model.trigger.Mode;
-
-import com.fasterxml.jackson.annotation.JsonInclude;
+import static org.hawkular.alerts.api.util.Util.isEmpty;
 
 /**
  * An <code>EventCondition</code> is used for condition evaluations over Event data using expressions.
@@ -214,7 +214,7 @@ public class EventCondition extends Condition {
         }
         if(expr != null && !isEmpty(expr)) {
             // Process expr first
-            return ExpressionParser.evaluateConditions(value.getFacts(), expr);
+            return ExprParser.evaluate(value.getFacts(), expr);
         }
         List<String> expressions = new ArrayList<>();
         int j = 0;
