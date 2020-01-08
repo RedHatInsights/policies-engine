@@ -23,7 +23,6 @@ public class JsonUtil {
 
     private JsonUtil() {
         mapper = new ObjectMapper();
-        mapper.enable(SerializationFeature.INDENT_OUTPUT);
 
         SimpleModule simpleModule = new SimpleModule();
         simpleModule.setDeserializerModifier(new JacksonDeserializer.AlertThinDeserializer());
