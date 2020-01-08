@@ -19,6 +19,7 @@
     <maven.compiler.source>1.8</maven.compiler.source>
     <compiler-plugin.version>3.8.1</compiler-plugin.version>
     <maven.compiler.target>1.8</maven.compiler.target>
+    <openapi-generator-version>4.2.2</openapi-generator-version>
   </properties>
   <dependencies>
     <dependency>
@@ -167,6 +168,25 @@
                 <goals>
                   <goal>execute</goal>
                 </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.openapitools</groupId>
+            <artifactId>openapi-generator-maven-plugin</artifactId>
+            <version>${openapi-generator-version}</version>
+            <executions>
+              <execution>
+                <id>generate-api-doc</id>
+                <phase>compile</phase>
+                <goals>
+                  <goal>generate</goal>
+                </goals>
+                <configuration>
+                  <inputSpec>${project.basedir}/src/main/resources/META-INF/resources/api/custom-policies/v1.0/openapi.json</inputSpec>
+                  <generatorName>asciidoc</generatorName>
+                  <skipValidateSpec>false</skipValidateSpec>
+                </configuration>
               </execution>
             </executions>
           </plugin>

@@ -66,14 +66,14 @@ Numeric operators only accept numbers as ``key`` and ``value`` type, while strin
 
 Number type is equivalent to integer or floating point value. Floating point value can be expressed with dot ``.`` only, not with comma (as is used in certain locales). A string can be quoted with ``'``, ``"``. Values without quotes are parsed as string at this point, but it is recommended to quote all the string values to separate them from ``keys``.
 
-All the operators are case-insignificant.
+All the operators are case-insignificant. The language definition can be found from link:https://github.com/RedHatInsights/custom-policies-engine/blob/cb60fc58adf2dab2bc9366041ad758718d1b8936/api/src/main/antlr4/com/redhat/cloud/custompolicies/api/model/condition/expression/parser/Expression.g4[here].
 
 .Field operators
 |===
 |Predicate |Description
 
 |
-|Key exists in the input data, no value is given.
+|Key exists in the input data, no value or operator is given.
 |===
 
 .Numeric operators

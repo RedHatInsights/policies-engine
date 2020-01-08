@@ -641,7 +641,7 @@ public class AlertsHandler {
             path = "/resolve/{alertId}",
             name = "Set one alert resolved.")
     @DocParameters(value = {
-            @DocParameter(name = "alertId", required = true,
+            @DocParameter(name = "alertId", required = true, path = true,
                     description = "The alertId to set resolved."),
             @DocParameter(name = "resolvedBy",
                     description = "User resolving the alerts."),
