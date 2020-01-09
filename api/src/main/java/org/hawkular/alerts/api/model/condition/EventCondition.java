@@ -138,6 +138,10 @@ public class EventCondition extends Condition {
      * This constructor requires the tenantId be assigned prior to persistence. It can be used when
      * creating triggers via Rest, as the tenant will be assigned automatically.
      */
+    public EventCondition(String triggerId, Mode triggerMode, String dataId) {
+        this("", triggerId, triggerMode, 1, 1, dataId, null);
+    }
+
     public EventCondition(String triggerId, Mode triggerMode, String dataId, String expression) {
         this("", triggerId, triggerMode, 1, 1, dataId, expression);
     }
@@ -176,6 +180,7 @@ public class EventCondition extends Condition {
         this.dataId = dataId;
         this.expression = expression;
         updateDisplayString();
+        validate();
     }
 
     public EventCondition(EventCondition condition) {
@@ -184,6 +189,7 @@ public class EventCondition extends Condition {
         this.dataId = condition.getDataId();
         this.expression = condition.getExpression();
         this.expr = condition.getExpr();
+        validate();
     }
 
     public void setDataId(String dataId) {
