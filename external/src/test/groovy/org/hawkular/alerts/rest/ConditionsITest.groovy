@@ -467,24 +467,32 @@ class ConditionsITest extends AbstractQuarkusITestBase {
     void verifyExpressionLanguageValidation() {
         def triggerId = "test-trigger-expr"
         Trigger testTrigger = new Trigger(triggerId, "No-Metric")
-        EventCondition eCond = new EventCondition(triggerId, Mode.FIRING, "dataId-event-expr")
-        eCond.setExpr("NOT (valid")
-
-        EventCondition eCond2 = new EventCondition(triggerId, Mode.FIRING, "dataId-event-expr2")
-        eCond2.setExpr("(data = 'valid')")
 
         def resp = client.post(path: "triggers", body: testTrigger)
         assertEquals(200, resp.status)
 
-        Collection<Condition> conditions = new ArrayList<>(1);
-        conditions.add(eCond)
-
-        resp = client.put(path: "triggers/" + triggerId + "/conditions/firing", body: conditions)
+        resp = client.put(path: "triggers/" + triggerId + "/conditions/firing", body: """
+[
+{
+          "triggerMode": "FIRING",
+          "type": "event",
+          "dataId": "dataId-event-expr",
+          "expression": "NOT (valid"
+}
+]
+        """)
         assertEquals(400, resp.status)
 
-        conditions.remove(0)
-        conditions.add(eCond2)
-        resp = client.put(path: "triggers/" + triggerId + "/conditions/firing", body: conditions)
+        resp = client.put(path: "triggers/" + triggerId + "/conditions/firing", body: """
+[
+{
+          "triggerMode": "FIRING",
+          "type": "event",
+          "dataId": "dataId-event-expr",
+          "expression": "data = 'valid'"
+}
+]
+        """)
         assertEquals(200, resp.status)
 
         resp = client.delete(path: "triggers/" + triggerId)

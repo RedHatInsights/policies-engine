@@ -114,7 +114,9 @@ public class EventCondition extends Condition {
     }
 
     public void setExpression(String expression) {
-        ExprParser.validate(expression);
+        if(expression != null && !expression.isEmpty()) {
+            ExprParser.validate(expression);
+        }
         this.expression = expression;
     }
 

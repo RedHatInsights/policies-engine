@@ -72,8 +72,7 @@ class EventsLifecycleITest extends AbstractQuarkusITestBase {
             Thread.sleep(100);
 
             // FETCH recent alerts for trigger, there should be 1
-//            resp = client.get(path: "", query: [startTime:start,triggerIds:"test-events-t01"] )
-            resp = client.get(path: "", query: [triggerIds:"test-events-t01"] )
+            resp = client.get(path: "", query: [startTime:start,triggerIds:"test-events-t01"] )
             if ( resp.status == 200 && resp.data != null && resp.data.size > 0) {
                 if ( i > 50 ) {
                     logger.info( "Perf: passing but sleep iterations high [" + i + "]" );
@@ -111,7 +110,7 @@ class EventsLifecycleITest extends AbstractQuarkusITestBase {
 
         // Add a condition over events
         EventCondition firingCond1 = new EventCondition("test-events-t02-app1", Mode.FIRING, "app1.war",
-            "text == 'DOWN'");
+            "text = 'DOWN'");
         Collection<Condition> conditions1 = new ArrayList<>(1);
         conditions1.add( firingCond1 );
 
@@ -132,7 +131,7 @@ class EventsLifecycleITest extends AbstractQuarkusITestBase {
 
         // Add a condition over events
         EventCondition firingCond2 = new EventCondition("test-events-t02-app2", Mode.FIRING, "app2.war",
-            "text == 'DOWN'");
+            "text = 'DOWN'");
         Collection<Condition> conditions2 = new ArrayList<>(1);
         conditions2.add( firingCond2 );
 
@@ -233,7 +232,7 @@ class EventsLifecycleITest extends AbstractQuarkusITestBase {
 
         // Add a condition over events
         EventCondition firingCond1 = new EventCondition("test-events-t03-app1", Mode.FIRING, "app1-03.war",
-                "text == 'DOWN'");
+                "text = 'DOWN'");
         Collection<Condition> conditions1 = new ArrayList<>(1);
         conditions1.add( firingCond1 );
 
@@ -254,7 +253,7 @@ class EventsLifecycleITest extends AbstractQuarkusITestBase {
 
         // Add a condition over events
         EventCondition firingCond2 = new EventCondition("test-events-t03-app2", Mode.FIRING, "app2-03.war",
-                "text == 'DOWN'");
+                "text = 'DOWN'");
         Collection<Condition> conditions2 = new ArrayList<>(1);
         conditions2.add( firingCond2 );
 
