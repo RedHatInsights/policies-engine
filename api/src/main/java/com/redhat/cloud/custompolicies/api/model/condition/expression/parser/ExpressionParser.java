@@ -770,7 +770,6 @@ public class ExpressionParser extends Parser {
 
 	public static class ValueContext extends ParserRuleContext {
 		public TerminalNode NUMBER() { return getToken(ExpressionParser.NUMBER, 0); }
-		public TerminalNode SIMPLETEXT() { return getToken(ExpressionParser.SIMPLETEXT, 0); }
 		public TerminalNode STRING() { return getToken(ExpressionParser.STRING, 0); }
 		public ValueContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -800,7 +799,7 @@ public class ExpressionParser extends Parser {
 			{
 			setState(99);
 			_la = _input.LA(1);
-			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << NUMBER) | (1L << SIMPLETEXT) | (1L << STRING))) != 0)) ) {
+			if ( !(_la==NUMBER || _la==STRING) ) {
 			_errHandler.recoverInline(this);
 			}
 			else {
@@ -939,7 +938,7 @@ public class ExpressionParser extends Parser {
 		"\4I\n\4\3\5\3\5\3\6\3\6\3\7\3\7\3\b\3\b\3\t\3\t\3\n\3\n\3\n\3\n\7\nY\n"+
 		"\n\f\n\16\n\\\13\n\3\n\3\n\3\n\3\n\5\nb\n\n\3\13\3\13\3\f\3\f\3\r\3\r"+
 		"\3\16\3\16\3\16\2\3\4\17\2\4\6\b\n\f\16\20\22\24\26\30\32\2\b\3\2\b\t"+
-		"\3\2\13\f\3\2\17\22\4\2\r\r\23\23\4\2\24\24\27\30\4\2\n\n\16\16\2h\2\34"+
+		"\3\2\13\f\3\2\17\22\4\2\r\r\23\23\4\2\24\24\30\30\4\2\n\n\16\16\2h\2\34"+
 		"\3\2\2\2\4(\3\2\2\2\6H\3\2\2\2\bJ\3\2\2\2\nL\3\2\2\2\fN\3\2\2\2\16P\3"+
 		"\2\2\2\20R\3\2\2\2\22a\3\2\2\2\24c\3\2\2\2\26e\3\2\2\2\30g\3\2\2\2\32"+
 		"i\3\2\2\2\34\35\5\4\3\2\35\36\7\2\2\3\36\3\3\2\2\2\37 \b\3\1\2 !\5\30"+

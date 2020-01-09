@@ -55,4 +55,18 @@ public class ExprKeyTest {
         expr = "tags.c.f = 'd'";
         assertFalse(ExprParser.evaluate(event, expr));
     }
+
+    @Test
+    public void testEscapedKeyName() {
+        Event event = new Event();
+        Map<String, Object> factMap = new HashMap<>();
+        factMap.put("log.category", "b");
+        event.setFacts(factMap);
+
+        String expr = "facts.log.category = 'b'";
+        assertFalse(ExprParser.evaluate(event, expr));
+
+        expr = "facts.log\\.category = 'b'";
+        assertTrue(ExprParser.evaluate(event, expr));
+    }
 }

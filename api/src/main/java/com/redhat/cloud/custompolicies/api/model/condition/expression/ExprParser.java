@@ -12,7 +12,6 @@ import org.hawkular.alerts.api.model.event.Event;
 
 import java.math.BigDecimal;
 import java.util.BitSet;
-import java.util.Collection;
 import java.util.Map;
 
 /*
@@ -36,6 +35,8 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
     private static final String CATEGORY = "category";
     private static final String TAGS = "tags.";
     private static final String FACTS = "facts.";
+
+    private static final String KEY_REGEXP = "(?<!\\\\)\\.";
 
     static ParseTree createParserTree(String expression, ANTLRErrorListener errorListener) {
         CharStream cs = CharStreams.fromString(expression);
@@ -90,7 +91,6 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
     // ExpressionBaseVisitor
 
     static class ExprVisitor extends ExpressionBaseVisitor<Boolean> {
-//        private Map<String, Object> facts;
         private Event value;
 
         ExprVisitor(Event value) {
@@ -191,11 +191,16 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
                         targetValueDecimal = new BigDecimal((Integer) targetValue);
                     } else if(targetValue instanceof String) {
                         // Do String comparison
-                        targetValueDecimal = null;
+                        try {
+                            targetValueDecimal = new BigDecimal(targetValueStr);
+                        } catch (NumberFormatException e) {
+                            // Only allow String comparison operators
+                            targetValueDecimal = null;
+                        }
                     } else {
                         return false;
                     }
-                    if(targetValueDecimal != null) {
+                    if (targetValueDecimal != null) {
                         targetValueStr = targetValueDecimal.toString();
                     }
                     strValue = decimalValue.toString();
@@ -328,14 +333,16 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
             } else if (eventField.startsWith(FACTS)) {
                 String key = eventField.substring(6);
 
-                // facts.key.value.value.etc
-                String[] subMap = key.split("\\.", 2);
-                Object innerValue = value.getFacts().get(subMap[0]);
+                // Allow matching of keys with dot in them if they're escaped correctly
+                String[] subMap = key.split(KEY_REGEXP, 2);
+                String innerKey = subMap[0].replace("\\.", ".");
+                Object innerValue = value.getFacts().get(innerKey);
 
                 while(subMap.length > 1) {
                     if(innerValue instanceof Map) {
-                        subMap = subMap[1].split("\\.", 2);
-                        innerValue = ((Map) innerValue).get(subMap[0]);
+                        subMap = subMap[1].split(KEY_REGEXP, 2);
+                        innerKey = subMap[0].replace("\\.", ".");
+                        innerValue = ((Map) innerValue).get(innerKey);
                     } else {
                         break;
                     }
@@ -358,15 +365,11 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
 
     static String valueToString(ExpressionParser.ValueContext value) {
         String strValue = null;
-        if (value.STRING() != null || value.SIMPLETEXT() != null) {
-            // This is String value
-            if (value.STRING() != null) {
-                strValue = value.STRING().getSymbol().getText();
-            } else if (value.SIMPLETEXT() != null) {
-                strValue = value.SIMPLETEXT().getSymbol().getText();
-            }
+        if (value.STRING() != null) {
+            strValue = value.STRING().getSymbol().getText();
             strValue = strValue.replaceAll("^(['\"])(.*)\\1$", "$2");
         }
+
         return strValue;
     }
 }

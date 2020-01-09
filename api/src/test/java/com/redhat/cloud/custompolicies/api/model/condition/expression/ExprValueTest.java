@@ -60,20 +60,20 @@ public class ExprValueTest {
         factMap.put("a", "b c");
         event.setFacts(factMap);
 
-        String expr = "facts.a contains b";
+        String expr = "facts.a contains \"b\"";
         assertTrue(ExprParser.evaluate(event, expr));
 
-        expr = "facts.a contains [b, c]";
+        expr = "facts.a contains ['b', 'c']";
         assertTrue(ExprParser.evaluate(event, expr));
 
-        expr = "facts.a contains [b]";
+        expr = "facts.a contains ['b']";
         assertTrue(ExprParser.evaluate(event, expr));
 
         // Empty array matches always
         expr = "facts.a contains []";
         assertTrue(ExprParser.evaluate(event, expr));
 
-        expr = "facts.a contains [b, e]";
+        expr = "facts.a contains ['b', 'e']";
         assertFalse(ExprParser.evaluate(event, expr));
     }
 
@@ -88,20 +88,20 @@ public class ExprValueTest {
         factMap.put("a", aList);
         event.setFacts(factMap);
 
-        String expr = "facts.a contains b";
+        String expr = "facts.a contains 'b'";
         assertTrue(ExprParser.evaluate(event, expr));
 
-        expr = "facts.a contains [b, c]";
+        expr = "facts.a contains [\"b\", \"c\"]";
         assertTrue(ExprParser.evaluate(event, expr));
 
-        expr = "facts.a contains [b]";
+        expr = "facts.a contains ['b']";
         assertTrue(ExprParser.evaluate(event, expr));
 
         // Empty array matches always
         expr = "facts.a contains []";
         assertTrue(ExprParser.evaluate(event, expr));
 
-        expr = "facts.a contains [b, e]";
+        expr = "facts.a contains ['b', 'e']";
         assertFalse(ExprParser.evaluate(event, expr));
     }
 }

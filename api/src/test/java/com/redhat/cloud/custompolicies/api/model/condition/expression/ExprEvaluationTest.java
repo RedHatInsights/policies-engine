@@ -20,7 +20,7 @@ public class ExprEvaluationTest {
         factMap.put("c", "");
         event.setFacts(factMap);
 
-        String expr = "facts.a = b";
+        String expr = "facts.a = 'b'";
         assertTrue(ExprParser.evaluate(event, expr));
 
         expr = "facts.a = 'b'";
@@ -127,16 +127,16 @@ public class ExprEvaluationTest {
         factMap.put("a", "b");
         event.setFacts(factMap);
 
-        String expr = "facts.a IN [b, c, d]";
+        String expr = "facts.a IN ['b', 'c', 'd']";
         assertTrue(ExprParser.evaluate(event, expr));
 
-        expr = "facts.a IN [b]";
+        expr = "facts.a IN ['b']";
         assertTrue(ExprParser.evaluate(event, expr));
 
         expr = "facts.a IN []";
         assertFalse(ExprParser.evaluate(event, expr));
 
-        expr = "facts.a IN [c, d]";
+        expr = "facts.a IN ['c', 'd']";
         assertFalse(ExprParser.evaluate(event, expr));
     }
 
@@ -148,7 +148,7 @@ public class ExprEvaluationTest {
         factMap.put("b", 1);
         event.setFacts(factMap);
 
-        String expr = "NOT (facts.a IN [c, d])";
+        String expr = "NOT (facts.a IN ['c', 'd'])";
         assertTrue(ExprParser.evaluate(event, expr));
 
         expr = "NOT (facts.a != 3)";

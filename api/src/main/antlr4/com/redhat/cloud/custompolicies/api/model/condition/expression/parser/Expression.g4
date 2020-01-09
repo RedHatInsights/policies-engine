@@ -58,7 +58,6 @@ numerical_value
 
 value
  : NUMBER
- | SIMPLETEXT
  | STRING
  ;
 
@@ -90,14 +89,12 @@ LTE: '<=';
 IN: I N;
 
 // Needs maybe INTEGER OR FLOAT? Use fragments?
-//NUMBER : [0-9.]+ ;
-
 NUMBER : INTEGER ('.' INTEGER)? ;
 
 FLOAT : INTEGER '.' INTEGER ;
 INTEGER : [0-9]+ ;
 
-SIMPLETEXT  : [a-zA-Z_0-9.][\-a-zA-Z_0-9.]* ;
+SIMPLETEXT  : [a-zA-Z_0-9.]([\-a-zA-Z_0-9.] | ESC_DOT)* ;
 STRING :  '\'' ( ESC | ~('\\'|'\'') )* '\''
           |'"' ( ESC | ~('\\'|'"') )* '"';
 //COMPLEXTEXT :  '\'' (ESC | ~['\\])* '\'' ;
@@ -109,6 +106,8 @@ WS  :   [ \t\n\r]+ -> skip ;
 fragment ESC : '\\' (['\\/bfnrt] | UNICODE | NEG_OP) ;
 fragment UNICODE : 'u' HEX HEX HEX HEX ;
 fragment HEX : [0-9a-fA-F] ;
+
+fragment ESC_DOT : '\\.';
 
 fragment A: [aA];
 fragment B: [bB];

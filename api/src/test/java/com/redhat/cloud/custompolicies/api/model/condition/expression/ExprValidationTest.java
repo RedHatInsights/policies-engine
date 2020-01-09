@@ -112,8 +112,6 @@ public class ExprValidationTest {
 
     @Test
     public void testNegation() {
-        // Not supported yet
-        ExprParser exprParser = new ExprParser();
         String expr = "not (machine_name = 'localhost' OR cores > 9)";
         ExprParser.validate(expr);
 
@@ -128,5 +126,16 @@ public class ExprValidationTest {
 
         expr = "!(a = 'b')";
         ExprParser.validate(expr);
+    }
+
+    @Test
+    public void testRejectUnquotedString() {
+        try {
+            // Unquoted strings are reserved for future use, don't allow them
+            String expr = "a = b";
+            ExprParser.validate(expr);
+            fail();
+        } catch(IllegalArgumentException e) { }
+
     }
 }
