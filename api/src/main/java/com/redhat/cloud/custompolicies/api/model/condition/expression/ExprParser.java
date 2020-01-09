@@ -8,6 +8,7 @@ import org.antlr.v4.runtime.atn.ATNConfigSet;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.hawkular.alerts.api.model.event.Event;
 
 import java.math.BigDecimal;
 import java.util.BitSet;
@@ -28,6 +29,14 @@ import java.util.Map;
 
 public class ExprParser extends ExpressionBaseVisitor<Boolean> {
 
+    private static final String TENANT_ID = "tenantId";
+    private static final String ID = "id";
+    private static final String CTIME = "ctime";
+    private static final String TEXT = "text";
+    private static final String CATEGORY = "category";
+    private static final String TAGS = "tags.";
+    private static final String FACTS = "facts.";
+
     static ParseTree createParserTree(String expression, ANTLRErrorListener errorListener) {
         CharStream cs = CharStreams.fromString(expression);
         ExpressionLexer lexer = new ExpressionLexer(cs);
@@ -47,10 +56,10 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
         createParserTree(expression, errorListener);
     }
 
-    public static boolean evaluate(Map<String, Object> facts, String expression) {
+    public static boolean evaluate(Event value, String expression) {
         ThrowingErrorHandler errorListener = new ThrowingErrorHandler();
         ParseTree parseTree = createParserTree(expression, errorListener);
-        ExprVisitor visitor = new ExprVisitor(facts);
+        ExprVisitor visitor = new ExprVisitor(value);
         return visitor.visit(parseTree);
     }
 
@@ -81,10 +90,11 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
     // ExpressionBaseVisitor
 
     static class ExprVisitor extends ExpressionBaseVisitor<Boolean> {
-        private Map<String, Object> facts;
+//        private Map<String, Object> facts;
+        private Event value;
 
-        ExprVisitor(Map<String, Object> facts) {
-            this.facts = facts;
+        ExprVisitor(Event value) {
+            this.value = value;
         }
 
         @Override
@@ -146,7 +156,7 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
                 return false;
             }
 
-            final Object targetValue = facts.get(key);
+            final Object targetValue = decodeKeyToValue(key);
             if(targetValue == null) {
                 // Doesn't matter if the key exists or not - the value will not match
                 return false;
@@ -297,6 +307,44 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
 
             // The define only check (negative is thrown out earlier)
             return true;
+        }
+
+        private Object decodeKeyToValue(String eventField) {
+            Object sEventValue = null;
+            if (TENANT_ID.equals(eventField)) {
+                sEventValue = value.getTenantId();
+            } else if (ID.equals(eventField)) {
+                sEventValue = value.getId();
+            } else if (CTIME.equals(eventField)) {
+                sEventValue = value.getCtime();
+            } else if (TEXT.equals(eventField)) {
+                sEventValue = value.getText();
+            } else if (CATEGORY.equals(eventField)) {
+                sEventValue = value.getCategory();
+            } else if (eventField.startsWith(TAGS)) {
+                // We get the key from tags.<key> string
+                String key = eventField.substring(5);
+                sEventValue = value.getTags().get(key);
+            } else if (eventField.startsWith(FACTS)) {
+                String key = eventField.substring(6);
+
+                // facts.key.value.value.etc
+                String[] subMap = key.split("\\.", 2);
+                Object innerValue = value.getFacts().get(subMap[0]);
+
+                while(subMap.length > 1) {
+                    if(innerValue instanceof Map) {
+                        subMap = subMap[1].split("\\.", 2);
+                        innerValue = ((Map) innerValue).get(subMap[0]);
+                    } else {
+                        break;
+                    }
+                }
+
+                sEventValue = innerValue;
+            }
+
+            return sEventValue;
         }
     }
 

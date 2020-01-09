@@ -220,7 +220,7 @@ public class EventCondition extends Condition {
         }
         if(expr != null && !isEmpty(expr)) {
             // Process expr first
-            return ExprParser.evaluate(value.getFacts(), expr);
+            return ExprParser.evaluate(value, expr);
         }
         List<String> expressions = new ArrayList<>();
         int j = 0;

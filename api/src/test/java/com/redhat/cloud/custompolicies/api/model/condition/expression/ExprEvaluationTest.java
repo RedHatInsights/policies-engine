@@ -1,5 +1,6 @@
 package com.redhat.cloud.custompolicies.api.model.condition.expression;
 
+import org.hawkular.alerts.api.model.event.Event;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -12,165 +13,178 @@ public class ExprEvaluationTest {
 
     @Test
     public void testStrComparisons() {
+        Event event = new Event();
         Map<String, Object> factMap = new HashMap<>();
         factMap.put("a", "b");
         factMap.put("b", 3);
         factMap.put("c", "");
+        event.setFacts(factMap);
 
-        String expr = "a = b";
-        assertTrue(ExprParser.evaluate(factMap, expr));
+        String expr = "facts.a = b";
+        assertTrue(ExprParser.evaluate(event, expr));
 
-        expr = "a = 'b'";
-        assertTrue(ExprParser.evaluate(factMap, expr));
+        expr = "facts.a = 'b'";
+        assertTrue(ExprParser.evaluate(event, expr));
 
-        expr = "a != 'c'";
-        assertTrue(ExprParser.evaluate(factMap, expr));
+        expr = "facts.a != 'c'";
+        assertTrue(ExprParser.evaluate(event, expr));
 
         // String comparison, equality should still match?
-        expr = "b = '3'";
-        assertTrue(ExprParser.evaluate(factMap, expr));
+        expr = "facts.b = '3'";
+        assertTrue(ExprParser.evaluate(event, expr));
 
         // Empty string matching
-        expr = "c = ''";
-        assertTrue(ExprParser.evaluate(factMap, expr));
+        expr = "facts.c = ''";
+        assertTrue(ExprParser.evaluate(event, expr));
 
-        expr = "c != ' '";
-        assertTrue(ExprParser.evaluate(factMap, expr));
+        expr = "facts.c != ' '";
+        assertTrue(ExprParser.evaluate(event, expr));
     }
 
     @Test
     public void testImpossibleStrComparisons() {
+        Event event = new Event();
         Map<String, Object> factMap = new HashMap<>();
         factMap.put("a", "b");
         factMap.put("b", 4);
+        event.setFacts(factMap);
 
         String expr = "a > 3";
-        assertFalse(ExprParser.evaluate(factMap, expr));
+        assertFalse(ExprParser.evaluate(event, expr));
 
         expr = "a < 3";
-        assertFalse(ExprParser.evaluate(factMap, expr));
+        assertFalse(ExprParser.evaluate(event, expr));
 
         expr = "a <= 3";
-        assertFalse(ExprParser.evaluate(factMap, expr));
+        assertFalse(ExprParser.evaluate(event, expr));
 
         expr = "a >= 3";
-        assertFalse(ExprParser.evaluate(factMap, expr));
+        assertFalse(ExprParser.evaluate(event, expr));
     }
 
     @Test
     public void testNumberComparisons() {
+        Event event = new Event();
         Map<String, Object> factMap = new HashMap<>();
         factMap.put("a", 2);
         factMap.put("b", 4.0);
         factMap.put("c", 4.1);
+        event.setFacts(factMap);
 
-        String expr = "a = 2";
-        assertTrue(ExprParser.evaluate(factMap, expr));
+        String expr = "facts.a = 2";
+        assertTrue(ExprParser.evaluate(event, expr));
 
-        expr = "a != 3";
-        assertTrue(ExprParser.evaluate(factMap, expr));
+        expr = "facts.a != 3";
+        assertTrue(ExprParser.evaluate(event, expr));
 
-        expr = "a >= 2";
-        assertTrue(ExprParser.evaluate(factMap, expr));
+        expr = "facts.a >= 2";
+        assertTrue(ExprParser.evaluate(event, expr));
 
-        expr = "a < 2.1";
-        assertTrue(ExprParser.evaluate(factMap, expr));
+        expr = "facts.a < 2.1";
+        assertTrue(ExprParser.evaluate(event, expr));
 
-        expr = "b = 4.00";
-        assertTrue(ExprParser.evaluate(factMap, expr));
+        expr = "facts.b = 4.00";
+        assertTrue(ExprParser.evaluate(event, expr));
 
-        expr = "b = 4";
-        assertTrue(ExprParser.evaluate(factMap, expr));
+        expr = "facts.b = 4";
+        assertTrue(ExprParser.evaluate(event, expr));
 
-        expr = "b > 3";
-        assertTrue(ExprParser.evaluate(factMap, expr));
+        expr = "facts.b > 3";
+        assertTrue(ExprParser.evaluate(event, expr));
 
-        expr = "b <= 5";
-        assertTrue(ExprParser.evaluate(factMap, expr));
+        expr = "facts.b <= 5";
+        assertTrue(ExprParser.evaluate(event, expr));
 
-        expr = "c < 3";
-        assertFalse(ExprParser.evaluate(factMap, expr));
+        expr = "facts.c < 3";
+        assertFalse(ExprParser.evaluate(event, expr));
 
-        expr = "b = 3.99";
-        assertFalse(ExprParser.evaluate(factMap, expr));
+        expr = "facts.b = 3.99";
+        assertFalse(ExprParser.evaluate(event, expr));
 
-        expr = "c != 4.1";
-        assertFalse(ExprParser.evaluate(factMap, expr));
+        expr = "facts.c != 4.1";
+        assertFalse(ExprParser.evaluate(event, expr));
     }
 
     @Test
     public void testNullMatching() {
         // Mainly error handling - should return false and not fail
+        Event event = new Event();
         Map<String, Object> factMap = new HashMap<>();
         factMap.put("c", null);
+        event.setFacts(factMap);
 
-        String expr = "c = 2";
-        assertFalse(ExprParser.evaluate(factMap, expr));
+        String expr = "facts.c = 2";
+        assertFalse(ExprParser.evaluate(event, expr));
 
-        expr = "c = 'b'";
-        assertFalse(ExprParser.evaluate(factMap, expr));
+        expr = "facts.c = 'b'";
+        assertFalse(ExprParser.evaluate(event, expr));
     }
 
     @Test
     public void testInMatching() {
-        // Negations are NotImplementedYet
+        Event event = new Event();
         Map<String, Object> factMap = new HashMap<>();
         factMap.put("a", "b");
+        event.setFacts(factMap);
 
-        String expr = "a IN [b, c, d]";
-        assertTrue(ExprParser.evaluate(factMap, expr));
+        String expr = "facts.a IN [b, c, d]";
+        assertTrue(ExprParser.evaluate(event, expr));
 
-        expr = "a IN [b]";
-        assertTrue(ExprParser.evaluate(factMap, expr));
+        expr = "facts.a IN [b]";
+        assertTrue(ExprParser.evaluate(event, expr));
 
-        expr = "a IN []";
-        assertFalse(ExprParser.evaluate(factMap, expr));
+        expr = "facts.a IN []";
+        assertFalse(ExprParser.evaluate(event, expr));
 
-        expr = "a IN [c, d]";
-        assertFalse(ExprParser.evaluate(factMap, expr));
+        expr = "facts.a IN [c, d]";
+        assertFalse(ExprParser.evaluate(event, expr));
     }
 
     @Test
     public void testNotMatching() {
+        Event event = new Event();
         Map<String, Object> factMap = new HashMap<>();
         factMap.put("a", "b");
         factMap.put("b", 1);
+        event.setFacts(factMap);
 
-        String expr = "NOT (a IN [c, d])";
-        assertTrue(ExprParser.evaluate(factMap, expr));
+        String expr = "NOT (facts.a IN [c, d])";
+        assertTrue(ExprParser.evaluate(event, expr));
 
-        expr = "NOT (a != 3)";
-        assertFalse(ExprParser.evaluate(factMap, expr));
+        expr = "NOT (facts.a != 3)";
+        assertFalse(ExprParser.evaluate(event, expr));
 
-        expr = "NOT (b >= 2)";
-        assertTrue(ExprParser.evaluate(factMap, expr));
+        expr = "NOT (facts.b >= 2)";
+        assertTrue(ExprParser.evaluate(event, expr));
 
-        expr = "NOT a = 'b'";
-        assertFalse(ExprParser.evaluate(factMap, expr));
+        expr = "NOT facts.a = 'b'";
+        assertFalse(ExprParser.evaluate(event, expr));
 
-        expr = "!(a = 'b')";
-        assertFalse(ExprParser.evaluate(factMap, expr));
+        expr = "!(facts.a = 'b')";
+        assertFalse(ExprParser.evaluate(event, expr));
     }
 
     @Test
     public void testDefine() {
+        Event event = new Event();
         Map<String, Object> factMap = new HashMap<>();
         factMap.put("a", "b");
         factMap.put("b", 1);
+        event.setFacts(factMap);
 
-        String expr = "a";
-        assertTrue(ExprParser.evaluate(factMap, expr));
+        String expr = "facts.a";
+        assertTrue(ExprParser.evaluate(event, expr));
 
-        expr = "c";
-        assertFalse(ExprParser.evaluate(factMap, expr));
+        expr = "facts.c";
+        assertFalse(ExprParser.evaluate(event, expr));
 
-        expr = "(c)";
-        assertFalse(ExprParser.evaluate(factMap, expr));
+        expr = "(facts.c)";
+        assertFalse(ExprParser.evaluate(event, expr));
 
-        expr = "NOT c";
-        assertTrue(ExprParser.evaluate(factMap, expr));
+        expr = "NOT facts.c";
+        assertTrue(ExprParser.evaluate(event, expr));
 
-        expr = "a = 'b' AND b";
-        assertTrue(ExprParser.evaluate(factMap, expr));
+        expr = "facts.a = 'b' AND facts.b";
+        assertTrue(ExprParser.evaluate(event, expr));
     }
 }
