@@ -1459,7 +1459,7 @@ public class JsonTest {
                                                                       "detect-undeployment-containerZ-with-errors-" +
                                                                       "FIRING-2-2\"," +
                                                     "\"dataId\":\"events-logs-source\"," +
-                                                    "\"expression\":\"text starts 'ERROR'\"}," +
+                                                    "\"expression\":\"text contains 'ERROR'\"}," +
                                                 "\"value\":{" +
                                                     "\"eventType\":\"EVENT\"," +
                                                     "\"eventType\":null," +
@@ -1497,8 +1497,8 @@ public class JsonTest {
                                                                       "detect-undeployment-containerZ-with-errors-" +
                                                                       "FIRING-2-1\"," +
                                                     "\"dataId\":\"events-deployments-source\"," +
-                                                    "\"expression\":\"tags.operation == 'undeployment'," +
-                                                                "tags.container == 'containerZ'\"" +
+                                                    "\"expression\":\"tags.operation = 'undeployment' AND " +
+                                                                "tags.container = 'containerZ'\"" +
                                                 "}," + // End condition
                                                 "\"value\":{" +
                                                     "\"eventType\":\"EVENT\"," +

@@ -123,6 +123,7 @@ public class FullTrigger implements Serializable {
                 if (isEmpty(c.getTriggerId()) || !c.getTriggerId().equals(trigger.getId())) {
                     c.setTriggerId(trigger.getId());
                 }
+                c.validate();
             }
         }
     }

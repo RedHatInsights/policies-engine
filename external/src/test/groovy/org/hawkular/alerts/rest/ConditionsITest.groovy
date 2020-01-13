@@ -462,4 +462,40 @@ class ConditionsITest extends AbstractQuarkusITestBase {
         resp = client.delete(path: "triggers/groups/group-trigger")
         assertEquals(200, resp.status)
     }
+
+    @Test
+    void verifyExpressionLanguageValidation() {
+        def triggerId = "test-trigger-expr"
+        Trigger testTrigger = new Trigger(triggerId, "No-Metric")
+
+        def resp = client.post(path: "triggers", body: testTrigger)
+        assertEquals(200, resp.status)
+
+        resp = client.put(path: "triggers/" + triggerId + "/conditions/firing", body: """
+[
+{
+          "triggerMode": "FIRING",
+          "type": "event",
+          "dataId": "dataId-event-expr",
+          "expression": "NOT (valid"
+}
+]
+        """)
+        assertEquals(400, resp.status)
+
+        resp = client.put(path: "triggers/" + triggerId + "/conditions/firing", body: """
+[
+{
+          "triggerMode": "FIRING",
+          "type": "event",
+          "dataId": "dataId-event-expr",
+          "expression": "data = 'valid'"
+}
+]
+        """)
+        assertEquals(200, resp.status)
+
+        resp = client.delete(path: "triggers/" + triggerId)
+        assertEquals(200, resp.status)
+    }
 }

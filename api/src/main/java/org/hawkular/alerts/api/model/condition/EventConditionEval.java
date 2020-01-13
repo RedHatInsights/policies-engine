@@ -79,8 +79,7 @@ public class EventConditionEval extends ConditionEval {
 
     @Override
     public void updateDisplayString() {
-        String cond = condition.getExpression() != null && condition.getExpression().length() > 0 ? condition.getExpression() : condition.getExpr();
-        String s = String.format("Event: %s[%s] matches [%s]", condition.getDataId(), value, cond);
+        String s = String.format("Event: %s[%s] matches [%s]", condition.getDataId(), value, condition.getExpression());
         setDisplayString(s);
     }
 

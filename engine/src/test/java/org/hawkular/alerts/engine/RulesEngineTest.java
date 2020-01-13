@@ -1091,7 +1091,7 @@ public class RulesEngineTest {
     public void eventTest() {
         Trigger t1 = new Trigger("tenant", "trigger-1", "Events Test");
         t1.setEventType(EventType.EVENT);
-        EventCondition t1c1 = new EventCondition("tenant", "trigger-1", "myapp.war", "text == 'DOWN'");
+        EventCondition t1c1 = new EventCondition("tenant", "trigger-1", "myapp.war", "text = 'DOWN'");
 
         Event appDownEvent = new Event("tenant", UUID.randomUUID().toString(), "myapp.war",
                 EventCategory.DEPLOYMENT.name(), "DOWN");
@@ -1194,11 +1194,11 @@ public class RulesEngineTest {
         Trigger t1 = new Trigger("tenant", "trigger-1", "Events Test");
         t1.setEventType(EventType.EVENT);
         EventCondition t1c1 = new EventCondition("tenant", "trigger-1", Mode.FIRING, 3, 1, "myapp.war",
-                "text == 'DOWN'");
+                "text = 'DOWN'");
         EventCondition t1c2 = new EventCondition("tenant", "trigger-1", Mode.FIRING, 3, 2, "datacenter1",
-                "text starts 'ERROR'");
+                "text contains 'ERROR'");
         EventCondition t1c3 = new EventCondition("tenant", "trigger-1", Mode.FIRING, 3, 3, "datacenter2",
-                "text starts 'WARN'");
+                "text contains 'WARN'");
 
         /*
             On multiple conditions timestamps on input events are important.
@@ -1281,11 +1281,11 @@ public class RulesEngineTest {
     public void chainedEventsRules() {
         Trigger t1 = new Trigger("tenant", "trigger-1", "A.war");
         t1.setEventType(EventType.EVENT);
-        EventCondition t1c1 = new EventCondition("tenant", "trigger-1", Mode.FIRING, "A.war", "text == 'DOWN'");
+        EventCondition t1c1 = new EventCondition("tenant", "trigger-1", Mode.FIRING, "A.war", "text = 'DOWN'");
 
         Trigger t2 = new Trigger("tenant", "trigger-2", "B.war");
         t2.setEventType(EventType.EVENT);
-        EventCondition t2c1 = new EventCondition("tenant", "trigger-2", Mode.FIRING, "B.war", "text == 'DOWN'");
+        EventCondition t2c1 = new EventCondition("tenant", "trigger-2", Mode.FIRING, "B.war", "text = 'DOWN'");
 
         Trigger t3 = new Trigger("tenant", "trigger-3", "A.war and B.war DOWN");
         EventCondition t3c1 = new EventCondition("tenant", "trigger-3", Mode.FIRING, 2, 1, "trigger-1");
