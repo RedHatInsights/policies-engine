@@ -11,7 +11,7 @@
   <artifactId>custom-policies-engine-engine</artifactId>
   <packaging>jar</packaging>
 
-  <name>Hawkular Alerting: Engine</name>
+  <name>Custom Policies Engine: Rules Engine</name>
 
   <dependencies>
 
@@ -31,27 +31,11 @@
     <dependency>
       <groupId>org.kie</groupId>
       <artifactId>kie-api</artifactId>
-      <version>${version.org.drools}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.drools</groupId>
-      <artifactId>drools-core</artifactId>
-      <version>${version.org.drools}</version>
     </dependency>
     <dependency>
       <groupId>org.drools</groupId>
       <artifactId>drools-compiler</artifactId>
-      <version>${version.org.drools}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>xmlpull</groupId>
-          <artifactId>xmlpull</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>xpp3</groupId>
-          <artifactId>xpp3_min</artifactId>
-        </exclusion>
-      </exclusions>
+      <scope>runtime</scope>
     </dependency>
 
     <dependency>
@@ -180,7 +164,7 @@
               <addClasspath>true</addClasspath>
             </manifest>
             <manifestEntries>
-              <Implementation-Vendor-Id>org.hawkular.alerts</Implementation-Vendor-Id>
+              <Implementation-Vendor-Id>com.redhat.cloud.custompolicies.engine</Implementation-Vendor-Id>
               <Implementation-Version>${project.version}</Implementation-Version>
             </manifestEntries>
           </archive>

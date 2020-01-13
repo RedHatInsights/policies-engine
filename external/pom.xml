@@ -10,7 +10,7 @@
   </parent>
 
   <artifactId>custom-policies-engine-external</artifactId>
-  <name>Hawkular Alerting: Quarkus</name>
+  <name>Custom Policies Engine: External</name>
   <properties>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <maven.compiler.parameters>true</maven.compiler.parameters>
