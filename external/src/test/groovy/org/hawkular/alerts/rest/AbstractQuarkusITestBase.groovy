@@ -18,27 +18,27 @@ abstract class AbstractQuarkusITestBase {
     static String tenantHeaderName = "Hawkular-Tenant"
     static final String TENANT_PREFIX = UUID.randomUUID().toString()
     static final AtomicInteger TENANT_ID_COUNTER = new AtomicInteger(0)
-    static cluster = System.getProperty('cluster') ? true : false
-    static testTenant = nextTenantId()
-
+    static String testTenant
     static String failureEntity;
+
+    AbstractQuarkusITestBase() {
+    }
 
     @BeforeAll
     static void initClient() {
-
+        testTenant = nextTenantId()
         client = new RESTClient(baseURI, ContentType.JSON)
         // this prevents 404 from being wrapped in an Exception, just return the response, better for testing
         client.handler.failure = { resp ->
-          failureEntity = null
-          if (resp.entity != null && resp.entity.contentLength != 0) {
-            def baos = new ByteArrayOutputStream()
-            resp.entity.writeTo(baos)
-            failureEntity = new String(baos.toByteArray(), "UTF-8")
-          }
-          return resp
+            failureEntity = null
+            if (resp.entity != null && resp.entity.contentLength != 0) {
+                def baos = new ByteArrayOutputStream()
+                resp.entity.writeTo(baos)
+                failureEntity = new String(baos.toByteArray(), "UTF-8")
+            }
+            return resp
         }
-
-        client.headers.put("Hawkular-Tenant", testTenant)
+        client.headers.put(tenantHeaderName, testTenant)
     }
 
     static String nextTenantId() {
