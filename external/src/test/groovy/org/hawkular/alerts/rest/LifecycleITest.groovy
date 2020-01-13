@@ -424,6 +424,7 @@ class LifecycleITest extends AbstractQuarkusITestBase {
         // FETCH alerts for just triggers generated in test t01, by time, should be 1
         resp = client.get(path: "", query: [startTime:t01Start,endTime:t02Start] )
         assertEquals(200, resp.status)
+        System.out.println("resp.data:" + resp.data)
         assertEquals(1, resp.data.size())
         assertEquals("test-autodisable-trigger", resp.data[0].trigger.id)
 
