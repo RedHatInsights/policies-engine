@@ -111,7 +111,7 @@ rule ProvideCompareData1
         $t : Trigger( $tenantId : tenantId, $tid : id, $tmode : mode, $tsource : source )
         $c : CompareCondition( tenantId == $tenantId, triggerId == $tid, triggerMode == $tmode, $d1id : dataId )
         $d : Data( tenantId == $tenantId, source == $tsource, id == $d1id )
-        not  CompareData( data.tenantId == $tenantId, data.source == $tsource, data.id == $d1id )
+        not CompareData( data.tenantId == $tenantId, data.source == $tsource, data.id == $d1id )
     then
         CompareData compareData = new CompareData( $d );
         if (log != null && log.isDebugEnabled()) {
@@ -125,7 +125,7 @@ rule ProvideCompareData2
         $t : Trigger( $tenantId : tenantId, $tid : id, $tmode : mode, $tsource : source )
         $c : CompareCondition( tenantId == $tenantId, triggerId == $tid, triggerMode == $tmode, $d2id : data2Id )
         $d : Data( tenantId == $tenantId, source == $tsource, id == $d2id )
-        not  CompareData( data.tenantId == $tenantId, data.source == $tsource, data.id == $d2id )
+        not CompareData( data.tenantId == $tenantId, data.source == $tsource, data.id == $d2id )
     then
         CompareData compareData = new CompareData( $d );
         if (log != null && log.isDebugEnabled()) {
@@ -141,7 +141,7 @@ rule UpdateCompareData
         $cd : CompareData( $tenantId : data.tenantId, $tsource : data.source, $did : data.id, $ts : data.timestamp )
         $d  : Data( tenantId == $tenantId, source == $tsource, id == $did, timestamp > $ts )
     then
-        retract( $cd )
+        retract( $cd );
 
         CompareData compareData = new CompareData( $d );
         if (log != null && log.isDebugEnabled()) {
@@ -305,7 +305,7 @@ rule RetractNelsonData
         $nd : NelsonData( $cid : condition.conditionId )
         not   NelsonCondition ( conditionId == $cid )
     then
-        retract( $nd )
+        retract( $nd );
         if (log != null && log.isDebugEnabled()) {
             log.debugf("RetractNelsonData: %s", $nd);
         }
@@ -619,8 +619,7 @@ rule retractOrphanDampening
         $d : Dampening( $tenantId : tenantId, $tid : triggerId )
         not  Trigger( tenantId == $tenantId, id == $tid )
     then
-        retract( $d )
-
+        retract( $d );
         if (log != null && log.isDebugEnabled()) {
             log.debugf("Retract Dampening with no Trigger. %s", $d);
         }
@@ -631,7 +630,7 @@ rule retractOrphanCondition
         $c : Condition( $tenantId : tenantId, $tid : triggerId )
         not Trigger( tenantId == $tenantId, id == $tid )
     then
-        retract( $c )
+        retract( $c );
 
         if (log != null && log.isDebugEnabled()) {
             log.debugf("Retract Condition with no Trigger. %s", $c);
@@ -643,8 +642,7 @@ rule retractOrphanMissingState
         $s : MissingState( $tenantId : tenantId, $tid : triggerId )
         not Trigger( tenantId == $tenantId, id == $tid )
     then
-        retract( $s )
-
+        retract( $s );
         if (log != null && log.isDebugEnabled()) {
             log.debugf("Retract MissingState with no Trigger. %s", $s);
         }

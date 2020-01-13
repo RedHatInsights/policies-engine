@@ -12,7 +12,7 @@
   <artifactId>custom-policies-engine-commons</artifactId>
   <packaging>jar</packaging>
 
-  <name>Hawkular Alerting: Commons</name>
+  <name>Custom Policies Engine: Commons (deprecated)</name>
 
   <dependencies>
 
@@ -26,7 +26,6 @@
     <dependency>
       <groupId>org.jboss.logging</groupId>
       <artifactId>jboss-logging</artifactId>
-      <version>${version.org.jboss.logging}</version>
     </dependency>
     <dependency>
       <groupId>org.jboss.logging</groupId>

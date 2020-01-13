@@ -11,7 +11,7 @@
   <artifactId>custom-policies-engine-api</artifactId>
   <packaging>jar</packaging>
 
-  <name>Hawkular Alerting: Api</name>
+  <name>Custom Policies Engine: API</name>
 
   <dependencies>
 

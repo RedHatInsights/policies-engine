@@ -1,9 +1,6 @@
 package org.hawkular.alerts.engine.impl;
 
-import org.drools.core.event.DebugAgendaEventListener;
-import org.drools.core.event.DebugRuleRuntimeEventListener;
 import org.eclipse.microprofile.config.ConfigProvider;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.hawkular.alerts.api.model.data.Data;
 import org.hawkular.alerts.api.model.event.Event;
 import org.hawkular.alerts.engine.service.RulesEngine;
@@ -34,7 +31,7 @@ import java.util.function.Predicate;
 public class DroolsRulesEngineImpl implements RulesEngine {
     // private final MsgLogger msgLog = MsgLogger.LOGGER;
     private final MsgLogger log = MsgLogging.getMsgLogger(DroolsRulesEngineImpl.class);
-    private static final String SESSION_NAME = "hawkular-alerts-engine-session";
+    private static final String SESSION_NAME = "customProfilesEngineSession";
     private static final long PERF_BATCHING_THRESHOLD = 3000L; // 3 seconds
     private static final long PERF_FIRING_THRESHOLD = 5000L; // 5 seconds
 
@@ -59,11 +56,6 @@ public class DroolsRulesEngineImpl implements RulesEngine {
 
         minReportingIntervalEvents = ConfigProvider.getConfig().getValue("engine.rules.events.duplicate-filter-time", Integer.class);
         minReportingIntervalData = ConfigProvider.getConfig().getValue("engine.rules.data.duplicate-filter-time", Integer.class);
-
-        if (log.isTraceEnabled()) {
-            kSession.addEventListener(new DebugAgendaEventListener());
-            kSession.addEventListener(new DebugRuleRuntimeEventListener());
-        }
     }
 
     @Override

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <kmodule xmlns="http://jboss.org/kie/6.0.0/kmodule">
-  <kbase name="hawkular-alerts-engine" packages="org.hawkular.alerts.engine.rules" equalsBehavior="equality">
-    <ksession name="hawkular-alerts-engine-session"/>
+  <kbase name="customProfilesEngine" packages="org.hawkular.alerts.engine.rules" equalsBehavior="equality">
+    <ksession name="customProfilesEngineSession"/>
   </kbase>
 </kmodule>
