@@ -18,8 +18,6 @@ abstract class AbstractQuarkusITestBase {
     static String tenantHeaderName = "Hawkular-Tenant"
     static final String TENANT_PREFIX = UUID.randomUUID().toString()
     static final AtomicInteger TENANT_ID_COUNTER = new AtomicInteger(0)
-    static cluster = System.getProperty('cluster') ? true : false
-    static testTenant = nextTenantId()
 
     static String failureEntity;
 
@@ -38,7 +36,7 @@ abstract class AbstractQuarkusITestBase {
           return resp
         }
 
-        client.headers.put("Hawkular-Tenant", testTenant)
+        client.headers.put(tenantHeaderName, nextTenantId())
     }
 
     static String nextTenantId() {
