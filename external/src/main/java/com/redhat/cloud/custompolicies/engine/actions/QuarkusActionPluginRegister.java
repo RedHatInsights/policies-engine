@@ -64,14 +64,9 @@ public class QuarkusActionPluginRegister {
     }
 
     public void init() {
-        log.infof("Scanning through available plugins");
         for (ActionPluginListener pluginListener : pluginListeners) {
-            log.infof("Found instance of: %s", pluginListener);
             Class<? extends ActionPluginListener> aClass = pluginListener.getClass();
             Plugin annotation = aClass.getAnnotation(Plugin.class);
-            if (annotation != null) {
-                log.infof("Direct call would result in: %s", annotation.name());
-            }
             for (Annotation declaredAnnotation : pluginListener.getClass().getDeclaredAnnotations()) {
                 if(declaredAnnotation instanceof Plugin) {
                     Plugin pluginAnnotation = (Plugin) declaredAnnotation;

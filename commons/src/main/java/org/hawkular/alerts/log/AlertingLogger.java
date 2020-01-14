@@ -7,11 +7,7 @@ import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
-/**
- * @author Jay Shaughnessy
- * @author Lucas Ponce
- */
-@MessageLogger(projectCode = "HAWKALERT")
+@MessageLogger(projectCode = "CPOL")
 @ValidIdRange(min = 220000, max = 299999)
 public interface AlertingLogger extends MsgLogger {
 

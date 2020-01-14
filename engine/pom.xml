@@ -15,7 +15,7 @@
 
   <dependencies>
 
-    <!-- Hawkular Alerting dependencies -->
+    <!-- Custom Policies dependencies -->
     <dependency>
       <groupId>com.redhat.cloud.custompolicies</groupId>
       <artifactId>custom-policies-engine-api</artifactId>
@@ -28,6 +28,7 @@
       <version>${project.version}</version>
     </dependency>
 
+    <!-- Drools / KIE -->
     <dependency>
       <groupId>org.kie</groupId>
       <artifactId>kie-api</artifactId>
@@ -38,6 +39,7 @@
       <scope>runtime</scope>
     </dependency>
 
+    <!-- Misc -->
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-math3</artifactId>
@@ -97,20 +99,6 @@
           <artifactId>hibernate-search-backend-elasticsearch</artifactId>
         </exclusion>
       </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-slf4j-impl</artifactId>
-      <scope>test</scope>
-      <version>${version.org.apache.logging.log4j}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-core</artifactId>
-      <scope>test</scope>
-      <version>${version.org.apache.logging.log4j}</version>
     </dependency>
 
     <!-- Tests -->
