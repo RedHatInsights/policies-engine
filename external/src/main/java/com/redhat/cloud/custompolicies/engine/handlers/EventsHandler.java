@@ -1,9 +1,10 @@
 package com.redhat.cloud.custompolicies.engine.handlers;
 
+import com.redhat.cloud.custompolicies.engine.handlers.util.ResponseUtil;
+import com.redhat.cloud.custompolicies.engine.handlers.util.ResponseUtil.ApiDeleted;
+import com.redhat.cloud.custompolicies.engine.handlers.util.ResponseUtil.ApiError;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
@@ -13,9 +14,8 @@ import org.hawkular.alerts.api.model.paging.Page;
 import org.hawkular.alerts.api.model.paging.Pager;
 import org.hawkular.alerts.api.services.AlertsService;
 import org.hawkular.alerts.api.services.EventsCriteria;
-import com.redhat.cloud.custompolicies.engine.handlers.util.ResponseUtil;
-import com.redhat.cloud.custompolicies.engine.handlers.util.ResponseUtil.ApiDeleted;
-import com.redhat.cloud.custompolicies.engine.handlers.util.ResponseUtil.ApiError;
+import org.hawkular.commons.log.MsgLogger;
+import org.hawkular.commons.log.MsgLogging;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
@@ -23,12 +23,12 @@ import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import java.util.*;
 
+import static com.redhat.cloud.custompolicies.engine.handlers.util.ResponseUtil.PARAMS_PAGING;
+import static com.redhat.cloud.custompolicies.engine.handlers.util.ResponseUtil.checkForUnknownQueryParams;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static org.hawkular.alerts.api.doc.DocConstants.*;
 import static org.hawkular.alerts.api.json.JsonUtil.*;
 import static org.hawkular.alerts.api.util.Util.isEmpty;
-import static com.redhat.cloud.custompolicies.engine.handlers.util.ResponseUtil.PARAMS_PAGING;
-import static com.redhat.cloud.custompolicies.engine.handlers.util.ResponseUtil.checkForUnknownQueryParams;
 
 /**
  * @author Jay Shaughnessy
@@ -40,8 +40,7 @@ public class EventsHandler {
     @Inject
     Vertx vertx;
 
-//    private static final MsgLogger log = MsgLogging.getMsgLogger(EventsHandler.class);
-    private static final Logger log = LoggerFactory.getLogger(EventsHandler.class);
+    private static final MsgLogger log = MsgLogging.getMsgLogger(EventsHandler.class);
     private static final String PARAM_START_TIME = "startTime";
     private static final String PARAM_END_TIME = "endTime";
     private static final String PARAM_EVENT_ID = "eventId";

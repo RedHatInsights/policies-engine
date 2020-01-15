@@ -1,8 +1,7 @@
 package com.redhat.cloud.custompolicies.engine.process;
 
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.hawkular.alerts.api.model.event.Event;
@@ -14,8 +13,6 @@ import java.util.*;
 
 @ApplicationScoped
 public class Receiver {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger("Receiver");
 
     private static String TENANT_ID = "account";
     private static String SYSTEM_PROFILE = "system_profile";
@@ -39,7 +36,7 @@ public class Receiver {
         JsonObject systemProfile = json.getJsonObject(SYSTEM_PROFILE);
         // TODO These are hardcoded for demo purposes
         Event event = new Event(tenantId, UUID.randomUUID().toString(),"insight_report", "insight_report", "just another report which needs a name");
-        event.setFacts(systemProfile.getMap());
+        event.setFacts(parseSystemProfile(systemProfile));
 
         // Indexed searchable events
         // TODO Examples for demo purposes
@@ -68,5 +65,33 @@ public class Receiver {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * parseSystemProfile extracts certain parts of the input JSON and modifies them for easier use
+     */
+    static Map<String, Object> parseSystemProfile(JsonObject json) {
+        Map<String, Object> facts = json.getMap();
+
+        JsonArray networkInterfaces = json.getJsonArray("network_interfaces");
+        JsonArray yumRepos = json.getJsonArray("yum_repos");
+
+        facts.put("network_interfaces", namedObjectsToMap(networkInterfaces));
+        facts.put("yum_repos", namedObjectsToMap(yumRepos));
+
+        return facts;
+    }
+
+    static Map<String, Object> namedObjectsToMap(JsonArray objectArray) {
+        Map<String, Object> arrayObjectKey = new HashMap<>();
+        for (Object o : objectArray) {
+            JsonObject json = (JsonObject) o;
+            String name = json.getString("name");
+            if(name == null || name.isEmpty()) {
+                continue;
+            }
+            arrayObjectKey.put(name, json.getMap());
+        }
+        return arrayObjectKey;
     }
 }
