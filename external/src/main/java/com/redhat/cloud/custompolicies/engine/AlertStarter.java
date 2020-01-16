@@ -1,13 +1,13 @@
 package com.redhat.cloud.custompolicies.engine;
 
-import io.quarkus.runtime.StartupEvent;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-import org.hawkular.alerts.AlertsStandalone;
 import com.redhat.cloud.custompolicies.engine.actions.QuarkusActionPluginRegister;
+import io.quarkus.runtime.StartupEvent;
+import org.hawkular.alerts.AlertsStandalone;
 import org.hawkular.alerts.api.services.ActionsService;
 import org.hawkular.alerts.api.services.AlertsService;
 import org.hawkular.alerts.api.services.DefinitionsService;
+import org.hawkular.commons.log.MsgLogger;
+import org.hawkular.commons.log.MsgLogging;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
@@ -16,7 +16,7 @@ import javax.inject.Inject;
 
 @ApplicationScoped
 public class AlertStarter {
-    private static final Logger LOGGER = LoggerFactory.getLogger("AlertStarter");
+    public static MsgLogger LOGGER = MsgLogging.getMsgLogger(AlertStarter.class);
 
     @Inject
     AlertsStandalone alerts;
@@ -26,7 +26,6 @@ public class AlertStarter {
 
     @Produces
     public AlertsService getAlertService() {
-        System.out.println("Returning getAlertsService instance: " + alerts.toString());
         return alerts.getAlertsService();
     }
 
@@ -41,19 +40,14 @@ public class AlertStarter {
     }
 
     void startApp(@Observes StartupEvent startup) {
-        LOGGER.info("Application created, starting CustomPolicy Engine.");
+        LOGGER.info("Application created, starting Custom Policies Engine.");
         initialize();
     }
 
 //    @PostConstruct
     void initialize() {
-//        ExecutorService executor = Executors.newCachedThreadPool();
-
-//        alerts = new AlertsStandalone();
-//        StandaloneAlerts.setExecutor(executor);
-//        StandaloneAlerts.start();
         // PluginRegister is already using CDI, but we want it to initialize after Alerts has started
         pluginRegister.init();
-        LOGGER.info("Started Hawkular Alerts");
+        LOGGER.info("Started Custom Policies Engine");
     }
 }

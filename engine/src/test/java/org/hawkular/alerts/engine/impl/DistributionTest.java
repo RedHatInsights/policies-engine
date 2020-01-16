@@ -1,17 +1,16 @@
 package org.hawkular.alerts.engine.impl;
 
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
+import org.hawkular.alerts.engine.impl.PartitionManagerImpl.PartitionEntry;
+import org.hawkular.commons.log.MsgLogger;
+import org.hawkular.commons.log.MsgLogging;
+import org.junit.Test;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.hawkular.alerts.engine.impl.PartitionManagerImpl.PartitionEntry;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
 
 /**
  * Testing https://en.wikipedia.org/wiki/Consistent_hashing as a method to partition triggers
@@ -21,7 +20,7 @@ import com.google.common.hash.Hashing;
  */
 public class DistributionTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(DistributionTest.class);
+    private static final MsgLogger logger = MsgLogging.getMsgLogger(DistributionTest.class);
 
     public static List<PartitionEntry> generateTriggers(int numTenants, int numTriggers) {
         List<PartitionEntry> triggers = new ArrayList<>();
