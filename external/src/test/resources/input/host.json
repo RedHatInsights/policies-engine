@@ -1,4 +1,5 @@
 {
+  "account": "integration-test",
   "system_profile": {
     "arch": "string",
     "bios_release_date": "string",

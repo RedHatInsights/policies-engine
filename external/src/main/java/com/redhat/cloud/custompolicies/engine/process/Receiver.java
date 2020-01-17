@@ -35,7 +35,7 @@ public class Receiver {
         String insightsId = json.getString(INSIGHT_ID_FIELD);
         JsonObject systemProfile = json.getJsonObject(SYSTEM_PROFILE);
         // TODO These are hardcoded for demo purposes
-        Event event = new Event(tenantId, UUID.randomUUID().toString(),"insight_report", "insight_report", "just another report which needs a name");
+        Event event = new Event(tenantId, UUID.randomUUID().toString(),"insight_report", "just another report which needs a name");
         event.setFacts(parseSystemProfile(systemProfile));
 
         // Indexed searchable events
