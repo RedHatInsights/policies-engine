@@ -128,7 +128,6 @@ class LifecycleITest extends AbstractQuarkusITestBase {
         resp = client.get(path: "triggers/test-autodisable-trigger");
         assertEquals(200, resp.status)
         Trigger t = (Trigger)resp.data;
-        logger.info(t.toString());
         assertEquals("test-autodisable-trigger", resp.data.name)
         assertFalse(resp.data.enabled)
 
@@ -1293,7 +1292,6 @@ class LifecycleITest extends AbstractQuarkusITestBase {
             resp = client.get(path: "",
                 query: [startTime:start,triggerIds:"test-hwkalerts234-trigger",statuses:"RESOLVED"] )
             if ( resp.status == 200 && resp.data.size() == 1 ) {
-                logger.info(resp.data);
                 break;
             }
             assertEquals(200, resp.status)

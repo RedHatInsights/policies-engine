@@ -150,7 +150,7 @@ public class TriggersHandler {
                     try {
                         dampening = fromJson(json, Dampening.class);
                     } catch (Exception e) {
-                        log.errorf("Error parsing Dampening json: %s. Reason: %s", json, e.toString());
+                        log.debugf("Error parsing Dampening json: %s. Reason: %s", json, e.toString());
                         throw new ResponseUtil.BadRequestException(e.toString());
                     }
                     dampening.setTenantId(tenantId);
@@ -280,8 +280,8 @@ public class TriggersHandler {
                     try {
                         fullTrigger = fromJson(json, FullTrigger.class);
                     } catch (Exception e) {
-                        log.errorf("Error parsing FullTrigger json: %s. Reason: %s", json, e.toString());
-                        throw new ResponseUtil.BadRequestException(e.toString(), e);
+                        log.debugf("Error parsing FullTrigger json: %s. Reason: %s", json, e.toString());
+                        throw new ResponseUtil.BadRequestException(e.getMessage());
                     }
                     if (null == fullTrigger) {
                         throw new ResponseUtil.BadRequestException("FullTrigger can not be null.");
@@ -335,7 +335,7 @@ public class TriggersHandler {
                     try {
                         groupMember = fromJson(json, GroupMemberInfo.class);
                     } catch (Exception e) {
-                        log.errorf("Error parsing GroupMemberInfo json: %s. Reason: %s", json, e.toString());
+                        log.debugf("Error parsing GroupMemberInfo json: %s. Reason: %s", json, e.toString());
                         throw new ResponseUtil.BadRequestException(e.toString());
                     }
                     String groupId = groupMember.getGroupId();
@@ -406,7 +406,7 @@ public class TriggersHandler {
                     try {
                         trigger = fromJson(json, Trigger.class);
                     } catch (Exception e) {
-                        log.errorf("Error parsing Trigger json: %s. Reason: %s", json, e.toString());
+                        log.debugf("Error parsing Trigger json: %s. Reason: %s", json, e.toString());
                         throw new ResponseUtil.BadRequestException(e);
                     }
                     if (isEmpty(trigger.getId())) {
@@ -889,7 +889,7 @@ public class TriggersHandler {
                     try {
                         trigger = fromJson(json, Trigger.class);
                     } catch (Exception e) {
-                        log.errorf("Error parsing Trigger json: %s. Reason: %s", json, e.toString());
+                        log.debugf("Error parsing Trigger json: %s. Reason: %s", json, e.toString());
                         throw new ResponseUtil.BadRequestException(e.toString(), e);
                     }
                     if (trigger != null && !isEmpty(triggerId)) {
@@ -1007,7 +1007,7 @@ public class TriggersHandler {
                     try {
                         dampening = fromJson(json, Dampening.class);
                     } catch (Exception e) {
-                        log.errorf("Error parsing Dampening json: %s. Reason: %s", json, e.toString());
+                        log.debugf("Error parsing Dampening json: %s. Reason: %s", json, e.toString());
                         throw new ResponseUtil.BadRequestException(e.toString());
                     }
                     Dampening found;
@@ -1063,7 +1063,7 @@ public class TriggersHandler {
                     try {
                         unorphanMemberInfo = fromJson(json, UnorphanMemberInfo.class);
                     } catch (Exception e) {
-                        log.errorf("Error parsing UnorphanMemberInfo json: %s. Reason: %s", json, e.toString());
+                        log.debugf("Error parsing UnorphanMemberInfo json: %s. Reason: %s", json, e.toString());
                         throw new ResponseUtil.BadRequestException(e.toString());
                     }
                     if (!ResponseUtil.checkTags(unorphanMemberInfo)) {
@@ -1115,7 +1115,7 @@ public class TriggersHandler {
                         conditions = collectionFromJson(json, Condition.class);
                     } catch (Exception e) {
                         log.debugf("Error parsing Condition json: %s. Reason: %s", json, e.toString());
-                        throw new ResponseUtil.BadRequestException(e.toString());
+                        throw new ResponseUtil.BadRequestException(e.getMessage());
                     }
                     try {
                         Collection<Condition> updatedConditions = definitionsService.setAllConditions(tenantId,
@@ -1164,8 +1164,8 @@ public class TriggersHandler {
                     try {
                         conditions = collectionFromJson(json, Condition.class);
                     } catch (Exception e) {
-                        log.errorf("Error parsing Condition json: %s. Reason: %s", json, e.toString());
-                        throw new ResponseUtil.BadRequestException(e.toString());
+                        log.debugf("Error parsing Condition json: %s. Reason: %s", json, e.toString());
+                        throw new ResponseUtil.BadRequestException(e.getMessage());
                     }
                     Mode mode = Mode.valueOf(triggerMode.toUpperCase());
                     for (Condition condition : conditions) {
@@ -1221,8 +1221,8 @@ public class TriggersHandler {
                     try {
                         groupConditionsInfo = fromJson(json, GroupConditionsInfo.class);
                     } catch (Exception e) {
-                        log.errorf("Error parsing GroupConditionsInfo json: %s. Reason: %s", json, e.toString());
-                        throw new ResponseUtil.BadRequestException(e.toString());
+                        log.debugf("Error parsing GroupConditionsInfo json: %s. Reason: %s", json, e.toString());
+                        throw new ResponseUtil.BadRequestException(e.getMessage());
                     }
                     Collection<Condition> updatedConditions = new HashSet<>();
                     if (groupConditionsInfo == null) {

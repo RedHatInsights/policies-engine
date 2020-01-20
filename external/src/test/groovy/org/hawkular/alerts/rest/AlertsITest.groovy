@@ -63,11 +63,11 @@ class AlertsITest extends AbstractQuarkusITestBase {
             startyTime:"0", endTime:now,
             alertIds:"Alert-01", triggrIds:"Trigger-01,Trigger-02", statuses: "OPEN"])
         assert resp.status == 400 : resp.status
-        assert failureEntity.contains("startyTime")
-        assert failureEntity.contains("triggrIds")
-        assert !failureEntity.contains("endTime")
-        assert !failureEntity.contains("alertIds")
-        assert !failureEntity.contains("statuses")
+        assert failureEntity.errorMsg.contains("startyTime")
+        assert failureEntity.errorMsg.contains("triggrIds")
+        assert !failureEntity.errorMsg.contains("endTime")
+        assert !failureEntity.errorMsg.contains("alertIds")
+        assert !failureEntity.errorMsg.contains("statuses")
     }
 
     @Test

@@ -43,8 +43,6 @@
     <version.org.drools>7.31.0.Final</version.org.drools>
     <version.com.google.guava>28.1-jre</version.com.google.guava>
 
-    <version.com.fasterxml.jackson>2.10.1</version.com.fasterxml.jackson>
-
     <!-- Used for openapi generation and itests -->
     <version.org.codehaus.groovy>2.5.8</version.org.codehaus.groovy>
     <version.org.codehaus.gmavenplus>1.8.1</version.org.codehaus.gmavenplus>
