@@ -68,7 +68,7 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
 
         @Override
         public void syntaxError(Recognizer<?, ?> recognizer, Object o, int line, int charPos, String msg, RecognitionException e) {
-            String errorMsg = String.format("Error: %s at line %d position %d\n", msg, line, charPos);
+            String errorMsg = String.format("Invalid expression: %s at line %d position %d", msg, line, charPos);
             throw new IllegalArgumentException(errorMsg);
         }
 

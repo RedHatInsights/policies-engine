@@ -19,6 +19,13 @@ import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+import io.quarkus.runtime.configuration.ConfigUtils;
+import io.quarkus.runtime.configuration.QuarkusConfigFactory;
+import io.quarkus.test.junit.QuarkusTest;
+import io.smallrye.config.SmallRyeConfig;
+import io.smallrye.config.SmallRyeConfigBuilder;
+import org.eclipse.microprofile.config.Config;
+import org.eclipse.microprofile.config.spi.ConfigProviderResolver;
 import org.hawkular.alerts.api.json.JsonUtil;
 import org.hawkular.alerts.api.model.condition.AvailabilityCondition;
 import org.hawkular.alerts.api.model.condition.AvailabilityConditionEval;
@@ -59,6 +66,9 @@ import org.hawkular.commons.log.MsgLogging;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+
+import javax.inject.Inject;
 
 /**
  * Basic test of RulesEngine implementation.
@@ -66,10 +76,12 @@ import org.junit.Test;
  * @author Jay Shaughnessy
  * @author Lucas Ponce
  */
+@QuarkusTest
 public class RulesEngineTest {
     private static final MsgLogger log = MsgLogging.getMsgLogger(RulesEngineTest.class);
 
-    RulesEngine rulesEngine = new DroolsRulesEngineImpl();
+    RulesEngine rulesEngine;
+
     List<Alert> alerts = new ArrayList<>();
     Set<Dampening> pendingTimeouts = new HashSet<>();
     Map<Trigger, List<Set<ConditionEval>>> autoResolvedTriggers = new HashMap<>();
@@ -81,6 +93,9 @@ public class RulesEngineTest {
 
     @Before
     public void before() {
+        SmallRyeConfig config = ConfigUtils.configBuilder(true).build();
+        QuarkusConfigFactory.setConfig(config);
+        rulesEngine = new DroolsRulesEngineImpl();
         rulesEngine.addGlobal("log", log);
         rulesEngine.addGlobal("alerts", alerts);
         rulesEngine.addGlobal("events", outputEvents);
