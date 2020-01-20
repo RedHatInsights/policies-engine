@@ -39,6 +39,23 @@
       <scope>runtime</scope>
     </dependency>
 
+    <!-- Quarkus -->
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-jackson</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-junit5</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.vintage</groupId>
+      <artifactId>junit-vintage-engine</artifactId>
+      <scope>test</scope>
+    </dependency>
+
     <!-- Misc -->
     <dependency>
       <groupId>org.apache.commons</groupId>
@@ -58,25 +75,7 @@
       <version>${version.org.antlr}</version>
     </dependency>
 
-    <!-- Wildfly dependencies -->
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-core</artifactId>
-      <version>${version.com.fasterxml.jackson}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
-      <version>${version.com.fasterxml.jackson}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-annotations</artifactId>
-      <version>${version.com.fasterxml.jackson}</version>
-    </dependency>
-
+    <!-- Wildfly -->
     <dependency>
       <groupId>org.infinispan</groupId>
       <artifactId>infinispan-jboss-marshalling</artifactId>
@@ -122,6 +121,22 @@
     </resources>
 
     <plugins>
+      <plugin>
+        <groupId>io.quarkus</groupId>
+        <artifactId>quarkus-maven-plugin</artifactId>
+        <version>${quarkus.version}</version>
+        <configuration>
+          <debug>5006</debug>
+          <suspend>false</suspend>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>build</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.antlr</groupId>
         <artifactId>antlr4-maven-plugin</artifactId>

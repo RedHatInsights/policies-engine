@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
@@ -38,14 +39,34 @@ public class JsonUtil {
     }
 
     public static <T> T fromJson(String json, Class<T> clazz) {
-        return fromJson(json,clazz, false);
+        T t;
+        try {
+            t = fromJson(json, clazz, false);
+        } catch(Exception e) {
+            Throwable cause = e.getCause();
+            while(cause != null) {
+                if(cause.getStackTrace()[0].getClassName().startsWith("com.redhat.cloud.custompolicies")) {
+                    throw new RuntimeException(cause.getMessage());
+                }
+                cause = cause.getCause();
+            }
+            throw e;
+        }
+        return t;
     }
 
     public static <T> Collection<T> collectionFromJson(String json, Class<T> clazz) {
         try {
             return instance.mapper.readValue(json, instance.mapper.getTypeFactory().constructCollectionType(List.class, clazz));
         } catch (IOException e) {
-            throw new IllegalArgumentException(e);
+            Throwable cause = e.getCause();
+            while(cause != null) {
+                if(cause.getStackTrace()[0].getClassName().startsWith("com.redhat.cloud.custompolicies")) {
+                    throw new RuntimeException(cause.getMessage());
+                }
+                cause = cause.getCause();
+            }
+            throw new RuntimeException(e);
         }
     }
 

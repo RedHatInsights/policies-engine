@@ -1,5 +1,6 @@
 package com.redhat.cloud.custompolicies.engine.handlers;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.redhat.cloud.custompolicies.engine.handlers.util.ResponseUtil;
 import io.vertx.core.MultiMap;
 import io.vertx.ext.web.Router;
@@ -30,8 +31,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.hawkular.alerts.api.doc.DocConstants.*;
-import static org.hawkular.alerts.api.json.JsonUtil.collectionFromJson;
-import static org.hawkular.alerts.api.json.JsonUtil.fromJson;
+import static org.hawkular.alerts.api.json.JsonUtil.*;
 import static org.hawkular.alerts.api.util.Util.isEmpty;
 
 /**
@@ -209,8 +209,8 @@ public class TriggersHandler {
                     try {
                         fullTrigger = fromJson(json, FullTrigger.class);
                     } catch (Exception e) {
-                        log.errorf("Error parsing FullTrigger json: %s. Reason: %s", json, e.toString());
-                        throw new ResponseUtil.BadRequestException(e);
+                        log.debugf("Error parsing FullTrigger json: %s. Reason: %s", json, e.toString());
+                        throw new ResponseUtil.BadRequestException(e.getMessage());
                     }
                     if (fullTrigger.getTrigger() == null) {
                         throw new ResponseUtil.BadRequestException("Trigger is empty");
@@ -1114,7 +1114,7 @@ public class TriggersHandler {
                     try {
                         conditions = collectionFromJson(json, Condition.class);
                     } catch (Exception e) {
-                        log.errorf("Error parsing Condition json: %s. Reason: %s", json, e.toString());
+                        log.debugf("Error parsing Condition json: %s. Reason: %s", json, e.toString());
                         throw new ResponseUtil.BadRequestException(e.toString());
                     }
                     try {
