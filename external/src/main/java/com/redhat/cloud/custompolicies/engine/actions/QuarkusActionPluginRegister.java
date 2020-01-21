@@ -56,7 +56,7 @@ public class QuarkusActionPluginRegister {
                 log.errorCannotRegisterPlugin(actionPlugin, e.toString());
             }
         } else {
-            log.infof("Plugin [%s] is already registered", actionPlugin);
+            log.debugf("Plugin [%s] is already registered", actionPlugin);
         }
 
         actionListener.addPlugin(actionPlugin, actionPluginListener);
@@ -66,12 +66,10 @@ public class QuarkusActionPluginRegister {
     public void init() {
         for (ActionPluginListener pluginListener : pluginListeners) {
             Class<? extends ActionPluginListener> aClass = pluginListener.getClass();
-            Plugin annotation = aClass.getAnnotation(Plugin.class);
-            for (Annotation declaredAnnotation : pluginListener.getClass().getDeclaredAnnotations()) {
+            for (Annotation declaredAnnotation : aClass.getDeclaredAnnotations()) {
                 if(declaredAnnotation instanceof Plugin) {
                     Plugin pluginAnnotation = (Plugin) declaredAnnotation;
                     addPlugin(pluginAnnotation.name(), pluginListener);
-                    log.infof(" of: %s", pluginListener);
                 }
             }
         }
