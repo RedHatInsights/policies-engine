@@ -28,6 +28,8 @@ import org.hawkular.alerts.api.services.DefinitionsEvent.Type;
  */
 public interface DefinitionsService {
 
+    // TODO Fix references to tags
+
     /*
         CRUD interface for Triggers
      */
@@ -268,14 +270,6 @@ public interface DefinitionsService {
      * @throws Exception on any problem
      */
     Collection<Trigger> getAllTriggers() throws Exception;
-
-    /**
-     * Get all stored Triggers for all Tenants with a specific Tag. This can be inefficient.
-     * @param name The tag name, not null.
-     * @param value The tag value, not null. Set to '*' to match all values for the name.
-     * @throws Exception on any problem
-     */
-    Collection<Trigger> getAllTriggersByTag(String name, String value) throws Exception;
 
     /**
      * Orphan a member trigger.  The member trigger will no longer inherit group updates.  It will be allowed

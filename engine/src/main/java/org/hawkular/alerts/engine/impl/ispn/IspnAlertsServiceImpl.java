@@ -25,7 +25,6 @@ import org.hawkular.alerts.api.services.EventsCriteria;
 import org.hawkular.alerts.engine.cache.IspnCacheManager;
 import org.hawkular.alerts.engine.impl.IncomingDataManagerImpl;
 import org.hawkular.alerts.engine.impl.ispn.model.IspnEvent;
-import org.hawkular.alerts.engine.impl.ispn.model.TagsBridge;
 import org.hawkular.alerts.engine.service.AlertsEngine;
 import org.hawkular.alerts.engine.service.IncomingDataManager;
 import org.hawkular.alerts.log.AlertingLogger;
@@ -50,8 +49,6 @@ import java.util.stream.Collectors;
 import static org.hawkular.alerts.api.util.Util.isEmpty;
 import static org.hawkular.alerts.engine.impl.ispn.IspnPk.pk;
 import static org.hawkular.alerts.engine.impl.ispn.IspnPk.pkFromEventId;
-import static org.hawkular.alerts.engine.tags.ExpressionTagQueryParser.ExpressionTagResolver.EQ;
-import static org.hawkular.alerts.engine.tags.ExpressionTagQueryParser.ExpressionTagResolver.NEQ;
 import static org.hawkular.alerts.engine.util.Utils.extractAlertIds;
 import static org.hawkular.alerts.engine.util.Utils.extractCategories;
 import static org.hawkular.alerts.engine.util.Utils.extractEventIds;
@@ -78,8 +75,6 @@ public class IspnAlertsServiceImpl implements AlertsService {
 
     QueryFactory queryFactory;
 
-    IspnExpressionTagQueryParser parser;
-
     long eventLifespanInHours;
     long alertsLifespanInHours;
 
@@ -95,89 +90,6 @@ public class IspnAlertsServiceImpl implements AlertsService {
             throw new RuntimeException("backend cache not found");
         }
         queryFactory = Search.getQueryFactory(backend);
-        parser = new IspnExpressionTagQueryParser((tokens, query) -> {
-            if (tokens != null) {
-                String tag;
-                if (tokens.size() == 1) {
-                    // tag
-                    tag = tokens.get(0);
-                    query.append("'").append(tag).append("'");
-                } else if (tokens.size() == 2) {
-                    // not tag
-                    tag = tokens.get(1);
-                    query.append("not '").append(tag).append("'");
-                } else {
-                    tag = tokens.get(0);
-                    String op;
-                    String value;
-                    if (tokens.size() == 3) {
-                        op = tokens.get(1);
-                        value = tokens.get(2);
-                        boolean isRegexp = value.startsWith("'");
-                        String regexp = "";
-                        if (isRegexp) {
-                            regexp = value.substring(1, value.length() - 1);
-                            regexp = regexp.equals("*") ? ".*" : regexp;
-                        }
-                        if (op.equalsIgnoreCase(EQ)) {
-                            // tag =
-                            if (isRegexp) {
-                                query.append("/").append(tag).append(TagsBridge.SEPARATOR).append(regexp).append("/");
-                            } else {
-                                query.append("'").append(tag).append(TagsBridge.SEPARATOR).append(value).append("'");
-                            }
-                        } else if (op.equalsIgnoreCase(NEQ)) {
-                            // tag !=
-                            query.append("'").append(tag).append("' and ").append("not ");
-                            if (isRegexp) {
-                                query.append("/").append(tag).append(TagsBridge.SEPARATOR).append(regexp).append("/");
-                            } else {
-                                query.append("'").append(tag).append(TagsBridge.SEPARATOR).append(value).append("'");
-                            }
-                        } else {
-                            // tag in []
-                            String array = value.substring(1, value.length() - 1);
-                            String[] values = array.split(",");
-                            for (int i = 0; i < values.length; i++) {
-                                String item = values[i];
-                                isRegexp = item.startsWith("'");
-                                regexp = item.substring(1, item.length() - 1);
-                                regexp = regexp.equals("*") ? ".*" : regexp;
-                                if (isRegexp) {
-                                    query.append("/").append(tag).append(TagsBridge.SEPARATOR).append(regexp).append("/");
-                                } else {
-                                    query.append("'").append(tag).append(TagsBridge.SEPARATOR).append(item).append("'");
-                                }
-                                if (i + 1 < values.length) {
-                                    query.append(" or ");
-                                }
-                            }
-                        }
-                    } else {
-                        // not in array
-                        String array = tokens.get(3).substring(1, tokens.get(3).length() - 1);
-                        String[] values = array.split(",");
-                        query.append("'").append(tag).append("' and ");
-                        for (int i = 0; i < values.length; i++) {
-                            String item = values[i];
-                            boolean isRegexp = item.startsWith("'");
-                            String regexp = item.substring(1, item.length() - 1);
-                            regexp = regexp.equals("*") ? ".*" : regexp;
-                            query.append("(");
-                            if (isRegexp) {
-                                query.append("not /").append(tag).append(TagsBridge.SEPARATOR).append(regexp).append("/");
-                            } else {
-                                query.append("not '").append(tag).append(TagsBridge.SEPARATOR).append(item).append("'");
-                            }
-                            query.append(")");
-                            if (i + 1 < values.length) {
-                                query.append(" and ");
-                            }
-                        }
-                    }
-                }
-            }
-        });
     }
 
     public void setAlertsEngine(AlertsEngine alertsEngine) {
@@ -455,7 +367,7 @@ public class IspnAlertsServiceImpl implements AlertsService {
            }
            if (criteria.hasTagQueryCriteria()) {
                query.append("and (tags : ");
-               parseTagQuery(criteria.getTagQuery(), query);
+//               parseTagQuery(criteria.getTagQuery(), query);
                query.append(") ");
            }
            if (criteria.hasTriggerIdCriteria()) {
@@ -618,8 +530,7 @@ public class IspnAlertsServiceImpl implements AlertsService {
             log.debugf("ParsedQuery: %s, maxResults: %d, startOffset: %d", parsedQuery.getQueryString(), parsedQuery.getMaxResults(), parsedQuery.getStartOffset());
         }
 
-        Page page = new Page(parsedQuery.list(), pager, totalSize);
-        return page;
+        return new Page(parsedQuery.list(), pager, totalSize);
     }
 
     @Override
@@ -686,7 +597,7 @@ public class IspnAlertsServiceImpl implements AlertsService {
             }
             if (criteria.hasTagQueryCriteria()) {
                 query.append("and (tags : ");
-                parseTagQuery(criteria.getTagQuery(), query);
+//                parseTagQuery(criteria.getTagQuery(), query);
                 query.append(") ");
             }
             if (criteria.hasTriggerIdCriteria()) {
@@ -907,10 +818,6 @@ public class IspnAlertsServiceImpl implements AlertsService {
         }
 
         incomingDataManager.bufferEvents(new IncomingDataManagerImpl.IncomingEvents(events, !ignoreFiltering));
-    }
-
-    protected void parseTagQuery(String tagQuery, StringBuilder query) throws Exception {
-        parser.resolveQuery(tagQuery, query);
     }
 
     private boolean isServerSideSorted(Pager pager) {

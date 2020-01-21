@@ -1,19 +1,17 @@
 package org.hawkular.alerts.engine.impl.ispn.model;
 
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
-
+import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
 import org.hawkular.alerts.api.model.event.Alert;
 import org.hawkular.alerts.api.model.event.Event;
 import org.hibernate.search.annotations.Analyze;
-import org.hibernate.search.annotations.Analyzer;
 import org.hibernate.search.annotations.Field;
 import org.hibernate.search.annotations.FieldBridge;
 import org.hibernate.search.annotations.Indexed;
 import org.hibernate.search.annotations.SortableField;
 import org.hibernate.search.annotations.Store;
 
+import java.io.Serializable;
 /**
  * @author Jay Shaughnessy
  * @author Lucas Ponce
@@ -33,8 +31,7 @@ public class IspnEvent implements Serializable {
 
     @Field(store = Store.YES, analyze = Analyze.YES)
     @FieldBridge(impl = TagsBridge.class)
-    @Analyzer(impl = TagsBridge.TagsAnalyzer.class)
-    private Map<String, String> tags;
+    private Multimap<String, String> tags;
 
     @Field(store = Store.YES, analyze = Analyze.NO)
     private String triggerId;
@@ -79,11 +76,16 @@ public class IspnEvent implements Serializable {
         this.id = event.getId();
         this.eventType = event.getEventType();
         this.tenantId = event.getTenantId();
-        this.tags = new HashMap<>(this.event.getTags());
+        this.tags = tagsBuilder();
+        this.tags.putAll(event.getTags());
         this.triggerId = event.getTrigger() != null ? event.getTrigger().getId() : null;
         this.ctime = event.getCtime();
         this.category = event.getCategory();
 //        this.facts = event.getFacts();
+    }
+
+    private Multimap<String, String> tagsBuilder() {
+        return MultimapBuilder.hashKeys().hashSetValues().build();
     }
 
     public String getEventType() {
@@ -102,12 +104,15 @@ public class IspnEvent implements Serializable {
         this.tenantId = tenantId;
     }
 
-    public Map<String, String> getTags() {
-        return new HashMap<>(tags);
+    public Multimap<String, String> getTags() {
+        Multimap<String, String> map = tagsBuilder();
+        map.putAll(tags);
+        return map;
     }
 
-    public void setTags(Map<String, String> tags) {
-        this.tags = new HashMap<>(tags);
+    public void setTags(Multimap<String, String> tags) {
+        this.tags = tagsBuilder();
+        this.tags.putAll(tags);
     }
 
     public String getId() {
@@ -176,14 +181,6 @@ public class IspnEvent implements Serializable {
     public void setCategory(String category) {
         this.category = category;
     }
-
-//    public Map<String, Object> getFacts() {
-//        return facts;
-//    }
-//
-//    public void setFacts(Map<String, Object> facts) {
-//        this.facts = facts;
-//    }
 
     @Override
     public boolean equals(Object o) {

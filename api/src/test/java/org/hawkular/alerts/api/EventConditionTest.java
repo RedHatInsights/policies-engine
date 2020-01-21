@@ -90,7 +90,8 @@ public class EventConditionTest {
 
         event1.addTag("quantity", "10");
 
-        assertFalse(condition.match(event1));
+        // This will match since the 11 and 12 are stored also. addTag does not replace tag
+        assertTrue(condition.match(event1));
 
 //        condition.setExpression("tags.log.category starts 'WARN'");
 //

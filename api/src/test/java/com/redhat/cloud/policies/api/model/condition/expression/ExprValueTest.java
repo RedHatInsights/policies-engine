@@ -24,10 +24,10 @@ public class ExprValueTest {
         factMap.put("a", aList);
         event.setFacts(factMap);
 
-        String expr = "facts.a = 'b'";
-        assertFalse(ExprParser.evaluate(event, expr));
+//        String expr = "facts.a = 'b'";
+//        assertFalse(ExprParser.evaluate(event, expr));
 
-        expr = "facts.a > 3";
+        String expr = "facts.a > 3";
         assertFalse(ExprParser.evaluate(event, expr));
     }
 
@@ -115,5 +115,39 @@ public class ExprValueTest {
 
         expr = "facts.a contains ['b', 'e']";
         assertFalse(ExprParser.evaluate(event, expr));
+    }
+
+    @Test
+    public void multiKeyTagsMatching() {
+        Event event = new Event();
+        event.addTag("a", "b");
+
+        String expr = "tags.a = 'b'";
+        assertTrue(ExprParser.evaluate(event, expr));
+
+        expr = "tags.a contains 'b'";
+        assertTrue(ExprParser.evaluate(event, expr));
+
+        event.addTag("a", "c");
+
+        expr = "tags.a = 'b'";
+        assertTrue(ExprParser.evaluate(event, expr));
+
+        expr = "tags.a contains 'b'";
+        assertTrue(ExprParser.evaluate(event, expr));
+
+        expr = "tags.a = 'c'";
+        assertTrue(ExprParser.evaluate(event, expr));
+
+        expr = "tags.a contains 'c'";
+        assertTrue(ExprParser.evaluate(event, expr));
+
+        event.addTag("b", "d");
+
+        expr = "tags.b = 'd' and tags.a = 'c'";
+        assertTrue(ExprParser.evaluate(event, expr));
+
+        expr = "tags.b = 'd' and tags.a contains 'c'";
+        assertTrue(ExprParser.evaluate(event, expr));
     }
 }

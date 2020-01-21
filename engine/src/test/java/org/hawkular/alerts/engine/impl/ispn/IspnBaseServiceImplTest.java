@@ -1,5 +1,8 @@
 package org.hawkular.alerts.engine.impl.ispn;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Multimap;
 import org.hawkular.alerts.api.exception.NotFoundException;
 import org.hawkular.alerts.api.model.Note;
 import org.hawkular.alerts.api.model.Severity;
@@ -151,7 +154,7 @@ public abstract class IspnBaseServiceImplTest {
                     contextMap.put("division", String.valueOf(alert % 3));
                     alertX.setContext(contextMap);
 
-                    Map<String, String> tagsMap = new HashMap<>();
+                    LinkedHashMultimap<String, String> tagsMap = LinkedHashMultimap.create();
                     tagsMap.put("division", "alert" + String.valueOf(alert % 3));
                     alertX.setTags(tagsMap);
 
@@ -198,7 +201,7 @@ public abstract class IspnBaseServiceImplTest {
                     String text = "this is text key" + (event % 2) + " for event";
                     Map<String, String> context = new HashMap<>();
                     context.put("context1", "value1");
-                    Map<String, String> tags = new HashMap<>();
+                    Multimap<String, String> tags = HashMultimap.create();
                     Event eventX = new Event(tenantId, eventId, eventTime, "testDataSource", "testDataId", category, text, context, tags);
                     eventX.setTrigger(triggerX);
                     newEvents.add(eventX);

@@ -3,6 +3,7 @@ package org.hawkular.alerts.api.util;
 import java.util.Collection;
 import java.util.Map;
 
+import com.google.common.collect.Multimap;
 import org.hawkular.alerts.api.model.action.ActionDefinition;
 import org.hawkular.alerts.api.model.dampening.Dampening;
 import org.hawkular.alerts.api.model.trigger.Trigger;
@@ -24,6 +25,10 @@ public class Util {
     }
 
     public static boolean isEmpty(Map m) {
+        return m == null || m.isEmpty();
+    }
+
+    public static boolean isEmpty(Multimap m) {
         return m == null || m.isEmpty();
     }
 

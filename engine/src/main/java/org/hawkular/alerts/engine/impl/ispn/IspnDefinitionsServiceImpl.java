@@ -17,22 +17,13 @@ import com.google.common.base.Charsets;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import org.apache.lucene.search.Query;
 import org.hawkular.alerts.api.exception.FoundException;
 import org.hawkular.alerts.api.exception.NotFoundException;
 import org.hawkular.alerts.api.json.GroupMemberInfo;
 import org.hawkular.alerts.api.model.Note;
 import org.hawkular.alerts.api.model.action.ActionDefinition;
-import org.hawkular.alerts.api.model.condition.AvailabilityCondition;
-import org.hawkular.alerts.api.model.condition.CompareCondition;
-import org.hawkular.alerts.api.model.condition.Condition;
-import org.hawkular.alerts.api.model.condition.EventCondition;
-import org.hawkular.alerts.api.model.condition.ExternalCondition;
-import org.hawkular.alerts.api.model.condition.MissingCondition;
-import org.hawkular.alerts.api.model.condition.NelsonCondition;
-import org.hawkular.alerts.api.model.condition.RateCondition;
-import org.hawkular.alerts.api.model.condition.StringCondition;
-import org.hawkular.alerts.api.model.condition.ThresholdCondition;
-import org.hawkular.alerts.api.model.condition.ThresholdRangeCondition;
+import org.hawkular.alerts.api.model.condition.*;
 import org.hawkular.alerts.api.model.dampening.Dampening;
 import org.hawkular.alerts.api.model.data.Data;
 import org.hawkular.alerts.api.model.export.Definitions;
@@ -41,8 +32,12 @@ import org.hawkular.alerts.api.model.paging.Order;
 import org.hawkular.alerts.api.model.paging.Page;
 import org.hawkular.alerts.api.model.paging.Pager;
 import org.hawkular.alerts.api.model.paging.TriggerComparator;
-import org.hawkular.alerts.api.model.trigger.*;
-import org.hawkular.alerts.api.services.DefinitionsEvent;
+import org.hawkular.alerts.api.model.trigger.FullTrigger;
+import org.hawkular.alerts.api.model.trigger.Mode;
+import org.hawkular.alerts.api.model.trigger.Trigger;
+import org.hawkular.alerts.api.model.trigger.TriggerAction;
+import org.hawkular.alerts.api.model.trigger.TriggerType;
+import org.hawkular.alerts.api.services.*;
 import org.hawkular.alerts.api.services.DefinitionsEvent.Type;
 import org.hawkular.alerts.api.services.DefinitionsListener;
 import org.hawkular.alerts.api.services.DefinitionsService;
@@ -50,20 +45,27 @@ import org.hawkular.alerts.api.services.DistributedListener;
 import org.hawkular.alerts.api.services.TriggersCriteria;
 import org.hawkular.alerts.engine.cache.IspnCacheManager;
 import org.hawkular.alerts.engine.impl.AlertsContext;
-import org.hawkular.alerts.engine.impl.ispn.model.IspnActionDefinition;
-import org.hawkular.alerts.engine.impl.ispn.model.IspnActionPlugin;
-import org.hawkular.alerts.engine.impl.ispn.model.IspnCondition;
-import org.hawkular.alerts.engine.impl.ispn.model.IspnDampening;
-import org.hawkular.alerts.engine.impl.ispn.model.IspnTrigger;
-import org.hawkular.alerts.engine.impl.ispn.model.TagsBridge;
+import org.hawkular.alerts.engine.impl.hibernate.HibernateSearchQueryCreator;
+import org.hawkular.alerts.engine.impl.ispn.model.*;
 import org.hawkular.alerts.engine.service.AlertsEngine;
 import org.hawkular.alerts.log.AlertingLogger;
 import org.hawkular.alerts.log.MsgLogging;
 import org.infinispan.Cache;
+import org.infinispan.query.CacheQuery;
 import org.infinispan.query.Search;
+import org.infinispan.query.SearchManager;
 import org.infinispan.query.dsl.FilterConditionContext;
 import org.infinispan.query.dsl.QueryBuilder;
 import org.infinispan.query.dsl.QueryFactory;
+
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
+
+import static org.hawkular.alerts.api.services.DefinitionsEvent.Type.*;
+import static org.hawkular.alerts.api.util.Util.isEmpty;
+import static org.hawkular.alerts.engine.impl.ispn.IspnPk.*;
+import static org.hawkular.alerts.engine.util.Utils.checkTenantId;
 
 /**
  * @author Jay Shaughnessy
@@ -79,6 +81,7 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
     Cache<String, Object> backend;
 
     QueryFactory queryFactory;
+    SearchManager searchManager;
 
     private List<DefinitionsEvent> deferredNotifications = new ArrayList<>();
     private int deferNotificationsCount = 0;
@@ -90,6 +93,7 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
             throw new RuntimeException("backend cache not found");
         }
         queryFactory = Search.getQueryFactory(backend);
+        searchManager = Search.getSearchManager(backend);
     }
 
     public void setAlertsEngine(AlertsEngine alertsEngine) {
@@ -237,10 +241,8 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
             }
             if (null != memberTags) {
                 // add additional or override existing tags
-                Map<String, String> combinedTags = new HashMap<>();
-                combinedTags.putAll(member.getTags());
-                combinedTags.putAll(memberTags);
-                member.setTags(combinedTags);
+                member.getTags().putAll(member.getTags());
+                memberTags.forEach((k, v) -> member.getTags().put(k, v));
             }
 
             // store the dataIdMap so that it can be used for future condition updates (where the mappings are unchanged)
@@ -696,49 +698,21 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
             throw new IllegalArgumentException("TenantId must be not null");
         }
         boolean filter = (null != criteria && criteria.hasCriteria());
-        if (filter) {
+        if (filter && log.isDebugEnabled()) {
             log.debugf("getTriggers criteria: %s", criteria);
         }
 
         List<IspnTrigger> triggers;
-        if (filter) {
-            StringBuilder query = new StringBuilder(
-                    "from org.hawkular.alerts.engine.impl.ispn.model.IspnTrigger where ");
-            query.append("tenantId = '").append(tenantId).append("' and ");
-            if (criteria.hasTriggerIdCriteria()) {
-                Set<String> triggerIds = filterByTriggers(criteria);
-                query.append("(");
-                Iterator<String> iter = triggerIds.iterator();
-                while (iter.hasNext()) {
-                    String triggerId = iter.next();
-                    query.append("triggerId = '").append(triggerId).append("' ");
-                    if (iter.hasNext()) {
-                        query.append("or ");
-                    }
-                }
-                query.append(") ");
-                if (criteria.hasTagCriteria()) {
-                    query.append("and ");
-                }
-            }
-            if (criteria.hasTagCriteria()) {
-                Map<String, String> tags = criteria.getTags();
-                query.append("(");
-                Iterator<Map.Entry<String, String>> iter = tags.entrySet().iterator();
-                while (iter.hasNext()) {
-                    Map.Entry<String, String> tag = iter.next();
-                    query.append("tags like '")
-                            .append(tag.getKey())
-                            .append(TagsBridge.VALUE)
-                            .append(tag.getValue().equals("*") ? "%" : tag.getValue())
-                            .append("' ");
-                    if (iter.hasNext()) {
-                        query.append("or ");
-                    }
-                }
-                query.append(") ");
-            }
-            triggers = queryFactory.create(query.toString()).list();
+        if (criteria != null && criteria.hasCriteria()) {
+            org.hibernate.search.query.dsl.QueryBuilder queryBuilder = searchManager.buildQueryBuilderForClass(IspnTrigger.class).get();
+            Query tenantQuery = queryBuilder.keyword().onField("tenantId").matching(tenantId).createQuery();
+
+            Query values = HibernateSearchQueryCreator.evaluate(queryBuilder, criteria.getQuery());
+
+            Query finalQuery = queryBuilder.bool().must(tenantQuery).must(values).createQuery();
+
+            CacheQuery<IspnTrigger> query = searchManager.getQuery(finalQuery, IspnTrigger.class);
+            triggers = query.list();
         } else {
             triggers = queryFactory.from(IspnTrigger.class)
                     .having("tenantId")
@@ -746,7 +720,8 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
                     .build()
                     .list();
         }
-        return prepareTriggersPage(triggers.stream().map(t -> t.getTrigger()).collect(Collectors.toList()), pager);
+
+        return prepareTriggersPage(triggers.stream().map(IspnTrigger::getTrigger).collect(Collectors.toList()), pager);
     }
 
     @Override
@@ -770,6 +745,7 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
         return triggers.stream().map(t -> t.getTrigger()).collect(Collectors.toList());
     }
 
+    /*
     @Override
     public Collection<Trigger> getAllTriggersByTag(String name, String value) throws Exception {
         if (isEmpty(name)) {
@@ -787,6 +763,7 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
         List<IspnTrigger> triggers = queryFactory.create(query.toString()).list();
         return triggers.stream().map(t -> t.getTrigger()).collect(Collectors.toList());
     }
+     */
 
     @Override
     public Trigger orphanMemberTrigger(String tenantId, String memberId) throws Exception {
@@ -1949,20 +1926,6 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
         return trigger;
     }
 
-    private Set<String> filterByTriggers(TriggersCriteria criteria) {
-        Set<String> result = Collections.emptySet();
-        if (isEmpty(criteria.getTriggerIds())) {
-            if (!isEmpty(criteria.getTriggerId())) {
-                result = new HashSet<>(1);
-                result.add(criteria.getTriggerId());
-            }
-        } else {
-            result = new HashSet<>();
-            result.addAll(criteria.getTriggerIds());
-        }
-        return result;
-    }
-
     private Page<Trigger> prepareTriggersPage(List<Trigger> triggers, Pager pager) {
         if (pager != null) {
             if (pager.getOrder() != null
@@ -2031,12 +1994,7 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
             }
             if (!isEmpty(group.getTags())) {
                 // add new group-level tags
-                Map<String, String> combinedTags = new HashMap<>();
-                combinedTags.putAll(member.getTags());
-                for (Map.Entry<String, String> entry : group.getTags().entrySet()) {
-                    combinedTags.putIfAbsent(entry.getKey(), entry.getValue());
-                }
-                member.setTags(combinedTags);
+                member.getTags().putAll(group.getTags());
             }
         }
 

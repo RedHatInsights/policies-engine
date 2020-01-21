@@ -19,9 +19,7 @@ public class ExprKeyTest {
         factMap.put("b", 1);
         event.setFacts(factMap);
         event.setCategory("timeless");
-        Map<String, String> tags = new HashMap<>();
-        tags.put("c", "f");
-        event.setTags(tags);
+        event.addTag("c", "f");
 
         String expr = "facts.a = 'b' AND category = 'timeless' AND tags.c = 'f'";
         assertTrue(ExprParser.evaluate(event, expr));
@@ -36,9 +34,7 @@ public class ExprKeyTest {
         Map<String, Object> factMap = new HashMap<>();
         factMap.put("a", "b");
         factMap.put("b", 1);
-        Map<String, String> tags = new HashMap<>();
-        tags.put("c", "f");
-        event.setTags(tags);
+        event.addTag("c", "f");
 
         Map<String, Object> innerMap = new HashMap<>();
         innerMap.put("d", "e");

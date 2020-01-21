@@ -168,35 +168,18 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
 
                 if(number != null) {
                     decimalValue = new BigDecimal(number.getSymbol().getText());
+                    strValue = cleanString(decimalValue.toString());
 
                     // Convert to BigDecimal supported types
-                    if(targetValue instanceof Long) {
-                        targetValueDecimal = new BigDecimal((Long) targetValue);
-                    } else if(targetValue instanceof Double) {
-                        targetValueDecimal = BigDecimal.valueOf((Double) targetValue);
-                    } else if(targetValue instanceof Float) {
-                        targetValueDecimal = BigDecimal.valueOf((Float) targetValue);
-                    } else if(targetValue instanceof Integer) {
-                        targetValueDecimal = new BigDecimal((Integer) targetValue);
-                    } else if(targetValue instanceof String) {
-                        // Do String comparison
-                        try {
-                            targetValueDecimal = new BigDecimal(targetValueStr);
-                        } catch (NumberFormatException e) {
-                            // Only allow String comparison operators
-                            targetValueDecimal = null;
+                    if(!(targetValue instanceof Iterable)) {
+                        targetValueDecimal = convertToBigDecimal(targetValue);
+                        if(targetValueDecimal != null) {
+                            targetValueStr = cleanString(targetValueDecimal.toString());
+                        } else {
+                            // We can't do numeric compare
+                            decimalValue = null;
                         }
-                    } else {
-                        return false;
                     }
-                    if (targetValueDecimal != null) {
-                        targetValueStr = cleanString(targetValueDecimal.toString());
-                    }
-                    strValue = cleanString(decimalValue.toString());
-                }
-
-                if(targetValueStr == null) {
-                    targetValueStr = cleanString(targetValue.toString());
                 }
             } catch(NumberFormatException e) {
                 e.printStackTrace();
@@ -207,7 +190,11 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
             if(ctx.boolean_operator() != null) {
                 final ExpressionParser.Boolean_operatorContext op = ctx.boolean_operator();
                 boolean compareResult = false;
-                if(decimalValue != null && targetValueDecimal != null) {
+                if(targetValue instanceof Iterable) {
+                    // If the targetValue is a container (such as with tags) - replace = operator with
+                    // contains operation
+                    compareResult = arrayContains((Iterable<?>) targetValue, strValue);
+                } else if(decimalValue != null) {
                     compareResult = decimalValue.compareTo(targetValueDecimal) == 0;
                 } else if(strValue != null) {
                     compareResult = targetValueStr.equals(strValue);
@@ -224,21 +211,16 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
 
             // These need to be integers or doubles
             if(ctx.numeric_compare_operator() != null) {
-                if(decimalValue == null || targetValueDecimal == null) {
+                ExpressionParser.Numeric_compare_operatorContext op = ctx.numeric_compare_operator();
+
+                if(targetValue instanceof Iterable) {
+                    // Do arrayContains basically.. with numericCompare
+                    return arrayNumericMatches(decimalValue, (Iterable<?>) targetValue, op);
+                } else if(decimalValue == null) {
                     return false;
                 }
-                ExpressionParser.Numeric_compare_operatorContext op = ctx.numeric_compare_operator();
-                if(op.GT() != null) {
-                    return decimalValue.compareTo(targetValueDecimal) < 0;
-                } else if(op.GTE() != null) {
-                    return decimalValue.compareTo(targetValueDecimal) <= 0;
-                } else if(op.LT() != null) {
-                    return decimalValue.compareTo(targetValueDecimal) > 0;
-                } else if(op.LTE() != null) {
-                    return decimalValue.compareTo(targetValueDecimal) >= 0;
-                }
 
-                return false;
+                return numericCompare(decimalValue, targetValueDecimal, op);
             }
 
             // Operators which support targetArray
@@ -303,6 +285,42 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
             return true;
         }
 
+        static BigDecimal convertToBigDecimal(Object targetValue) {
+            BigDecimal targetValueDecimal = null;
+
+            if(targetValue instanceof Long) {
+                targetValueDecimal = new BigDecimal((Long) targetValue);
+            } else if(targetValue instanceof Double) {
+                targetValueDecimal = BigDecimal.valueOf((Double) targetValue);
+            } else if(targetValue instanceof Float) {
+                targetValueDecimal = BigDecimal.valueOf((Float) targetValue);
+            } else if(targetValue instanceof Integer) {
+                targetValueDecimal = new BigDecimal((Integer) targetValue);
+            } else if(targetValue instanceof String) {
+                // Do String comparison
+                try {
+                    targetValueDecimal = new BigDecimal(cleanString(targetValue.toString()));
+                } catch (NumberFormatException e) {
+                    // Only allow String comparison operators
+                    targetValueDecimal = null;
+                }
+            }
+            return targetValueDecimal;
+        }
+
+        static boolean numericCompare(BigDecimal decimalValue, BigDecimal targetValueDecimal, ExpressionParser.Numeric_compare_operatorContext op) {
+            if(op.GT() != null) {
+                return decimalValue.compareTo(targetValueDecimal) < 0;
+            } else if(op.GTE() != null) {
+                return decimalValue.compareTo(targetValueDecimal) <= 0;
+            } else if(op.LT() != null) {
+                return decimalValue.compareTo(targetValueDecimal) > 0;
+            } else if(op.LTE() != null) {
+                return decimalValue.compareTo(targetValueDecimal) >= 0;
+            }
+            return false;
+        }
+
         private Object decodeKeyToValue(String eventField) {
             eventField = eventField.toLowerCase();
             Object sEventValue = null;
@@ -345,17 +363,31 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
 
             return sEventValue;
         }
-    }
 
-    static boolean arrayContains(Iterable<?> targetValue, String matcher) {
-        boolean anyMatch = false;
-        for (Object o : targetValue) {
-            anyMatch |= cleanString(o.toString()).equals(matcher);
+        static boolean arrayContains(Iterable<?> targetValue, String matcher) {
+            boolean anyMatch = false;
+            for (Object o : targetValue) {
+                anyMatch |= cleanString(o.toString()).equals(matcher);
+            }
+            return anyMatch;
         }
-        return anyMatch;
+
+        static boolean arrayNumericMatches(BigDecimal decimalValue, Iterable<?> targetValue, ExpressionParser.Numeric_compare_operatorContext op) {
+            boolean anyMatch = false;
+            // Missing op & targetValue..
+            for (Object o : targetValue) {
+                BigDecimal targetValueDecimal = convertToBigDecimal(o);
+                if(targetValueDecimal != null) {
+                    anyMatch |= numericCompare(decimalValue, targetValueDecimal, op);
+                }
+            }
+
+            return anyMatch;
+        }
+
     }
 
-    static String valueToString(ExpressionParser.ValueContext value) {
+    public static String valueToString(ExpressionParser.ValueContext value) {
         String strValue = null;
         if (value.STRING() != null) {
             strValue = value.STRING().getSymbol().getText();

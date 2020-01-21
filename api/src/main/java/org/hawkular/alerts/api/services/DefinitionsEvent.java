@@ -3,6 +3,7 @@ package org.hawkular.alerts.api.services;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Multimap;
 import org.hawkular.alerts.api.model.action.ActionDefinition;
 import org.hawkular.alerts.api.model.dampening.Dampening;
 import org.hawkular.alerts.api.model.trigger.Trigger;
@@ -39,7 +40,7 @@ public class DefinitionsEvent {
     private Set<String> dataIds;
     private String actionPlugin;
     private ActionDefinition actionDefinition;
-    private Map<String, String> tags;
+    private Multimap<String, String> tags;
 
     public DefinitionsEvent(Type type, ActionDefinition actionDefinition) {
         this(type, actionDefinition.getTenantId(), actionDefinition.getActionId(), null,
@@ -62,7 +63,7 @@ public class DefinitionsEvent {
         this(type, targetTenantId, targetId, null, null, null, null);
     }
 
-    public DefinitionsEvent(Type type, String targetTenantId, String targetId, Map<String, String> tags) {
+    public DefinitionsEvent(Type type, String targetTenantId, String targetId, Multimap<String, String> tags) {
         this(type, targetTenantId, targetId, null, null, null, tags);
     }
 
@@ -71,7 +72,7 @@ public class DefinitionsEvent {
     }
 
     public DefinitionsEvent(Type type, String targetTenantId, String targetId, Set<String> dataIds,
-                            String actionPlugin, ActionDefinition actionDefinition, Map<String, String> tags) {
+                            String actionPlugin, ActionDefinition actionDefinition, Multimap<String, String> tags) {
         super();
         this.type = type;
         this.targetTenantId = targetTenantId;
@@ -114,7 +115,7 @@ public class DefinitionsEvent {
         this.actionDefinition = actionDefinition;
     }
 
-    public Map<String, String> getTags() {
+    public Multimap<String, String> getTags() {
         return tags;
     }
 
