@@ -525,7 +525,6 @@ class TriggersITest extends AbstractQuarkusITestBase {
     void createFullTriggerWithNullId() {
         String jsonTrigger = "{\n" +
                 "      \"trigger\":{\n" +
-                "        \"id\": null,\n" +
                 "        \"enabled\": true,\n" +
                 "        \"name\": \"NumericData-01-low\",\n" +
                 "        \"description\": \"description 1\",\n" +
