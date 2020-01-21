@@ -482,6 +482,7 @@ class ConditionsITest extends AbstractQuarkusITestBase {
 ]
         """)
         assertEquals(400, resp.status)
+        assertEquals("Invalid expression: missing ')' at '<EOF>' at line 1 position 10", failureEntity.errorMsg)
 
         resp = client.put(path: "triggers/" + triggerId + "/conditions/firing", body: """
 [

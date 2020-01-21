@@ -1,5 +1,6 @@
 package org.hawkular.alerts.rest
 
+import groovy.json.JsonSlurper
 import groovyx.net.http.ContentType
 import groovyx.net.http.RESTClient
 import org.junit.jupiter.api.BeforeAll
@@ -19,7 +20,7 @@ abstract class AbstractQuarkusITestBase {
     static final String TENANT_PREFIX = UUID.randomUUID().toString()
     static final AtomicInteger TENANT_ID_COUNTER = new AtomicInteger(0)
     static String testTenant
-    static String failureEntity;
+    static Object failureEntity
 
     AbstractQuarkusITestBase() {
     }
@@ -29,12 +30,13 @@ abstract class AbstractQuarkusITestBase {
         testTenant = nextTenantId()
         client = new RESTClient(baseURI, ContentType.JSON)
         // this prevents 404 from being wrapped in an Exception, just return the response, better for testing
+        def jsonSlurper = new JsonSlurper()
         client.handler.failure = { resp ->
             failureEntity = null
             if (resp.entity != null && resp.entity.contentLength != 0) {
                 def baos = new ByteArrayOutputStream()
                 resp.entity.writeTo(baos)
-                failureEntity = new String(baos.toByteArray(), "UTF-8")
+                failureEntity = jsonSlurper.parseText(new String(baos.toByteArray(), "UTF-8"))
             }
             return resp
         }

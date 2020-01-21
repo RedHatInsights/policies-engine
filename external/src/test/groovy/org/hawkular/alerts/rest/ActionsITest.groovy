@@ -41,12 +41,6 @@ class ActionsITest extends AbstractQuarkusITestBase {
         assertThat(resp.data, containsInAnyOrder("email", "webhook"))
     }
 
-//    @Test
-//    void findSupportedPlugins() {
-//        def resp =client.get(path: "plugins/email")
-//        assertEquals(200, resp.status)
-//    }
-
     @Test
     void createAction() {
         String actionPlugin = "email"

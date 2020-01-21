@@ -66,7 +66,7 @@ public class JsonUtil {
                 }
                 cause = cause.getCause();
             }
-            throw new RuntimeException(e);
+            throw new IllegalStateException(e);
         }
     }
 
