@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.UUID;
 
 import org.hawkular.alerts.api.json.JacksonDeserializer;
 import org.hawkular.alerts.api.model.Severity;
@@ -204,6 +205,17 @@ public class JsonTest {
         mapper.registerModule(simpleModule);
         alert = mapper.readValue(jsonAlert, Alert.class);
         assertNull(alert.getEvalSets());
+    }
+
+    @Test
+    public void jsonToTriggerTest() throws Exception {
+        // When id is not specified, it creates a new UUID
+        String jsonTrigger = "{ \"name\": \"foo-trigger\", \"description\": \"my-desc\" }";
+
+        ObjectMapper mapper = new ObjectMapper();
+        Trigger trigger = mapper.readValue(jsonTrigger, Trigger.class);
+        assertNotNull(trigger);
+        assertNotNull(UUID.fromString(trigger.getId()));
     }
 
     @Test

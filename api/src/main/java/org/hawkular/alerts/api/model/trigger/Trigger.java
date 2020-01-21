@@ -168,7 +168,7 @@ public class Trigger implements Serializable {
         /*
             Default constructor is needed for JSON libraries in JAX-RS context.
          */
-        this("defaultTenant", "defaultName");
+        this(generateId(), "defaultName");
     }
 
     /**
