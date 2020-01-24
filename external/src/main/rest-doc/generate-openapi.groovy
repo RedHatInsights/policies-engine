@@ -1,10 +1,9 @@
-import org.hawkular.alerts.api.json.JsonUtil
+import groovy.json.JsonOutput
 import org.hawkular.alerts.api.doc.*
 
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 import java.lang.reflect.ParameterizedType
-import java.util.stream.Collectors
 
 def handlersDir = new File(classesDir, "com/redhat/cloud/custompolicies/engine/handlers")
 def generatedFile = new File(generatedFile)
@@ -375,8 +374,8 @@ try {
      */
 
     generatedFile.getParentFile().mkdirs()
-    JsonUtil.mapper.writeValue(generatedFile, json)
-
+    outputJson = JsonOutput.prettyPrint(JsonOutput.toJson(json))
+    generatedFile.write(outputJson)
 } catch (Exception e) {
     e.printStackTrace()
 }
