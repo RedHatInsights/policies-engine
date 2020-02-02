@@ -522,6 +522,37 @@ class TriggersITest extends AbstractQuarkusITestBase {
     }
 
     @Test
+    void createFullTriggerWithNullId() {
+        String jsonTrigger = "{\n" +
+                "      \"trigger\":{\n" +
+                "        \"enabled\": true,\n" +
+                "        \"name\": \"NumericData-01-low\",\n" +
+                "        \"description\": \"description 1\",\n" +
+                "        \"severity\": null\n," +
+                "        \"autoResolve\": null\n," +
+                "        \"autoResolveAlerts\": null\n," +
+                "        \"eventType\": null\n," +
+                "        \"tenantId\": null\n," +
+                "        \"description\": null\n," +
+                "        \"autoEnable\": null\n," +
+                "        \"autoDisable\": null\n" +
+                "      }\n" +
+                "    }";
+
+        // The server should assign an id for it
+
+        // create the test trigger
+        def resp = client.post(path: "triggers/trigger", body: jsonTrigger)
+        assertEquals(200, resp.status)
+
+        // Verify is an UUID
+        UUID.fromString(resp.data.trigger.id)
+
+        resp = client.delete(path: "triggers/" + resp.data.trigger.id)
+        assertEquals(200, resp.status)
+    }
+
+    @Test
     void updateFullTrigger() {
         // CREATE the action definition
         String actionPlugin = "email"
