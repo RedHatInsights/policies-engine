@@ -18,6 +18,7 @@
       <transaction mode="BATCH"/>
     </local-cache>
 
+    <!-- Migrate to Protostream -->
     <serialization marshaller="org.infinispan.jboss.marshalling.core.JBossUserMarshaller"/>
 
     <!-- Backend for definitions, actions history, events and alerts -->
