@@ -40,6 +40,11 @@ public class WebhookActionPluginListener implements ActionPluginListener {
     }
 
     @Override
+    public void flush() {
+
+    }
+
+    @Override
     public Set<String> getProperties() {
         Set<String> properties = new HashSet<>();
         properties.add("url");

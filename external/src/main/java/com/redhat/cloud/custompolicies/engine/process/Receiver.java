@@ -16,7 +16,7 @@ public class Receiver {
 
     private static String TENANT_ID = "account";
     private static String SYSTEM_PROFILE = "system_profile";
-    private static String INSIGHT_ID_FIELD = "insight_id";
+    public static String INSIGHT_ID_FIELD = "insight_id";
     private static String EVENT_TYPE = "type";
 
     @ConfigProperty(name = "engine.receiver.store-events")
@@ -50,7 +50,7 @@ public class Receiver {
         // TODO Examples for demo purposes
         Map<String, String> contextMap = new HashMap<>();
         contextMap.put("rhel_machine_id", json.getString("rhel_machine_id"));
-//        contextMap.put(INSIGHT_ID_FIELD, insightsId);
+        contextMap.put(INSIGHT_ID_FIELD, insightsId);
         contextMap.put("infrastructure_vendor", (String) systemProfile.getMap().get("infrastructure_vendor"));
         event.setContext(contextMap);
 

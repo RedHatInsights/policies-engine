@@ -130,6 +130,13 @@ public class IspnActionsServiceImpl implements ActionsService {
     }
 
     @Override
+    public void flush() {
+        for (ActionListener listener : alertsContext.getActionsListeners()) {
+            listener.flush();
+        }
+    }
+
+    @Override
     public Page<Action> getActions(String tenantId, ActionsCriteria criteria, Pager pager) throws Exception {
         if (isEmpty(tenantId)) {
             throw new IllegalArgumentException("TenantId must be not null");

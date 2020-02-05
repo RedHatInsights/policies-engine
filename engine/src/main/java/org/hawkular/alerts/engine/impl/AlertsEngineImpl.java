@@ -543,10 +543,9 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
 
     private TreeSet<Event> processEventsExtensions(TreeSet<Event> events) {
         Set<EventExtension> extensions = extensionsService.getEventExtensions();
-        if (!extensions.isEmpty()) {
-            for (EventExtension extension : extensions) {
-                events = extension.processEvents(events);
-            }
+        for (EventExtension extension : extensions) {
+            log.infof("Processing with %s\n", extension.getClass().toString());
+            events = extension.processEvents(events);
         }
         return events;
     }
@@ -614,13 +613,12 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
                     events.clear();
                     handleDisabledTriggers();
                     handleAutoResolvedTriggers();
-
+                    actions.flush();
                 } catch (Exception e) {
                     e.printStackTrace();
                     log.debugf("Error on rules processing: %s", e);
                     log.errorProcessingRules(e.getMessage());
                 } finally {
-                    // TODO Is this thread safe?
                     alerts.clear();
                     events.clear();
                 }

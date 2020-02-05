@@ -35,4 +35,9 @@ public interface ActionPluginListener {
      * @throws Exception any problem
      */
     void process(ActionMessage msg) throws Exception;
+
+    /**
+     * Potentially flush the messages after a firing cycle has ended
+     */
+    void flush();
 }
