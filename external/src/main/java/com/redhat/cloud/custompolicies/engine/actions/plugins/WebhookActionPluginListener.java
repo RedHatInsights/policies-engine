@@ -29,7 +29,6 @@ public class WebhookActionPluginListener implements ActionPluginListener {
 
     @Override
     public void process(ActionMessage actionMessage) throws Exception {
-        System.out.println("process was fired in the WebhookActionPluginListener");
         Action action = actionMessage.getAction();
         Event actionEvent = action.getEvent();
         JsonObject actionJson = new JsonObject();

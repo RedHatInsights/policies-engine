@@ -91,9 +91,6 @@ public class AlertsHandler {
     }
 
     @Inject
-    Vertx vertx;
-
-    @Inject
     AlertsService alertsService;
 
     @PostConstruct

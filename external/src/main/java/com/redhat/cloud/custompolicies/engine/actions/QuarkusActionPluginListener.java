@@ -64,7 +64,7 @@ public class QuarkusActionPluginListener implements ActionListener {
                 log.errorProcessingAction(e.getMessage());
             }
         } catch (Exception e) {
-            log.debugf("Error processing action: %s", action.getActionPlugin(), e);
+            log.debugf("Error setting up action processing: %s", action.getActionPlugin(), e);
             log.errorProcessingAction(e.getMessage());
         }
     }

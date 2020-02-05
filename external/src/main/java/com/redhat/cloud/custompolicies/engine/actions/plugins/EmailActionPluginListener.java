@@ -22,7 +22,7 @@ import java.util.Set;
 public class EmailActionPluginListener implements ActionPluginListener {
     @Inject
     @Channel("email")
-    Emitter<String> channel;
+    Emitter<JsonObject> channel;
 
     void findLimits(@Observes StartupEvent event) {
         System.out.println(event.toString());
@@ -30,7 +30,8 @@ public class EmailActionPluginListener implements ActionPluginListener {
 
     @Override
     public void process(ActionMessage actionMessage) throws Exception {
-        channel.send(JsonUtil.toJson(actionMessage));
+        channel.send(JsonObject.mapFrom(actionMessage));
+//        channel.send(JsonUtil.toJson(actionMessage));
 //        Action action = actionMessage.getAction();
 //        Event actionEvent = action.getEvent();
 //        JsonObject actionJson = new JsonObject();

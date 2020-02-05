@@ -37,9 +37,6 @@ import static org.hawkular.alerts.api.util.Util.isEmpty;
 @DocEndpoint(value = "/events", description = "Events Handling")
 @ApplicationScoped
 public class EventsHandler {
-    @Inject
-    Vertx vertx;
-
     private static final MsgLogger log = MsgLogging.getMsgLogger(EventsHandler.class);
     private static final String PARAM_START_TIME = "startTime";
     private static final String PARAM_END_TIME = "endTime";

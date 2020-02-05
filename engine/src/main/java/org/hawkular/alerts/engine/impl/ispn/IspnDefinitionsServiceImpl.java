@@ -125,11 +125,12 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
         if (isEmpty(actionDefinition.getProperties())) {
             throw new IllegalArgumentException("Properties must be not null");
         }
-        String plugin = actionDefinition.getActionPlugin();
-        if (!getActionPlugins().contains(plugin)) {
+        String pluginName = actionDefinition.getActionPlugin();
+        IspnActionPlugin plugin = (IspnActionPlugin) backend.get(pk(pluginName));
+        if(plugin == null) {
             throw new IllegalArgumentException("Plugin: " + plugin + " is not deployed");
         }
-        Set<String> pluginProperties = getActionPlugin(plugin);
+        Set<String> pluginProperties = plugin.getDefaultProperties().keySet();
         for (String property : actionDefinition.getProperties().keySet()) {
             boolean isPluginProperty = false;
             for (String pluginProperty : pluginProperties) {
