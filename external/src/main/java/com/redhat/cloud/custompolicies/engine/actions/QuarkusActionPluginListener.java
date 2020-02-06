@@ -73,7 +73,7 @@ public class QuarkusActionPluginListener implements ActionListener {
     public void flush() {
         for (Map.Entry<String, ActionPluginListener> pluginEntry : plugins.entrySet()) {
             ActionPluginListener plugin = pluginEntry.getValue();
-            log.infof("Flushing %s\n", pluginEntry.getKey());
+            log.debugf("Flushing %s\n", pluginEntry.getKey());
             plugin.flush();
         }
     }

@@ -6,7 +6,6 @@ import io.smallrye.reactive.messaging.annotations.Channel;
 import io.smallrye.reactive.messaging.annotations.Emitter;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.io.IOUtils;
-import org.hawkular.alerts.api.model.action.Action;
 import org.hawkular.alerts.api.model.action.ActionDefinition;
 import org.hawkular.alerts.api.model.condition.Condition;
 import org.hawkular.alerts.api.model.condition.EventCondition;
@@ -21,11 +20,14 @@ import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
 
 import javax.inject.Inject;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 
 @QuarkusTest
 @Tag("integration")
@@ -37,7 +39,7 @@ public class ReceiverTest {
 
     @Inject
     @Channel("email")
-    Publisher<String> emailReceiver;
+    Publisher<JsonObject> emailReceiver;
 
     @Inject
     DefinitionsService definitionsService;
@@ -71,7 +73,7 @@ public class ReceiverTest {
         FullTrigger fullTrigger = new FullTrigger(trigger, null, conditions);
         definitionsService.createFullTrigger("integration-test", fullTrigger);
 
-        TestSubscriber<String> testSubscriber = new TestSubscriber<>();
+        TestSubscriber<JsonObject> testSubscriber = new TestSubscriber<>();
         emailReceiver.subscribe(testSubscriber);
 
         // Read the input file and send it
@@ -83,5 +85,10 @@ public class ReceiverTest {
         // Wait for the async messaging to arrive
         testSubscriber.await(10, TimeUnit.SECONDS);
         testSubscriber.assertValueCount(1);
+
+        JsonObject emailOutput = testSubscriber.values().get(0);
+        assertEquals("integration-test", emailOutput.getString("tenantId"));
+        assertTrue(emailOutput.containsKey("tags"));
+        assertTrue(emailOutput.containsKey("triggerNames"));
     }
 }

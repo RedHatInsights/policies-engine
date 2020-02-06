@@ -1,6 +1,5 @@
 package com.redhat.cloud.custompolicies.engine.actions.plugins;
 
-import io.quarkus.runtime.StartupEvent;
 import io.smallrye.reactive.messaging.annotations.Channel;
 import io.smallrye.reactive.messaging.annotations.Emitter;
 import io.vertx.core.json.JsonObject;
@@ -10,7 +9,7 @@ import org.hawkular.alerts.actions.api.Plugin;
 import org.hawkular.alerts.api.model.action.Action;
 import org.hawkular.alerts.api.model.event.Event;
 
-import javax.enterprise.event.Observes;
+import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -18,14 +17,11 @@ import java.util.Map;
 import java.util.Set;
 
 @Plugin(name = "webhook")
+@Dependent
 public class WebhookActionPluginListener implements ActionPluginListener {
     @Inject
     @Channel("webhook")
     Emitter<JsonObject> channel;
-
-    void findLimits(@Observes StartupEvent event) {
-        System.out.println(event.toString());
-    }
 
     @Override
     public void process(ActionMessage actionMessage) throws Exception {
