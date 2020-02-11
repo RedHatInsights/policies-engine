@@ -69,6 +69,15 @@ public class QuarkusActionPluginListener implements ActionListener {
         }
     }
 
+    @Override
+    public void flush() {
+        for (Map.Entry<String, ActionPluginListener> pluginEntry : plugins.entrySet()) {
+            ActionPluginListener plugin = pluginEntry.getValue();
+            log.debugf("Flushing %s\n", pluginEntry.getKey());
+            plugin.flush();
+        }
+    }
+
     public void close() {
         if (executorService != null) {
             executorService.shutdown();

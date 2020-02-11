@@ -32,6 +32,11 @@ public interface ActionsService {
     void updateResult(Action action);
 
     /**
+     * Notify the action plugin that the results can be sent forward, fire cycle is done
+     */
+    void flush();
+
+    /**
      * @param tenantId Tenant where actions are stored
      * @param criteria If null returns all actions for the tenant (not recommended)
      * @param pager Paging requirement for fetching actions. Optional. Return all if null.

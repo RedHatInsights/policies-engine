@@ -16,4 +16,9 @@ public interface ActionListener {
      * @param action Action to be processed.
      */
     void process(Action action);
+
+    /**
+     * The firing cycle has ended, the actions can be sent
+     */
+    void flush();
 }
