@@ -31,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
 @Tag("integration")
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class ReceiverTest {
 
     @Inject
@@ -90,7 +91,7 @@ public class ReceiverTest {
         hostEmitter.send(json);
 
         // Wait for the async messaging to arrive
-        testSubscriber.await(10, TimeUnit.SECONDS);
+        testSubscriber.awaitCount(1);
         testSubscriber.assertValueCount(1);
 
         JsonObject emailOutput = testSubscriber.values().get(0);
