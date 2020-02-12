@@ -60,6 +60,18 @@
       <scope>test</scope>
     </dependency>
 
+    <!-- bare API -->
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-web-client</artifactId>
+    </dependency>
+
+    <!-- Axle API -->
+    <dependency>
+      <groupId>io.smallrye.reactive</groupId>
+      <artifactId>smallrye-axle-web-client</artifactId>
+    </dependency>
+
     <!-- Groovy Tests -->
     <dependency>
       <groupId>org.codehaus.groovy.modules.http-builder</groupId>
