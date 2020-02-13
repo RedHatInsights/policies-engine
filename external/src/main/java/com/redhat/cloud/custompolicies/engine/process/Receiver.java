@@ -26,6 +26,7 @@ public class Receiver {
     private static String TENANT_ID = "account";
     public static String INSIGHT_ID_FIELD = "insights_id";
     private static String EVENT_TYPE = "type";
+    private static String SYSTEM_PROFILE = "system_profile";
 
     @ConfigProperty(name = "engine.receiver.store-events")
     boolean storeEvents;
@@ -41,7 +42,14 @@ public class Receiver {
         String tenantId = json.getString(TENANT_ID);
         String insightsId = json.getString(INSIGHT_ID_FIELD);
 
-        CompletionStage<JsonObject> systemProfileStage = client.getSystemProfile(tenantId, insightsId);
+        JsonObject systemProfile = json.getJsonObject("system_profile");
+        CompletionStage<JsonObject> systemProfileStage;
+
+        if(systemProfile != null) {
+            systemProfileStage = CompletableFuture.supplyAsync(() -> systemProfile);
+        } else {
+            systemProfileStage = client.getSystemProfile(tenantId, insightsId);
+        }
 
         return CompletableFuture.supplyAsync(() -> {
             Event event = new Event(tenantId, UUID.randomUUID().toString(),"insight_report", "just another report which needs a name");
