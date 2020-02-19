@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test
 import static org.hawkular.alerts.api.model.event.Alert.Status
 
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertNotNull
 import static org.junit.jupiter.api.Assertions.assertTrue
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -43,66 +44,28 @@ class ActionsITest extends AbstractQuarkusITestBase {
 
     @Test
     void createAction() {
-        String actionPlugin = "email"
+        String actionPlugin = "webhook"
         String actionId = "test-action";
 
-        Map<String, String> actionProperties = new HashMap<>();
-        actionProperties.put("from", "from-email@company.org");
-        actionProperties.put("to", "to-email@company.org");
-        actionProperties.put("cc", "cc-email@company.org");
+        Map<String, String> properties = new HashMap<>();
+        properties.put("endpoint_id", "1");
 
-        ActionDefinition actionDefinition = new ActionDefinition(null, actionPlugin, actionId, actionProperties);
+        ActionDefinition actionDefinition = new ActionDefinition(null, actionPlugin, actionId, properties);
 
         def resp = client.post(path: "actions", body: actionDefinition)
         assertEquals(200, resp.status)
 
         resp = client.get(path: "actions/" + actionPlugin + "/" + actionId);
         assertEquals(200, resp.status)
-        assertEquals("from-email@company.org", resp.data.properties.from)
+        assertEquals("1", resp.data.properties.endpoint_id)
 
-        actionDefinition.getProperties().put("cc", "cc-modified@company.org")
+        actionDefinition.getProperties().put("endpoint_id", "2")
         resp = client.put(path: "actions", body: actionDefinition)
         assertEquals(200, resp.status)
 
         resp = client.get(path: "actions/" + actionPlugin + "/" + actionId)
         assertEquals(200, resp.status)
-        assertEquals("cc-modified@company.org", resp.data.properties.cc)
-
-        resp = client.delete(path: "actions/" + actionPlugin + "/" + actionId)
-        assertEquals(200, resp.status)
-    }
-
-    @Test
-    void createComplexAction() {
-        String actionPlugin = "email"
-        String actionId = "test-action";
-
-        Map<String, String> actionProperties = new HashMap<>();
-        actionProperties.put("from", "from-default@company.org");
-        actionProperties.put("from.resolved", "from-resolved@company.org");
-        actionProperties.put("from.acknowledged", "from-acknowledged@company.org");
-        actionProperties.put("to", "to-default@company.org");
-        actionProperties.put("to.acknowledged", "to-acknowledged@company.org");
-        actionProperties.put("cc", "cc-email@company.org");
-
-        ActionDefinition actionDefinition = new ActionDefinition(null, actionPlugin, actionId, actionProperties);
-
-        def resp = client.post(path: "actions", body: actionDefinition)
-        assertEquals(200, resp.status)
-
-        resp = client.get(path: "actions/" + actionPlugin + "/" + actionId);
-        assertEquals(200, resp.status)
-        assertEquals("from-default@company.org", resp.data.properties["from"])
-        assertEquals("from-resolved@company.org", resp.data.properties["from.resolved"])
-        assertEquals("from-acknowledged@company.org", resp.data.properties["from.acknowledged"])
-
-        actionDefinition.getProperties().put("cc", "cc-modified@company.org")
-        resp = client.put(path: "actions", body: actionDefinition)
-        assertEquals(200, resp.status)
-
-        resp = client.get(path: "actions/" + actionPlugin + "/" + actionId)
-        assertEquals(200, resp.status)
-        assertEquals("cc-modified@company.org", resp.data.properties.cc)
+        assertEquals("2", resp.data.properties.endpoint_id)
 
         resp = client.delete(path: "actions/" + actionPlugin + "/" + actionId)
         assertEquals(200, resp.status)
@@ -115,9 +78,6 @@ class ActionsITest extends AbstractQuarkusITestBase {
         String actionId = "email-to-admin";
 
         Map<String, String> actionProperties = new HashMap<>();
-        actionProperties.put("from", "from-alerts@company.org");
-        actionProperties.put("to", "to-admin@company.org");
-        actionProperties.put("cc", "cc-developers@company.org");
         actionProperties.put("bad-property", "cc-developers@company.org");
 
         ActionDefinition actionDefinition = new ActionDefinition(null, actionPlugin, actionId, actionProperties);
@@ -131,13 +91,11 @@ class ActionsITest extends AbstractQuarkusITestBase {
         String start = String.valueOf(System.currentTimeMillis());
 
         // CREATE the action definition
-        String actionPlugin = "email"
-        String actionId = "email-to-admin";
+        String actionPlugin = "webhook"
+        String actionId = "webhook-to-admin";
 
         Map<String, String> actionProperties = new HashMap<>();
-        actionProperties.put("from", "from-alerts@company.org");
-        actionProperties.put("to", "to-admin@company.org");
-        actionProperties.put("cc", "cc-developers@company.org");
+        actionProperties.put("endpoint_id", "1");
 
         ActionDefinition actionDefinition = new ActionDefinition(null, actionPlugin, actionId, actionProperties);
 
@@ -148,10 +106,10 @@ class ActionsITest extends AbstractQuarkusITestBase {
         resp = client.get(path: "")
         assert resp.status == 200 : resp.status
 
-        Trigger testTrigger = new Trigger("test-email-availability", "http://www.mydemourl.com");
+        Trigger testTrigger = new Trigger("test-webhook-availability", "http://www.mydemourl.com");
 
         // remove if it exists
-        resp = client.delete(path: "triggers/test-email-availability")
+        resp = client.delete(path: "triggers/test-webhook-availability")
         assert(200 == resp.status || 404 == resp.status)
 
         testTrigger.setAutoDisable(false);
@@ -160,29 +118,29 @@ class ActionsITest extends AbstractQuarkusITestBase {
         /*
             email-to-admin action is pre-created from demo data
          */
-        testTrigger.addAction(new TriggerAction("email", "email-to-admin"));
+        testTrigger.addAction(new TriggerAction("webhook", "webhook-to-admin"));
 
         resp = client.post(path: "triggers", body: testTrigger)
         assertEquals(200, resp.status)
 
         // ADD Firing condition
-        AvailabilityCondition firingCond = new AvailabilityCondition("test-email-availability",
-                Mode.FIRING, "test-email-availability", AvailabilityCondition.Operator.NOT_UP);
+        AvailabilityCondition firingCond = new AvailabilityCondition("test-webhook-availability",
+                Mode.FIRING, "test-webhook-availability", AvailabilityCondition.Operator.NOT_UP);
 
         Collection<Condition> conditions = new ArrayList<>(1);
         conditions.add( firingCond );
-        resp = client.put(path: "triggers/test-email-availability/conditions/firing", body: conditions)
+        resp = client.put(path: "triggers/test-webhook-availability/conditions/firing", body: conditions)
         assertEquals(200, resp.status)
         assertEquals(1, resp.data.size())
 
         // ENABLE Trigger
         testTrigger.setEnabled(true);
 
-        resp = client.put(path: "triggers/test-email-availability", body: testTrigger)
+        resp = client.put(path: "triggers/test-webhook-availability", body: testTrigger)
         assertEquals(200, resp.status)
 
         // FETCH trigger and make sure it's as expected
-        resp = client.get(path: "triggers/test-email-availability");
+        resp = client.get(path: "triggers/test-webhook-availability");
         assertEquals(200, resp.status)
         assertEquals("http://www.mydemourl.com", resp.data.name)
         assertEquals(true, resp.data.enabled)
@@ -191,7 +149,7 @@ class ActionsITest extends AbstractQuarkusITestBase {
         assertEquals(false, resp.data.autoResolveAlerts);
 
         // FETCH recent alerts for trigger, should not be any
-        resp = client.get(path: "", query: [startTime:start,triggerIds:"test-email-availability"] )
+        resp = client.get(path: "", query: [startTime:start,triggerIds:"test-webhook-availability"] )
         assertEquals(200, resp.status)
 
         waitDefinitions()
@@ -199,7 +157,7 @@ class ActionsITest extends AbstractQuarkusITestBase {
         // Send in DOWN avail data to fire the trigger
         // Instead of going through the bus, in this test we'll use the alerts rest API directly to send data
         for (int i=0; i<5; i++) {
-            Data avail = new Data("test-email-availability", System.currentTimeMillis() + (i*1000), "DOWN");
+            Data avail = new Data("test-webhook-availability", System.currentTimeMillis() + (i*1000), "DOWN");
             Collection<Data> datums = new ArrayList<>();
             datums.add(avail);
             resp = client.post(path: "data", body: datums);
@@ -211,7 +169,7 @@ class ActionsITest extends AbstractQuarkusITestBase {
             Thread.sleep(500);
 
             // FETCH recent alerts for trigger, there should be 5
-            resp = client.get(path: "", query: [startTime:start,triggerIds:"test-email-availability"] )
+            resp = client.get(path: "", query: [startTime:start,triggerIds:"test-webhook-availability"] )
             if ( resp.status == 200 && resp.data.size() == 5 ) {
                 break;
             }
@@ -220,7 +178,7 @@ class ActionsITest extends AbstractQuarkusITestBase {
         assertEquals(5, resp.data.size())
         assertEquals("OPEN", resp.data[0].status)
 
-        resp = client.delete(path: "triggers/test-email-availability");
+        resp = client.delete(path: "triggers/test-webhook-availability");
         assertEquals(200, resp.status)
 
         resp = client.delete(path: "actions/" + actionPlugin + "/" + actionId)
@@ -232,13 +190,11 @@ class ActionsITest extends AbstractQuarkusITestBase {
         String start = String.valueOf(System.currentTimeMillis());
 
         // CREATE the action definition
-        String actionPlugin = "email"
-        String actionId = "email-to-admin";
+        String actionPlugin = "webhook"
+        String actionId = "webhook-to-admin";
 
         Map<String, String> actionProperties = new HashMap<>();
-        actionProperties.put("from", "from-alerts@company.org");
-        actionProperties.put("to", "to-admin@company.org");
-        actionProperties.put("cc", "cc-developers@company.org");
+        actionProperties.put("endpoint_id", "1");
 
         ActionDefinition actionDefinition = new ActionDefinition(null, actionPlugin, actionId, actionProperties);
 
@@ -249,10 +205,10 @@ class ActionsITest extends AbstractQuarkusITestBase {
         resp = client.get(path: "")
         assert resp.status == 200 : resp.status
 
-        Trigger testTrigger = new Trigger("test-email-threshold", "http://www.mydemourl.com");
+        Trigger testTrigger = new Trigger("test-webhook-threshold", "http://www.mydemourl.com");
 
         // remove if it exists
-        resp = client.delete(path: "triggers/test-email-threshold")
+        resp = client.delete(path: "triggers/test-webhook-threshold")
         assert(200 == resp.status || 404 == resp.status)
 
         testTrigger.setAutoDisable(false);
@@ -261,27 +217,27 @@ class ActionsITest extends AbstractQuarkusITestBase {
         /*
             email-to-admin action is pre-created from demo data
          */
-        testTrigger.addAction(new TriggerAction("email", "email-to-admin"));
+        testTrigger.addAction(new TriggerAction(actionPlugin, actionId));
 
         resp = client.post(path: "triggers", body: testTrigger)
         assertEquals(200, resp.status)
 
         // ADD Firing condition
-        ThresholdCondition firingCond = new ThresholdCondition("test-email-threshold",
-                Mode.FIRING, "test-email-threshold", ThresholdCondition.Operator.GT, 300);
+        ThresholdCondition firingCond = new ThresholdCondition("test-webhook-threshold",
+                Mode.FIRING, "test-webhook-threshold", ThresholdCondition.Operator.GT, 300);
 
         Collection<Condition> conditions = new ArrayList<>(1);
         conditions.add( firingCond );
-        resp = client.put(path: "triggers/test-email-threshold/conditions/firing", body: conditions)
+        resp = client.put(path: "triggers/test-webhook-threshold/conditions/firing", body: conditions)
         assertEquals(200, resp.status)
         assertEquals(1, resp.data.size())
 
         // ENABLE Trigger
-        resp = client.put(path: "triggers/enabled", query:[triggerIds:"test-email-threshold",enabled:true] )
+        resp = client.put(path: "triggers/enabled", query:[triggerIds:"test-webhook-threshold",enabled:true] )
         assertEquals(200, resp.status)
 
         // FETCH trigger and make sure it's as expected
-        resp = client.get(path: "triggers/test-email-threshold");
+        resp = client.get(path: "triggers/test-webhook-threshold");
         assertEquals(200, resp.status)
         assertEquals("http://www.mydemourl.com", resp.data.name)
         assertEquals(true, resp.data.enabled)
@@ -290,7 +246,7 @@ class ActionsITest extends AbstractQuarkusITestBase {
         assertEquals(false, resp.data.autoResolveAlerts);
 
         // FETCH recent alerts for trigger, should not be any
-        resp = client.get(path: "", query: [startTime:start,triggerIds:"test-email-threshold"] )
+        resp = client.get(path: "", query: [startTime:start,triggerIds:"test-webhook-threshold"] )
         assertEquals(200, resp.status)
 
         waitDefinitions()
@@ -298,7 +254,7 @@ class ActionsITest extends AbstractQuarkusITestBase {
         // Send in data to fire the trigger
         // Instead of going through the bus, in this test we'll use the alerts rest API directly to send data
         for (int i=0; i<5; i++) {
-            Data threshold = new Data("test-email-threshold", System.currentTimeMillis() + (i*1000), String.valueOf(305.5 + i));
+            Data threshold = new Data("test-webhook-threshold", System.currentTimeMillis() + (i*1000), String.valueOf(305.5 + i));
             Collection<Data> datums = new ArrayList<>();
             datums.add(threshold);
             resp = client.post(path: "data", body: datums);
@@ -310,7 +266,7 @@ class ActionsITest extends AbstractQuarkusITestBase {
             Thread.sleep(500);
 
             // FETCH recent alerts for trigger, there should be 5
-            resp = client.get(path: "", query: [startTime:start,triggerIds:"test-email-threshold"] )
+            resp = client.get(path: "", query: [startTime:start,triggerIds:"test-webhook-threshold"] )
             if ( resp.status == 200 && resp.data.size() == 5 ) {
                 break;
             }
@@ -319,7 +275,7 @@ class ActionsITest extends AbstractQuarkusITestBase {
         assertEquals(5, resp.data.size())
         assertEquals("OPEN", resp.data[0].status)
 
-        resp = client.delete(path: "triggers/test-email-threshold");
+        resp = client.delete(path: "triggers/test-webhook-threshold");
         assertEquals(200, resp.status)
 
         resp = client.delete(path: "actions/" + actionPlugin + "/" + actionId)
@@ -335,18 +291,17 @@ class ActionsITest extends AbstractQuarkusITestBase {
         assert resp.status == 200 : resp.status
 
         // Create an action definition for admins
-        String actionPlugin = "email"
+        String actionPlugin = "webhook"
         String actionId = "notify-to-admins";
 
         // Remove previous history
-        client.put(path: "actions/history/delete", query: [actionPlugins:"email"])
+        client.put(path: "actions/history/delete", query: [actionPlugins:"webhook"])
 
         // Remove a previous action
         client.delete(path: "actions/" + actionPlugin + "/" + actionId)
 
         Map<String, String> actionProperties = new HashMap<>();
-        actionProperties.put("from", "from-alerts@company.org");
-        actionProperties.put("to", "to-admin@company.org");
+        actionProperties.put("endpoint_id", "1");
 
         ActionDefinition actionDefinition = new ActionDefinition(null, actionPlugin, actionId, actionProperties);
 
@@ -354,15 +309,14 @@ class ActionsITest extends AbstractQuarkusITestBase {
         assertEquals(200, resp.status)
 
         // Create an action definition for developers
-        actionPlugin = "email"
+        actionPlugin = "webhook"
         actionId = "notify-to-developers";
 
         // Remove a previous action
         client.delete(path: "actions/" + actionPlugin + "/" + actionId)
 
         actionProperties = new HashMap<>();
-        actionProperties.put("from", "from-alerts@company.org");
-        actionProperties.put("to", "to-developers@company.org");
+        actionProperties.put("endpoint_id", "2");
 
         actionDefinition = new ActionDefinition(null, actionPlugin, actionId, actionProperties);
 
@@ -381,9 +335,9 @@ class ActionsITest extends AbstractQuarkusITestBase {
         testTrigger.setAutoResolve(false);
         testTrigger.setAutoResolveAlerts(false);
 
-        TriggerAction notifyAdmins = new TriggerAction("email", "notify-to-admins");
+        TriggerAction notifyAdmins = new TriggerAction(actionPlugin, "notify-to-admins");
         notifyAdmins.addState(Status.OPEN.name());
-        TriggerAction notifyDevelopers = new TriggerAction("email", "notify-to-developers");
+        TriggerAction notifyDevelopers = new TriggerAction(actionPlugin, "notify-to-developers");
         notifyDevelopers.addState(Status.ACKNOWLEDGED.name());
 
         testTrigger.addAction(notifyAdmins);
@@ -446,7 +400,7 @@ class ActionsITest extends AbstractQuarkusITestBase {
         // Check actions generated
         // This used to fail randomly, therefore try several times before failing
         for ( int i=0; i < 20; ++i ) {
-            resp = client.get(path: "actions/history", query: [startTime:start,actionPlugins:"email"])
+            resp = client.get(path: "actions/history", query: [startTime:start,actionPlugins:"webhook"])
             if ( resp.status == 200 && resp.data.size() == 5 ) {
                 break;
             }
@@ -472,7 +426,7 @@ class ActionsITest extends AbstractQuarkusITestBase {
             Thread.sleep(500);
 
             // FETCH recent alerts for trigger, there should be 5
-            resp = client.get(path: "actions/history", query: [startTime:start,actionPlugins:"email"])
+            resp = client.get(path: "actions/history", query: [startTime:start,actionPlugins:"webhook"])
             if ( resp.status == 200 && resp.data.size() == 10 ) {
                 break;
             }
@@ -484,10 +438,10 @@ class ActionsITest extends AbstractQuarkusITestBase {
         resp = client.delete(path: "triggers/test-status-threshold");
         assertEquals(200, resp.status)
 
-        resp = client.delete(path: "actions/email/notify-to-admins")
+        resp = client.delete(path: "actions/webhook/notify-to-admins")
         assertEquals(200, resp.status)
 
-        resp = client.delete(path: "actions/email/notify-to-developers")
+        resp = client.delete(path: "actions/webhook/notify-to-developers")
         assertEquals(200, resp.status)
     }
 
@@ -500,18 +454,17 @@ class ActionsITest extends AbstractQuarkusITestBase {
         assert resp.status == 200 : resp.status
 
         // Create an action definition for admins
-        String actionPlugin = "email"
+        String actionPlugin = "webhook"
         String actionId = "global-action-notify-to-admins";
 
         // Remove previous history
-        client.put(path: "actions/history/delete", query: [actionPlugins:"email"])
+        client.put(path: "actions/history/delete", query: [actionPlugins:"webhook"])
 
         // Remove a previous action
         client.delete(path: "actions/" + actionPlugin + "/" + actionId)
 
         Map<String, String> actionProperties = new HashMap<>();
-        actionProperties.put("from", "from-alerts@company.org");
-        actionProperties.put("to", "to-admin@company.org");
+        actionProperties.put("endpoint_id", "1");
 
         ActionDefinition actionDefinition = new ActionDefinition(null, actionPlugin, actionId, actionProperties);
         actionDefinition.setGlobal(true);
@@ -520,15 +473,14 @@ class ActionsITest extends AbstractQuarkusITestBase {
         assertEquals(200, resp.status)
 
         // Create an action definition for developers
-        actionPlugin = "email"
+        actionPlugin = "webhook"
         actionId = "global-action-notify-to-developers";
 
         // Remove a previous action
         client.delete(path: "actions/" + actionPlugin + "/" + actionId)
 
         actionProperties = new HashMap<>();
-        actionProperties.put("from", "from-alerts@company.org");
-        actionProperties.put("to", "to-developers@company.org");
+        actionProperties.put("endpoint_id", "2");
 
         actionDefinition = new ActionDefinition(null, actionPlugin, actionId, actionProperties);
         actionDefinition.setGlobal(true);
@@ -605,7 +557,7 @@ class ActionsITest extends AbstractQuarkusITestBase {
         // This used to fail randomly, therefore try several times before failing
         for ( int i=0; i < 30; ++i ) {
             resp = client.get(path: "actions/history",
-                    query: [startTime:start,actionPlugins:"email",
+                    query: [startTime:start,actionPlugins:"webhook",
                             actionIds:"global-action-notify-to-admins,global-action-notify-to-developers"])
             if ( resp.status == 200 && resp.data.size() == 10 ) {
                 break;
@@ -619,10 +571,10 @@ class ActionsITest extends AbstractQuarkusITestBase {
         resp = client.delete(path: "triggers/test-global-status-threshold");
         assertEquals(200, resp.status)
 
-        resp = client.delete(path: "actions/email/global-action-notify-to-admins")
+        resp = client.delete(path: "actions/webhook/global-action-notify-to-admins")
         assertEquals(200, resp.status)
 
-        resp = client.delete(path: "actions/email/global-action-notify-to-developers")
+        resp = client.delete(path: "actions/webhook/global-action-notify-to-developers")
         assertEquals(200, resp.status)
     }
 }

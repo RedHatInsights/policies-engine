@@ -414,13 +414,11 @@ class TriggersITest extends AbstractQuarkusITestBase {
     @Test
     void createFullTrigger() {
         // CREATE the action definition
-        String actionPlugin = "email"
-        String actionId = "email-to-admin";
+        String actionPlugin = "webhook"
+        String actionId = "webhook-to-admin";
 
         Map<String, String> actionProperties = new HashMap<>();
-//        actionProperties.put("from", "from-alerts@company.org");
-        actionProperties.put("to", "to-admin@company.org");
-//        actionProperties.put("cc", "cc-developers@company.org");
+        actionProperties.put("endpoint_id", "1");
 
         ActionDefinition actionDefinition = new ActionDefinition(null, actionPlugin, actionId, actionProperties);
 
@@ -435,7 +433,7 @@ class TriggersITest extends AbstractQuarkusITestBase {
                 "        \"description\": \"description 1\",\n" +
                 "        \"severity\": \"HIGH\",\n" +
                 "        \"actions\": [\n" +
-                "          {\"actionPlugin\":\"email\", \"actionId\":\"email-to-admin\"}\n" +
+                "          {\"actionPlugin\":\"webhook\", \"actionId\":\"webhook-to-admin\"}\n" +
                 "        ],\n" +
                 "        \"context\": {\n" +
                 "          \"name1\":\"value1\"\n" +
@@ -484,6 +482,151 @@ class TriggersITest extends AbstractQuarkusITestBase {
         assertEquals(1, resp.data.conditions.size())
 
         resp = client.delete(path: "triggers/full-test-trigger-1")
+        assertEquals(200, resp.status)
+
+        resp = client.delete(path: "actions/" + actionPlugin + "/" + actionId)
+        assertEquals(200, resp.status)
+    }
+
+    @Test
+    void createFullTriggerWithManagedPlugin() {
+        // CREATE the action definition
+        String actionPlugin = "email"
+
+        String jsonTrigger = "{\n" +
+                "      \"trigger\":{\n" +
+                "        \"id\": \"full-test-trigger-1\",\n" +
+                "        \"enabled\": true,\n" +
+                "        \"name\": \"NumericData-01-low\",\n" +
+                "        \"description\": \"description 1\",\n" +
+                "        \"severity\": \"HIGH\",\n" +
+                "        \"actions\": [\n" +
+                "          {\"actionPlugin\":\"email\"}\n" +
+                "        ],\n" +
+                "        \"context\": {\n" +
+                "          \"name1\":\"value1\"\n" +
+                "        },\n" +
+                "        \"tags\": {\n" +
+                "          \"tname1\":\"tvalue1\",\n" +
+                "          \"tname2\":\"tvalue2\"\n" +
+                "        }\n" +
+                "      },\n" +
+                "      \"dampenings\":[\n" +
+                "        {\n" +
+                "          \"triggerMode\": \"FIRING\",\n" +
+                "          \"type\": \"STRICT\",\n" +
+                "          \"evalTrueSetting\": 2,\n" +
+                "          \"evalTotalSetting\": 2\n" +
+                "        }\n" +
+                "      ],\n" +
+                "      \"conditions\":[\n" +
+                "        {\n" +
+                "          \"triggerMode\": \"FIRING\",\n" +
+                "          \"type\": \"threshold\",\n" +
+                "          \"dataId\": \"NumericData-01\",\n" +
+                "          \"operator\": \"LT\",\n" +
+                "          \"threshold\": 10.0,\n" +
+                "          \"context\": {\n" +
+                "            \"description\": \"Response Time\",\n" +
+                "            \"unit\": \"ms\"\n" +
+                "          }\n" +
+                "        }\n" +
+                "      ]\n" +
+                "    }";
+
+        // remove if it exists
+        def resp = client.delete(path: "triggers/full-test-trigger-1")
+        assert(200 == resp.status || 404 == resp.status)
+
+        // create the test trigger
+        resp = client.post(path: "triggers/trigger", body: jsonTrigger)
+        assertEquals(200, resp.status)
+        assertTrue(resp.data.trigger.actions[0].actionId.startsWith("_managed"))
+        String actionId = resp.data.trigger.actions[0].actionId
+
+        resp = client.get(path: "triggers/trigger/full-test-trigger-1");
+        assertEquals(200, resp.status)
+        assertEquals("NumericData-01-low", resp.data.trigger.name)
+        assertEquals(testTenant, resp.data.trigger.tenantId)
+        assertEquals(1, resp.data.dampenings.size())
+        assertEquals(1, resp.data.conditions.size())
+
+        resp = client.delete(path: "triggers/full-test-trigger-1")
+        assertEquals(200, resp.status)
+
+        resp = client.delete(path: "actions/" + actionPlugin + "/" + actionId)
+        assertEquals(200, resp.status)
+    }
+
+    @Test
+    void verifyManagedActionIdIdentical() {
+        // CREATE the action definition
+        String actionPlugin = "email"
+
+        String jsonTrigger = "{\n" +
+                "      \"trigger\":{\n" +
+                "        \"id\": \"full-test-trigger-1\",\n" +
+                "        \"enabled\": true,\n" +
+                "        \"name\": \"NumericData-01-low\",\n" +
+                "        \"description\": \"description 1\",\n" +
+                "        \"severity\": \"HIGH\",\n" +
+                "        \"actions\": [\n" +
+                "          {\"actionPlugin\":\"email\"}\n" +
+                "        ],\n" +
+                "        \"context\": {\n" +
+                "          \"name1\":\"value1\"\n" +
+                "        },\n" +
+                "        \"tags\": {\n" +
+                "          \"tname1\":\"tvalue1\",\n" +
+                "          \"tname2\":\"tvalue2\"\n" +
+                "        }\n" +
+                "      },\n" +
+                "      \"dampenings\":[\n" +
+                "        {\n" +
+                "          \"triggerMode\": \"FIRING\",\n" +
+                "          \"type\": \"STRICT\",\n" +
+                "          \"evalTrueSetting\": 2,\n" +
+                "          \"evalTotalSetting\": 2\n" +
+                "        }\n" +
+                "      ],\n" +
+                "      \"conditions\":[\n" +
+                "        {\n" +
+                "          \"triggerMode\": \"FIRING\",\n" +
+                "          \"type\": \"threshold\",\n" +
+                "          \"dataId\": \"NumericData-01\",\n" +
+                "          \"operator\": \"LT\",\n" +
+                "          \"threshold\": 10.0,\n" +
+                "          \"context\": {\n" +
+                "            \"description\": \"Response Time\",\n" +
+                "            \"unit\": \"ms\"\n" +
+                "          }\n" +
+                "        }\n" +
+                "      ]\n" +
+                "    }";
+
+        // remove if it exists
+        def resp = client.delete(path: "triggers/full-test-trigger-1")
+        assert(200 == resp.status || 404 == resp.status)
+
+        // create the test trigger
+        resp = client.post(path: "triggers/trigger", body: jsonTrigger)
+        assertEquals(200, resp.status)
+        assertTrue(resp.data.trigger.actions[0].actionId.startsWith("_managed"))
+        String actionId = resp.data.trigger.actions[0].actionId
+
+        jsonTrigger = jsonTrigger.replaceFirst("full-test-trigger-1", "full-test-trigger-2");
+
+        resp = client.post(path: "triggers/trigger", body: jsonTrigger)
+        assertEquals(200, resp.status)
+        assertTrue(resp.data.trigger.actions[0].actionId.startsWith("_managed"))
+        String actionId2 = resp.data.trigger.actions[0].actionId
+
+        assertEquals(actionId, actionId2)
+
+        resp = client.delete(path: "triggers/full-test-trigger-1")
+        assertEquals(200, resp.status)
+
+        resp = client.delete(path: "triggers/full-test-trigger-2")
         assertEquals(200, resp.status)
 
         resp = client.delete(path: "actions/" + actionPlugin + "/" + actionId)
@@ -555,13 +698,11 @@ class TriggersITest extends AbstractQuarkusITestBase {
     @Test
     void updateFullTrigger() {
         // CREATE the action definition
-        String actionPlugin = "email"
-        String actionId = "email-to-admin";
+        String actionPlugin = "webhook"
+        String actionId = "webhook-to-admin";
 
         Map<String, String> actionProperties = new HashMap<>();
-        actionProperties.put("from", "from-alerts@company.org");
-        actionProperties.put("to", "to-admin@company.org");
-        actionProperties.put("cc", "cc-developers@company.org");
+        actionProperties.put("endpoint_id", "1");
 
         ActionDefinition actionDefinition = new ActionDefinition(null, actionPlugin, actionId, actionProperties);
 
@@ -576,7 +717,7 @@ class TriggersITest extends AbstractQuarkusITestBase {
                 "        \"description\": \"description 1\",\n" +
                 "        \"severity\": \"HIGH\",\n" +
                 "        \"actions\": [\n" +
-                "          {\"actionPlugin\":\"email\", \"actionId\":\"email-to-admin\"}\n" +
+                "          {\"actionPlugin\":\"webhook\", \"actionId\":\"webhook-to-admin\"}\n" +
                 "        ],\n" +
                 "        \"context\": {\n" +
                 "          \"name1\":\"value1\"\n" +
@@ -742,7 +883,7 @@ class TriggersITest extends AbstractQuarkusITestBase {
                 "        \"severity\": \"HIGH\",\n" +
                 "        \"actions\": [\n" +
                 // Unknown email-to-nothing action
-                "          {\"actionPlugin\":\"email\", \"actionId\":\"email-to-nothing\"}\n" +
+                "          {\"actionPlugin\":\"webhook\", \"actionId\":\"webhook-to-nothing\"}\n" +
                 "        ],\n" +
                 "        \"context\": {\n" +
                 "          \"name1\":\"value1\"\n" +
