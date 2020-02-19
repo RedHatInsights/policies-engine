@@ -1,10 +1,5 @@
 package org.hawkular.alerts.engine.impl.ispn;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -20,14 +15,14 @@ import org.hawkular.alerts.api.model.condition.AvailabilityCondition;
 import org.hawkular.alerts.api.model.condition.AvailabilityCondition.Operator;
 import org.hawkular.alerts.api.model.condition.Condition;
 import org.hawkular.alerts.api.model.dampening.Dampening;
-import org.hawkular.alerts.api.model.trigger.Mode;
-import org.hawkular.alerts.api.model.trigger.Trigger;
-import org.hawkular.alerts.api.model.trigger.TriggerType;
+import org.hawkular.alerts.api.model.trigger.*;
 import org.hawkular.alerts.api.services.TriggersCriteria;
 import org.hawkular.commons.log.MsgLogger;
 import org.hawkular.commons.log.MsgLogging;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 /**
  * @author Jay Shaughnessy
@@ -345,6 +340,44 @@ public class IspnDefinitionsServiceImplTest extends IspnBaseServiceImplTest {
                 Collections.singletonMap("avail", "avail0"));
         assertEquals(1, definitions.getMemberTriggers("tenant0", "groupTrigger0", true).size());
         definitions.removeGroupTrigger("tenant0", "groupTrigger0", false, false);
+    }
+
+    @Test
+    public void testManagedFullTriggerCreation() throws Exception {
+        Map<String, String> props = new HashMap<>();
+        props.put("_managed", "true");
+        props.put("id", "");
+        definitions.addActionPlugin("pluginM", props);
+
+        TriggerAction action = new TriggerAction();
+        action.setActionPlugin("pluginM");
+        Map<String, String> actionProps = new HashMap<>();
+        actionProps.put("id", "abcdefghjikl");
+        action.setProperties(actionProps);
+
+        FullTrigger fullTrigger = new FullTrigger();
+        Trigger trigger = new Trigger();
+        Set<TriggerAction> actionSet = new HashSet<>();
+        actionSet.add(action);
+        trigger.setActions(actionSet);
+        trigger.setId("trigger1");
+
+        fullTrigger.setTrigger(trigger);
+        definitions.createFullTrigger(TENANT, fullTrigger);
+
+        assertNotNull(fullTrigger.getTrigger().getActions());
+        String actionId = fullTrigger.getTrigger().getActions().iterator().next().getActionId();
+        assertTrue(actionId.startsWith("_managed"));
+
+        trigger.setId("trigger2");
+        action.setActionId(null);
+
+        definitions.createFullTrigger(TENANT, fullTrigger);
+        String actionId2 = fullTrigger.getTrigger().getActions().iterator().next().getActionId();
+        assertEquals(actionId, actionId2);
+
+        definitions.removeTrigger(TENANT, "trigger1");
+        definitions.removeTrigger(TENANT, "trigger2");
     }
 
 }
