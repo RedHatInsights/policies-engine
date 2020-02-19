@@ -63,8 +63,7 @@ public class ActionDefinition implements Serializable {
     private String actionPlugin;
 
     @DocModelProperty(description = "Action definition identifier.",
-            position = 2,
-            required = true)
+            position = 2)
     @JsonInclude
     private String actionId;
 

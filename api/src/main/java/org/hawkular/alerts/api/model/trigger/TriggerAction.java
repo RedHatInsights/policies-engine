@@ -2,6 +2,7 @@ package org.hawkular.alerts.api.model.trigger;
 
 import java.io.Serializable;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.hawkular.alerts.api.doc.DocModel;
@@ -26,18 +27,18 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
  * @author Jay Shaughnessy
  * @author Lucas Ponce
  */
-@DocModel(description = "Links an <<ActionDefinition>> with a <<Trigger>>. + \n" +
-        " + \n" +
-        "The TriggerAction can override the constraints set on the <<ActionDefintion>>. + \n" +
-        "If a <<TriggerAction>> defines any constraints the <<ActionDefinition>> constraints will be ignored. + \n" +
-        "If a <<TriggerAction>> defines no constraints the <<ActionDefinition>> constraints will be used. + \n")
+@DocModel(description = "Links an <<ActionDefinition>> with a <<Trigger>>.\n" +
+        "\n" +
+        "The TriggerAction can override the constraints set on the <<ActionDefintion>>.\n" +
+        "If a <<TriggerAction>> defines any constraints the <<ActionDefinition>> constraints will be ignored.\n" +
+        "If a <<TriggerAction>> defines no constraints the <<ActionDefinition>> constraints will be used.\n" +
+        "If a <<TriggerAction>> defines properties and no actionId, the <<ActionDefinition>> will be created.\n")
 public class TriggerAction implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @DocModelProperty(description = "Tenant id owner of this trigger.",
             position = 0,
-            required = false,
             allowableValues = "Tenant is overwritten from Hawkular-Tenant HTTP header parameter request")
     @JsonInclude(Include.NON_NULL)
     private String tenantId;
@@ -51,26 +52,29 @@ public class TriggerAction implements Serializable {
 
     @DocModelProperty(description = "Action definition identifier.",
             position = 2,
-            required = true,
             allowableValues = "Only existing action definitions on the system are valid.")
     @JsonInclude
     private String actionId;
 
+    @DocModelProperty(description = "Plugin properties. Each plugin defines its own specific properties that can be " +
+            "supplied at action definition level. If properties is given, actionId must be empty as it is generated.",
+            position = 3)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private Map<String, String> properties;
+
     @DocModelProperty(description = "A list of Alert.Status restricting active states for this action.",
-            position = 3,
-            required = false,
+            position = 4,
             allowableValues = "OPEN, ACKNOWLEDGED, RESOLVED")
     @JsonInclude(Include.NON_EMPTY)
     private Set<String> states;
 
     @DocModelProperty(description = "A TimeConstraint restricting active times for this action.",
-            position = 4,
-            required = false)
+            position = 5)
     @JsonInclude(Include.NON_NULL)
     private TimeConstraint calendar;
 
     public TriggerAction() {
-        this(null, null, null);
+        this(null, null);
     }
 
     public TriggerAction(String actionPlugin, String actionId) {
@@ -78,15 +82,19 @@ public class TriggerAction implements Serializable {
     }
 
     public TriggerAction(String tenantId, String actionPlugin, String actionId) {
-        this(tenantId, actionPlugin, actionId, new HashSet<>(), null);
+        this(tenantId, actionPlugin, actionId, new HashSet<>(), null, null);
+    }
+
+    public TriggerAction(String tenantId, String actionPlugin, Map<String, String> properties) {
+        this(tenantId, actionPlugin, null, new HashSet<>(), null, properties);
     }
 
     public TriggerAction(String tenantId, String actionPlugin, String actionId, Set<String> states) {
-        this(tenantId, actionPlugin, actionId, new HashSet<>(states), null);
+        this(tenantId, actionPlugin, actionId, new HashSet<>(states), null, null);
     }
 
     public TriggerAction(String tenantId, String actionPlugin, String actionId, TimeConstraint calendar) {
-        this(tenantId, actionPlugin, actionId, new HashSet<>(), calendar);
+        this(tenantId, actionPlugin, actionId, new HashSet<>(), calendar, null);
     }
 
     public TriggerAction(TriggerAction triggerAction) {
@@ -101,12 +109,13 @@ public class TriggerAction implements Serializable {
     }
 
     public TriggerAction(String tenantId, String actionPlugin, String actionId, Set<String> states,
-                         TimeConstraint calendar) {
+                         TimeConstraint calendar, Map<String, String> properties) {
         this.tenantId = tenantId;
         this.actionPlugin = actionPlugin;
         this.actionId = actionId;
         this.states = states;
         this.calendar = calendar;
+        this.properties = properties;
     }
 
     public String getTenantId() {
@@ -154,6 +163,14 @@ public class TriggerAction implements Serializable {
 
     public void setCalendar(TimeConstraint calendar) {
         this.calendar = calendar;
+    }
+
+    public Map<String, String> getProperties() {
+        return properties;
+    }
+
+    public void setProperties(Map<String, String> properties) {
+        this.properties = properties;
     }
 
     @Override

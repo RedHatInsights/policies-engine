@@ -26,13 +26,7 @@ public class WebhookActionPluginListener implements ActionPluginListener {
     @Override
     public void process(ActionMessage actionMessage) throws Exception {
         Action action = actionMessage.getAction();
-        Event actionEvent = action.getEvent();
-        JsonObject actionJson = new JsonObject();
-        // Example mapping, we could add payload, method, timeout etc for example
-        actionJson.put("url", action.getProperties().get("url"));
-
-        // TODO Do we want something for
-        channel.send(actionJson);
+        channel.send(JsonObject.mapFrom(action));
     }
 
     @Override
@@ -43,12 +37,15 @@ public class WebhookActionPluginListener implements ActionPluginListener {
     @Override
     public Set<String> getProperties() {
         Set<String> properties = new HashSet<>();
-        properties.add("url");
+        properties.add("endpoint_id");
         return properties;
     }
 
     @Override
     public Map<String, String> getDefaultProperties() {
-        return new HashMap<>();
+        Map<String, String> defaultProperties = new HashMap<>();
+        defaultProperties.put("_managed", "true");
+        defaultProperties.put("endpoint_id", "");
+        return defaultProperties;
     }
 }

@@ -9,19 +9,16 @@ import static org.hawkular.alerts.engine.impl.ispn.IspnPk.pkFromDampeningId;
 import static org.hawkular.alerts.engine.impl.ispn.IspnPk.pkFromTriggerId;
 import static org.hawkular.alerts.engine.util.Utils.checkTenantId;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Charsets;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 import org.hawkular.alerts.api.exception.FoundException;
 import org.hawkular.alerts.api.exception.NotFoundException;
 import org.hawkular.alerts.api.json.GroupMemberInfo;
@@ -45,10 +42,7 @@ import org.hawkular.alerts.api.model.paging.Order;
 import org.hawkular.alerts.api.model.paging.Page;
 import org.hawkular.alerts.api.model.paging.Pager;
 import org.hawkular.alerts.api.model.paging.TriggerComparator;
-import org.hawkular.alerts.api.model.trigger.FullTrigger;
-import org.hawkular.alerts.api.model.trigger.Mode;
-import org.hawkular.alerts.api.model.trigger.Trigger;
-import org.hawkular.alerts.api.model.trigger.TriggerType;
+import org.hawkular.alerts.api.model.trigger.*;
 import org.hawkular.alerts.api.services.DefinitionsEvent;
 import org.hawkular.alerts.api.services.DefinitionsEvent.Type;
 import org.hawkular.alerts.api.services.DefinitionsListener;
@@ -122,7 +116,7 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
         if (isEmpty(actionDefinition.getActionId())) {
             throw new IllegalArgumentException("ActionId must be not null");
         }
-        if (isEmpty(actionDefinition.getProperties())) {
+        if(!isManaged(actionDefinition.getActionPlugin()) && isEmpty(actionDefinition.getProperties())) {
             throw new IllegalArgumentException("Properties must be not null");
         }
         String pluginName = actionDefinition.getActionPlugin();
@@ -1796,16 +1790,65 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
         alertsContext.notifyListeners(notifications);
     }
 
+    private static String getManagedId(String actionPlugin, Map<String, String> properties) {
+        // Hash the properties
+        HashFunction hf = Hashing.farmHashFingerprint64();
+        Hasher mapHasher = hf.newHasher();
+        mapHasher.putString(actionPlugin, Charsets.UTF_8);
+        if(properties != null) {
+            properties.entrySet().stream()
+                    .forEach(e -> {
+                        mapHasher.putString(e.getKey(), Charsets.UTF_8);
+                        mapHasher.putString(e.getValue(), Charsets.UTF_8);
+                    });
+        }
+        String hash = mapHasher.hash().toString();
+        return String.format("_managed-instance-%s-%s", actionPlugin, hash);
+    }
+
+    private ActionDefinition createManagedActionDefinition(TriggerAction action) {
+        String actionId = getManagedId(action.getActionPlugin(), action.getProperties());
+        ActionDefinition actionDefinition = new ActionDefinition(action.getTenantId(), action.getActionPlugin(), actionId, action.getProperties());
+        return actionDefinition;
+    }
+
+    private boolean isManaged(String actionPlugin) throws Exception {
+        Map<String, String> defaultPluginProperties = getDefaultActionPlugin(actionPlugin);
+        String managed = defaultPluginProperties.get("_managed");
+        return Boolean.parseBoolean(managed);
+    }
+
     private void addTrigger(Trigger trigger) throws Exception {
         if (trigger.getActions() != null) {
+            // Verify managed actionDefinitions
+            trigger.getActions().stream()
+                    .filter(action -> isEmpty(action.getActionId()))
+                    .forEach(action -> {
+                        try {
+                            if(isManaged(action.getActionPlugin())) {
+                                ActionDefinition managedActionDefinition = getActionDefinition(trigger.getTenantId(), action.getActionPlugin(), getManagedId(action.getActionPlugin(), action.getProperties()));
+                                if(managedActionDefinition == null) {
+                                    managedActionDefinition = createManagedActionDefinition(action);
+                                    addActionDefinition(trigger.getTenantId(), managedActionDefinition);
+                                }
+                                action.setActionId(managedActionDefinition.getActionId());
+                            }
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+
             Collection<ActionDefinition> actionDefinitions = getActionDefinitions(trigger.getTenantId());
-            trigger.getActions().stream().forEach(actionDefinition -> {
+
+            // Check existence of targeted actionDefinitions
+            trigger.getActions().stream()
+                    .filter(actionDefinition -> !isEmpty(actionDefinition.getActionId()))
+                    .forEach(actionDefinition -> {
                 actionDefinition.setTenantId(trigger.getTenantId());
                 boolean found = actionDefinitions.stream()
-                        .filter(a -> a.getActionPlugin().equals(actionDefinition.getActionPlugin())
-                                && a.getActionId().equals(actionDefinition.getActionId()))
-                        .findFirst().isPresent();
-                if (!found) {
+                        .anyMatch(a -> a.getActionPlugin().equals(actionDefinition.getActionPlugin())
+                                && a.getActionId().equals(actionDefinition.getActionId()));
+                if(!found) {
                     throw new IllegalArgumentException("Action " + actionDefinition.getActionId() + " on plugin: "
                             + actionDefinition.getActionPlugin() + " is not found");
                 }
@@ -2118,6 +2161,16 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
                 .build()
                 .list();
         return actionDefinitions.stream().map(a -> a.getActionDefinition()).collect(Collectors.toList());
+    }
+
+    private List<ActionDefinition> getActionDefinitions(String tenantId, String actionPlugin) throws Exception {
+        List<IspnActionDefinition> actionDefinitions = queryFactory.from(IspnActionDefinition.class)
+                .having("tenantId")
+                .eq(tenantId)
+                .and().having("actionPlugin").eq(actionPlugin)
+                .build()
+                .list();
+        return actionDefinitions.stream().map(IspnActionDefinition::getActionDefinition).collect(Collectors.toList());
     }
 
     private Collection<Condition> mapConditions(List<IspnCondition> ispnConditions) {

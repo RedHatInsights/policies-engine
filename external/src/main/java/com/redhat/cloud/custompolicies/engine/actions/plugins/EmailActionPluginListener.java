@@ -88,7 +88,9 @@ public class EmailActionPluginListener implements ActionPluginListener {
 
     @Override
     public Map<String, String> getDefaultProperties() {
-        return new HashMap<>();
+        Map<String, String> defaultProperties = new HashMap<>();
+        defaultProperties.put("_managed", "true");
+        return defaultProperties;
     }
 
     /**
