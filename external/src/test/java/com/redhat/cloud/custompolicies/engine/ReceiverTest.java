@@ -42,36 +42,43 @@ public class ReceiverTest {
     Publisher<JsonObject> emailReceiver;
 
     @Inject
+    @Channel("webhook")
+    Publisher<JsonObject> webhookReceiver;
+
+    @Inject
     DefinitionsService definitionsService;
 
     @Test
     public void testReceiver() throws Exception {
+        String tenantId = "integration-test";
+        String actionPlugin = "email";
+        String actionId =  "email-notif";
+        String triggerId = "arch-trigger";
+        
         /*
         Create trigger definitions, send to hostEmitter and wait for the trigger to send an alert to email
          */
-        ActionDefinition actionDefinition = new ActionDefinition("integration-test", "email", "email-notif");
+        ActionDefinition actionDefinition = new ActionDefinition(tenantId, actionPlugin, actionId);
         Map<String, String> props = new HashMap<>();
-        props.put("to", "my@destination.com");
         actionDefinition.setProperties(props);
-        definitionsService.addActionDefinition("integration-test", actionDefinition);
+        definitionsService.addActionDefinition(tenantId, actionDefinition);
 
         EventCondition evCond = new EventCondition();
         evCond.setExpression("facts.arch = 'string'");
-        evCond.setTenantId("integration-test");
+        evCond.setTenantId(tenantId);
         List<Condition> conditions = Collections.singletonList(evCond);
 
-        TriggerAction action = new TriggerAction("email", "email-notif");
+        TriggerAction action = new TriggerAction(actionPlugin, actionId);
         Set<TriggerAction> actions = Collections.singleton(action);
 
-        Trigger trigger = new Trigger("integration-test", "arch-trigger", "Trigger from arch", null);
+        Trigger trigger = new Trigger(tenantId, triggerId, "Trigger from arch", null);
         trigger.setEventType(EventType.ALERT);
         trigger.setActions(actions);
         trigger.setMode(Mode.FIRING);
         trigger.setEnabled(true);
 
-
         FullTrigger fullTrigger = new FullTrigger(trigger, null, conditions);
-        definitionsService.createFullTrigger("integration-test", fullTrigger);
+        definitionsService.createFullTrigger(tenantId, fullTrigger);
 
         TestSubscriber<JsonObject> testSubscriber = new TestSubscriber<>();
         emailReceiver.subscribe(testSubscriber);
@@ -87,8 +94,12 @@ public class ReceiverTest {
         testSubscriber.assertValueCount(1);
 
         JsonObject emailOutput = testSubscriber.values().get(0);
-        assertEquals("integration-test", emailOutput.getString("tenantId"));
+        assertEquals(tenantId, emailOutput.getString("tenantId"));
         assertTrue(emailOutput.containsKey("tags"));
         assertTrue(emailOutput.containsKey("triggerNames"));
+        
+        // Delete what we created..
+        definitionsService.removeTrigger(tenantId, triggerId);
+        definitionsService.removeActionDefinition(tenantId, actionPlugin, actionId);
     }
 }

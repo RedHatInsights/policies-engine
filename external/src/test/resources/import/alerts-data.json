@@ -9,7 +9,7 @@
         "description": "description 1",
         "severity": "HIGH",
         "actions": [
-          {"actionPlugin":"email", "actionId":"email-to-admin"}
+          {"actionPlugin":"webhook", "actionId":"webhook-to-admin"}
         ],
         "context": {
           "name1":"value1"
@@ -50,7 +50,7 @@
         "description": "description 2",
         "severity": "HIGH",
         "actions": [
-          {"actionPlugin":"email", "actionId":"email-to-admin"}
+          {"actionPlugin":"webhook", "actionId":"webhook-to-admin"}
         ]
       },
       "dampenings":[],
@@ -88,7 +88,7 @@
         "description": "description 3",
         "severity": "HIGH",
         "actions": [
-          {"actionPlugin":"email", "actionId":"email-to-admin"}
+          {"actionPlugin":"webhook", "actionId":"webhook-to-admin"}
         ]
       },
       "dampenings":[],
@@ -118,7 +118,7 @@
         "description": "description 4",
         "severity": "HIGH",
         "actions": [
-          {"actionPlugin":"email", "actionId":"email-to-admin"}
+          {"actionPlugin":"webhook", "actionId":"webhook-to-admin"}
         ]
       },
       "dampenings":[],
@@ -146,7 +146,7 @@
         "description": "description 5",
         "severity": "HIGH",
         "actions": [
-          {"actionPlugin":"email", "actionId":"email-to-admin"}
+          {"actionPlugin":"webhook", "actionId":"webhook-to-admin"}
         ]
       },
       "dampenings":[],
@@ -173,7 +173,7 @@
         "description": "description 6",
         "severity": "HIGH",
         "actions": [
-          {"actionPlugin":"email", "actionId":"email-to-admin"}
+          {"actionPlugin":"webhook", "actionId":"webhook-to-admin"}
         ]
       },
       "dampenings":[],
@@ -199,7 +199,7 @@
         "description": "description 8",
         "severity": "HIGH",
         "actions": [
-          {"actionPlugin":"email", "actionId":"email-to-admin"}
+          {"actionPlugin":"webhook", "actionId":"webhook-to-admin"}
         ]
       },
       "dampenings":[
@@ -234,7 +234,7 @@
         "description": "Event generating trigger",
         "severity": "HIGH",
         "actions": [
-          {"actionPlugin":"email", "actionId":"email-to-admin"}
+          {"actionPlugin":"webhook", "actionId":"webhook-to-admin"}
         ],
         "context": {
           "trigger-8-name":"value"
@@ -268,7 +268,7 @@
         "description": "Rate Condition Test",
         "severity": "HIGH",
         "actions": [
-          {"actionPlugin":"email", "actionId":"email-to-admin"}
+          {"actionPlugin":"webhook", "actionId":"webhook-to-admin"}
         ]
       },
       "dampenings":[],
@@ -291,11 +291,10 @@
   "actions":[
     {
       "tenantId": "28026b36-8fe4-4332-84c8-524e173a68bf",
-      "actionPlugin": "email",
-      "actionId": "email-to-admin",
+      "actionPlugin": "webhook",
+      "actionId": "webhook-to-admin",
       "properties": {
-        "to": "admin@hawkular.org",
-        "cc": "bigboss@hawkular.org"
+        "endpoint_id": "35e48b6487d9568e"
       }
     }
   ]

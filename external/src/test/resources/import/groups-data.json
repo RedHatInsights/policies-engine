@@ -9,7 +9,7 @@
         "description": "Trigger definition used as parent",
         "severity": "HIGH",
         "actions": [
-          {"actionPlugin":"email", "actionId":"email-to-admin"}
+          {"actionPlugin":"webhook", "actionId":"webhook-to-admin"}
         ]
       },
       "conditions":[
@@ -62,11 +62,10 @@
   ],
   "actions":[
     {
-      "actionPlugin": "email",
-      "actionId": "email-to-admin",
+      "actionPlugin": "webhook",
+      "actionId": "webhook-to-admin",
       "properties": {
-        "to": "admin@hawkular.org",
-        "cc": "bigboss@hawkular.org"
+        "endpoint_id": "35e48b6487d9568e"
       }
     }
   ]

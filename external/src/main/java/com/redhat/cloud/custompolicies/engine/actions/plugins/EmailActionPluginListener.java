@@ -79,11 +79,7 @@ public class EmailActionPluginListener implements ActionPluginListener {
 
     @Override
     public Set<String> getProperties() {
-        Set<String> properties = new HashSet<>();
-        properties.add("from");
-        properties.add("to");
-        properties.add("cc");
-        return properties;
+        return new HashSet<>();
     }
 
     @Override
