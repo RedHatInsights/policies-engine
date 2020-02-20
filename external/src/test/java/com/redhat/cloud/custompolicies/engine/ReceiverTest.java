@@ -17,13 +17,13 @@ import org.hawkular.alerts.api.model.trigger.TriggerAction;
 import org.hawkular.alerts.api.services.DefinitionsService;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.reactivestreams.Publisher;
 
 import javax.inject.Inject;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -31,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
 @Tag("integration")
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class ReceiverTest {
 
     @Inject
@@ -90,7 +91,7 @@ public class ReceiverTest {
         hostEmitter.send(json);
 
         // Wait for the async messaging to arrive
-        testSubscriber.await(10, TimeUnit.SECONDS);
+        testSubscriber.awaitCount(1);
         testSubscriber.assertValueCount(1);
 
         JsonObject emailOutput = testSubscriber.values().get(0);

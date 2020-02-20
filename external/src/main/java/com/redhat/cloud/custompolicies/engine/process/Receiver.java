@@ -6,78 +6,99 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.hawkular.alerts.api.model.event.Event;
 import org.hawkular.alerts.api.services.AlertsService;
+import org.hawkular.commons.log.MsgLogger;
+import org.hawkular.commons.log.MsgLogging;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
+/**
+ * This is the main process for Custom Policies. It ingests data from Kafka, enriches it with information from
+ * insights-host-inventory and then sends it for event processing in the engine.
+ */
 @ApplicationScoped
 public class Receiver {
+    private final MsgLogger log = MsgLogging.getMsgLogger(Receiver.class);
 
     private static String TENANT_ID = "account";
-    private static String SYSTEM_PROFILE = "system_profile";
-    public static String INSIGHT_ID_FIELD = "insight_id";
+    public static String INSIGHT_ID_FIELD = "insights_id";
     private static String EVENT_TYPE = "type";
+    private static String SYSTEM_PROFILE = "system_profile";
 
     @ConfigProperty(name = "engine.receiver.store-events")
     boolean storeEvents;
 
     @Inject
+    SystemProfileClient client;
+
+    @Inject
     AlertsService alertsService;
 
     @Incoming("kafka-hosts")
-    public void process(JsonObject json) {
-        // This process should potentially be in external system
-
-        // TODO Remember to correctly map data_id, otherwise duplication removal will filter most of the data.
-
+    public CompletionStage<Void> processAsync(JsonObject json) {
         String tenantId = json.getString(TENANT_ID);
         String insightsId = json.getString(INSIGHT_ID_FIELD);
-        JsonObject systemProfile = json.getJsonObject(SYSTEM_PROFILE);
-        // TODO These are hardcoded for demo purposes
-        Event event = new Event(tenantId, UUID.randomUUID().toString(),"insight_report", "just another report which needs a name");
-        event.setFacts(parseSystemProfile(systemProfile));
 
-        // Indexed searchable events
-        // TODO Examples for demo purposes
-        Map<String, String> tagsMap = new HashMap<>();
-        tagsMap.put("subscription_manager_id", json.getString("subscription_manager_id"));
-        tagsMap.put("satellite_id", json.getString("satellite_id"));
-        tagsMap.put("ansible_host", json.getString("ansible_host"));
-        event.setTags(tagsMap);
+        JsonObject systemProfile = json.getJsonObject("system_profile");
+        CompletionStage<JsonObject> systemProfileStage;
 
-        // Additional context for processing
-        // TODO Examples for demo purposes
-        Map<String, String> contextMap = new HashMap<>();
-        contextMap.put("rhel_machine_id", json.getString("rhel_machine_id"));
-        contextMap.put(INSIGHT_ID_FIELD, insightsId);
-        contextMap.put("infrastructure_vendor", (String) systemProfile.getMap().get("infrastructure_vendor"));
-        event.setContext(contextMap);
-
-        try {
-            List<Event> eventList = new ArrayList<>(1);
-            eventList.add(event);
-            if(storeEvents) {
-                alertsService.addEvents(eventList);
-            } else {
-                alertsService.sendEvents(eventList);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        if(systemProfile != null) {
+            systemProfileStage = CompletableFuture.supplyAsync(() -> systemProfile);
+        } else {
+            systemProfileStage = client.getSystemProfile(tenantId, insightsId);
         }
+
+        return CompletableFuture.supplyAsync(() -> {
+            Event event = new Event(tenantId, UUID.randomUUID().toString(),"insight_report", "just another report which needs a name");
+            // Indexed searchable events
+            Map<String, String> tagsMap = new HashMap<>();
+            tagsMap.put("display_name", json.getString("display_name"));
+            tagsMap.put(INSIGHT_ID_FIELD, insightsId);
+            event.setTags(tagsMap);
+
+            // Additional context for processing
+            Map<String, String> contextMap = new HashMap<>();
+            event.setContext(contextMap);
+            return event;
+        }).thenCombine(systemProfileStage, (event, sp) -> {
+            event.setFacts(parseSystemProfile(sp));
+            return event;
+        }).thenAcceptAsync(event -> {
+            try {
+                List<Event> eventList = new ArrayList<>(1);
+                eventList.add(event);
+                if (storeEvents) {
+                    alertsService.addEvents(eventList);
+                } else {
+                    alertsService.sendEvents(eventList);
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     /**
      * parseSystemProfile extracts certain parts of the input JSON and modifies them for easier use
      */
     static Map<String, Object> parseSystemProfile(JsonObject json) {
+        if(json == null) {
+            return new HashMap<>();
+        }
         Map<String, Object> facts = json.getMap();
 
         JsonArray networkInterfaces = json.getJsonArray("network_interfaces");
-        JsonArray yumRepos = json.getJsonArray("yum_repos");
+        if(networkInterfaces != null) {
+            facts.put("network_interfaces", namedObjectsToMap(networkInterfaces));
+        }
 
-        facts.put("network_interfaces", namedObjectsToMap(networkInterfaces));
-        facts.put("yum_repos", namedObjectsToMap(yumRepos));
+        JsonArray yumRepos = json.getJsonArray("yum_repos");
+        if(yumRepos != null) {
+            facts.put("yum_repos", namedObjectsToMap(yumRepos));
+        }
 
         return facts;
     }
@@ -87,7 +108,7 @@ public class Receiver {
         for (Object o : objectArray) {
             JsonObject json = (JsonObject) o;
             String name = json.getString("name");
-            if(name == null || name.isEmpty()) {
+            if (name == null || name.isEmpty()) {
                 continue;
             }
             arrayObjectKey.put(name, json.getMap());

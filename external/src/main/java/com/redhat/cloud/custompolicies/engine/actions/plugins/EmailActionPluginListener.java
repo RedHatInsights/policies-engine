@@ -40,26 +40,28 @@ public class EmailActionPluginListener implements ActionPluginListener {
     public void process(ActionMessage actionMessage) throws Exception {
         for (Set<ConditionEval> evalSet : actionMessage.getAction().getEvent().getEvalSets()) {
             for (ConditionEval conditionEval : evalSet) {
-                String tenantId = actionMessage.getAction().getTenantId();
-                EventConditionEval eventEval = (EventConditionEval) conditionEval;
-                String insightId = eventEval.getContext().get(Receiver.INSIGHT_ID_FIELD);
-                if(insightId == null) {
-                    // Fallback, this won't merge anything
-                    insightId = actionMessage.getAction().getEventId();
+                if(conditionEval instanceof EventConditionEval) {
+                    String tenantId = actionMessage.getAction().getTenantId();
+                    EventConditionEval eventEval = (EventConditionEval) conditionEval;
+                    String insightId = eventEval.getContext().get(Receiver.INSIGHT_ID_FIELD);
+                    if(insightId == null) {
+                        // Fallback, this won't merge anything
+                        insightId = actionMessage.getAction().getEventId();
+                    }
+                    Map<String, String> tags = eventEval.getValue().getTags();
+                    String name = actionMessage.getAction().getEvent().getTrigger().getName();
+
+                    Notification notification = new Notification(tenantId);
+                    notification.getTriggerNames().add(name);
+                    notification.getTags().putAll(tags);
+
+                    notifyBuffer.merge(insightId, notification, (existing, addition) -> {
+                        existing.getTags().putAll(addition.getTags());
+                        existing.getTriggerNames().addAll(addition.getTriggerNames());
+
+                        return existing;
+                    });
                 }
-                Map<String, String> tags = eventEval.getValue().getTags();
-                String name = actionMessage.getAction().getEvent().getTrigger().getName();
-
-                Notification notification = new Notification(tenantId);
-                notification.getTriggerNames().add(name);
-                notification.getTags().putAll(tags);
-
-                notifyBuffer.merge(insightId, notification, (existing, addition) -> {
-                    existing.getTags().putAll(addition.getTags());
-                    existing.getTriggerNames().addAll(addition.getTriggerNames());
-
-                    return existing;
-                });
             }
         }
     }
