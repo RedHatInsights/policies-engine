@@ -38,8 +38,8 @@ class ActionsITest extends AbstractQuarkusITestBase {
         def resp = client.get(path: "plugins")
         def data = resp.data
         assertEquals(200, resp.status)
-        assertTrue(data.size() == 2)
-        assertThat(resp.data, containsInAnyOrder("email", "webhook"))
+        assertTrue(data.size() == 3)
+        assertThat(resp.data, containsInAnyOrder("email", "webhook", "hooks"))
     }
 
     @Test
