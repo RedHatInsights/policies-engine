@@ -94,7 +94,6 @@ public class BetaHooksActionPluginRegister implements ActionPluginListener {
         JsonObject message = new JsonObject();
         message.put("application", APPLICATION_NAME);
         message.put("event_type", EVENT_TYPE);
-        message.put("level", 1); // Is this necessary field?
         message.put("timestamp", msg.getAction().getCtime());
         message.put("message", JsonObject.mapFrom(msg.getAction()));
         message.put("account_id", msg.getAction().getTenantId());
