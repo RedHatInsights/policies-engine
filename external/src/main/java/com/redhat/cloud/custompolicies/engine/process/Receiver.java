@@ -14,6 +14,7 @@ import javax.inject.Inject;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.function.BiFunction;
 
 /**
  * This is the main process for Custom Policies. It ingests data from Kafka, enriches it with information from
@@ -78,6 +79,9 @@ public class Receiver {
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
+        }).handleAsync((BiFunction<Void, Throwable, Void>) (event, throwable) -> {
+            log.errorf("Failed to enrich the data: " + throwable.getMessage());
+            return null;
         });
     }
 
