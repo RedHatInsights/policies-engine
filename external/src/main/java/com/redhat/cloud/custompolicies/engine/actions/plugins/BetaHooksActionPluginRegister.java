@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiFunction;
 
 @Plugin(name = "hooks")
 @Dependent
@@ -48,14 +49,18 @@ public class BetaHooksActionPluginRegister implements ActionPluginListener {
     @PostConstruct
     public void initialize() {
         client = WebClient.create(vertx, new WebClientOptions().setDefaultHost(notificationsHostname).setDefaultPort(notificationsPort));
-        client.post(String.format("/apps"))
+        client.post("/apps")
                 .sendJsonObject(createApplicationRegistrationPayload())
                 .thenApply(resp -> {
-                    if(resp.statusCode() == 200) {
+                    if (resp.statusCode() == 200) {
                         log.info("Application registered to beta hooks backend");
                     } else {
                         log.error("Failed to register application to beta hooks backend: " + resp.bodyAsString());
                     }
+                    return null;
+                })
+                .handle((BiFunction<Object, Throwable, Void>) (aVoid, throwable) -> {
+                    log.errorf("Failed to connect to beta hooks backend " + throwable.getMessage());
                     return null;
                 });
     }
