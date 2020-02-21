@@ -3,6 +3,7 @@ package com.redhat.cloud.custompolicies.engine.process;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.metrics.annotation.Timed;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.hawkular.alerts.api.model.event.Event;
 import org.hawkular.alerts.api.services.AlertsService;
@@ -31,16 +32,23 @@ public class Receiver {
     @ConfigProperty(name = "engine.receiver.store-events")
     boolean storeEvents;
 
+    @ConfigProperty(name = "engine.receiver.log-events", defaultValue = "false")
+    boolean logEvents;
+
     @Inject
     SystemProfileClient client;
 
     @Inject
     AlertsService alertsService;
 
+    @Timed(name = "engine-incoming", absolute = true)
     @Incoming("kafka-hosts")
     public CompletionStage<Void> processAsync(JsonObject json) {
         String tenantId = json.getString(TENANT_ID);
         String insightsId = json.getString(INSIGHT_ID_FIELD);
+        if (logEvents) {
+            System.out.printf("Got msg for tenant [%s] and insightsId [%s] \n ",  tenantId , insightsId);
+        }
 
         JsonObject systemProfile = json.getJsonObject("system_profile");
         CompletionStage<JsonObject> systemProfileStage;
