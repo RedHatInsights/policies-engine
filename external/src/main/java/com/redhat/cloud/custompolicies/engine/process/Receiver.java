@@ -52,7 +52,7 @@ public class Receiver {
         String tenantId = json.getString(TENANT_ID);
         String insightsId = json.getString(INSIGHT_ID_FIELD);
         if (logEvents) {
-            log.debugf("Got msg for tenant [%s] and insightsId [%s] \n ",  tenantId , insightsId);
+            log.infof("Got msg for tenant [%s] and insightsId [%s] \n ",  tenantId , insightsId);
         }
 
         JsonObject systemProfile = json.getJsonObject("system_profile");
