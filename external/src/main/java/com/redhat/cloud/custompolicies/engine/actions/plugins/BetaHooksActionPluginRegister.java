@@ -45,6 +45,7 @@ public class BetaHooksActionPluginRegister implements ActionPluginListener {
 
     @PostConstruct
     public void initialize() {
+        log.debugf("Trying to register to: %s", notificationsRegisterUrl);
         client = WebClient.create(vertx, new WebClientOptions());
         client.postAbs(notificationsRegisterUrl)
                 .sendJsonObject(createApplicationRegistrationPayload())
