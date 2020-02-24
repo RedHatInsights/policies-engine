@@ -34,11 +34,8 @@ public class BetaHooksActionPluginRegister implements ActionPluginListener {
     @Inject
     Vertx vertx;
 
-    @ConfigProperty(name="external.notifications-backend.server")
-    String notificationsHostname;
-
-    @ConfigProperty(name="external.notifications-backend.port")
-    Integer notificationsPort;
+    @ConfigProperty(name="external.notifications-backend.register.url")
+    String notificationsRegisterUrl;
 
     @Inject
     @Channel("hooks")
@@ -48,8 +45,8 @@ public class BetaHooksActionPluginRegister implements ActionPluginListener {
 
     @PostConstruct
     public void initialize() {
-        client = WebClient.create(vertx, new WebClientOptions().setDefaultHost(notificationsHostname).setDefaultPort(notificationsPort));
-        client.post("/apps")
+        client = WebClient.create(vertx, new WebClientOptions());
+        client.postAbs(notificationsRegisterUrl)
                 .sendJsonObject(createApplicationRegistrationPayload())
                 .thenApply(resp -> {
                     if (resp.statusCode() == 200) {
