@@ -4,6 +4,7 @@ import io.smallrye.reactive.messaging.annotations.Channel;
 import io.smallrye.reactive.messaging.annotations.Emitter;
 import io.vertx.axle.core.Vertx;
 import io.vertx.axle.ext.web.client.WebClient;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClientOptions;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -75,7 +76,7 @@ public class BetaHooksActionPluginRegister implements ActionPluginListener {
         eventTypes.put("title", "Any policy");
         eventTypes.put("levels", new JsonObject());
 
-        registration.put("event_types", eventTypes);
+        registration.put("event_types", new JsonArray().add(eventTypes);
         return registration;
     }
 
