@@ -74,7 +74,7 @@ public class BetaHooksActionPluginRegister implements ActionPluginListener {
         JsonObject eventTypes = new JsonObject();
         eventTypes.put("id", "any");
         eventTypes.put("title", "Any policy");
-        eventTypes.put("levels", new JsonObject());
+        eventTypes.put("levels", new JsonArray());
 
         registration.put("event_types", new JsonArray().add(eventTypes));
         return registration;
