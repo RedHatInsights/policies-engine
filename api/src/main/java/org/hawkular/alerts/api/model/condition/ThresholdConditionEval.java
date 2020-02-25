@@ -8,6 +8,8 @@ import org.hawkular.alerts.api.model.data.Data;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
+import java.util.Objects;
+
 /**
  * An evaluation state for threshold condition.
  *
@@ -19,11 +21,7 @@ public class ThresholdConditionEval extends ConditionEval {
 
     private static final long serialVersionUID = 1L;
 
-    @DocModelProperty(description = "Threshold condition linked with this state.", position = 0)
-    @JsonInclude(Include.NON_NULL)
-    private ThresholdCondition condition;
-
-    @DocModelProperty(description = "Numeric value for dataId used in the evaluation.", position = 1)
+    @DocModelProperty(description = "Numeric value for dataId used in the evaluation.")
     @JsonInclude(Include.NON_NULL)
     private Double value;
 
@@ -33,18 +31,15 @@ public class ThresholdConditionEval extends ConditionEval {
     }
 
     public ThresholdConditionEval(ThresholdCondition condition, Data data) {
-        super(Type.THRESHOLD, condition.match(Double.valueOf(data.getValue())), data.getTimestamp(),
+        super(Type.THRESHOLD, condition.match(Double.parseDouble(data.getValue())), data.getTimestamp(),
                 data.getContext());
-        this.condition = condition;
+        setCondition(condition);
         this.value = Double.valueOf(data.getValue());
     }
 
+    @Override
     public ThresholdCondition getCondition() {
-        return condition;
-    }
-
-    public void setCondition(ThresholdCondition condition) {
-        this.condition = condition;
+        return (ThresholdCondition) condition;
     }
 
     public Double getValue() {
@@ -77,8 +72,8 @@ public class ThresholdConditionEval extends ConditionEval {
 
     @Override
     public void updateDisplayString() {
-        String s = String.format("Threshold: %s[%.2f] %s %.2f", condition.getDataId(), value,
-                condition.getOperator().name(), condition.getThreshold());
+        String s = String.format("Threshold: %s[%.2f] %s %.2f", getCondition().getDataId(), value,
+                getCondition().getOperator().name(), getCondition().getThreshold());
         setDisplayString(s);
     }
 
@@ -93,12 +88,9 @@ public class ThresholdConditionEval extends ConditionEval {
 
         ThresholdConditionEval that = (ThresholdConditionEval) o;
 
-        if (condition != null ? !condition.equals(that.condition) : that.condition != null)
+        if (!Objects.equals(condition, that.condition))
             return false;
-        if (value != null ? !value.equals(that.value) : that.value != null)
-            return false;
-
-        return true;
+        return Objects.equals(value, that.value);
     }
 
     @Override

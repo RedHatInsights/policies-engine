@@ -8,6 +8,8 @@ import org.hawkular.alerts.api.model.event.Event;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
+import java.util.Objects;
+
 /**
  * An evaluation state for event condition.
  *
@@ -18,11 +20,6 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 public class EventConditionEval extends ConditionEval {
 
     private static final long serialVersionUID = 1L;
-
-    @DocModelProperty(description = "Event condition linked with this state.",
-            position = 0)
-    @JsonInclude(Include.NON_NULL)
-    private EventCondition condition;
 
     @DocModelProperty(description = "Event value used for dataId.",
             position = 1)
@@ -37,16 +34,13 @@ public class EventConditionEval extends ConditionEval {
 
     public EventConditionEval(EventCondition condition, Event value) {
         super(Type.EVENT, condition.match(value), value.getCtime(), value.getContext());
-        this.condition = condition;
+        setCondition(condition);
         this.value = value;
     }
 
+    @Override
     public EventCondition getCondition() {
-        return condition;
-    }
-
-    public void setCondition(EventCondition condition) {
-        this.condition = condition;
+        return (EventCondition) condition;
     }
 
     public Event getValue() {
@@ -79,7 +73,7 @@ public class EventConditionEval extends ConditionEval {
 
     @Override
     public void updateDisplayString() {
-        String s = String.format("Event: %s[%s] matches [%s]", condition.getDataId(), value, condition.getExpression());
+        String s = String.format("Event: %s[%s] matches [%s]", getCondition().getDataId(), value, getCondition().getExpression());
         setDisplayString(s);
     }
 
@@ -94,12 +88,9 @@ public class EventConditionEval extends ConditionEval {
 
         EventConditionEval that = (EventConditionEval) o;
 
-        if (condition != null ? !condition.equals(that.condition) : that.condition != null)
+        if (!Objects.equals(condition, that.condition))
             return false;
-        if (value != null ? !value.equals(that.value) : that.value != null)
-            return false;
-
-        return true;
+        return Objects.equals(value, that.value);
     }
 
     @Override

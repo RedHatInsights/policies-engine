@@ -1,6 +1,7 @@
 package org.hawkular.alerts.api.model.condition;
 
 import java.util.Map;
+import java.util.Objects;
 
 import org.hawkular.alerts.api.doc.DocModel;
 import org.hawkular.alerts.api.doc.DocModelProperty;
@@ -20,11 +21,6 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 public class CompareConditionEval extends ConditionEval {
 
     private static final long serialVersionUID = 1L;
-
-    @DocModelProperty(description = "Compare condition linked with this state.",
-            position = 0)
-    @JsonInclude(Include.NON_NULL)
-    private CompareCondition condition;
 
     @DocModelProperty(description = "Numeric value used for dataId.",
             position = 1)
@@ -50,21 +46,18 @@ public class CompareConditionEval extends ConditionEval {
     }
 
     public CompareConditionEval(CompareCondition condition, Data data1, Data data2) {
-        super(Type.COMPARE, condition.match(Double.valueOf(data1.getValue()), Double.valueOf(data2.getValue())),
+        super(Type.COMPARE, condition.match(Double.parseDouble(data1.getValue()), Double.parseDouble(data2.getValue())),
                 ((data1.getTimestamp() > data1.getTimestamp()) ? data1.getTimestamp() : data2.getTimestamp()),
                 data1.getContext());
-        this.condition = condition;
+        setCondition(condition);
         this.value1 = Double.valueOf(data1.getValue());
         this.value2 = Double.valueOf(data2.getValue());
         this.context2 = data2.getContext();
     }
 
+    @Override
     public CompareCondition getCondition() {
-        return condition;
-    }
-
-    public void setCondition(CompareCondition condition) {
-        this.condition = condition;
+        return (CompareCondition) condition;
     }
 
     public Double getValue1() {
@@ -114,7 +107,7 @@ public class CompareConditionEval extends ConditionEval {
     @Override
     public void updateDisplayString() {
         String s = String.format("Compare: %s[%.2f] %s %.2f%% %s[%.2f]", condition.getDataId(), value1,
-                condition.getOperator().name(), (100 * condition.getData2Multiplier()), condition.getData2Id(),
+                getCondition().getOperator().name(), (100 * getCondition().getData2Multiplier()), getCondition().getData2Id(),
                 value2);
         super.setDisplayString(s);
     }
@@ -130,13 +123,13 @@ public class CompareConditionEval extends ConditionEval {
 
         CompareConditionEval that = (CompareConditionEval) o;
 
-        if (condition != null ? !condition.equals(that.condition) : that.condition != null)
+        if (!Objects.equals(condition, that.condition))
             return false;
-        if (value1 != null ? !value1.equals(that.value1) : that.value1 != null)
+        if (!Objects.equals(value1, that.value1))
             return false;
-        if (value2 != null ? !value2.equals(that.value2) : that.value2 != null)
+        if (!Objects.equals(value2, that.value2))
             return false;
-        return !(context2 != null ? !context2.equals(that.context2) : that.context2 != null);
+        return Objects.equals(context2, that.context2);
     }
 
     @Override

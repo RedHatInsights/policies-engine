@@ -19,10 +19,6 @@ public class RateConditionEval extends ConditionEval {
 
     private static final long serialVersionUID = 1L;
 
-    @DocModelProperty(description = "Rate condition linked with this state.", position = 0)
-    @JsonInclude(Include.NON_NULL)
-    private RateCondition condition;
-
     @DocModelProperty(description = "First (older) value for dataId used in the evaluation.", position = 1)
     @JsonInclude(Include.NON_NULL)
     private Double previousValue;
@@ -56,10 +52,10 @@ public class RateConditionEval extends ConditionEval {
     }
 
     public RateConditionEval(RateCondition condition, Data data, Data previousData) {
-        super(Type.RATE, condition.match(data.getTimestamp(), Double.valueOf(data.getValue()),
-                previousData.getTimestamp(), Double.valueOf(previousData.getValue())), data.getTimestamp(),
+        super(Type.RATE, condition.match(data.getTimestamp(), Double.parseDouble(data.getValue()),
+                previousData.getTimestamp(), Double.parseDouble(previousData.getValue())), data.getTimestamp(),
                 data.getContext());
-        this.condition = condition;
+        setCondition(condition);
         this.time = data.getTimestamp();
         this.value = Double.valueOf(data.getValue());
         this.previousTime = previousData.getTimestamp();
@@ -67,12 +63,9 @@ public class RateConditionEval extends ConditionEval {
         this.rate = condition.getRate(this.time, this.value, this.previousTime, this.previousValue);
     }
 
+    @Override
     public RateCondition getCondition() {
-        return condition;
-    }
-
-    public void setCondition(RateCondition condition) {
-        this.condition = condition;
+        return (RateCondition) condition;
     }
 
     public Double getValue() {
@@ -137,9 +130,9 @@ public class RateConditionEval extends ConditionEval {
 
     @Override
     public void updateDisplayString() {
-        String s = String.format("Rate: %s[%.2f] %s %s %s per %s", condition.getDataId(), this.rate,
-                condition.getDirection().name(), condition.getOperator().name(), condition.getThreshold(),
-                condition.getPeriod().name());
+        String s = String.format("Rate: %s[%.2f] %s %s %s per %s", getCondition().getDataId(), this.rate,
+                getCondition().getDirection().name(), getCondition().getOperator().name(), getCondition().getThreshold(),
+                getCondition().getPeriod().name());
         setDisplayString(s);
     }
 
@@ -181,8 +174,7 @@ public class RateConditionEval extends ConditionEval {
         if (value == null) {
             if (other.value != null)
                 return false;
-        } else if (!value.equals(other.value))
-            return false;
+        } else return value.equals(other.value);
         return true;
     }
 

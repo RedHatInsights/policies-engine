@@ -22,23 +22,19 @@ public class NelsonConditionEval extends ConditionEval {
 
     private static final long serialVersionUID = 1L;
 
-    @DocModelProperty(description = "Nelson condition linked with this state.", position = 0)
-    @JsonInclude(Include.NON_NULL)
-    private NelsonCondition condition;
-
-    @DocModelProperty(description = "Mean applied to NelsonRules.", position = 1)
+    @DocModelProperty(description = "Mean applied to NelsonRules.", position = 0)
     @JsonInclude(Include.NON_NULL)
     private Double mean;
 
-    @DocModelProperty(description = "Standard Deviation applied to NelsonRules.", position = 2)
+    @DocModelProperty(description = "Standard Deviation applied to NelsonRules.", position = 1)
     @JsonInclude(Include.NON_NULL)
     private Double standardDeviation;
 
-    @DocModelProperty(description = "Data used to determine violations.", position = 3)
+    @DocModelProperty(description = "Data used to determine violations.", position = 2)
     @JsonInclude(Include.NON_NULL)
     private List<Data> violationsData;
 
-    @DocModelProperty(description = "NelsonRule violations for the data.", position = 4)
+    @DocModelProperty(description = "NelsonRule violations for the data.", position = 3)
     @JsonInclude(Include.NON_NULL)
     private List<NelsonRule> violations;
 
@@ -52,19 +48,16 @@ public class NelsonConditionEval extends ConditionEval {
     public NelsonConditionEval(NelsonCondition condition, Data data, List<NelsonRule> violations, Double mean,
             Double standardDeviation, List<Data> violationsData) {
         super(Type.NELSON, condition.match(violations), data.getTimestamp(), data.getContext());
-        this.condition = condition;
+        setCondition(condition);
         this.mean = mean;
         this.standardDeviation = standardDeviation;
         this.violations = violations;
         this.violationsData = violationsData;
     }
 
+    @Override
     public NelsonCondition getCondition() {
-        return condition;
-    }
-
-    public void setCondition(NelsonCondition condition) {
-        this.condition = condition;
+        return (NelsonCondition) condition;
     }
 
     public Double getMean() {
@@ -123,7 +116,7 @@ public class NelsonConditionEval extends ConditionEval {
     public void updateDisplayString() {
         String s = String.format(
                 "Nelson: %s violations=%s mean=%.2f, standardDeviation=%.2f, sampleSize=%d, violationsData=%s",
-                condition.getDataId(), violations, mean, standardDeviation, condition.getSampleSize(), violationsData);
+                condition.getDataId(), violations, mean, standardDeviation, getCondition().getSampleSize(), violationsData);
         setDisplayString(s);
     }
 

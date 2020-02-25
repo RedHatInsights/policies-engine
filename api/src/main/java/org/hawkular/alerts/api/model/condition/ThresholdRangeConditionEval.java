@@ -8,6 +8,8 @@ import org.hawkular.alerts.api.model.data.Data;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
+import java.util.Objects;
+
 /**
  * An evaluation state for threshold range condition.
  *
@@ -19,11 +21,7 @@ public class ThresholdRangeConditionEval extends ConditionEval {
 
     private static final long serialVersionUID = 1L;
 
-    @DocModelProperty(description = "Threshold range condition linked with this state.", position = 0)
-    @JsonInclude(Include.NON_NULL)
-    private ThresholdRangeCondition condition;
-
-    @DocModelProperty(description = "Numeric value for dataId used in the evaluation.", position = 1)
+    @DocModelProperty(description = "Numeric value for dataId used in the evaluation.")
     @JsonInclude(Include.NON_NULL)
     private Double value;
 
@@ -34,17 +32,14 @@ public class ThresholdRangeConditionEval extends ConditionEval {
     }
 
     public ThresholdRangeConditionEval(ThresholdRangeCondition condition, Data data) {
-        super(Type.RANGE, condition.match(Double.valueOf(data.getValue())), data.getTimestamp(), data.getContext());
-        this.condition = condition;
+        super(Type.RANGE, condition.match(Double.parseDouble(data.getValue())), data.getTimestamp(), data.getContext());
+        setCondition(condition);
         this.value = Double.valueOf(data.getValue());
     }
 
+    @Override
     public ThresholdRangeCondition getCondition() {
-        return condition;
-    }
-
-    public void setCondition(ThresholdRangeCondition condition) {
-        this.condition = condition;
+        return (ThresholdRangeCondition) condition;
     }
 
     public Double getValue() {
@@ -78,8 +73,8 @@ public class ThresholdRangeConditionEval extends ConditionEval {
     @Override
     public void updateDisplayString() {
         String s = String.format("Range: %s[%.2f] %s %s%.2f , %.2f%s", condition.getDataId(), value,
-                (condition.isInRange() ? "in" : "not in"), condition.getOperatorLow().getLow(),
-                condition.getThresholdLow(), condition.getThresholdHigh(), condition.getOperatorHigh().getHigh());
+                (getCondition().isInRange() ? "in" : "not in"), getCondition().getOperatorLow().getLow(),
+                getCondition().getThresholdLow(), getCondition().getThresholdHigh(), getCondition().getOperatorHigh().getHigh());
         setDisplayString(s);
     }
 
@@ -94,12 +89,9 @@ public class ThresholdRangeConditionEval extends ConditionEval {
 
         ThresholdRangeConditionEval that = (ThresholdRangeConditionEval) o;
 
-        if (condition != null ? !condition.equals(that.condition) : that.condition != null)
+        if (!Objects.equals(condition, that.condition))
             return false;
-        if (value != null ? !value.equals(that.value) : that.value != null)
-            return false;
-
-        return true;
+        return Objects.equals(value, that.value);
     }
 
     @Override

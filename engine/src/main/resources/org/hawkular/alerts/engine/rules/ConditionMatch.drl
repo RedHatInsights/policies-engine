@@ -141,7 +141,7 @@ rule UpdateCompareData
         $cd : CompareData( $tenantId : data.tenantId, $tsource : data.source, $did : data.id, $ts : data.timestamp )
         $d  : Data( tenantId == $tenantId, source == $tsource, id == $did, timestamp > $ts )
     then
-        retract( $cd );
+        delete( $cd );
 
         CompareData compareData = new CompareData( $d );
         if (log != null && log.isDebugEnabled()) {
@@ -305,7 +305,7 @@ rule RetractNelsonData
         $nd : NelsonData( $cid : condition.conditionId )
         not   NelsonCondition ( conditionId == $cid )
     then
-        retract( $nd );
+        delete( $nd );
         if (log != null && log.isDebugEnabled()) {
             log.debugf("RetractNelsonData: %s", $nd);
         }
@@ -480,8 +480,8 @@ rule DampenTrigger
                    collectSet( $ce )
                )
     then
-        $ces.stream().forEach(ce -> retract(ce));
-        retract( $d );
+        $ces.stream().forEach(ce -> delete(ce));
+        delete( $d );
 
         $d.perform( $t.getMatch(), $ces );
 
@@ -561,7 +561,7 @@ rule AlertOnSatisfiedDampening
             actions.send($t, newEvent);
         }
 
-        retract( $d );
+        delete( $d );
         $d.reset();
         insert( $d );
 
@@ -579,7 +579,7 @@ rule AlertOnSatisfiedDampening
             // current definition. And given that it will be disabled, it actually will not get loaded.
             disabledTriggers.add( $t );
 
-            retract( $t );
+            delete( $t );
 
         } else {
             if (log != null && log.isDebugEnabled()) {
@@ -604,7 +604,7 @@ rule SetFiringModeOnSatisfiedDampening
         $t.setMode(Mode.FIRING);
         autoResolvedTriggers.put( $t, $d.getSatisfyingEvals() );
 
-        retract( $t );
+        delete( $t );
 end
 
 
@@ -619,7 +619,7 @@ rule retractOrphanDampening
         $d : Dampening( $tenantId : tenantId, $tid : triggerId )
         not  Trigger( tenantId == $tenantId, id == $tid )
     then
-        retract( $d );
+        delete( $d );
         if (log != null && log.isDebugEnabled()) {
             log.debugf("Retract Dampening with no Trigger. %s", $d);
         }
@@ -630,7 +630,7 @@ rule retractOrphanCondition
         $c : Condition( $tenantId : tenantId, $tid : triggerId )
         not Trigger( tenantId == $tenantId, id == $tid )
     then
-        retract( $c );
+        delete( $c );
 
         if (log != null && log.isDebugEnabled()) {
             log.debugf("Retract Condition with no Trigger. %s", $c);
@@ -642,7 +642,7 @@ rule retractOrphanMissingState
         $s : MissingState( $tenantId : tenantId, $tid : triggerId )
         not Trigger( tenantId == $tenantId, id == $tid )
     then
-        retract( $s );
+        delete( $s );
         if (log != null && log.isDebugEnabled()) {
             log.debugf("Retract MissingState with no Trigger. %s", $s);
         }

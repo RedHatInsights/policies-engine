@@ -103,6 +103,10 @@ public abstract class Condition implements Serializable {
     @JsonInclude(Include.NON_EMPTY)
     public String displayString;
 
+    @DocModelProperty(description = "Last time this trigger was evaluated.", position = 8)
+    @JsonInclude
+    private long lastEvaluation;
+
     public Condition() {
         // for json assembly
     }
@@ -204,6 +208,14 @@ public abstract class Condition implements Serializable {
         this.displayString = displayString;
     }
 
+    public long getLastEvaluation() {
+        return lastEvaluation;
+    }
+
+    public void setLastEvaluation(long lastEvaluation) {
+        this.lastEvaluation = lastEvaluation;
+    }
+
     private void updateId() {
         StringBuilder sb = new StringBuilder(tenantId);
         sb.append("-").append(triggerId);
@@ -271,6 +283,10 @@ public abstract class Condition implements Serializable {
      */
     @JsonIgnore
     public abstract void updateDisplayString();
+
+    public void updateLastEvaluation() {
+        this.lastEvaluation = System.currentTimeMillis();
+    }
 
     /**
      * Used to determine whether two conditions have differences. The base implementation is equals(), subclassed
