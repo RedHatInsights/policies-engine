@@ -331,6 +331,10 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
                 String key = eventField.substring(5);
                 sEventValue = value.getTags().get(key);
             } else if (eventField.startsWith(FACTS)) {
+                if(value.getFacts() == null) {
+                    return null;
+                }
+
                 String key = eventField.substring(6);
 
                 // Allow matching of keys with dot in them if they're escaped correctly
