@@ -52,6 +52,7 @@ public class AlertsStandalone {
     private PublishCacheManager publishCacheManager;
 
     public AlertsStandalone() {
+        log.info("Hawkular Alerting uses Infinispan backend");
         cacheManager = IspnCacheManager.getCacheManager();
 
         if (executor == null) {
@@ -70,7 +71,6 @@ public class AlertsStandalone {
         actionsCacheManager = new ActionsCacheManager();
         publishCacheManager = new PublishCacheManager();
 
-        log.info("Hawkular Alerting uses Infinispan backend");
         ispnReindex = ConfigProvider.getConfig().getValue("engine.backend.ispn.reindex", Boolean.class);
 
         if (this.ispnReindex) {
