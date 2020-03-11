@@ -1,5 +1,7 @@
 package org.hawkular.alerts.cache;
 
+import org.hawkular.commons.log.MsgLogger;
+import org.hawkular.commons.log.MsgLogging;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 
@@ -15,7 +17,7 @@ import java.io.InputStream;
  * @author Lucas Ponce
  */
 public class IspnCacheManager {
-//    private static final MsgLogger log = MsgLogging.getMsgLogger(IspnCacheManager.class);
+    private static final MsgLogger log = MsgLogging.getMsgLogger(IspnCacheManager.class);
     private static final String CONFIG_PATH = "hawkular.configuration";
     private static final String ISPN_CONFIG_DISTRIBUTED = "ispn-alerting-distributed.xml";
     private static final String ISPN_CONFIG_LOCAL = "ispn-alerting-local.xml";
@@ -48,8 +50,6 @@ public class IspnCacheManager {
         if (cacheManager == null) {
             try {
                 distributed = false;
-//                distributed = Boolean.valueOf(HawkularProperties.getProperty(ALERTS_DISTRIBUTED, ALERTS_DISTRIBUTED_ENV,
-//                        ALERTS_DISTRIBUTED_DEFAULT));
                 String configPath = System.getProperty(CONFIG_PATH);
                 InputStream is = null;
                 if (configPath != null) {
@@ -63,8 +63,7 @@ public class IspnCacheManager {
                 }
                 cacheManager = new DefaultCacheManager(is);
             } catch (IOException e) {
-                e.printStackTrace();
-//                log.error(e);
+                log.error(e);
             }
         }
     }
