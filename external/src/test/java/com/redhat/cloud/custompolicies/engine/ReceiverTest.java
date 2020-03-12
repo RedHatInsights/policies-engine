@@ -1,5 +1,6 @@
 package com.redhat.cloud.custompolicies.engine;
 
+import com.redhat.cloud.custompolicies.engine.process.Receiver;
 import io.quarkus.test.junit.QuarkusTest;
 import io.reactivex.subscribers.TestSubscriber;
 import io.smallrye.reactive.messaging.annotations.Channel;
@@ -67,6 +68,7 @@ public class ReceiverTest {
         EventCondition evCond = new EventCondition();
         evCond.setExpression("facts.arch = 'string'");
         evCond.setTenantId(tenantId);
+        evCond.setDataId(Receiver.INSIGHTS_REPORT_DATA_ID);
         List<Condition> conditions = Collections.singletonList(evCond);
 
         TriggerAction action = new TriggerAction(actionPlugin, actionId);

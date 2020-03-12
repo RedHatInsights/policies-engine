@@ -25,10 +25,17 @@ import java.util.concurrent.CompletionStage;
 public class Receiver {
     private final MsgLogger log = MsgLogging.getMsgLogger(Receiver.class);
 
-    private static String TENANT_ID = "account";
-    public static String INSIGHT_ID_FIELD = "insights_id";
-    private static String EVENT_TYPE = "type";
-    private static String SYSTEM_PROFILE = "system_profile";
+    public static final String INSIGHTS_REPORT_DATA_ID = "platform.inventory.host-egress";
+
+    public static final String CATEGORY_NAME = "insight_report";
+    public static final String INSIGHT_ID_FIELD = "insights_id";
+
+    private static final String TENANT_ID_FIELD = "account";
+    private static final String SYSTEM_PROFILE_FIELD = "system_profile";
+    private static final String NETWORK_INTERFACES_FIELD = "network_interfaces";
+    private static final String YUM_REPOS_FIELD = "yum_repos";
+    private static final String DISPLAY_NAME_FIELD = "display_name";
+    private static final String NAME_FIELD = "name";
 
     @ConfigProperty(name = "engine.receiver.store-events")
     boolean storeEvents;
@@ -44,13 +51,16 @@ public class Receiver {
             log.tracef("Received message, input payload: %s", payload);
             return payload;
         }).thenApplyAsync(json -> {
-            String tenantId = json.getString(TENANT_ID);
+            String tenantId = json.getString(TENANT_ID_FIELD);
             String insightsId = json.getString(INSIGHT_ID_FIELD);
+            String displayName = json.getString(DISPLAY_NAME_FIELD);
 
-            Event event = new Event(tenantId, UUID.randomUUID().toString(), "insight_report", "just another report which needs a name");
+            String text = String.format("host-egress report %s for %s", insightsId, displayName);
+
+            Event event = new Event(tenantId, UUID.randomUUID().toString(), INSIGHTS_REPORT_DATA_ID, CATEGORY_NAME, text);
             // Indexed searchable events
             Map<String, String> tagsMap = new HashMap<>();
-            tagsMap.put("display_name", json.getString("display_name"));
+            tagsMap.put(DISPLAY_NAME_FIELD, displayName);
             tagsMap.put(INSIGHT_ID_FIELD, insightsId);
             event.setTags(tagsMap);
 
@@ -58,7 +68,7 @@ public class Receiver {
             Map<String, String> contextMap = new HashMap<>();
             event.setContext(contextMap);
 
-            JsonObject sp = json.getJsonObject("system_profile");
+            JsonObject sp = json.getJsonObject(SYSTEM_PROFILE_FIELD);
             event.setFacts(parseSystemProfile(sp));
             return event;
         }).thenAcceptAsync(event -> {
@@ -88,14 +98,14 @@ public class Receiver {
         }
         Map<String, Object> facts = json.getMap();
 
-        JsonArray networkInterfaces = json.getJsonArray("network_interfaces");
+        JsonArray networkInterfaces = json.getJsonArray(NETWORK_INTERFACES_FIELD);
         if(networkInterfaces != null) {
-            facts.put("network_interfaces", namedObjectsToMap(networkInterfaces));
+            facts.put(NETWORK_INTERFACES_FIELD, namedObjectsToMap(networkInterfaces));
         }
 
-        JsonArray yumRepos = json.getJsonArray("yum_repos");
+        JsonArray yumRepos = json.getJsonArray(YUM_REPOS_FIELD);
         if(yumRepos != null) {
-            facts.put("yum_repos", namedObjectsToMap(yumRepos));
+            facts.put(YUM_REPOS_FIELD, namedObjectsToMap(yumRepos));
         }
 
         return facts;
@@ -105,7 +115,7 @@ public class Receiver {
         Map<String, Object> arrayObjectKey = new HashMap<>();
         for (Object o : objectArray) {
             JsonObject json = (JsonObject) o;
-            String name = json.getString("name");
+            String name = json.getString(NAME_FIELD);
             if (name == null || name.isEmpty()) {
                 continue;
             }
