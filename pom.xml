@@ -48,12 +48,12 @@
     <version.org.codehaus.groovy.modules.http-builder>0.7.1</version.org.codehaus.groovy.modules.http-builder>
 
     <!-- Wildfly to Quarkus related stuff to be ported / removed -->
-    <version.org.hibernate>5.10.7.Final</version.org.hibernate>
-    <version.org.infinispan>10.0.1.Final</version.org.infinispan>
+    <version.org.infinispan>10.1.2.Final</version.org.infinispan>
     <version.org.jboss.logging.jboss-logging-tools>2.2.1.Final</version.org.jboss.logging.jboss-logging-tools>
 
     <!-- Quarkus -->
-    <quarkus.version>1.2.1.Final</quarkus.version>
+    <quarkus.version>999-SNAPSHOT</quarkus.version>
+
   </properties>
 
   <dependencyManagement>

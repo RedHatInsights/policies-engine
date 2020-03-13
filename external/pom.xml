@@ -56,6 +56,12 @@
       <artifactId>quarkus-junit5</artifactId>
       <scope>test</scope>
     </dependency>
+    <!-- This is added because of a bug in Quarkus 1.3.0, not used otherwise -->
+    <dependency>
+      <groupId>org.jboss.resteasy</groupId>
+      <artifactId>resteasy-context-propagation</artifactId>
+      <version>4.5.2.Final</version>
+    </dependency>
 
     <!-- bare API -->
     <dependency>
