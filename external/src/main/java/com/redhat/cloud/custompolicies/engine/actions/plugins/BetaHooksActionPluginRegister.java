@@ -8,6 +8,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClientOptions;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.metrics.Counter;
+import org.eclipse.microprofile.metrics.annotation.Metric;
 import org.hawkular.alerts.actions.api.ActionMessage;
 import org.hawkular.alerts.actions.api.ActionPluginListener;
 import org.hawkular.alerts.actions.api.Plugin;
@@ -41,6 +43,11 @@ public class BetaHooksActionPluginRegister implements ActionPluginListener {
     @Inject
     @Channel("hooks")
     Emitter<JsonObject> channel;
+
+    @Inject
+    @Metric(absolute = true, name = "messages.outgoing.hook.count")
+    Counter messagesCount;
+
 
     private WebClient client;
 
@@ -102,6 +109,7 @@ public class BetaHooksActionPluginRegister implements ActionPluginListener {
         message.put("message", JsonObject.mapFrom(msg.getAction()));
         message.put("account_id", msg.getAction().getTenantId());
         channel.send(message);
+        messagesCount.inc();
     }
 
     @Override
