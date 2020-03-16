@@ -3,6 +3,8 @@ package com.redhat.cloud.custompolicies.engine.actions.plugins;
 import io.smallrye.reactive.messaging.annotations.Channel;
 import io.smallrye.reactive.messaging.annotations.Emitter;
 import io.vertx.core.json.JsonObject;
+import org.eclipse.microprofile.metrics.Counter;
+import org.eclipse.microprofile.metrics.annotation.Metric;
 import org.hawkular.alerts.actions.api.ActionMessage;
 import org.hawkular.alerts.actions.api.ActionPluginListener;
 import org.hawkular.alerts.actions.api.Plugin;
@@ -23,9 +25,14 @@ public class WebhookActionPluginListener implements ActionPluginListener {
     @Channel("webhook")
     Emitter<JsonObject> channel;
 
+    @Inject
+    @Metric(absolute = true, name = "messages.outgoing.webhook.count")
+    Counter messagesCount;
+
     @Override
     public void process(ActionMessage actionMessage) throws Exception {
         Action action = actionMessage.getAction();
+        messagesCount.inc();
         channel.send(JsonObject.mapFrom(action));
     }
 

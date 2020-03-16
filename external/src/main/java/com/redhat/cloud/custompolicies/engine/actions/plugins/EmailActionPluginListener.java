@@ -4,6 +4,8 @@ import com.redhat.cloud.custompolicies.engine.process.Receiver;
 import io.smallrye.reactive.messaging.annotations.Channel;
 import io.smallrye.reactive.messaging.annotations.Emitter;
 import io.vertx.core.json.JsonObject;
+import org.eclipse.microprofile.metrics.Counter;
+import org.eclipse.microprofile.metrics.annotation.Metric;
 import org.hawkular.alerts.actions.api.ActionMessage;
 import org.hawkular.alerts.actions.api.ActionPluginListener;
 import org.hawkular.alerts.actions.api.Plugin;
@@ -29,6 +31,11 @@ public class EmailActionPluginListener implements ActionPluginListener {
     @Inject
     @Channel("email")
     Emitter<JsonObject> channel;
+
+    @Inject
+    @Metric(absolute = true, name = "messages.outgoing.email.count")
+    Counter messagesCount;
+
 
     public EmailActionPluginListener() {
         notifyBuffer = new ConcurrentSkipListMap<>();
@@ -76,6 +83,7 @@ public class EmailActionPluginListener implements ActionPluginListener {
             }
             Notification notification = notificationEntry.getValue();
             channel.send(JsonObject.mapFrom(notification));
+            messagesCount.inc();
         }
     }
 

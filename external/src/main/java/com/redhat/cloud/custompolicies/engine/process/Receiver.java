@@ -3,6 +3,8 @@ package com.redhat.cloud.custompolicies.engine.process;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.metrics.Counter;
+import org.eclipse.microprofile.metrics.annotation.Metric;
 import org.eclipse.microprofile.reactive.messaging.Acknowledgment;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Message;
@@ -43,10 +45,15 @@ public class Receiver {
     @Inject
     AlertsService alertsService;
 
+    @Inject
+    @Metric(absolute = true, name = "messages.incoming.host-egress.count")
+    Counter incomingMessagesCount;
+
     @Incoming("kafka-hosts")
     @Acknowledgment(Acknowledgment.Strategy.MANUAL)
     public CompletionStage<Void> processAsync(Message<JsonObject> input) {
         return CompletableFuture.supplyAsync(() -> {
+            incomingMessagesCount.inc();
             JsonObject payload = input.getPayload();
             log.tracef("Received message, input payload: %s", payload);
             return payload;
