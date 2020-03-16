@@ -45,9 +45,8 @@ public class BetaHooksActionPluginRegister implements ActionPluginListener {
     Emitter<JsonObject> channel;
 
     @Inject
-    @Metric(absolute = true, name = "messages.outgoing.hook.count")
+    @Metric(absolute = true, name = "engine.actions.hooks.processed")
     Counter messagesCount;
-
 
     private WebClient client;
 

@@ -33,9 +33,12 @@ public class EmailActionPluginListener implements ActionPluginListener {
     Emitter<JsonObject> channel;
 
     @Inject
-    @Metric(absolute = true, name = "messages.outgoing.email.count")
+    @Metric(absolute = true, name = "engine.actions.email.processed")
     Counter messagesCount;
 
+    @Inject
+    @Metric(absolute = true, name = "engine.actions.email.processed.aggregated")
+    Counter messagesCountAggregated;
 
     public EmailActionPluginListener() {
         notifyBuffer = new ConcurrentSkipListMap<>();
@@ -68,6 +71,8 @@ public class EmailActionPluginListener implements ActionPluginListener {
 
                         return existing;
                     });
+
+                    messagesCount.inc();
                 }
             }
         }
@@ -75,7 +80,9 @@ public class EmailActionPluginListener implements ActionPluginListener {
 
     @Override
     public void flush() {
-        log.debug("Starting flush of email messages");
+        if(log.isDebugEnabled()) { // buffer .size() is expensive and blocks processing
+            log.debugf("Starting flush of %d email messages", notifyBuffer.size());
+        }
         for (; ; ) {
             Map.Entry<String, Notification> notificationEntry = notifyBuffer.pollFirstEntry();
             if (notificationEntry == null) {
@@ -83,7 +90,7 @@ public class EmailActionPluginListener implements ActionPluginListener {
             }
             Notification notification = notificationEntry.getValue();
             channel.send(JsonObject.mapFrom(notification));
-            messagesCount.inc();
+            messagesCountAggregated.inc();
         }
     }
 

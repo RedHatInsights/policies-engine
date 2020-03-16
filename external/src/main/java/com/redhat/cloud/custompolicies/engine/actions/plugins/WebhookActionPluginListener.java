@@ -26,7 +26,7 @@ public class WebhookActionPluginListener implements ActionPluginListener {
     Emitter<JsonObject> channel;
 
     @Inject
-    @Metric(absolute = true, name = "messages.outgoing.webhook.count")
+    @Metric(absolute = true, name = "engine.actions.webhook.processed")
     Counter messagesCount;
 
     @Override
