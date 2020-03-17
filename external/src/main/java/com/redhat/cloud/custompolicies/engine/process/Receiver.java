@@ -33,6 +33,7 @@ public class Receiver {
     public static final String CATEGORY_NAME = "insight_report";
     public static final String INSIGHT_ID_FIELD = "insights_id";
 
+    private static final String HOST_FIELD = "host";
     private static final String TENANT_ID_FIELD = "account";
     private static final String SYSTEM_PROFILE_FIELD = "system_profile";
     private static final String NETWORK_INTERFACES_FIELD = "network_interfaces";
@@ -62,7 +63,8 @@ public class Receiver {
                     // smallrye-messaging 1.1.0 and up has its own metric for received messages
                     incomingMessagesCount.inc();
                     log.tracef("Received message, input payload: %s", input.getPayload());
-                    return new JsonObject(input.getPayload());
+                    JsonObject json = new JsonObject(input.getPayload());
+                    return json.getJsonObject(HOST_FIELD);
                 }).thenApplyAsync(json -> {
                     String tenantId = json.getString(TENANT_ID_FIELD);
                     String insightsId = json.getString(INSIGHT_ID_FIELD);
