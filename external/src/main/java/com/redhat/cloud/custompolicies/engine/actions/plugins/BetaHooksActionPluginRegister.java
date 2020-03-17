@@ -31,8 +31,7 @@ public class BetaHooksActionPluginRegister implements ActionPluginListener {
     private final MsgLogger log = MsgLogging.getMsgLogger(BetaHooksActionPluginRegister.class);
 
     private static String APPLICATION_NAME = "custom-policies";
-    private static String EVENT_TYPE = "custom-policies";
-    private static String LEVEL = "1";
+    private static String EVENT_TYPE = "any";
 
     @Inject
     Vertx vertx;
