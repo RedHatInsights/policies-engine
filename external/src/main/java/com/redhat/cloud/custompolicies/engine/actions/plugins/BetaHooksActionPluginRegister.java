@@ -32,6 +32,7 @@ public class BetaHooksActionPluginRegister implements ActionPluginListener {
 
     private static String APPLICATION_NAME = "custom-policies";
     private static String EVENT_TYPE = "any";
+    private static String LEVEL = "all";
 
     @Inject
     Vertx vertx;
@@ -76,12 +77,16 @@ public class BetaHooksActionPluginRegister implements ActionPluginListener {
         application.put("title", "Custom Policies");
         registration.put("application", application);
 
-        JsonObject eventTypes = new JsonObject();
-        eventTypes.put("id", "any");
-        eventTypes.put("title", "Any policy");
-        eventTypes.put("levels", new JsonArray());
+        JsonObject level = new JsonObject();
+        level.put("id", LEVEL);
+        level.put("title", "All");
 
-        registration.put("event_types", new JsonArray().add(eventTypes));
+        JsonObject eventType = new JsonObject();
+        eventType.put("id", EVENT_TYPE);
+        eventType.put("title", "Triggered policy");
+        eventType.put("levels", new JsonArray().add(level));
+
+        registration.put("event_types", new JsonArray().add(eventType));
         return registration;
     }
 
@@ -102,10 +107,11 @@ public class BetaHooksActionPluginRegister implements ActionPluginListener {
         // Fields and terminology straight from the target project
         JsonObject message = new JsonObject();
         message.put("application", APPLICATION_NAME);
+        message.put("account_id", msg.getAction().getTenantId());
         message.put("event_type", EVENT_TYPE);
+        message.put("level", LEVEL);
         message.put("timestamp", msg.getAction().getCtime());
         message.put("message", JsonObject.mapFrom(msg.getAction()));
-        message.put("account_id", msg.getAction().getTenantId());
         channel.send(message);
         messagesCount.inc();
     }
