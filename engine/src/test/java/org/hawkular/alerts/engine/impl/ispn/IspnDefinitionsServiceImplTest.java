@@ -376,8 +376,17 @@ public class IspnDefinitionsServiceImplTest extends IspnBaseServiceImplTest {
         String actionId2 = fullTrigger.getTrigger().getActions().iterator().next().getActionId();
         assertEquals(actionId, actionId2);
 
+        // Test updating with original data - ensure that the managed id is really recreated
+        for (TriggerAction triggerAction : fullTrigger.getTrigger().getActions()) {
+            triggerAction.setActionId(null);
+        }
+        definitions.updateFullTrigger(TENANT, fullTrigger);
+        assertEquals(actionId, fullTrigger.getTrigger().getActions().iterator().next().getActionId());
+
         definitions.removeTrigger(TENANT, "trigger1");
         definitions.removeTrigger(TENANT, "trigger2");
+        definitions.removeActionDefinition(TENANT, "pluginM", actionId);
+        definitions.removeActionPlugin("pluginM");
     }
 
 }
