@@ -880,6 +880,12 @@ class TriggersITest extends AbstractQuarkusITestBase {
         assertEquals(1, fullTrigger.conditions.size());
         assertEquals("THRESHOLD", fullTrigger.conditions[0].type);
 
+        // Update conditios' part only
+        fullTrigger.conditions[0].dataId = "somethingElse"
+        resp = client.put(path: "triggers/trigger/full-test-trigger-1", body: fullTrigger)
+        assertEquals(200, resp.status)
+        assertEquals(fullTrigger.conditions[0].dataId, resp.data.conditions[0].dataId)
+
         // remove the test trigger
         resp = client.delete(path: "triggers/full-test-trigger-1")
         assertEquals(200, resp.status)
@@ -1043,6 +1049,54 @@ class TriggersITest extends AbstractQuarkusITestBase {
 
         // remove group trigger
         resp = client.delete(path: "triggers/groups/group-trigger")
+        assertEquals(200, resp.status)
+    }
+
+    @Test
+    void updateOnlyExpression() {
+        def jsonTrigger = """{
+            "trigger": {
+                "id": "detect-floating-4-tutorial2",
+                "name": "Node with no infra second",
+                "description": "These hosts are not allocated to any known infrastructure provider",
+                "enabled": true,
+                "eventType": "ALERT",
+                "firingMatch": "ALL",
+                "actions": [
+                    {
+                        "actionPlugin": "email"
+                    }
+                ]
+            },
+            "conditions": [
+                {
+                    "triggerMode": "FIRING",
+                    "type": "EVENT",
+                    "dataId": "platform.inventory.host-egress",
+                    "expression": "facts.nomatch = 'false'"
+                }
+            ]
+        }
+        """
+
+        // remove if it exists
+        def resp = client.delete(path: "triggers/detect-floating-4-tutorial2")
+        assert(200 == resp.status || 404 == resp.status)
+
+        // create the test trigger
+        resp = client.post(path: "triggers/trigger", body: jsonTrigger)
+        assertEquals(200, resp.status)
+        assertTrue(resp.data.trigger.actions[0].actionId.startsWith("_managed"))
+
+        def fullTrigger = resp.data
+        def updatedExpression = "facts.nomatch = 'true'"
+        fullTrigger.conditions[0].expression = updatedExpression
+
+        resp = client.put(path: "triggers/trigger/detect-floating-4-tutorial2", body: fullTrigger)
+        assertEquals(200, resp.status)
+        assertEquals(updatedExpression, resp.data.conditions[0].expression)
+
+        resp = client.delete(path: "triggers/detect-floating-4-tutorial2")
         assertEquals(200, resp.status)
     }
 }
