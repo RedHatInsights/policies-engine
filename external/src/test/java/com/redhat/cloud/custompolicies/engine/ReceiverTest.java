@@ -5,6 +5,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.reactivex.subscribers.TestSubscriber;
 import io.smallrye.reactive.messaging.annotations.Channel;
 import io.smallrye.reactive.messaging.annotations.Emitter;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.microprofile.metrics.*;
@@ -97,6 +98,12 @@ public class ReceiverTest {
         FullTrigger fullTrigger = new FullTrigger(trigger, null, conditions);
         definitionsService.createFullTrigger(TENANT_ID, fullTrigger);
 
+        // Create second trigger
+        fullTrigger.getTrigger().setName("Trigger from past");
+        fullTrigger.getTrigger().setId(TRIGGER_ID + "2");
+
+        definitionsService.createFullTrigger(TENANT_ID, fullTrigger);
+
         TestSubscriber<JsonObject> testSubscriber = new TestSubscriber<>();
         emailReceiver.subscribe(testSubscriber);
 
@@ -113,6 +120,8 @@ public class ReceiverTest {
         assertEquals(TENANT_ID, emailOutput.getString("tenantId"));
         assertTrue(emailOutput.containsKey("tags"));
         assertTrue(emailOutput.containsKey("triggerNames"));
+        JsonArray triggerNames = emailOutput.getJsonArray("triggerNames");
+        assertEquals(2, triggerNames.size());
 
         // Now send broken data and then working and expect things to still work
         String brokenJson = "{ \"json\": ";
@@ -123,10 +132,9 @@ public class ReceiverTest {
         testSubscriber.awaitCount(2);
         testSubscriber.assertValueCount(2);
 
-        testSubscriber.dispose(); // In current smallrye-messaging, can't resubscribe even after dispose.
-
         Counter hostEgressProcessingErrors = metricRegistry.getCounters().get(errorCount);
         assertEquals(1, hostEgressProcessingErrors.getCount());
+        testSubscriber.dispose(); // In current smallrye-messaging, can't resubscribe even after dispose.
     }
 
     @AfterAll
