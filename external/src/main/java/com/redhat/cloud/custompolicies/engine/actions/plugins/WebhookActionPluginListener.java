@@ -9,7 +9,6 @@ import org.hawkular.alerts.actions.api.ActionMessage;
 import org.hawkular.alerts.actions.api.ActionPluginListener;
 import org.hawkular.alerts.actions.api.Plugin;
 import org.hawkular.alerts.api.model.action.Action;
-import org.hawkular.alerts.api.model.event.Event;
 
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;

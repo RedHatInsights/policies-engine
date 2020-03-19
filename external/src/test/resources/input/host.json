@@ -2,9 +2,11 @@
   "timestamp": "2020-03-14T16:37:23.927968+00:00",
   "host": {
     "account": "integration-test",
+    "created": "2020-03-19T15:35:09.632864+00:00",
     "display_name": "VM",
     "tags": [],
     "reporter": "puptoo",
+    "insights_id": "d4039530-4e3c-44d8-83b9-44de55400c2b",
     "system_profile": {
       "arch": "string",
       "bios_release_date": "string",

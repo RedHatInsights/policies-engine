@@ -18,7 +18,6 @@ import javax.inject.Inject;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.function.BiFunction;
 
 /**
  * This is the main process for Custom Policies. It ingests data from Kafka, enriches it with information from
@@ -32,13 +31,13 @@ public class Receiver {
 
     public static final String CATEGORY_NAME = "insight_report";
     public static final String INSIGHT_ID_FIELD = "insights_id";
+    public static final String DISPLAY_NAME_FIELD = "display_name";
 
     private static final String HOST_FIELD = "host";
     private static final String TENANT_ID_FIELD = "account";
     private static final String SYSTEM_PROFILE_FIELD = "system_profile";
     private static final String NETWORK_INTERFACES_FIELD = "network_interfaces";
     private static final String YUM_REPOS_FIELD = "yum_repos";
-    private static final String DISPLAY_NAME_FIELD = "display_name";
     private static final String NAME_FIELD = "name";
 
     @ConfigProperty(name = "engine.receiver.store-events")
@@ -76,11 +75,11 @@ public class Receiver {
                     // Indexed searchable events
                     Map<String, String> tagsMap = new HashMap<>();
                     tagsMap.put(DISPLAY_NAME_FIELD, displayName);
-                    tagsMap.put(INSIGHT_ID_FIELD, insightsId);
                     event.setTags(tagsMap);
 
                     // Additional context for processing
                     Map<String, String> contextMap = new HashMap<>();
+                    contextMap.put(INSIGHT_ID_FIELD, insightsId);
                     event.setContext(contextMap);
 
                     JsonObject sp = json.getJsonObject(SYSTEM_PROFILE_FIELD);
