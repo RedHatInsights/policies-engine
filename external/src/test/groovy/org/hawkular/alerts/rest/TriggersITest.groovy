@@ -623,6 +623,14 @@ class TriggersITest extends AbstractQuarkusITestBase {
 
         assertEquals(actionId, actionId2)
 
+        def fullTrigger = resp.data
+        fullTrigger.trigger.actions[0].actionId = null
+        // Update and verify equality
+        resp = client.put(path: "triggers/trigger/full-test-trigger-1", body: fullTrigger)
+        assertEquals(200, resp.status)
+        assertTrue(resp.data.trigger.actions[0].actionId.startsWith("_managed"))
+        assertEquals(actionId, resp.data.trigger.actions[0].actionId)
+
         resp = client.delete(path: "triggers/full-test-trigger-1")
         assertEquals(200, resp.status)
 
@@ -785,6 +793,14 @@ class TriggersITest extends AbstractQuarkusITestBase {
         // try an update with no changes (should succeed but not actually perform any updates, need to manually verify)
         resp = client.put(path: "triggers/trigger/full-test-trigger-1", body: fullTrigger)
         assertEquals(200, resp.status)
+
+        // Try to update with null actionId
+        def prevActionId = trigger.actions.get(0).actionId
+        trigger.actions.get(0).actionId = null
+        resp = client.put(path: "triggers/trigger/full-test-trigger-1", body: fullTrigger)
+        // No managed id was created in previous section as the id was defined in the create, thus update will fail
+        assertEquals(400, resp.status)
+        trigger.actions.get(0).actionId = prevActionId
 
         // re-get the test trigger
         def prevFullTrigger = fullTrigger;

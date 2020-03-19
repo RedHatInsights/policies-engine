@@ -406,6 +406,28 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
         if (TriggerType.MEMBER == type) {
             throw new IllegalArgumentException("FullTrigger.Trigger is type MEMBER and must be updated via the group");
         }
+        if (!isEmpty(trigger.getActions())) {
+            trigger.getActions().stream()
+                    .filter(action -> isEmpty(action.getActionId()))
+                    .forEach(action -> {
+                        try {
+                            if (isManaged(action.getActionPlugin())) {
+                                ActionDefinition managedActionDefinition = getActionDefinition(tenantId, action.getActionPlugin(), getManagedId(action.getActionPlugin(), action.getProperties()));
+                                if (managedActionDefinition != null) {
+                                    action.setActionId(managedActionDefinition.getActionId());
+                                }
+                            }
+                        } catch (Exception e) {
+                            if(e instanceof IllegalArgumentException) {
+                                throw (IllegalArgumentException) e;
+                            }
+                            throw new RuntimeException(e);
+                        }
+                        if (isEmpty(action.getActionId())) {
+                            throw new IllegalArgumentException("Supplied actionId could not be found");
+                        }
+                    });
+        }
 
         checkTenantId(tenantId, trigger);
         String triggerId = trigger.getId();

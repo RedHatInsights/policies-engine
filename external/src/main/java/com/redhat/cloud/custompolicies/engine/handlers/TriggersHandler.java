@@ -300,7 +300,7 @@ public class TriggersHandler {
                             definitionsService.updateFullTrigger(tenantId, fullTrigger);
                         }
                         log.debugf("FullTrigger: %s", fullTrigger);
-                        future.complete();
+                        future.complete(fullTrigger);
                     } catch (NotFoundException e) {
                         throw new NotFoundException(e.getMessage());
                     } catch (IllegalArgumentException e) {
