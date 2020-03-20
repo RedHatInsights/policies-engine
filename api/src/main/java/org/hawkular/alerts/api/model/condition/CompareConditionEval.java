@@ -18,7 +18,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
  * @author Lucas Ponce
  */
 @DocModel(description = "An evaluation state for compare condition.")
-public class CompareConditionEval extends ConditionEval {
+public class CompareConditionEval extends ConditionEval<CompareCondition> {
 
     private static final long serialVersionUID = 1L;
 
@@ -53,11 +53,6 @@ public class CompareConditionEval extends ConditionEval {
         this.value1 = Double.valueOf(data1.getValue());
         this.value2 = Double.valueOf(data2.getValue());
         this.context2 = data2.getContext();
-    }
-
-    @Override
-    public CompareCondition getCondition() {
-        return (CompareCondition) condition;
     }
 
     public Double getValue1() {

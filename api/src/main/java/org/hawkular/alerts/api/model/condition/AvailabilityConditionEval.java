@@ -18,7 +18,7 @@ import java.util.Objects;
  * @author Lucas Ponce
  */
 @DocModel(description = "An evaluation state for availability condition.")
-public class AvailabilityConditionEval extends ConditionEval {
+public class AvailabilityConditionEval extends ConditionEval<AvailabilityCondition> {
 
     private static final long serialVersionUID = 1L;
 
@@ -37,11 +37,6 @@ public class AvailabilityConditionEval extends ConditionEval {
                 avail.getContext());
         setCondition(condition);
         this.value = AvailabilityType.valueOf(avail.getValue());
-    }
-
-    @Override
-    public AvailabilityCondition getCondition() {
-        return (AvailabilityCondition) condition;
     }
 
     public AvailabilityType getValue() {

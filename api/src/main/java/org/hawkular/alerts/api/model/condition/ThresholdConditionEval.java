@@ -17,7 +17,7 @@ import java.util.Objects;
  * @author Lucas Ponce
  */
 @DocModel(description = "An evaluation state for threshold condition.")
-public class ThresholdConditionEval extends ConditionEval {
+public class ThresholdConditionEval extends ConditionEval<ThresholdCondition> {
 
     private static final long serialVersionUID = 1L;
 
@@ -35,11 +35,6 @@ public class ThresholdConditionEval extends ConditionEval {
                 data.getContext());
         setCondition(condition);
         this.value = Double.valueOf(data.getValue());
-    }
-
-    @Override
-    public ThresholdCondition getCondition() {
-        return (ThresholdCondition) condition;
     }
 
     public Double getValue() {

@@ -17,7 +17,7 @@ import java.util.Objects;
  * @author Lucas Ponce
  */
 @DocModel(description = "An evaluation state for string condition.")
-public class StringConditionEval extends ConditionEval {
+public class StringConditionEval extends ConditionEval<StringCondition> {
 
     private static final long serialVersionUID = 1L;
 
@@ -35,11 +35,6 @@ public class StringConditionEval extends ConditionEval {
         super(Type.STRING, condition.match(data.getValue()), data.getTimestamp(), data.getContext());
         setCondition(condition);
         this.value = data.getValue();
-    }
-
-    @Override
-    public StringCondition getCondition() {
-        return (StringCondition) condition;
     }
 
     public String getValue() {

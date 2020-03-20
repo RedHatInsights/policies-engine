@@ -20,7 +20,7 @@ import java.util.Objects;
  */
 @DocModel(description = "An evaluation state for an external condition. + \n" +
         "Note that external conditions may report a Data value or an Event.")
-public class ExternalConditionEval extends ConditionEval {
+public class ExternalConditionEval extends ConditionEval<ExternalCondition> {
 
     private static final long serialVersionUID = 1L;
 
@@ -51,11 +51,6 @@ public class ExternalConditionEval extends ConditionEval {
         super(Type.EXTERNAL, condition.match(data.getValue()), data.getTimestamp(), data.getContext());
         setCondition(condition);
         this.value = data.getValue();
-    }
-
-    @Override
-    public ExternalCondition getCondition() {
-        return (ExternalCondition) condition;
     }
 
     public String getValue() {

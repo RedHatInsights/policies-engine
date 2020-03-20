@@ -18,7 +18,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
  * @author Lucas Ponce
  */
 @DocModel(description = "An evaluation state for nelson condition.")
-public class NelsonConditionEval extends ConditionEval {
+public class NelsonConditionEval extends ConditionEval<NelsonCondition> {
 
     private static final long serialVersionUID = 1L;
 
@@ -53,11 +53,6 @@ public class NelsonConditionEval extends ConditionEval {
         this.standardDeviation = standardDeviation;
         this.violations = violations;
         this.violationsData = violationsData;
-    }
-
-    @Override
-    public NelsonCondition getCondition() {
-        return (NelsonCondition) condition;
     }
 
     public Double getMean() {

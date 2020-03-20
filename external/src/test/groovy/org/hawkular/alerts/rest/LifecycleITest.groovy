@@ -1,6 +1,7 @@
 package org.hawkular.alerts.rest
 
 import io.quarkus.test.junit.QuarkusTest
+import org.apache.groovy.json.internal.LazyMap
 import org.hawkular.alerts.api.model.Severity
 import org.hawkular.alerts.api.model.condition.*
 import org.hawkular.alerts.api.model.data.AvailabilityType
@@ -450,8 +451,14 @@ class LifecycleITest extends AbstractQuarkusITestBase {
         assertEquals(1, resp.data.size())
         assertNotNull(resp.data[0].evalSets)
         assertTrue(!resp.data[0].evalSets.isEmpty())
-        AvailabilityConditionEval eval =
-            (AvailabilityConditionEval)resp.data[0].evalSets.iterator().next().iterator().next();
+
+        LazyMap lazyMapAvailConditionEval = resp.data[0].evalSets.iterator().next().iterator().next()
+
+        // groovy has a hard time when trying to deserialize the condition object, lets help it a bit.
+        AvailabilityCondition availCondition = (AvailabilityCondition) lazyMapAvailConditionEval.condition
+        lazyMapAvailConditionEval.condition = availCondition
+
+        AvailabilityConditionEval eval = (AvailabilityConditionEval) lazyMapAvailConditionEval
         assertNotNull(eval.getContext())
         assertEquals("contextValue", eval.getContext().get("contextName"))
 

@@ -25,7 +25,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
         ExternalConditionEval.class, MissingConditionEval.class, RateConditionEval.class, StringConditionEval.class,
         ThresholdConditionEval.class, ThresholdRangeConditionEval.class })
 @JsonDeserialize(using = JacksonDeserializer.ConditionEvalDeserializer.class)
-public abstract class ConditionEval implements Serializable {
+public abstract class ConditionEval<TCondition extends Condition> implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -60,7 +60,7 @@ public abstract class ConditionEval implements Serializable {
 
     @DocModelProperty(description = "Condition linked with this state.", position = 6)
     @JsonInclude(Include.NON_NULL)
-    protected Condition condition;
+    protected TCondition condition;
 
     public ConditionEval() {
         // for json assembly
@@ -89,7 +89,9 @@ public abstract class ConditionEval implements Serializable {
 
     public void setEvalTimestamp(long evalTimestamp) {
         this.evalTimestamp = evalTimestamp;
-        condition.setLastEvaluation(evalTimestamp);
+        if (condition != null) {
+            condition.setLastEvaluation(evalTimestamp);
+        }
     }
 
     public long getDataTimestamp() {
@@ -146,11 +148,11 @@ public abstract class ConditionEval implements Serializable {
     @JsonIgnore
     public abstract void updateDisplayString();
 
-    public Condition getCondition() {
+    public TCondition getCondition() {
         return condition;
     }
 
-    public void setCondition(Condition condition) {
+    public void setCondition(TCondition condition) {
         this.condition = condition;
         condition.setLastEvaluation(this.evalTimestamp);
     }

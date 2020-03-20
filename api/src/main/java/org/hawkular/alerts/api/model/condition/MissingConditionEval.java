@@ -8,7 +8,6 @@ import org.hawkular.alerts.api.doc.DocModelProperty;
 import org.hawkular.alerts.api.model.condition.Condition.Type;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 /**
  * An evaluation state for MissingCondition
@@ -17,7 +16,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
  * @author Lucas Ponce
  */
 @DocModel(description = "An evaluation state for missing condition.")
-public class MissingConditionEval extends ConditionEval {
+public class MissingConditionEval extends ConditionEval<MissingCondition> {
 
     private static final long serialVersionUID = 1L;
 
@@ -72,11 +71,6 @@ public class MissingConditionEval extends ConditionEval {
         String s = String.format("Missing: %s[%tc] %dms GTE %dms", getCondition().getDataId(), time,
                 (time - previousTime), getCondition().getInterval());
         setDisplayString(s);
-    }
-
-    @Override
-    public MissingCondition getCondition() {
-        return (MissingCondition) condition;
     }
 
     public long getPreviousTime() {

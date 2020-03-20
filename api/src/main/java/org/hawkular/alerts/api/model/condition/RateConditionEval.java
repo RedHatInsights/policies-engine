@@ -15,7 +15,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
  * @author Lucas Ponce
  */
 @DocModel(description = "An evaluation state for rate condition.")
-public class RateConditionEval extends ConditionEval {
+public class RateConditionEval extends ConditionEval<RateCondition> {
 
     private static final long serialVersionUID = 1L;
 
@@ -61,11 +61,6 @@ public class RateConditionEval extends ConditionEval {
         this.previousTime = previousData.getTimestamp();
         this.previousValue = Double.valueOf(previousData.getValue());
         this.rate = condition.getRate(this.time, this.value, this.previousTime, this.previousValue);
-    }
-
-    @Override
-    public RateCondition getCondition() {
-        return (RateCondition) condition;
     }
 
     public Double getValue() {

@@ -17,7 +17,7 @@ import java.util.Objects;
  * @author Lucas Ponce
  */
 @DocModel(description = "An evaluation state for threshold range condition.")
-public class ThresholdRangeConditionEval extends ConditionEval {
+public class ThresholdRangeConditionEval extends ConditionEval<ThresholdRangeCondition> {
 
     private static final long serialVersionUID = 1L;
 
@@ -35,11 +35,6 @@ public class ThresholdRangeConditionEval extends ConditionEval {
         super(Type.RANGE, condition.match(Double.parseDouble(data.getValue())), data.getTimestamp(), data.getContext());
         setCondition(condition);
         this.value = Double.valueOf(data.getValue());
-    }
-
-    @Override
-    public ThresholdRangeCondition getCondition() {
-        return (ThresholdRangeCondition) condition;
     }
 
     public Double getValue() {

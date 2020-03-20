@@ -17,7 +17,7 @@ import java.util.Objects;
  * @author Lucas Ponce
  */
 @DocModel(description = "An evaluation state for event condition.")
-public class EventConditionEval extends ConditionEval {
+public class EventConditionEval extends ConditionEval<EventCondition> {
 
     private static final long serialVersionUID = 1L;
 
@@ -36,11 +36,6 @@ public class EventConditionEval extends ConditionEval {
         super(Type.EVENT, condition.match(value), value.getCtime(), value.getContext());
         setCondition(condition);
         this.value = value;
-    }
-
-    @Override
-    public EventCondition getCondition() {
-        return (EventCondition) condition;
     }
 
     public Event getValue() {
