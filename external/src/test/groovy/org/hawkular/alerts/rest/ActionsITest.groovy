@@ -1,8 +1,6 @@
 package org.hawkular.alerts.rest
 
 import io.quarkus.test.junit.QuarkusTest
-import io.vertx.core.json.JsonObject
-import org.eclipse.microprofile.reactive.messaging.Incoming
 import org.hawkular.alerts.api.model.action.ActionDefinition
 import org.hawkular.alerts.api.model.condition.AvailabilityCondition
 import org.hawkular.alerts.api.model.condition.Condition
@@ -31,16 +29,6 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
  */
 @QuarkusTest
 class ActionsITest extends AbstractQuarkusITestBase {
-
-    // Remove these if Groovy tests start testing the output of action plugin queues - at the moment Java tests do that
-    @Incoming("email")
-    void blackholeEmailPluginSubscriber(JsonObject json) { }
-
-    @Incoming("webhook")
-    void blackholeWebhookSubscriber(JsonObject json) { }
-
-    @Incoming("hooks")
-    void blackholeHooksSubscriber(JsonObject json) { }
 
     static MsgLogger logger = MsgLogging.getMsgLogger(ActionsITest.class)
 
