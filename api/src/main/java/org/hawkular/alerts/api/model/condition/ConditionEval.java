@@ -2,6 +2,7 @@ package org.hawkular.alerts.api.model.condition;
 
 import java.io.Serializable;
 import java.util.Map;
+import java.util.Objects;
 
 import org.hawkular.alerts.api.doc.DocModel;
 import org.hawkular.alerts.api.doc.DocModelProperty;
@@ -24,7 +25,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
         ExternalConditionEval.class, MissingConditionEval.class, RateConditionEval.class, StringConditionEval.class,
         ThresholdConditionEval.class, ThresholdRangeConditionEval.class })
 @JsonDeserialize(using = JacksonDeserializer.ConditionEvalDeserializer.class)
-public abstract class ConditionEval implements Serializable {
+public abstract class ConditionEval<TCondition extends Condition> implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -57,6 +58,10 @@ public abstract class ConditionEval implements Serializable {
     @JsonInclude(Include.NON_EMPTY)
     protected String displayString;
 
+    @DocModelProperty(description = "Condition linked with this state.", position = 6)
+    @JsonInclude(Include.NON_NULL)
+    protected TCondition condition;
+
     public ConditionEval() {
         // for json assembly
     }
@@ -84,6 +89,9 @@ public abstract class ConditionEval implements Serializable {
 
     public void setEvalTimestamp(long evalTimestamp) {
         this.evalTimestamp = evalTimestamp;
+        if (condition != null) {
+            condition.setLastEvaluation(evalTimestamp);
+        }
     }
 
     public long getDataTimestamp() {
@@ -140,6 +148,15 @@ public abstract class ConditionEval implements Serializable {
     @JsonIgnore
     public abstract void updateDisplayString();
 
+    public TCondition getCondition() {
+        return condition;
+    }
+
+    public void setCondition(TCondition condition) {
+        this.condition = condition;
+        condition.setLastEvaluation(this.evalTimestamp);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o)
@@ -155,7 +172,7 @@ public abstract class ConditionEval implements Serializable {
             return false;
         if (type != that.type)
             return false;
-        return !(context != null ? !context.equals(that.context) : that.context != null);
+        return Objects.equals(context, that.context);
 
     }
 

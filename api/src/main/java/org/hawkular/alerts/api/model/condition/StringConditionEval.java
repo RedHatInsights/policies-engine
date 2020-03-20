@@ -8,6 +8,8 @@ import org.hawkular.alerts.api.model.data.Data;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
+import java.util.Objects;
+
 /**
  * An evaluation state for string condition.
  *
@@ -15,17 +17,11 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
  * @author Lucas Ponce
  */
 @DocModel(description = "An evaluation state for string condition.")
-public class StringConditionEval extends ConditionEval {
+public class StringConditionEval extends ConditionEval<StringCondition> {
 
     private static final long serialVersionUID = 1L;
 
-    @DocModelProperty(description = "String condition linked with this state.",
-            position = 0)
-    @JsonInclude(Include.NON_NULL)
-    private StringCondition condition;
-
-    @DocModelProperty(description = "String value for dataId used in the evaluation.",
-            position = 1)
+    @DocModelProperty(description = "String value for dataId used in the evaluation.")
     @JsonInclude(Include.NON_NULL)
     private String value;
 
@@ -37,16 +33,8 @@ public class StringConditionEval extends ConditionEval {
 
     public StringConditionEval(StringCondition condition, Data data) {
         super(Type.STRING, condition.match(data.getValue()), data.getTimestamp(), data.getContext());
-        this.condition = condition;
+        setCondition(condition);
         this.value = data.getValue();
-    }
-
-    public StringCondition getCondition() {
-        return condition;
-    }
-
-    public void setCondition(StringCondition condition) {
-        this.condition = condition;
     }
 
     public String getValue() {
@@ -79,9 +67,9 @@ public class StringConditionEval extends ConditionEval {
 
     @Override
     public void updateDisplayString() {
-        String s = String.format("String: %s[%s] %s [%s]%s", condition.getDataId(), value,
-                condition.getOperator().name(), condition.getPattern(),
-                (condition.isIgnoreCase() ? " Ignoring Case" : ""));
+        String s = String.format("String: %s[%s] %s [%s]%s", getCondition().getDataId(), value,
+                getCondition().getOperator().name(), getCondition().getPattern(),
+                (getCondition().isIgnoreCase() ? " Ignoring Case" : ""));
         setDisplayString(s);
     }
 
@@ -96,12 +84,9 @@ public class StringConditionEval extends ConditionEval {
 
         StringConditionEval that = (StringConditionEval) o;
 
-        if (condition != null ? !condition.equals(that.condition) : that.condition != null)
+        if (!Objects.equals(condition, that.condition))
             return false;
-        if (value != null ? !value.equals(that.value) : that.value != null)
-            return false;
-
-        return true;
+        return Objects.equals(value, that.value);
     }
 
     @Override

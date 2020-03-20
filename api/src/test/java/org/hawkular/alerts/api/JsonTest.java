@@ -293,7 +293,7 @@ public class JsonTest {
         String str = "{\"tenantId\":\"test\",\"triggerId\":\"test\",\"triggerMode\":\"FIRING\"," +
                 "\"type\":\"AVAILABILITY\",\"conditionSetSize\":1,\"conditionSetIndex\":1," +
                 "\"conditionId\":\"test-test-FIRING-1-1\"," +
-                "\"displayString\":\"Default is UP\",\"dataId\":\"Default\",\"operator\":\"UP\"}";
+                "\"displayString\":\"Default is UP\",\"lastEvaluation\":0,\"dataId\":\"Default\",\"operator\":\"UP\"}";
         AvailabilityCondition condition = objectMapper.readValue(str, AvailabilityCondition.class);
 
         assertTrue(condition.getTenantId().equals("test"));
@@ -347,7 +347,7 @@ public class JsonTest {
     public void jsonAvailabilityConditionEvalTest() throws Exception {
         String str = "{\"evalTimestamp\":1,\"dataTimestamp\":1,\"type\":\"AVAILABILITY\"," +
                 "\"condition\":{\"triggerId\":\"test\",\"triggerMode\":\"FIRING\",\"type\":\"AVAILABILITY\"," +
-                "\"dataId\":\"Default\",\"operator\":\"UP\"}," +
+                "\"lastEvaluation\":0,\"dataId\":\"Default\",\"operator\":\"UP\"}," +
                 "\"value\":\"UP\",\"context\":{\"n1\":\"v1\",\"n2\":\"v2\"}}";
         AvailabilityConditionEval eval = objectMapper.readValue(str, AvailabilityConditionEval.class);
 
@@ -369,7 +369,7 @@ public class JsonTest {
         String str = "{\"tenantId\":\"test\",\"triggerId\":\"test\",\"triggerMode\":\"FIRING\",\"type\":\"COMPARE\"," +
                 "\"conditionSetSize\":1,\"conditionSetIndex\":1,\"conditionId\":\"test-test-FIRING-1-1\"," +
                 "\"displayString\":\"Default1 LT 120.00% Default2\"," +
-                "\"dataId\":\"Default1\",\"operator\":\"LT\",\"data2Id\":\"Default2\",\"data2Multiplier\":1.2}";
+                "\"lastEvaluation\":0,\"dataId\":\"Default1\",\"operator\":\"LT\",\"data2Id\":\"Default2\",\"data2Multiplier\":1.2}";
         CompareCondition condition = objectMapper.readValue(str, CompareCondition.class);
 
         assertTrue(condition.getTenantId().equals("test"));
@@ -474,7 +474,7 @@ public class JsonTest {
         String str = "{\"tenantId\":\"test\",\"triggerId\":\"test\",\"triggerMode\":\"FIRING\",\"type\":\"STRING\"," +
                 "\"conditionSetSize\":1,\"conditionSetIndex\":1,\"conditionId\":\"test-test-FIRING-1-1\"," +
                 "\"displayString\":\"Default MATCH [test-pattern]\"," +
-                "\"dataId\":\"Default\",\"operator\":\"MATCH\",\"pattern\":\"test-pattern\",\"ignoreCase\":false}";
+                "\"lastEvaluation\":0,\"dataId\":\"Default\",\"operator\":\"MATCH\",\"pattern\":\"test-pattern\",\"ignoreCase\":false}";
         StringCondition condition = objectMapper.readValue(str, StringCondition.class);
 
         assertTrue(condition.getTenantId().equals("test"));
@@ -577,7 +577,7 @@ public class JsonTest {
                 "\"type\":\"THRESHOLD\",\"conditionSetSize\":1,\"conditionSetIndex\":1," +
                 "\"conditionId\":\"test-test-FIRING-1-1\"," +
                 "\"displayString\":\"Default LT 10.50\"," +
-                "\"dataId\":\"Default\",\"operator\":\"LT\",\"threshold\":10.5}";
+                "\"lastEvaluation\":0,\"dataId\":\"Default\",\"operator\":\"LT\",\"threshold\":10.5}";
         ThresholdCondition condition = objectMapper.readValue(str, ThresholdCondition.class);
 
         assertTrue(condition.getTenantId().equals("test"));
@@ -668,7 +668,7 @@ public class JsonTest {
         String str = "{\"tenantId\":\"test\",\"triggerId\":\"test\",\"triggerMode\":\"FIRING\",\"type\":\"RANGE\"," +
                 "\"conditionSetSize\":1,\"conditionSetIndex\":1,\"conditionId\":\"test-test-FIRING-1-1\"," +
                 "\"displayString\":\"Default in [10.50 , 20.50]\"," +
-                "\"dataId\":\"Default\",\"operatorLow\":\"INCLUSIVE\",\"operatorHigh\":\"INCLUSIVE\"," +
+                "\"lastEvaluation\":0,\"dataId\":\"Default\",\"operatorLow\":\"INCLUSIVE\",\"operatorHigh\":\"INCLUSIVE\"," +
                 "\"thresholdLow\":10.5,\"thresholdHigh\":20.5,\"inRange\":true}";
         ThresholdRangeCondition condition = objectMapper.readValue(str, ThresholdRangeCondition.class);
 
@@ -824,7 +824,7 @@ public class JsonTest {
         String str = "{\"evalTimestamp\":1,\"dataTimestamp\":1,\"type\":\"EXTERNAL\"," +
                 "\"condition\":" +
                 "{\"triggerId\":\"test\",\"triggerMode\":\"FIRING\",\"type\":\"EXTERNAL\"," +
-                "\"dataId\":\"Default\",\"alerterId\":\"HawkularMetrics\"," +
+                "\"lastEvaluation\":0,\"dataId\":\"Default\",\"alerterId\":\"HawkularMetrics\"," +
                 "\"expression\":\"metric:5:avg(foo > 100.5)\"}," +
                 "\"value\":\"foo\",\"context\":{\"n1\":\"v1\",\"n2\":\"v2\"}}";
         ExternalConditionEval eval = objectMapper.readValue(str, ExternalConditionEval.class);
@@ -846,7 +846,7 @@ public class JsonTest {
         str = "{\"evalTimestamp\":1,\"dataTimestamp\":1,\"type\":\"EXTERNAL\"," +
                 "\"condition\":" +
                 "{\"triggerId\":\"test\",\"triggerMode\":\"FIRING\",\"type\":\"EXTERNAL\"," +
-                "\"dataId\":\"Default\",\"alerterId\":\"HawkularMetrics\"," +
+                "\"lastEvaluation\":0,\"dataId\":\"Default\",\"alerterId\":\"HawkularMetrics\"," +
                 "\"expression\":\"event:test\"}," +
                 "\"event\":{\"id\":\"test-event\",\"text\":\"text-value\"},\"context\":{\"n1\":\"v1\",\"n2\":\"v2\"}}";
         eval = objectMapper.readValue(str, ExternalConditionEval.class);
@@ -866,19 +866,20 @@ public class JsonTest {
                 + "\"conditionSetIndex\":1," //
                 + "\"conditionId\":\"test-test-FIRING-1-1\"," //
                 + "\"displayString\":\"Default missing GTE 123ms\"," //
+                + "\"lastEvaluation\":0,"
                 + "\"dataId\":\"Default\"," //
                 + "\"interval\":123}";
         MissingCondition condition = objectMapper.readValue(str, MissingCondition.class);
 
-        assertTrue(condition.getTenantId().equals("test"));
-        assertTrue(condition.getTriggerId().equals("test"));
-        assertTrue(condition.getTriggerMode().equals(Mode.FIRING));
-        assertTrue(condition.getDataId().equals("Default"));
-        assertTrue(condition.getInterval() == 123L);
+        assertEquals("test", condition.getTenantId());
+        assertEquals("test", condition.getTriggerId());
+        assertEquals(condition.getTriggerMode(), Mode.FIRING);
+        assertEquals("Default", condition.getDataId());
+        assertEquals(123L, condition.getInterval());
 
         String output = objectMapper.writeValueAsString(condition);
 
-        assertTrue(output, str.equals(output));
+        assertEquals(output, str, output);
     }
 
     @Test
@@ -919,6 +920,7 @@ public class JsonTest {
                 + "\"conditionSetIndex\":1," //
                 + "\"conditionId\":\"test-test-FIRING-1-1\"," //
                 + "\"displayString\":\"Default activeNelsonRules=[Rule6] sampleSize=100\"," //
+                + "\"lastEvaluation\":0,"
                 + "\"dataId\":\"Default\"," //
                 + "\"activeRules\":[\"Rule6\"]," //
                 + "\"sampleSize\":100}";
@@ -1016,6 +1018,7 @@ public class JsonTest {
                 + "\"conditionSetIndex\":1," //
                 + "\"conditionId\":\"test-test-FIRING-1-1\"," //
                 + "\"displayString\":\"Default DECREASING GT 10.50 per HOUR\","
+                + "\"lastEvaluation\":0,"
                 + "\"dataId\":\"Default\"," //
                 + "\"direction\":\"DECREASING\"," //
                 + "\"period\":\"HOUR\"," //
@@ -1045,6 +1048,7 @@ public class JsonTest {
                 + "\"conditionSetSize\":1," //
                 + "\"conditionSetIndex\":1," //
                 + "\"conditionId\":\"test-test-FIRING-1-1\"," //
+                + "\"lastEvaluation\":0,"
                 + "\"dataId\":\"Default\"," //
                 + "\"operator\":\"GT\"," //
                 + "\"threshold\":10.5}";
@@ -1062,6 +1066,7 @@ public class JsonTest {
                 + "\"conditionSetSize\":1," //
                 + "\"conditionSetIndex\":1," //
                 + "\"conditionId\":\"test-test-FIRING-1-1\"," //
+                + "\"lastEvaluation\":0,"
                 + "\"dataId\":\"Default\"," //
                 + "\"direction\":\"UP\"," //
                 + "\"operator\":\"GT\"," //

@@ -9,6 +9,8 @@ import org.hawkular.alerts.api.model.data.Data;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
+import java.util.Objects;
+
 /**
  * An evaluation state for availability condition.
  *
@@ -16,17 +18,11 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
  * @author Lucas Ponce
  */
 @DocModel(description = "An evaluation state for availability condition.")
-public class AvailabilityConditionEval extends ConditionEval {
+public class AvailabilityConditionEval extends ConditionEval<AvailabilityCondition> {
 
     private static final long serialVersionUID = 1L;
 
-    @DocModelProperty(description = "Availability condition linked with this state.",
-            position = 0)
-    @JsonInclude(Include.NON_NULL)
-    private AvailabilityCondition condition;
-
-    @DocModelProperty(description = "Availability value used for dataId.",
-            position = 1)
+    @DocModelProperty(description = "Availability value used for dataId.")
     @JsonInclude(Include.NON_NULL)
     private AvailabilityType value;
 
@@ -39,16 +35,8 @@ public class AvailabilityConditionEval extends ConditionEval {
     public AvailabilityConditionEval(AvailabilityCondition condition, Data avail) {
         super(Type.AVAILABILITY, condition.match(AvailabilityType.valueOf(avail.getValue())), avail.getTimestamp(),
                 avail.getContext());
-        this.condition = condition;
+        setCondition(condition);
         this.value = AvailabilityType.valueOf(avail.getValue());
-    }
-
-    public AvailabilityCondition getCondition() {
-        return condition;
-    }
-
-    public void setCondition(AvailabilityCondition condition) {
-        this.condition = condition;
     }
 
     public AvailabilityType getValue() {
@@ -81,8 +69,8 @@ public class AvailabilityConditionEval extends ConditionEval {
 
     @Override
     public void updateDisplayString() {
-        String s = String.format("Avail: %s[%s] is %s", condition.getDataId(), value.name(),
-                condition.getOperator().name());
+        String s = String.format("Avail: %s[%s] is %s", getCondition().getDataId(), value.name(),
+                getCondition().getOperator().name());
         setDisplayString(s);
     }
 
@@ -97,12 +85,9 @@ public class AvailabilityConditionEval extends ConditionEval {
 
         AvailabilityConditionEval that = (AvailabilityConditionEval) o;
 
-        if (condition != null ? !condition.equals(that.condition) : that.condition != null)
+        if (!Objects.equals(condition, that.condition))
             return false;
-        if (value != that.value)
-            return false;
-
-        return true;
+        return value == that.value;
     }
 
     @Override

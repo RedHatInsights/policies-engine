@@ -1,13 +1,13 @@
 package org.hawkular.alerts.api.model.condition;
 
 import java.util.HashMap;
+import java.util.Objects;
 
 import org.hawkular.alerts.api.doc.DocModel;
 import org.hawkular.alerts.api.doc.DocModelProperty;
 import org.hawkular.alerts.api.model.condition.Condition.Type;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 /**
  * An evaluation state for MissingCondition
@@ -16,22 +16,17 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
  * @author Lucas Ponce
  */
 @DocModel(description = "An evaluation state for missing condition.")
-public class MissingConditionEval extends ConditionEval {
+public class MissingConditionEval extends ConditionEval<MissingCondition> {
 
     private static final long serialVersionUID = 1L;
 
-    @DocModelProperty(description = "Missing condition linked with this state.",
-            position = 0)
-    @JsonInclude(Include.NON_NULL)
-    private MissingCondition condition;
-
     @DocModelProperty(description = "Time when trigger was enabled or last time a data/event was received.",
-            position = 1)
+            position = 0)
     @JsonInclude
     private long previousTime;
 
     @DocModelProperty(description = "Time when most recently evaluation of missing condition.",
-            position = 2)
+            position = 1)
     @JsonInclude
     private long time;
 
@@ -46,7 +41,7 @@ public class MissingConditionEval extends ConditionEval {
 
     public MissingConditionEval(MissingCondition condition, long previousTime, long time) {
         super(Type.MISSING, condition.match(previousTime, time), time, new HashMap<>());
-        this.condition = condition;
+        setCondition(condition);
         this.previousTime = previousTime;
         this.time = time;
     }
@@ -73,17 +68,9 @@ public class MissingConditionEval extends ConditionEval {
 
     @Override
     public void updateDisplayString() {
-        String s = String.format("Missing: %s[%tc] %dms GTE %dms", condition.getDataId(), time,
-                (time - previousTime), condition.getInterval());
+        String s = String.format("Missing: %s[%tc] %dms GTE %dms", getCondition().getDataId(), time,
+                (time - previousTime), getCondition().getInterval());
         setDisplayString(s);
-    }
-
-    public MissingCondition getCondition() {
-        return condition;
-    }
-
-    public void setCondition(MissingCondition condition) {
-        this.condition = condition;
     }
 
     public long getPreviousTime() {
@@ -112,7 +99,7 @@ public class MissingConditionEval extends ConditionEval {
 
         if (previousTime != that.previousTime) return false;
         if (time != that.time) return false;
-        return condition != null ? condition.equals(that.condition) : that.condition == null;
+        return Objects.equals(condition, that.condition);
 
     }
 

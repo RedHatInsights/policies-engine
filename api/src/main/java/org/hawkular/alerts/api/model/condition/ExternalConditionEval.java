@@ -9,6 +9,8 @@ import org.hawkular.alerts.api.model.event.Event;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
+import java.util.Objects;
+
 /**
  * An evaluation state for an external condition.  Note that external conditions may report a <code>Data</code> value
  * or an <code>Event</code>.
@@ -18,22 +20,17 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
  */
 @DocModel(description = "An evaluation state for an external condition. + \n" +
         "Note that external conditions may report a Data value or an Event.")
-public class ExternalConditionEval extends ConditionEval {
+public class ExternalConditionEval extends ConditionEval<ExternalCondition> {
 
     private static final long serialVersionUID = 1L;
 
-    @DocModelProperty(description = "External condition linked with this state.",
-            position = 0)
-    @JsonInclude(Include.NON_NULL)
-    private ExternalCondition condition;
-
     @DocModelProperty(description = "String value used for dataId.",
-            position = 1)
+            position = 0)
     @JsonInclude(Include.NON_NULL)
     private String value;
 
     @DocModelProperty(description = "Event value used for dataId.",
-            position = 2)
+            position = 1)
     @JsonInclude(Include.NON_NULL)
     private Event event;
 
@@ -46,22 +43,14 @@ public class ExternalConditionEval extends ConditionEval {
 
     public ExternalConditionEval(ExternalCondition condition, Event event) {
         super(Type.EXTERNAL, condition.match(event.getText()), event.getCtime(), event.getContext());
-        this.condition = condition;
+        setCondition(condition);
         this.event = event;
     }
 
     public ExternalConditionEval(ExternalCondition condition, Data data) {
         super(Type.EXTERNAL, condition.match(data.getValue()), data.getTimestamp(), data.getContext());
-        this.condition = condition;
+        setCondition(condition);
         this.value = data.getValue();
-    }
-
-    public ExternalCondition getCondition() {
-        return condition;
-    }
-
-    public void setCondition(ExternalCondition condition) {
-        this.condition = condition;
     }
 
     public String getValue() {
@@ -102,8 +91,8 @@ public class ExternalConditionEval extends ConditionEval {
 
     @Override
     public void updateDisplayString() {
-        String s = String.format("External[%s]: %s[%s] matches [%s]", condition.getAlerterId(),
-                condition.getDataId(), (value != null ? value : event.toString()), condition.getExpression());
+        String s = String.format("External[%s]: %s[%s] matches [%s]", getCondition().getAlerterId(),
+                getCondition().getDataId(), (value != null ? value : event.toString()), getCondition().getExpression());
         setDisplayString(s);
     }
 
@@ -115,9 +104,9 @@ public class ExternalConditionEval extends ConditionEval {
 
         ExternalConditionEval that = (ExternalConditionEval) o;
 
-        if (condition != null ? !condition.equals(that.condition) : that.condition != null) return false;
-        if (value != null ? !value.equals(that.value) : that.value != null) return false;
-        return event != null ? event.equals(that.event) : that.event == null;
+        if (!Objects.equals(condition, that.condition)) return false;
+        if (!Objects.equals(value, that.value)) return false;
+        return Objects.equals(event, that.event);
     }
 
     @Override
