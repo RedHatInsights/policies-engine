@@ -82,6 +82,7 @@ public class AlertsStandalone {
             searchManager.getMassIndexer().start();
             long stopReindex = System.currentTimeMillis();
             log.info("Reindexing Ispn [backend] completed in [" + (stopReindex - startReindex) + " ms]");
+
         }
 
         ispnActions = new IspnActionsServiceImpl();
