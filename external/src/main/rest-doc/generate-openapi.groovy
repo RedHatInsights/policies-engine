@@ -5,7 +5,7 @@ import java.lang.reflect.Field
 import java.lang.reflect.Method
 import java.lang.reflect.ParameterizedType
 
-def handlersDir = new File(classesDir, "com/redhat/cloud/custompolicies/engine/handlers")
+def handlersDir = new File(classesDir, "com/redhat/cloud/policies/engine/handlers")
 def generatedFile = new File(generatedFile)
 def cl = Thread.currentThread().getContextClassLoader()
 def json = [:]
@@ -13,7 +13,7 @@ def definitions = new HashSet<Class>()
 def processed = new HashSet<Class>()
 
 json["openapi"] = "3.0.0"
-json["info"] = [version: alertingVersion, title: "Custom Policies Engine", description: "REST interface to Custom Policies backend engine"]
+json["info"] = [version: alertingVersion, title: "Policies Engine", description: "REST interface to Policies backend engine"]
 json["paths"] = [:]
 json["components"] = [:]
 json["components"]["schemas"] = [:]
@@ -188,7 +188,7 @@ try {
     File[] handlers = handlersDir.listFiles()
     for (def i = 0; i < handlers.length; i++) {
         if (handlers[i].name.endsWith("Handler.class")) {
-            def className = "com.redhat.cloud.custompolicies.engine.handlers." + handlers[i].name.substring(0, handlers[i].name.length() - 6)
+            def className = "com.redhat.cloud.policies.engine.handlers." + handlers[i].name.substring(0, handlers[i].name.length() - 6)
             def clazz = cl.loadClass(className)
             def endPointPath
             if (clazz.isAnnotationPresent(DocEndpoint.class)) {

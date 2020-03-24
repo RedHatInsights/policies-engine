@@ -46,7 +46,7 @@ public class JsonUtil {
         } catch(Exception e) {
             Throwable cause = e.getCause();
             while(cause != null) {
-                if(cause.getStackTrace()[0].getClassName().startsWith("com.redhat.cloud.custompolicies")) {
+                if(cause.getStackTrace()[0].getClassName().startsWith("com.redhat.cloud.policies")) {
                     throw new RuntimeException(cause.getMessage());
                 }
                 cause = cause.getCause();
@@ -62,7 +62,7 @@ public class JsonUtil {
         } catch (IOException e) {
             Throwable cause = e.getCause();
             while(cause != null) {
-                if(cause.getStackTrace()[0].getClassName().startsWith("com.redhat.cloud.custompolicies")) {
+                if(cause.getStackTrace()[0].getClassName().startsWith("com.redhat.cloud.policies")) {
                     throw new RuntimeException(cause.getMessage());
                 }
                 cause = cause.getCause();
