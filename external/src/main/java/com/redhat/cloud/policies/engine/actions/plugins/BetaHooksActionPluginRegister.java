@@ -1,5 +1,6 @@
 package com.redhat.cloud.policies.engine.actions.plugins;
 
+import com.redhat.cloud.policies.engine.process.Receiver;
 import io.smallrye.reactive.messaging.annotations.Channel;
 import io.smallrye.reactive.messaging.annotations.Emitter;
 import io.vertx.axle.core.Vertx;
@@ -13,6 +14,10 @@ import org.eclipse.microprofile.metrics.annotation.Metric;
 import org.hawkular.alerts.actions.api.ActionMessage;
 import org.hawkular.alerts.actions.api.ActionPluginListener;
 import org.hawkular.alerts.actions.api.Plugin;
+import org.hawkular.alerts.api.model.action.Action;
+import org.hawkular.alerts.api.model.condition.ConditionEval;
+import org.hawkular.alerts.api.model.condition.EventConditionEval;
+import org.hawkular.alerts.api.model.trigger.Trigger;
 import org.hawkular.commons.log.MsgLogger;
 import org.hawkular.commons.log.MsgLogging;
 
@@ -102,6 +107,32 @@ public class BetaHooksActionPluginRegister implements ActionPluginListener {
         return defaultProperties;
     }
 
+    private JsonObject createMessage(Action action) {
+        JsonObject message = new JsonObject();
+
+        Trigger trigger = action.getEvent().getTrigger();
+        message.put("policy_id", trigger.getId());
+        message.put("policy_name", trigger.getName());
+        message.put("policy_description", trigger.getDescription());
+
+        Outer:
+        for (Set<ConditionEval> evalSet : action.getEvent().getEvalSets()) {
+            for (ConditionEval conditionEval : evalSet) {
+                if(conditionEval instanceof EventConditionEval) {
+                    EventConditionEval eventEval = (EventConditionEval) conditionEval;
+                    message.put("policy_condition", eventEval.getCondition().getExpression());
+
+                    message.put(Receiver.INSIGHT_ID_FIELD, eventEval.getContext().get(Receiver.INSIGHT_ID_FIELD));
+                    break Outer; // We only want to process the first one
+                }
+            }
+        }
+
+        message.put(Receiver.DISPLAY_NAME_FIELD, action.getEvent().getTags().get(Receiver.DISPLAY_NAME_FIELD));
+
+        return message;
+    }
+
     @Override
     public void process(ActionMessage msg) throws Exception {
         // Fields and terminology straight from the target project
@@ -111,7 +142,7 @@ public class BetaHooksActionPluginRegister implements ActionPluginListener {
         message.put("event_type", EVENT_TYPE);
         message.put("level", LEVEL);
         message.put("timestamp", msg.getAction().getCtime());
-        message.put("message", JsonObject.mapFrom(msg.getAction()));
+        message.put("message", createMessage(msg.getAction()));
         channel.send(message);
         messagesCount.inc();
     }
