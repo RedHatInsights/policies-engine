@@ -3,28 +3,28 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>com.redhat.cloud.custompolicies</groupId>
-    <artifactId>custom-policies-engine</artifactId>
+    <groupId>com.redhat.cloud.policies</groupId>
+    <artifactId>policies-engine</artifactId>
     <version>2.1.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>custom-policies-engine-engine</artifactId>
+  <artifactId>policies-engine-engine</artifactId>
   <packaging>jar</packaging>
 
-  <name>Custom Policies Engine: Rules Engine</name>
+  <name>Policies Engine: Rules Engine</name>
 
   <dependencies>
 
-    <!-- Custom Policies dependencies -->
+    <!-- Internal dependencies -->
     <dependency>
-      <groupId>com.redhat.cloud.custompolicies</groupId>
-      <artifactId>custom-policies-engine-api</artifactId>
+      <groupId>com.redhat.cloud.policies</groupId>
+      <artifactId>policies-engine-api</artifactId>
       <version>${project.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>com.redhat.cloud.custompolicies</groupId>
-      <artifactId>custom-policies-engine-commons</artifactId>
+      <groupId>com.redhat.cloud.policies</groupId>
+      <artifactId>policies-engine-commons</artifactId>
       <version>${project.version}</version>
     </dependency>
 
@@ -167,7 +167,7 @@
               <addClasspath>true</addClasspath>
             </manifest>
             <manifestEntries>
-              <Implementation-Vendor-Id>com.redhat.cloud.custompolicies.engine</Implementation-Vendor-Id>
+              <Implementation-Vendor-Id>com.redhat.cloud.policies.engine</Implementation-Vendor-Id>
               <Implementation-Version>${project.version}</Implementation-Version>
             </manifestEntries>
           </archive>

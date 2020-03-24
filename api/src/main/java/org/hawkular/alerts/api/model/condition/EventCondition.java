@@ -1,7 +1,7 @@
 package org.hawkular.alerts.api.model.condition;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.redhat.cloud.custompolicies.api.model.condition.expression.ExprParser;
+import com.redhat.cloud.policies.api.model.condition.expression.ExprParser;
 import org.hawkular.alerts.api.doc.DocModel;
 import org.hawkular.alerts.api.doc.DocModelProperty;
 import org.hawkular.alerts.api.model.event.Event;

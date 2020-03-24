@@ -1,10 +1,10 @@
-= Custom Policies Engine
+= Policies Engine
 :source-language: java
 
 [.lead]
-This project contains the execution engine for custom policies. For the user-facing UI-backend see https://github.com/RedHatInsights/custom-policies-ui-backend
+This project contains the execution engine for policies service. For the user-facing UI-backend see https://github.com/RedHatInsights/policies-ui-backend
 
-This repository contains parts of the Hawkular-Alerts core. It is not interexchangable with the previous maven modules as stuff has been moved around, removed and modified. For old documentation (not necessarily relevant in all parts), see:
+This repository contains parts of the Hawkular-Alerts core. It is not interchangeable with the previous maven modules as stuff has been moved around, removed and modified. For the old documentation (not necessarily relevant in all parts), see:
 
 link:http://www.hawkular.org/community/docs/developer-guide/alerts-v2.html[Hawkular Alerting User Guide].
 
@@ -14,15 +14,15 @@ link:http://www.hawkular.org/docs/rest/rest-alerts-v2.html[Hawkular Alerting RES
 
 ``external`` module depends on ``engine``
 
-``engine`` module depends on ``commons`` (deprecated) and ``api``
+``engine`` module depends on ``commons`` and ``api``
 
 == Run
 
-See link:https://github.com/RedHatInsights/custom-policies-engine/tree/master/external[external] module for instructions. Requires Kafka and Java 1.8+.
+See link:https://github.com/RedHatInsights/policies-engine/tree/master/external[external] module for instructions. Requires Kafka and Java 11 (or newer).
 
 == License
 
-Custom Policies Engine is released under Apache License, Version 2.0 as described in the link:LICENSE[LICENSE] document
+Policies Engine is released under Apache License, Version 2.0 as described in the link:LICENSE[LICENSE] document
 
 ----
    Copyright 2015-2020 Red Hat, Inc.

@@ -1,4 +1,4 @@
-## Quarkus startup for Custom-Policies Engine
+## Quarkus startup for Policies Engine
 
 * This module is about external interfaces (Kafka, REST)
   * Also the distribution generation
@@ -7,7 +7,7 @@
 
 Running Kafka instance is required to process inbound messages through the queue. If none exists, one can start Kafka with ``docker run --rm -e RUNTESTS=0 --net=host lensesio/fast-data-dev``
 
-To start a clean instance of Custom Policies Engine, run in this directory: ``mvn quarkus:dev``
+To start a clean instance of Policies Engine, run in this directory: ``mvn quarkus:dev``
 
 Alternative, create container images from ``src/main/docker/Dockerfile.jvm``
 

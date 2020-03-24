@@ -1,5 +1,5 @@
-= Custom Policies Engine documentation for Developers
-:description: Custom Policies Engine Developer Guide
+= Policies Engine documentation for Developers
+:description: Policies Engine Developer Guide
 :toc: macro
 :toc-title:
 
@@ -7,7 +7,7 @@ toc::[]
 
 == Introduction
 
-Custom Policies Engine provides ..
+Policies Engine provides ..
 
 === Alerting Philosophy
 
@@ -66,7 +66,7 @@ Numeric operators only accept numbers as ``key`` and ``value`` type, while strin
 
 Number type is equivalent to integer or floating point value. Floating point value can be expressed with dot ``.`` only, not with comma (as is used in certain locales). A string can be quoted with ``'``, ``"``. Values without quotes are parsed as string at this point, but it is recommended to quote all the string values to separate them from ``keys``.
 
-All the operators are case-insignificant. The language definition can be found from link:https://github.com/RedHatInsights/custom-policies-engine/blob/cb60fc58adf2dab2bc9366041ad758718d1b8936/api/src/main/antlr4/com/redhat/cloud/custompolicies/api/model/condition/expression/parser/Expression.g4[here].
+All the operators are case-insignificant. The language definition can be found from link:https://github.com/RedHatInsights/policies-engine/blob/cb60fc58adf2dab2bc9366041ad758718d1b8936/api/src/main/antlr4/com/redhat/cloud/custompolicies/api/model/condition/expression/parser/Expression.g4[here].
 
 .Field operators
 |===
@@ -182,7 +182,7 @@ The special form of ``(b)`` means that ``b`` key must exists in the input data, 
 
 === Actions
 
-The whole purpose of alerting is to be able to immediately respond to a developing or active problem. Custom Policies Engine provides several plugins to take action when alerts are generated. Custom action plugins can be defined as well. The available plugins do not have any features in this repository other than setting and defining properties, but instead they always write to external queue (such as Kafka) from which the next process continues.
+The whole purpose of alerting is to be able to immediately respond to a developing or active problem. Policies Engine provides several plugins to take action when alerts are generated. Custom action plugins can be defined as well. The available plugins do not have any features in this repository other than setting and defining properties, but instead they always write to external queue (such as Kafka) from which the next process continues.
 
 The following notification types are currently supported out of the box:
 
@@ -388,7 +388,7 @@ Plugins are responsible to execute actions when an alert, or possibly an event, 
 
 Actions can be a notification task or a complex process.
 
-Custom Policies Engine provides a plugin architecture to extend and add new behaviours.
+Policies Engine provides a plugin architecture to extend and add new behaviours.
 
 === Create a new plugin
 
@@ -535,7 +535,7 @@ Default value
 | *_managed* | This is managed plugin | true |
 |=======================
 
-Email plugin takes no properties when created from the FullTrigger. It outputs a specific data model which is used by the link:https://github.com/RedHatInsights/custom-policies-notifications[Custom Policies Notifications] project to enrich the data with receivers, generate the email message and send it. More details in the project.
+Email plugin takes no properties when created from the FullTrigger. It outputs a specific data model which is used by the link:https://github.com/RedHatInsights/policies-notifications[Policies Notifications] project to enrich the data with receivers, generate the email message and send it. More details in the project.
 
 === WebHook Action Plugin
 
@@ -551,7 +551,7 @@ Description |
 Default value
 | *_managed* | This is managed plugin | true
 | *endpoint_id* |
-Endpoint id as defined in the link:https://github.com/RedHatInsights/custom-policies-notifications[Custom Policies Notifications] project
+Endpoint id as defined in the link:https://github.com/RedHatInsights/policies-notifications[Policies Notifications] project
 | -
 |=======================
 
