@@ -61,7 +61,7 @@ public class EmailActionPluginListener implements ActionPluginListener {
                     Map<String, String> tags = eventEval.getValue().getTags();
                     String name = actionMessage.getAction().getEvent().getTrigger().getName();
 
-                    Notification notification = new Notification(tenantId);
+                    Notification notification = new Notification(tenantId, insightId);
                     notification.getTriggerNames().add(name);
                     notification.getTags().putAll(tags);
 
@@ -111,11 +111,13 @@ public class EmailActionPluginListener implements ActionPluginListener {
      */
     private static class Notification {
         private String tenantId;
+        private String insightId;
         private Map<String, String> tags;
         private Set<String> triggerNames;
 
-        public Notification(String tenantId) {
+        public Notification(String tenantId, String insightId) {
             this.tenantId = tenantId;
+            this.insightId = insightId;
             this.tags = new HashMap<>();
             this.triggerNames = new HashSet<>();
         }
@@ -130,6 +132,10 @@ public class EmailActionPluginListener implements ActionPluginListener {
 
         public Set<String> getTriggerNames() {
             return triggerNames;
+        }
+
+        public String getInsightId() {
+            return insightId;
         }
     }
 }
