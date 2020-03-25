@@ -1,5 +1,6 @@
 package org.hawkular.alerts;
 
+import io.quarkus.runtime.LaunchMode;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.hawkular.alerts.api.services.ActionsService;
@@ -22,6 +23,8 @@ import org.infinispan.query.SearchManager;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import static org.hawkular.alerts.api.util.Util.isEmpty;
 
 /**
  * Factory helper for standalone use cases.
@@ -53,6 +56,11 @@ public class AlertsStandalone {
 
     public AlertsStandalone() {
         log.info("Hawkular Alerting uses Infinispan backend");
+
+        if(LaunchMode.current() == LaunchMode.DEVELOPMENT && isEmpty(System.getProperty("hawkular.data"))) {
+            System.setProperty("hawkular.data", "target/hawkular.data");
+        }
+
         cacheManager = IspnCacheManager.getCacheManager();
 
         if (executor == null) {
