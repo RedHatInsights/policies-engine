@@ -8,6 +8,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import io.quarkus.runtime.configuration.ConfigUtils;
+import io.quarkus.runtime.configuration.QuarkusConfigFactory;
+import io.smallrye.config.SmallRyeConfig;
 import org.hawkular.alerts.api.exception.FoundException;
 import org.hawkular.alerts.api.exception.NotFoundException;
 import org.hawkular.alerts.api.model.action.ActionDefinition;
@@ -32,9 +35,10 @@ public class IspnDefinitionsServiceImplTest extends IspnBaseServiceImplTest {
     static final MsgLogger log = MsgLogging.getMsgLogger(IspnDefinitionsServiceImplTest.class);
     static final String TENANT = "testTenant";
 
-
     @BeforeClass
     public static void init() {
+        SmallRyeConfig config = ConfigUtils.configBuilder(true).build();
+        QuarkusConfigFactory.setConfig(config);
         System.setProperty("hawkular.data", "./target/ispn");
         definitions = new IspnDefinitionsServiceImpl();
         definitions.init();

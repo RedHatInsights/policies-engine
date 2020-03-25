@@ -57,7 +57,7 @@ public class AlertsStandalone {
     public AlertsStandalone() {
         log.info("Hawkular Alerting uses Infinispan backend");
 
-        if(LaunchMode.current() == LaunchMode.DEVELOPMENT && isEmpty(System.getProperty("hawkular.data"))) {
+        if((LaunchMode.current() == LaunchMode.DEVELOPMENT || LaunchMode.current() == LaunchMode.TEST) && isEmpty(System.getProperty("hawkular.data"))) {
             System.setProperty("hawkular.data", "target/hawkular.data");
         }
 
