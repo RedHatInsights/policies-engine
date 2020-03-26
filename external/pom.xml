@@ -86,6 +86,7 @@
         <configuration>
           <debug>5006</debug>
           <suspend>false</suspend>
+          <jvmArgs>-Xmx512m -XX:+HeapDumpOnOutOfMemoryError</jvmArgs>
         </configuration>
         <executions>
           <execution>

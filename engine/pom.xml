@@ -78,6 +78,12 @@
     <!-- Wildfly -->
     <dependency>
       <groupId>org.infinispan</groupId>
+      <artifactId>infinispan-cachestore-rocksdb</artifactId>
+      <version>${version.org.infinispan}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.infinispan</groupId>
       <artifactId>infinispan-jboss-marshalling</artifactId>
       <version>${version.org.infinispan}</version>
     </dependency>
@@ -140,7 +146,7 @@
       <plugin>
         <groupId>org.antlr</groupId>
         <artifactId>antlr4-maven-plugin</artifactId>
-        <version>4.7.2</version>
+        <version>${version.org.antlr}</version>
         <executions>
           <execution>
             <id>antlr4</id>

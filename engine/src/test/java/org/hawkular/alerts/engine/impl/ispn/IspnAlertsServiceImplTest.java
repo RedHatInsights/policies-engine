@@ -11,6 +11,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import io.quarkus.runtime.configuration.ConfigUtils;
+import io.quarkus.runtime.configuration.QuarkusConfigFactory;
+import io.quarkus.test.junit.QuarkusTest;
+import io.smallrye.config.SmallRyeConfig;
 import org.hawkular.alerts.api.model.Severity;
 import org.hawkular.alerts.api.model.event.Alert;
 import org.hawkular.alerts.api.model.event.Event;
@@ -25,11 +29,14 @@ import org.junit.Test;
  * @author Jay Shaughnessy
  * @author Lucas Ponce
  */
+@QuarkusTest
 public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
     static final MsgLogger log = MsgLogging.getMsgLogger(IspnAlertsServiceImplTest.class);
 
     @BeforeClass
     public static void init() {
+        SmallRyeConfig config = ConfigUtils.configBuilder(true).build();
+        QuarkusConfigFactory.setConfig(config);
         System.setProperty("hawkular.data", "./target/ispn");
         alerts = new IspnAlertsServiceImpl();
         alerts.init();
