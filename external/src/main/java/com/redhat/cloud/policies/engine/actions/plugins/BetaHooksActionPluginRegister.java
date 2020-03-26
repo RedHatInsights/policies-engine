@@ -25,7 +25,6 @@ import javax.annotation.PostConstruct;
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.HashMap;
@@ -140,7 +139,7 @@ public class BetaHooksActionPluginRegister implements ActionPluginListener {
     @Override
     public void process(ActionMessage msg) throws Exception {
         // Fields and terminology straight from the target project
-        LocalDate ts = Instant.ofEpochMilli(msg.getAction().getCtime()).atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDateTime ts = Instant.ofEpochMilli(msg.getAction().getCtime()).atZone(ZoneId.systemDefault()).toLocalDateTime();
 
         JsonObject message = new JsonObject();
         message.put("application", APPLICATION_NAME);
