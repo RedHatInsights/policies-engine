@@ -24,6 +24,10 @@ import org.hawkular.commons.log.MsgLogging;
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -123,12 +127,12 @@ public class BetaHooksActionPluginRegister implements ActionPluginListener {
                     message.put("policy_condition", eventEval.getCondition().getExpression());
 
                     message.put(Receiver.INSIGHT_ID_FIELD, eventEval.getContext().get(Receiver.INSIGHT_ID_FIELD));
+                    message.put(Receiver.DISPLAY_NAME_FIELD, eventEval.getValue().getTags().get(Receiver.DISPLAY_NAME_FIELD));
                     break Outer; // We only want to process the first one
                 }
             }
         }
 
-        message.put(Receiver.DISPLAY_NAME_FIELD, action.getEvent().getTags().get(Receiver.DISPLAY_NAME_FIELD));
 
         return message;
     }
@@ -136,12 +140,14 @@ public class BetaHooksActionPluginRegister implements ActionPluginListener {
     @Override
     public void process(ActionMessage msg) throws Exception {
         // Fields and terminology straight from the target project
+        LocalDate ts = Instant.ofEpochMilli(msg.getAction().getCtime()).atZone(ZoneId.systemDefault()).toLocalDate();
+
         JsonObject message = new JsonObject();
         message.put("application", APPLICATION_NAME);
         message.put("account_id", msg.getAction().getTenantId());
         message.put("event_type", EVENT_TYPE);
         message.put("level", LEVEL);
-        message.put("timestamp", msg.getAction().getCtime());
+        message.put("timestamp", ts.toString());
         message.put("message", createMessage(msg.getAction()));
         channel.send(message);
         messagesCount.inc();

@@ -1,6 +1,7 @@
 package com.redhat.cloud.policies.engine;
 
 import com.redhat.cloud.policies.engine.actions.QuarkusActionPluginRegister;
+import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
 import org.hawkular.alerts.AlertsStandalone;
 import org.hawkular.alerts.api.services.ActionsService;
@@ -42,6 +43,11 @@ public class AlertStarter {
     void startApp(@Observes StartupEvent startup) {
         LOGGER.info("Application created, starting Policies Engine.");
         initialize();
+    }
+
+    void stopApp(@Observes ShutdownEvent shutdown) {
+        LOGGER.info("Shutting down Policies Engine.");
+        alerts.stop();
     }
 
 //    @PostConstruct
