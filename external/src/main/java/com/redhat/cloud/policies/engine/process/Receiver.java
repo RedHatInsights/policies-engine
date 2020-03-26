@@ -61,7 +61,9 @@ public class Receiver {
                 CompletableFuture.supplyAsync(() -> {
                     // smallrye-messaging 1.1.0 and up has its own metric for received messages
                     incomingMessagesCount.inc();
-                    log.tracef("Received message, input payload: %s", input.getPayload());
+                    if(log.isTraceEnabled()) {
+                        log.tracef("Received message, input payload: %s", input.getPayload());
+                    }
                     JsonObject json = new JsonObject(input.getPayload());
                     return json.getJsonObject(HOST_FIELD);
                 }).thenApplyAsync(json -> {
