@@ -119,7 +119,7 @@ public class ReceiverTest {
         JsonObject emailOutput = testSubscriber.values().get(0);
         assertEquals(TENANT_ID, emailOutput.getString("tenantId"));
         assertTrue(emailOutput.containsKey("tags"));
-        assertTrue(emailOutput.containsKey("insight_id"));
+        assertTrue(emailOutput.containsKey("insightId"));
         assertTrue(emailOutput.containsKey("triggerNames"));
         JsonArray triggerNames = emailOutput.getJsonArray("triggerNames");
         assertEquals(2, triggerNames.size());
