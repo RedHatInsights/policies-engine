@@ -19,6 +19,8 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
+import static org.hawkular.alerts.api.util.Util.isEmpty;
+
 /**
  * This is the main process for Policies. It ingests data from Kafka, enriches it with information from
  * insights-host-inventory and then sends it for event processing in the engine.
@@ -70,6 +72,10 @@ public class Receiver {
                     String tenantId = json.getString(TENANT_ID_FIELD);
                     String insightsId = json.getString(INSIGHT_ID_FIELD);
                     String displayName = json.getString(DISPLAY_NAME_FIELD);
+
+                    if(isEmpty(insightsId)) {
+                        throw new IllegalArgumentException("No insights id in the input document");
+                    }
 
                     String text = String.format("host-egress report %s for %s", insightsId, displayName);
 

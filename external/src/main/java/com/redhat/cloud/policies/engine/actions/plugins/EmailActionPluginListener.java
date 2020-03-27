@@ -56,7 +56,7 @@ public class EmailActionPluginListener implements ActionPluginListener {
                     String insightId = eventEval.getContext().get(Receiver.INSIGHT_ID_FIELD);
                     if(insightId == null) {
                         // Fallback, this won't merge anything
-                        insightId = actionMessage.getAction().getEventId();
+                        insightId = eventEval.getValue().getId();
                     }
                     Map<String, String> tags = eventEval.getValue().getTags();
                     String name = actionMessage.getAction().getEvent().getTrigger().getName();
