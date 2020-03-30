@@ -67,16 +67,22 @@ public class Receiver {
                         log.tracef("Received message, input payload: %s", input.getPayload());
                     }
                     JsonObject json = new JsonObject(input.getPayload());
-                    return json.getJsonObject(HOST_FIELD);
+                    return json;
                 }).thenApplyAsync(json -> {
-                    String tenantId = json.getString(TENANT_ID_FIELD);
-                    String insightsId = json.getString(INSIGHT_ID_FIELD);
-                    String displayName = json.getString(DISPLAY_NAME_FIELD);
-
-                    if(isEmpty(insightsId)) {
-                        throw new IllegalArgumentException("No insights id in the input document");
+                    if(json.containsKey(HOST_FIELD)) {
+                        json = json.getJsonObject(HOST_FIELD);
+                    } else {
+                        return null;
                     }
 
+                    String insightsId = json.getString(INSIGHT_ID_FIELD);
+
+                    if (isEmpty(insightsId)) {
+                        return null;
+                    }
+
+                    String tenantId = json.getString(TENANT_ID_FIELD);
+                    String displayName = json.getString(DISPLAY_NAME_FIELD);
                     String text = String.format("host-egress report %s for %s", insightsId, displayName);
 
                     Event event = new Event(tenantId, UUID.randomUUID().toString(), INSIGHTS_REPORT_DATA_ID, CATEGORY_NAME, text);
@@ -94,6 +100,9 @@ public class Receiver {
                     event.setFacts(parseSystemProfile(sp));
                     return event;
                 }).thenAcceptAsync(event -> {
+                    if(event == null) {
+                        return;
+                    }
                     try {
                         List<Event> eventList = new ArrayList<>(1);
                         eventList.add(event);
