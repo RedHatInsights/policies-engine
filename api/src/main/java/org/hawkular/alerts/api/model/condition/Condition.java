@@ -134,6 +134,7 @@ public abstract class Condition implements Serializable {
         this.type = condition.getType();
         this.context = new HashMap<>(condition.getContext());
         this.displayString = condition.displayString;
+        this.lastEvaluation = condition.lastEvaluation;
         updateId();
     }
 

@@ -1328,6 +1328,18 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
     }
 
     @Override
+    public void updateConditions(String tenantId, String triggerId, Set<Condition> conditions) {
+        Map<String, IspnCondition> newConditions = new HashMap<>();
+
+        conditions.stream()
+                .forEach(c -> {
+                    newConditions.put(pk(c), new IspnCondition(c));
+                });
+
+        backend.putAll(newConditions);
+    }
+
+    @Override
     public Collection<Condition> getConditions(String tenantId) throws Exception {
         return mapConditions(queryFactory.from(IspnCondition.class)
                 .having("tenantId").eq(tenantId)
@@ -1343,6 +1355,7 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
         if (null != triggerMode) {
             qb = qb.and().having("triggerMode").eq(triggerMode.name());
         }
+
         return mapConditions(((QueryBuilder) qb).build().list());
     }
 
