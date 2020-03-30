@@ -7,6 +7,7 @@ import org.hawkular.alerts.api.model.condition.*
 import org.hawkular.alerts.api.model.data.AvailabilityType
 import org.hawkular.alerts.api.model.data.Data
 import org.hawkular.alerts.api.model.event.Alert
+import org.hawkular.alerts.api.model.trigger.FullTrigger
 import org.hawkular.alerts.api.model.trigger.Mode
 import org.hawkular.alerts.api.model.trigger.Trigger
 import org.hawkular.commons.log.MsgLogger
@@ -153,6 +154,15 @@ class LifecycleITest extends AbstractQuarkusITestBase {
         assertEquals(200, resp.status)
         assertEquals("test-autodisable-trigger", resp.data.name)
         assertFalse(resp.data.enabled)
+    }
+
+    @Test
+    void t021_verifyTriggerEvaluationTime() {
+        logger.info( "Running t011_verifyTriggerEvaluationTime")
+        def resp = client.get(path: "triggers/trigger/test-autodisable-trigger");
+        assertEquals(200, resp.status)
+        assertEquals("test-autodisable-trigger", resp.data.trigger.name)
+        assertTrue(resp.data.conditions[0].lastEvaluation > 0)
     }
 
     @Test
