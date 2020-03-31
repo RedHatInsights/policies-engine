@@ -1,6 +1,5 @@
-package com.redhat.cloud.policies.engine;
+package com.redhat.cloud.policies.engine.process;
 
-import com.redhat.cloud.policies.engine.process.Receiver;
 import io.quarkus.test.junit.QuarkusTest;
 import io.reactivex.subscribers.TestSubscriber;
 import io.smallrye.reactive.messaging.annotations.Channel;
@@ -10,6 +9,7 @@ import io.vertx.core.json.JsonObject;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.microprofile.metrics.*;
 import org.eclipse.microprofile.metrics.annotation.RegistryType;
+import org.eclipse.microprofile.reactive.messaging.Message;
 import org.hawkular.alerts.api.model.action.ActionDefinition;
 import org.hawkular.alerts.api.model.condition.Condition;
 import org.hawkular.alerts.api.model.condition.EventCondition;
@@ -24,9 +24,11 @@ import org.junit.jupiter.api.Tag;
 import org.reactivestreams.Publisher;
 
 import javax.inject.Inject;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.CompletionStage;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -50,14 +52,7 @@ public class ReceiverTest {
     Publisher<JsonObject> emailReceiver;
 
     @Inject
-    @Channel("webhook")
-    Publisher<JsonObject> webhookReceiver;
-
-    @Inject
     DefinitionsService definitionsService;
-
-    @Inject
-    Receiver receiver;
 
     @Inject
     @RegistryType(type=MetricRegistry.Type.APPLICATION)
