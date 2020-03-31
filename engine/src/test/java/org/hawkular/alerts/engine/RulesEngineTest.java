@@ -27,27 +27,8 @@ import io.smallrye.config.SmallRyeConfigBuilder;
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.spi.ConfigProviderResolver;
 import org.hawkular.alerts.api.json.JsonUtil;
-import org.hawkular.alerts.api.model.condition.AvailabilityCondition;
-import org.hawkular.alerts.api.model.condition.AvailabilityConditionEval;
-import org.hawkular.alerts.api.model.condition.CompareCondition;
-import org.hawkular.alerts.api.model.condition.CompareConditionEval;
-import org.hawkular.alerts.api.model.condition.ConditionEval;
-import org.hawkular.alerts.api.model.condition.EventCondition;
-import org.hawkular.alerts.api.model.condition.ExternalCondition;
-import org.hawkular.alerts.api.model.condition.ExternalConditionEval;
-import org.hawkular.alerts.api.model.condition.MissingCondition;
-import org.hawkular.alerts.api.model.condition.MissingConditionEval;
-import org.hawkular.alerts.api.model.condition.NelsonCondition;
+import org.hawkular.alerts.api.model.condition.*;
 import org.hawkular.alerts.api.model.condition.NelsonCondition.NelsonRule;
-import org.hawkular.alerts.api.model.condition.NelsonConditionEval;
-import org.hawkular.alerts.api.model.condition.RateCondition;
-import org.hawkular.alerts.api.model.condition.RateConditionEval;
-import org.hawkular.alerts.api.model.condition.StringCondition;
-import org.hawkular.alerts.api.model.condition.StringConditionEval;
-import org.hawkular.alerts.api.model.condition.ThresholdCondition;
-import org.hawkular.alerts.api.model.condition.ThresholdConditionEval;
-import org.hawkular.alerts.api.model.condition.ThresholdRangeCondition;
-import org.hawkular.alerts.api.model.condition.ThresholdRangeConditionEval;
 import org.hawkular.alerts.api.model.dampening.Dampening;
 import org.hawkular.alerts.api.model.data.AvailabilityType;
 import org.hawkular.alerts.api.model.data.Data;
@@ -85,6 +66,7 @@ public class RulesEngineTest {
     List<Alert> alerts = new ArrayList<>();
     Set<Dampening> pendingTimeouts = new HashSet<>();
     Map<Trigger, List<Set<ConditionEval>>> autoResolvedTriggers = new HashMap<>();
+    Set<Condition> evaluatedConditions = new HashSet<>();
     Set<Trigger> disabledTriggers = new CopyOnWriteArraySet<>();
     TreeSet<Data> datums = new TreeSet<Data>();
     TreeSet<Event> inputEvents = new TreeSet<>();
@@ -101,6 +83,7 @@ public class RulesEngineTest {
         rulesEngine.addGlobal("events", outputEvents);
         rulesEngine.addGlobal("pendingTimeouts", pendingTimeouts);
         rulesEngine.addGlobal("autoResolvedTriggers", autoResolvedTriggers);
+        rulesEngine.addGlobal("evaluatedConditions", evaluatedConditions);
         rulesEngine.addGlobal("disabledTriggers", disabledTriggers);
     }
 
@@ -113,6 +96,7 @@ public class RulesEngineTest {
         inputEvents.clear();
         outputEvents.clear();
         missingStates.clear();
+        evaluatedConditions.clear();
     }
 
     @Test
@@ -2297,4 +2281,38 @@ public class RulesEngineTest {
         assertEquals(e.getViolations().toString(), 1, e.getViolations().size());
     }
 
+    @Test
+    public void limitedConditionEvalUpdates() {
+        // This should get updated evaluationTime
+        Trigger t1 = new Trigger("tenant-event", "trigger-1", "EventConditionEval test");
+        t1.setEventType(EventType.EVENT);
+        EventCondition evCond = new EventCondition("tenant-event", "trigger-1", "event-stream-1", "text = 'DOWN'");
+
+        // This shouldn't be updated
+        Trigger t2 = new Trigger("tenant-event", "trigger-2", "EventConditionEval test2");
+        t2.setEventType(EventType.EVENT);
+        EventCondition evCond2 = new EventCondition("tenant-event", "trigger-2", "event-stream-2", "text = 'DOWN'");
+
+        // This shouldn't be updated
+        Trigger t3 = new Trigger("tenant-event2", "trigger-1", "EventConditionEval test3");
+        t3.setEventType(EventType.EVENT);
+        EventCondition evCond3 = new EventCondition("tenant-event2", "trigger-3", "event-stream-1", "text = 'DOWN'");
+
+        rulesEngine.addFact(t1);
+        rulesEngine.addFact(evCond);
+        rulesEngine.addFact(t2);
+        rulesEngine.addFact(evCond2);
+        rulesEngine.addFact(t3);
+        rulesEngine.addFact(evCond3);
+
+        Event appDownEvent = new Event("tenant-event", UUID.randomUUID().toString(), "event-stream-1",
+                EventCategory.DEPLOYMENT.name(), "DOWN");
+        inputEvents.add(appDownEvent);
+        rulesEngine.addEvents(inputEvents);
+        rulesEngine.fire();
+
+        // Only a single event should be output
+        assertEquals(1, evaluatedConditions.size());
+        assertEquals(outputEvents.toString(), 1, outputEvents.size());
+    }
 }

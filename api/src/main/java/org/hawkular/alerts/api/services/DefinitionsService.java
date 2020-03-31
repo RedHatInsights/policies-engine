@@ -522,6 +522,17 @@ public interface DefinitionsService {
      */
     Collection<Condition> getAllConditions() throws Exception;
 
+    /**
+     * Updates the given conditions to the backend storage. Does not do alertsEngine reload, use setConditions instead
+     * if that is required.
+     *
+     * @param tenantId
+     * @param triggerId
+     * @param conditions
+     * @throws Exception
+     */
+    void updateConditions(String tenantId, String triggerId, Set<Condition> conditions);
+
     /*
         An action plugin is a representation of an action capability.
         i.e. email, snmp or sms.

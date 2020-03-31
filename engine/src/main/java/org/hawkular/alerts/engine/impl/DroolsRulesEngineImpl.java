@@ -148,8 +148,10 @@ public class DroolsRulesEngineImpl implements RulesEngine {
                 }
             }
 
-            for (Object object : kSession.getObjects()) {
-                log.debugf("Object: %s", object);
+            if(log.isDebugEnabled()) {
+                for (Object object : kSession.getObjects()) {
+                    log.debugf("Object: %s", object);
+                }
             }
 
             kSession.fireAllRules();

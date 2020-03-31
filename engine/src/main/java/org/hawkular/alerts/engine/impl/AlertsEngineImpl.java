@@ -17,7 +17,6 @@ import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 
 import org.eclipse.microprofile.config.ConfigProvider;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.hawkular.alerts.api.model.condition.CompareCondition;
 import org.hawkular.alerts.api.model.condition.Condition;
 import org.hawkular.alerts.api.model.condition.ConditionEval;
@@ -72,6 +71,7 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
     private final List<Event> events;
     private final Set<Dampening> pendingTimeouts;
     private final Map<Trigger, List<Set<ConditionEval>>> autoResolvedTriggers;
+    private final Set<Condition> evaluatedConditions;
     private final Set<Trigger> disabledTriggers;
     private final Set<MissingState> missingStates;
 
@@ -110,6 +110,7 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
         events = new ArrayList<>();
         pendingTimeouts = new HashSet<>();
         autoResolvedTriggers = new HashMap<>();
+        evaluatedConditions = new HashSet<>();
         disabledTriggers = new HashSet<>();
         missingStates = new HashSet<>();
 
@@ -240,6 +241,7 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
         rules.addGlobal("events", events);
         rules.addGlobal("pendingTimeouts", pendingTimeouts);
         rules.addGlobal("autoResolvedTriggers", autoResolvedTriggers);
+        rules.addGlobal("evaluatedConditions", evaluatedConditions);
         rules.addGlobal("disabledTriggers", disabledTriggers);
 
         rulesTask = new RulesInvoker();
@@ -613,6 +615,7 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
                     events.clear();
                     handleDisabledTriggers();
                     handleAutoResolvedTriggers();
+                    handleConditionEvaluationTimes();
                     actions.flush();
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -704,6 +707,43 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
         } finally {
             autoResolvedTriggers.clear();
         }
+    }
+
+    private class ConditionKey {
+        String tenantId;
+        String triggerId;
+
+        public ConditionKey(String tenantId, String triggerId) {
+            this.tenantId = tenantId;
+            this.triggerId = triggerId;
+        }
+
+        public String getTenantId() {
+            return tenantId;
+        }
+
+        public String getTriggerId() {
+            return triggerId;
+        }
+    }
+
+    private void handleConditionEvaluationTimes() {
+        HashMap<ConditionKey, Set<Condition>> groupedConditionUpdates = new HashMap<>();
+        for (Condition evaluatedCondition : evaluatedConditions) {
+            ConditionKey condKey = new ConditionKey(evaluatedCondition.getTenantId(), evaluatedCondition.getTriggerId());
+            Set<Condition> conditions = groupedConditionUpdates.get(condKey);
+            if(conditions == null) {
+                conditions = new HashSet<>();
+            }
+            conditions.add(evaluatedCondition);
+            groupedConditionUpdates.put(condKey, conditions);
+        }
+
+        for (Entry<ConditionKey, Set<Condition>> condEntry : groupedConditionUpdates.entrySet()) {
+            definitions.updateConditions(condEntry.getKey().getTenantId(), condEntry.getKey().getTriggerId(), condEntry.getValue());
+        }
+
+        evaluatedConditions.clear();
     }
 
     private int checkMissingStates() {

@@ -27,6 +27,10 @@ abstract class AbstractQuarkusITestBase {
 
     @BeforeAll
     static void initClient() {
+        String dataDirectory = System.getProperty("hawkular.data")
+        if(dataDirectory == null || dataDirectory.isEmpty()) {
+            System.setProperty("hawkular.data", "target/hawkular.data")
+        }
         testTenant = nextTenantId()
         client = new RESTClient(baseURI, ContentType.JSON)
         // this prevents 404 from being wrapped in an Exception, just return the response, better for testing

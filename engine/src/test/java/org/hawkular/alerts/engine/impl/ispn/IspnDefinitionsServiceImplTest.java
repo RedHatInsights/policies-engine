@@ -277,6 +277,29 @@ public class IspnDefinitionsServiceImplTest extends IspnBaseServiceImplTest {
                 definitions.getTriggerConditions("tenant0", "trigger0", Mode.AUTORESOLVE));
         assertEquals(Collections.singleton(rc), fetchedConditions);
 
+        // verify updated conditions
+
+        fetchedConditions = new HashSet<>(
+                definitions.getTriggerConditions("tenant0", "trigger0", Mode.FIRING));
+
+        for (Condition fetchedCondition : fetchedConditions) {
+            fetchedCondition.updateLastEvaluation();
+        }
+
+        definitions.updateConditions("tenant0", "trigger0", fetchedConditions);
+
+        Collection<Condition> triggerConditions = definitions.getTriggerConditions("tenant0", "trigger0", Mode.FIRING);
+        assertEquals(1, triggerConditions.size());
+        for (Condition triggerCondition : triggerConditions) {
+            assertTrue(triggerCondition.getLastEvaluation() > 0);
+        }
+
+        triggerConditions = definitions.getTriggerConditions("tenant0", "trigger0", Mode.AUTORESOLVE);
+        assertEquals(1, triggerConditions.size());
+        for (Condition triggerCondition : triggerConditions) {
+            assertEquals(0, triggerCondition.getLastEvaluation());
+        }
+
         deleteTestTriggers(numTenants, numTriggers);
     }
 

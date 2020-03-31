@@ -53,6 +53,7 @@ global List alerts;
 global List events;
 global Set pendingTimeouts;
 global Map autoResolvedTriggers;
+global Set evaluatedConditions;
 global Set disabledTriggers;
 
 ////// CONDITION MATCHING
@@ -353,6 +354,20 @@ rule UpdateMissingStateFromEvent
         insert( mce );
 end
 
+// This updates the evaluationTime of the conditions
+rule UpdateConditionEvalTimes
+    when
+        $t : Trigger( $tenantId : tenantId, $tid : id, $tmode : mode, $tsource : source )
+        $c : Condition ( tenantId == $tenantId, triggerId == $tid, triggerMode == $tmode, $did : dataId )
+        $d : Event( tenantId == $tenantId, dataSource == $tsource, dataId == $did ) or
+             Data( tenantId == $tenantId, source == $tsource, id == $did )
+    then
+        $c.updateLastEvaluation();
+        evaluatedConditions.add($c);
+end
+
+
+
 // Data retraction rules
 // These rules are expected to fire after any Eval rules, due to their simplicity.  Note that Data is not retracted
 // in the (above) rules, that generate ConditionEval facts, because one Datum can generate multiple evals, for different
@@ -606,7 +621,6 @@ rule SetFiringModeOnSatisfiedDampening
 
         delete( $t );
 end
-
 
 ////// TRIGGER RETRACTION CLEANUP
 
