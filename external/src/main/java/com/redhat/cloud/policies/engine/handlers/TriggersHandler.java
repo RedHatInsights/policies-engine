@@ -1337,6 +1337,10 @@ public class TriggersHandler {
     @DocPath(method = PUT,
             path = "/{triggerId}/enable",
             name = "Enable trigger.")
+    @DocParameters(value = {
+            @DocParameter(name = "triggerId", required = true, path = true,
+                    description = "Trigger definition id to be enabled.")
+    })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Trigger enabled."),
             @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ResponseUtil.ApiError.class),
@@ -1350,6 +1354,10 @@ public class TriggersHandler {
     @DocPath(method = DELETE,
             path = "/{triggerId}/enable",
             name = "Disable trigger,")
+    @DocParameters(value = {
+            @DocParameter(name = "triggerId", required = true, path = true,
+                    description = "Trigger definition id to be disabled.")
+    })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Trigger disabled."),
             @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ResponseUtil.ApiError.class),
