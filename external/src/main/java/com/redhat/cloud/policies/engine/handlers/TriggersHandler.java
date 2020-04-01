@@ -2,6 +2,7 @@ package com.redhat.cloud.policies.engine.handlers;
 
 import com.redhat.cloud.policies.engine.handlers.util.ResponseUtil;
 import io.vertx.core.MultiMap;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
@@ -75,6 +76,8 @@ public class TriggersHandler {
         router.post(path + "/groups").handler(this::createGroupTrigger);
         router.put(path + "/enabled").handler(this::setTriggersEnabled);
         router.put(path + "/:triggerId").handler(this::updateTrigger);
+        router.put(path + "/:triggerId/enable").handler(this::setTriggerEnabled);
+        router.delete(path + "/:triggerId/enable").handler(this::setTriggerDisabled);
         router.delete(path + "/:triggerId").handler(this::deleteTrigger);
         router.get(path + "/trigger/:triggerId").handler(this::getFullTrigger);
         router.get(path + "/:triggerId/dampenings").handler(this::getTriggerDampenings);
@@ -1332,6 +1335,40 @@ public class TriggersHandler {
     }
 
     @DocPath(method = PUT,
+            path = "/{triggerId}/enable",
+            name = "Enable trigger.")
+    @DocParameters(value = {
+            @DocParameter(name = "triggerId", required = true, path = true,
+                    description = "Trigger definition id to be enabled.")
+    })
+    @DocResponses(value = {
+            @DocResponse(code = 200, message = "Success, Trigger enabled."),
+            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 404, message = "Trigger not found", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
+    })
+    public void setTriggerEnabled(RoutingContext routingContext) {
+        setTriggersEnabled(routingContext, false);
+    }
+
+    @DocPath(method = DELETE,
+            path = "/{triggerId}/enable",
+            name = "Disable trigger,")
+    @DocParameters(value = {
+            @DocParameter(name = "triggerId", required = true, path = true,
+                    description = "Trigger definition id to be disabled.")
+    })
+    @DocResponses(value = {
+            @DocResponse(code = 200, message = "Success, Trigger disabled."),
+            @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 404, message = "Trigger not found", response = ResponseUtil.ApiError.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
+    })
+    public void setTriggerDisabled(RoutingContext routingContext) {
+        setTriggersEnabled(routingContext, false);
+    }
+
+    @DocPath(method = PUT,
             path = "/groups/enabled",
             name = "Update group triggers and their member triggers to be enabled or disabled.")
     @DocParameters(value = {
@@ -1356,19 +1393,33 @@ public class TriggersHandler {
                 .executeBlocking(future -> {
                     String tenantId = ResponseUtil.checkTenant(routing);
                     try {
-                        String triggerIds = null;
                         Boolean enabled = null;
-                        if (routing.request().params().get(PARAM_TRIGGER_IDS) != null) {
-                            triggerIds = routing.request().params().get(PARAM_TRIGGER_IDS);
-                        }
-                        if (routing.request().params().get(PARAM_ENABLED) != null) {
-                            enabled = Boolean.valueOf(routing.request().params().get(PARAM_ENABLED));
-                        }
-                        if (isEmpty(triggerIds)) {
-                            throw new ResponseUtil.BadRequestException("TriggerIds must be non empty.");
-                        }
-                        if (null == enabled) {
-                            throw new ResponseUtil.BadRequestException("Enabled must be non-empty.");
+                        String triggerIds = routing.request().getParam("triggerId");
+                        if(triggerIds != null) {
+                            // Single enable / disable
+                            switch(routing.request().method()) {
+                                case DELETE:
+                                    enabled = false;
+                                    break;
+                                case PUT:
+                                    enabled = true;
+                                    break;
+                                default:
+                                    throw new ResponseUtil.BadRequestException("Invalid HTTP method");
+                            }
+                        } else {
+                            if (routing.request().params().get(PARAM_TRIGGER_IDS) != null) {
+                                triggerIds = routing.request().params().get(PARAM_TRIGGER_IDS);
+                            }
+                            if (routing.request().params().get(PARAM_ENABLED) != null) {
+                                enabled = Boolean.valueOf(routing.request().params().get(PARAM_ENABLED));
+                            }
+                            if (isEmpty(triggerIds)) {
+                                throw new ResponseUtil.BadRequestException("TriggerIds must be non empty.");
+                            }
+                            if (null == enabled) {
+                                throw new ResponseUtil.BadRequestException("Enabled must be non-empty.");
+                            }
                         }
                         if (isGroup) {
                             definitionsService.updateGroupTriggerEnablement(tenantId, triggerIds, enabled);

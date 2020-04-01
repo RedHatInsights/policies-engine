@@ -1099,4 +1099,72 @@ class TriggersITest extends AbstractQuarkusITestBase {
         resp = client.delete(path: "triggers/detect-floating-4-tutorial2")
         assertEquals(200, resp.status)
     }
+
+    @Test
+    void testSingleEnableDisable() {
+        def jsonTrigger = """{
+            "trigger": {
+                "id": "detect-floating-4-tutorial2",
+                "name": "Node with no infra second",
+                "description": "These hosts are not allocated to any known infrastructure provider",
+                "enabled": true,
+                "eventType": "ALERT",
+                "firingMatch": "ALL",
+                "actions": [
+                    {
+                        "actionPlugin": "email"
+                    }
+                ]
+            },
+            "conditions": [
+                {
+                    "triggerMode": "FIRING",
+                    "type": "EVENT",
+                    "dataId": "platform.inventory.host-egress",
+                    "expression": "facts.nomatch = 'false'"
+                }
+            ]
+        }
+        """
+        // remove if it exists
+        def resp = client.delete(path: "triggers/detect-floating-4-tutorial2")
+        assert(200 == resp.status || 404 == resp.status)
+
+        // create the test full trigger
+        resp = client.post(path: "triggers/trigger", body: jsonTrigger)
+        assertEquals(200, resp.status)
+        assertEquals(true, resp.data.trigger.enabled)
+
+        // Re-enable it, no error should happen
+        resp = client.put(path: "triggers/detect-floating-4-tutorial2/enable")
+        assertEquals(200, resp.status)
+
+        resp = client.get(path: "triggers/detect-floating-4-tutorial2")
+        assertEquals(200, resp.status)
+        assertEquals(true, resp.data.enabled)
+
+        // Disable it
+        resp = client.delete(path: "triggers/detect-floating-4-tutorial2/enable")
+        assertEquals(200, resp.status)
+
+        resp = client.get(path: "triggers/detect-floating-4-tutorial2")
+        assertEquals(200, resp.status)
+        assertEquals(false, resp.data.enabled)
+
+        // Again disable the disabled
+        resp = client.delete(path: "triggers/detect-floating-4-tutorial2/enable")
+        assertEquals(200, resp.status)
+
+        resp = client.get(path: "triggers/detect-floating-4-tutorial2")
+        assertEquals(200, resp.status)
+        assertEquals(false, resp.data.enabled)
+
+        // Enable it
+        resp = client.put(path: "triggers/detect-floating-4-tutorial2/enable")
+        assertEquals(200, resp.status)
+
+        resp = client.get(path: "triggers/detect-floating-4-tutorial2")
+        assertEquals(200, resp.status)
+        assertEquals(true, resp.data.enabled)
+    }
 }

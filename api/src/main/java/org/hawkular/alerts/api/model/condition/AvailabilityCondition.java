@@ -10,6 +10,8 @@ import org.hawkular.alerts.api.model.trigger.Mode;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
+import java.util.Objects;
+
 /**
  * An availability condition definition.
  *
@@ -129,29 +131,17 @@ public class AvailabilityCondition extends Condition {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
-        if (!super.equals(o))
-            return false;
-
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
         AvailabilityCondition that = (AvailabilityCondition) o;
-
-        if (dataId != null ? !dataId.equals(that.dataId) : that.dataId != null)
-            return false;
-        if (operator != that.operator)
-            return false;
-
-        return true;
+        return Objects.equals(dataId, that.dataId) &&
+                operator == that.operator;
     }
 
     @Override
     public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + (dataId != null ? dataId.hashCode() : 0);
-        result = 31 * result + (operator != null ? operator.hashCode() : 0);
-        return result;
+        return Objects.hash(super.hashCode(), dataId, operator);
     }
 
     @Override

@@ -7,6 +7,8 @@ import org.hawkular.alerts.api.model.trigger.Mode;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
+import java.util.Objects;
+
 /**
  * An <code>ExternalCondition</code> is used for condition evaluations performed outside of the Alerts engine.
  * The external engine will send <code>StringData</code> providing the data for which the external evaluation
@@ -154,40 +156,19 @@ public class ExternalCondition extends Condition {
     }
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = super.hashCode();
-        result = prime * result + ((dataId == null) ? 0 : dataId.hashCode());
-        result = prime * result + ((expression == null) ? 0 : expression.hashCode());
-        result = prime * result + ((alerterId == null) ? 0 : alerterId.hashCode());
-        return result;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        ExternalCondition that = (ExternalCondition) o;
+        return Objects.equals(alerterId, that.alerterId) &&
+                Objects.equals(dataId, that.dataId) &&
+                Objects.equals(expression, that.expression);
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (!super.equals(obj))
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        ExternalCondition other = (ExternalCondition) obj;
-        if (dataId == null) {
-            if (other.dataId != null)
-                return false;
-        } else if (!dataId.equals(other.dataId))
-            return false;
-        if (expression == null) {
-            if (other.expression != null)
-                return false;
-        } else if (!expression.equals(other.expression))
-            return false;
-        if (alerterId == null) {
-            if (other.alerterId != null)
-                return false;
-        } else if (!alerterId.equals(other.alerterId))
-            return false;
-        return true;
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), alerterId, dataId, expression);
     }
 
     @Override

@@ -7,6 +7,8 @@ import org.hawkular.alerts.api.model.trigger.Mode;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
+import java.util.Objects;
+
 /**
  * A <code>MissingCondition</code> is used to evaluate when a data or an event has not been received on time interval.
  *
@@ -102,20 +104,14 @@ public class MissingCondition extends Condition {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
-
         MissingCondition that = (MissingCondition) o;
-
-        if (interval != that.interval) return false;
-        return dataId != null ? dataId.equals(that.dataId) : that.dataId == null;
-
+        return interval == that.interval &&
+                Objects.equals(dataId, that.dataId);
     }
 
     @Override
     public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + (dataId != null ? dataId.hashCode() : 0);
-        result = 31 * result + (int) (interval ^ (interval >>> 32));
-        return result;
+        return Objects.hash(super.hashCode(), dataId, interval);
     }
 
     @Override
