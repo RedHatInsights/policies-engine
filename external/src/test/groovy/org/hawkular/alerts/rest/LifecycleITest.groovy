@@ -157,12 +157,32 @@ class LifecycleITest extends AbstractQuarkusITestBase {
     }
 
     @Test
-    void t021_verifyTriggerEvaluationTime() {
+    void t021_verifyTriggerEvaluationTimeStability() {
+        // Disable && re-enable, trigger time should stay the same
         logger.info( "Running t011_verifyTriggerEvaluationTime")
         def resp = client.get(path: "triggers/trigger/test-autodisable-trigger");
         assertEquals(200, resp.status)
         assertEquals("test-autodisable-trigger", resp.data.trigger.name)
-        assertTrue(resp.data.conditions[0].lastEvaluation > 0)
+        def lastEvaluation = resp.data.conditions[0].lastEvaluation
+        assertTrue(lastEvaluation > 0)
+
+        // Disable it
+        resp = client.delete(path: "triggers/test-autodisable-trigger/enable")
+        assertEquals(200, resp.status)
+
+        // Verify the lastEvaluated did not change
+        resp = client.get(path: "triggers/trigger/test-autodisable-trigger");
+        assertEquals(200, resp.status)
+        assertEquals(lastEvaluation, resp.data.conditions[0].lastEvaluation)
+
+        // Enable it
+        resp = client.put(path: "triggers/test-autodisable-trigger/enable")
+        assertEquals(200, resp.status)
+
+        // Verify the lastEvaluated did not change
+        resp = client.get(path: "triggers/trigger/test-autodisable-trigger");
+        assertEquals(200, resp.status)
+        assertEquals(lastEvaluation, resp.data.conditions[0].lastEvaluation)
     }
 
     @Test
