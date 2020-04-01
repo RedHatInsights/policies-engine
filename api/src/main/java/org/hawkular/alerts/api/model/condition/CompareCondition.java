@@ -3,6 +3,8 @@ package org.hawkular.alerts.api.model.condition;
 import static org.hawkular.alerts.api.model.trigger.Mode.FIRING;
 
 import java.util.Locale;
+import java.util.Objects;
+
 import org.hawkular.alerts.api.doc.DocModel;
 import org.hawkular.alerts.api.doc.DocModelProperty;
 import org.hawkular.alerts.api.model.trigger.Mode;
@@ -174,39 +176,6 @@ public class CompareCondition extends Condition {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
-        if (!super.equals(o))
-            return false;
-
-        CompareCondition that = (CompareCondition) o;
-
-        if (dataId != null ? !dataId.equals(that.dataId) : that.dataId != null)
-            return false;
-        if (data2Id != null ? !data2Id.equals(that.data2Id) : that.data2Id != null)
-            return false;
-        if (data2Multiplier != null ? !data2Multiplier.equals(that.data2Multiplier) : that.data2Multiplier != null)
-            return false;
-        if (operator != that.operator)
-            return false;
-
-        return true;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + (dataId != null ? dataId.hashCode() : 0);
-        result = 31 * result + (operator != null ? operator.hashCode() : 0);
-        result = 31 * result + (data2Id != null ? data2Id.hashCode() : 0);
-        result = 31 * result + (data2Multiplier != null ? data2Multiplier.hashCode() : 0);
-        return result;
-    }
-
-    @Override
     public String toString() {
         return "CompareCondition [triggerId='" + triggerId + "', " +
                 "triggerMode=" + triggerMode + ", " +
@@ -216,4 +185,20 @@ public class CompareCondition extends Condition {
                 "data2Multiplier=" + data2Multiplier + "]";
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        CompareCondition that = (CompareCondition) o;
+        return Objects.equals(dataId, that.dataId) &&
+                operator == that.operator &&
+                Objects.equals(data2Id, that.data2Id) &&
+                Objects.equals(data2Multiplier, that.data2Multiplier);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), dataId, operator, data2Id, data2Multiplier);
+    }
 }

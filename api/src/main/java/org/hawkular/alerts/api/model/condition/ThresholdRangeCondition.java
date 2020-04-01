@@ -1,6 +1,8 @@
 package org.hawkular.alerts.api.model.condition;
 
 import java.util.Locale;
+import java.util.Objects;
+
 import org.hawkular.alerts.api.doc.DocModel;
 import org.hawkular.alerts.api.doc.DocModelProperty;
 import org.hawkular.alerts.api.model.trigger.Mode;
@@ -243,41 +245,21 @@ public class ThresholdRangeCondition extends Condition {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
-        if (!super.equals(o))
-            return false;
-
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
         ThresholdRangeCondition that = (ThresholdRangeCondition) o;
-
-        if (inRange != that.inRange)
-            return false;
-        if (dataId != null ? !dataId.equals(that.dataId) : that.dataId != null)
-            return false;
-        if (operatorHigh != that.operatorHigh)
-            return false;
-        if (operatorLow != that.operatorLow)
-            return false;
-        if (thresholdHigh != null ? !thresholdHigh.equals(that.thresholdHigh) : that.thresholdHigh != null)
-            return false;
-        if (thresholdLow != null ? !thresholdLow.equals(that.thresholdLow) : that.thresholdLow != null)
-            return false;
-
-        return true;
+        return inRange == that.inRange &&
+                Objects.equals(dataId, that.dataId) &&
+                operatorLow == that.operatorLow &&
+                operatorHigh == that.operatorHigh &&
+                Objects.equals(thresholdLow, that.thresholdLow) &&
+                Objects.equals(thresholdHigh, that.thresholdHigh);
     }
 
     @Override
     public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + (dataId != null ? dataId.hashCode() : 0);
-        result = 31 * result + (operatorLow != null ? operatorLow.hashCode() : 0);
-        result = 31 * result + (operatorHigh != null ? operatorHigh.hashCode() : 0);
-        result = 31 * result + (thresholdLow != null ? thresholdLow.hashCode() : 0);
-        result = 31 * result + (thresholdHigh != null ? thresholdHigh.hashCode() : 0);
-        result = 31 * result + (inRange ? 1 : 0);
-        return result;
+        return Objects.hash(super.hashCode(), dataId, operatorLow, operatorHigh, thresholdLow, thresholdHigh, inRange);
     }
 
     @Override

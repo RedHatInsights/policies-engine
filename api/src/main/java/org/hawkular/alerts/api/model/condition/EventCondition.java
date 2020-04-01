@@ -146,23 +146,17 @@ public class EventCondition extends Condition {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
-        if (!super.equals(o))
-            return false;
-
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
         EventCondition that = (EventCondition) o;
-
-        return Objects.equals(expression, that.expression);
+        return Objects.equals(dataId, that.dataId) &&
+                Objects.equals(expression, that.expression);
     }
 
     @Override
     public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + (expression != null ? expression.hashCode() : 0);
-        return result;
+        return Objects.hash(super.hashCode(), dataId, expression);
     }
 
     @Override

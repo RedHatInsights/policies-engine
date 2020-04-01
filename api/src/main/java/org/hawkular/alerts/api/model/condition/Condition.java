@@ -3,6 +3,7 @@ package org.hawkular.alerts.api.model.condition;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import org.hawkular.alerts.api.doc.DocModel;
 import org.hawkular.alerts.api.doc.DocModelProperty;
@@ -236,28 +237,22 @@ public abstract class Condition implements Serializable {
     public void validate() {}
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((conditionId == null) ? 0 : conditionId.hashCode());
-        return result;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Condition condition = (Condition) o;
+        return conditionSetSize == condition.conditionSetSize &&
+                conditionSetIndex == condition.conditionSetIndex &&
+                Objects.equals(tenantId, condition.tenantId) &&
+                Objects.equals(triggerId, condition.triggerId) &&
+                triggerMode == condition.triggerMode &&
+                type == condition.type &&
+                Objects.equals(conditionId, condition.conditionId);
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        Condition other = (Condition) obj;
-        if (conditionId == null) {
-            if (other.conditionId != null)
-                return false;
-        } else if (!conditionId.equals(other.conditionId))
-            return false;
-        return true;
+    public int hashCode() {
+        return Objects.hash(tenantId, triggerId, triggerMode, type, conditionSetSize, conditionSetIndex, conditionId, context);
     }
 
     @Override

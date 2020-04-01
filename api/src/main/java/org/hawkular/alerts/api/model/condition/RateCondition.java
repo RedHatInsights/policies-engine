@@ -1,6 +1,8 @@
 package org.hawkular.alerts.api.model.condition;
 
 import java.util.Locale;
+import java.util.Objects;
+
 import org.hawkular.alerts.api.doc.DocModel;
 import org.hawkular.alerts.api.doc.DocModelProperty;
 import org.hawkular.alerts.api.model.trigger.Mode;
@@ -257,43 +259,21 @@ public class RateCondition extends Condition {
     }
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = super.hashCode();
-        result = prime * result + ((dataId == null) ? 0 : dataId.hashCode());
-        result = prime * result + ((direction == null) ? 0 : direction.hashCode());
-        result = prime * result + ((operator == null) ? 0 : operator.hashCode());
-        result = prime * result + ((period == null) ? 0 : period.hashCode());
-        result = prime * result + ((threshold == null) ? 0 : threshold.hashCode());
-        return result;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        RateCondition that = (RateCondition) o;
+        return Objects.equals(dataId, that.dataId) &&
+                direction == that.direction &&
+                period == that.period &&
+                operator == that.operator &&
+                Objects.equals(threshold, that.threshold);
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (!super.equals(obj))
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        RateCondition other = (RateCondition) obj;
-        if (dataId == null) {
-            if (other.dataId != null)
-                return false;
-        } else if (!dataId.equals(other.dataId))
-            return false;
-        if (direction != other.direction)
-            return false;
-        if (operator != other.operator)
-            return false;
-        if (period != other.period)
-            return false;
-        if (threshold == null) {
-            if (other.threshold != null)
-                return false;
-        } else if (!threshold.equals(other.threshold))
-            return false;
-        return true;
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), dataId, direction, period, operator, threshold);
     }
 
     @Override

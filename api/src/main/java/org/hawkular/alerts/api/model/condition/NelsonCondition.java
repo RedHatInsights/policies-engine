@@ -2,10 +2,7 @@ package org.hawkular.alerts.api.model.condition;
 
 import static org.hawkular.alerts.api.util.Util.isEmpty;
 
-import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.hawkular.alerts.api.doc.DocModel;
@@ -191,37 +188,19 @@ public class NelsonCondition extends Condition {
     }
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = super.hashCode();
-        result = prime * result + ((activeRules == null) ? 0 : activeRules.hashCode());
-        result = prime * result + ((dataId == null) ? 0 : dataId.hashCode());
-        result = prime * result + sampleSize;
-        return result;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        NelsonCondition that = (NelsonCondition) o;
+        return sampleSize == that.sampleSize &&
+                Objects.equals(dataId, that.dataId) &&
+                Objects.equals(activeRules, that.activeRules);
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (!super.equals(obj))
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        NelsonCondition other = (NelsonCondition) obj;
-        if (activeRules == null) {
-            if (other.activeRules != null)
-                return false;
-        } else if (!activeRules.equals(other.activeRules))
-            return false;
-        if (dataId == null) {
-            if (other.dataId != null)
-                return false;
-        } else if (!dataId.equals(other.dataId))
-            return false;
-        if (sampleSize != other.sampleSize)
-            return false;
-        return true;
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), dataId, activeRules, sampleSize);
     }
 
     @Override
