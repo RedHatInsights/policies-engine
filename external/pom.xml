@@ -57,6 +57,12 @@
       <scope>test</scope>
     </dependency>
 
+    <!-- Quarkus bug 7809 -->
+    <dependency>
+      <groupId>org.jboss.resteasy</groupId>
+      <artifactId>resteasy-context-propagation</artifactId>
+    </dependency>
+
     <!-- bare API -->
     <dependency>
       <groupId>io.vertx</groupId>
@@ -178,6 +184,7 @@
               </properties>
               <scripts>
                 <script>file:///${restDocDirectory}/generate-openapi.groovy</script>
+                <script>file:///${restDocDirectory}/metrics-generator.groovy</script>
               </scripts>
             </configuration>
             <executions>

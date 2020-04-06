@@ -184,7 +184,6 @@ Class parseSubclass(def field) {
 }
 
 try {
-
     File[] handlers = handlersDir.listFiles()
     for (def i = 0; i < handlers.length; i++) {
         if (handlers[i].name.endsWith("Handler.class")) {
