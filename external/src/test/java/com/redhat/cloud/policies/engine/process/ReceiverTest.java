@@ -2,14 +2,15 @@ package com.redhat.cloud.policies.engine.process;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.reactivex.subscribers.TestSubscriber;
-import io.smallrye.reactive.messaging.annotations.Channel;
-import io.smallrye.reactive.messaging.annotations.Emitter;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.io.IOUtils;
-import org.eclipse.microprofile.metrics.*;
+import org.eclipse.microprofile.metrics.Counter;
+import org.eclipse.microprofile.metrics.MetricID;
+import org.eclipse.microprofile.metrics.MetricRegistry;
 import org.eclipse.microprofile.metrics.annotation.RegistryType;
-import org.eclipse.microprofile.reactive.messaging.Message;
+import org.eclipse.microprofile.reactive.messaging.Channel;
+import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.hawkular.alerts.api.model.action.ActionDefinition;
 import org.hawkular.alerts.api.model.condition.Condition;
 import org.hawkular.alerts.api.model.condition.EventCondition;
@@ -20,17 +21,15 @@ import org.hawkular.alerts.api.model.trigger.Trigger;
 import org.hawkular.alerts.api.model.trigger.TriggerAction;
 import org.hawkular.alerts.api.services.DefinitionsService;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.Tag;
 import org.reactivestreams.Publisher;
 
 import javax.inject.Inject;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.CompletionStage;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
 @Tag("integration")
@@ -55,7 +54,7 @@ public class ReceiverTest {
     DefinitionsService definitionsService;
 
     @Inject
-    @RegistryType(type=MetricRegistry.Type.APPLICATION)
+    @RegistryType(type = MetricRegistry.Type.APPLICATION)
     MetricRegistry metricRegistry;
 
     private static final String TENANT_ID = "integration-test";

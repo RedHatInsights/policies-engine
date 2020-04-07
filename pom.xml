@@ -48,8 +48,7 @@
     <version.org.codehaus.groovy.modules.http-builder>0.7.1</version.org.codehaus.groovy.modules.http-builder>
 
     <!-- Wildfly to Quarkus related stuff to be ported / removed -->
-    <version.org.hibernate>5.10.7.Final</version.org.hibernate>
-    <version.org.infinispan>10.0.1.Final</version.org.infinispan>
+    <version.org.infinispan>10.1.5.Final</version.org.infinispan>
     <version.org.jboss.logging.jboss-logging-tools>2.2.1.Final</version.org.jboss.logging.jboss-logging-tools>
 
     <!-- Quarkus -->
@@ -97,6 +96,7 @@
         <version>${version.org.apache.maven.plugins.maven-compiler-plugin}</version>
         <configuration>
           <release>11</release>
+          <forceJavacCompilerUse>true</forceJavacCompilerUse>
         </configuration>
       </plugin>
     </plugins>
