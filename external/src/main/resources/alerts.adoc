@@ -135,7 +135,8 @@ Array operators can have different key input type and value types, but everythin
 
 All the examples are considering the following input:
 
-```json
+[source,json]
+----
 {
   "a": "b",
   "b": 3,
@@ -147,7 +148,7 @@ All the examples are considering the following input:
   "f": 2.0,
   "g": "time",
 }
-```
+----
 
 ===== String examples
 

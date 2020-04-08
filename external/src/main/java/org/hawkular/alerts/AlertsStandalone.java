@@ -2,7 +2,6 @@ package org.hawkular.alerts;
 
 import io.quarkus.runtime.LaunchMode;
 import org.eclipse.microprofile.config.ConfigProvider;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.hawkular.alerts.api.services.ActionsService;
 import org.hawkular.alerts.api.services.AlertsService;
 import org.hawkular.alerts.api.services.DefinitionsService;
