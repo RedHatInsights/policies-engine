@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <infinispan
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="urn:infinispan:config:10.1 http://www.infinispan.org/schemas/infinispan-config-10.0.xsd"
-    xmlns="urn:infinispan:config:10.0">
+    xsi:schemaLocation="urn:infinispan:config:10.1 http://www.infinispan.org/schemas/infinispan-config-10.1.xsd"
+    xmlns="urn:infinispan:config:10.1">
 
   <cache-container name="hawkular-alerts">
     <!-- Migrate to Protostream -->
@@ -29,10 +29,11 @@
     <local-cache name="backend">
       <transaction mode="BATCH"/>
       <persistence passivation="false">
-        <!-- xmlns="urn:infinispan:config:store:rocksdb:10.0" schemaLocation="https://infinispan.org/schemas/infinispan-config-10.1.xsd"  -->
-        <rocksdb-store xmlns="urn:infinispan:config:store:rocksdb:10.0" path="rocksdb/data" preload="false" fetch-state="false">
+        <!-- xmlns="urn:infinispan:config:store:rocksdb:10.1" schemaLocation="https://infinispan.org/schemas/infinispan-config-10.1.xsd"  -->
+        <rocksdb-store xmlns="urn:infinispan:config:store:rocksdb:10.1" path="rocksdb/data" preload="false" fetch-state="false">
           <expiration path="${hawkular.data}/alerting/rocksdb/expired"/>
           <property name="database.max_background_compactions">2</property>
+          <compression type="LZ4"/>
         </rocksdb-store>
       </persistence>
       <memory>
@@ -58,7 +59,7 @@
     <local-cache name="LuceneIndexesMetadata_custom">
       <transaction mode="NON_XA" />
       <persistence>
-      <rocksdb-store xmlns="urn:infinispan:config:store:rocksdb:10.0" path="rocksdb/data" preload="false" fetch-state="false">
+      <rocksdb-store xmlns="urn:infinispan:config:store:rocksdb:10.1" path="rocksdb/data" preload="false" fetch-state="false">
         <expiration path="${hawkular.data}/alerting/rocksdb/expired"/>
         <property name="database.max_background_compactions">2</property>
       </rocksdb-store>
@@ -68,8 +69,8 @@
     <local-cache name="LuceneIndexesData_custom">
       <transaction mode="NON_XA" />
       <persistence passivation="false">
-        <!-- xmlns="urn:infinispan:config:store:rocksdb:10.0" schemaLocation="https://infinispan.org/schemas/infinispan-config-10.1.xsd"  -->
-        <rocksdb-store xmlns="urn:infinispan:config:store:rocksdb:10.0" path="rocksdb/data" preload="false" fetch-state="false">
+        <!-- xmlns="urn:infinispan:config:store:rocksdb:10.1" schemaLocation="https://infinispan.org/schemas/infinispan-config-10.1.xsd"  -->
+        <rocksdb-store xmlns="urn:infinispan:config:store:rocksdb:10.1" path="rocksdb/data" preload="false" fetch-state="false">
           <expiration path="${hawkular.data}/alerting/rocksdb/expired"/>
           <property name="database.max_background_compactions">2</property>
         </rocksdb-store>
@@ -79,8 +80,8 @@
     <local-cache name="LuceneIndexesLocking_custom">
       <transaction mode="NON_XA" />
       <persistence passivation="false">
-        <!-- xmlns="urn:infinispan:config:store:rocksdb:10.0" schemaLocation="https://infinispan.org/schemas/infinispan-config-10.1.xsd"  -->
-        <rocksdb-store xmlns="urn:infinispan:config:store:rocksdb:10.0" path="rocksdb/data" preload="false" fetch-state="false">
+        <!-- xmlns="urn:infinispan:config:store:rocksdb:10.1" schemaLocation="https://infinispan.org/schemas/infinispan-config-10.1.xsd"  -->
+        <rocksdb-store xmlns="urn:infinispan:config:store:rocksdb:10.1" path="rocksdb/data" preload="false" fetch-state="false">
           <expiration path="${hawkular.data}/alerting/rocksdb/expired"/>
           <property name="database.max_background_compactions">2</property>
         </rocksdb-store>

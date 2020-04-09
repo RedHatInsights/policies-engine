@@ -1,8 +1,6 @@
 package com.redhat.cloud.policies.engine.actions.plugins;
 
 import com.redhat.cloud.policies.engine.process.Receiver;
-import io.smallrye.reactive.messaging.annotations.Channel;
-import io.smallrye.reactive.messaging.annotations.Emitter;
 import io.vertx.axle.core.Vertx;
 import io.vertx.axle.ext.web.client.WebClient;
 import io.vertx.core.json.JsonArray;
@@ -11,6 +9,8 @@ import io.vertx.ext.web.client.WebClientOptions;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.metrics.Counter;
 import org.eclipse.microprofile.metrics.annotation.Metric;
+import org.eclipse.microprofile.reactive.messaging.Channel;
+import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.hawkular.alerts.actions.api.ActionMessage;
 import org.hawkular.alerts.actions.api.ActionPluginListener;
 import org.hawkular.alerts.actions.api.Plugin;

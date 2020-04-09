@@ -1,10 +1,10 @@
 package com.redhat.cloud.policies.engine.actions.plugins;
 
-import io.smallrye.reactive.messaging.annotations.Channel;
-import io.smallrye.reactive.messaging.annotations.Emitter;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.metrics.Counter;
 import org.eclipse.microprofile.metrics.annotation.Metric;
+import org.eclipse.microprofile.reactive.messaging.Channel;
+import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.hawkular.alerts.actions.api.ActionMessage;
 import org.hawkular.alerts.actions.api.ActionPluginListener;
 import org.hawkular.alerts.actions.api.Plugin;
