@@ -56,7 +56,7 @@
     <dependency>
       <groupId>io.opentracing.contrib</groupId>
       <artifactId>opentracing-vertx-web</artifactId>
-     <version>${version.opentracing-vertx-web}</version>
+      <version>${version.opentracing-vertx-web}</version>
     </dependency>
 
     <!-- bare API -->
