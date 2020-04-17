@@ -34,6 +34,7 @@ public class AlertsCriteria {
     Collection<String> triggerIds = null;
     String tagQuery = null;
     boolean thin = false;
+    boolean latestOnly = false;
 
     public AlertsCriteria() {
         super();
@@ -42,7 +43,7 @@ public class AlertsCriteria {
     public AlertsCriteria(Long startTime, Long endTime, String alertIds, String triggerIds,
                           String statuses, String severities, String tagQuery, Long startResolvedTime,
                           Long endResolvedTime, Long startAckTime, Long endAckTime, Long startStatusTime,
-                          Long endStatusTime, Boolean thin) {
+                          Long endStatusTime, Boolean thin, Boolean latestOnly) {
         setStartTime(startTime);
         setEndTime(endTime);
         if (!isEmpty(alertIds)) {
@@ -74,6 +75,9 @@ public class AlertsCriteria {
         setEndStatusTime(endStatusTime);
         if (null != thin) {
             setThin(thin.booleanValue());
+        }
+        if (null != latestOnly) {
+            setLatestOnly(latestOnly);
         }
     }
 
@@ -276,6 +280,14 @@ public class AlertsCriteria {
 
     public void setThin(boolean thin) {
         this.thin = thin;
+    }
+
+    public boolean isLatestOnly() {
+        return latestOnly;
+    }
+
+    public void setLatestOnly(boolean latestOnly) {
+        this.latestOnly = latestOnly;
     }
 
     public boolean hasAlertIdCriteria() {

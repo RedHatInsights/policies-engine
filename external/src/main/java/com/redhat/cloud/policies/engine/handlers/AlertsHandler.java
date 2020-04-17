@@ -58,6 +58,7 @@ public class AlertsHandler {
     private static final String PARAM_TEXT = "text";
     private static final String PARAM_TAG_NAMES = "tagNames";
     private static final String PARAM_THIN = "thin";
+    private static final String PARAM_LATEST_ONLY = "latestOnly";
     private static final String PARAM_RESOLVED_BY = "resolvedBy";
     private static final String PARAM_RESOLVED_NOTES = "resolvedNotes";
 
@@ -80,7 +81,8 @@ public class AlertsHandler {
                 PARAM_END_ACK_TIME,
                 PARAM_START_STATUS_TIME,
                 PARAM_END_STATUS_TIME,
-                PARAM_THIN);
+                PARAM_THIN,
+                PARAM_LATEST_ONLY);
         queryParamValidationMap.put(FIND_ALERTS, new HashSet<>(ALERTS_CRITERIA));
         queryParamValidationMap.get(FIND_ALERTS).addAll(ResponseUtil.PARAMS_PAGING);
         queryParamValidationMap.put(WATCH_ALERTS, new HashSet<>(ALERTS_CRITERIA));
@@ -138,7 +140,7 @@ public class AlertsHandler {
             @DocParameter(name = "startTime", type = Long.class,
                     description = "Filter out alerts created before this time.",
                     allowableValues = "Timestamp in millisecond since epoch."),
-            @DocParameter(name = "entTime", type = Long.class,
+            @DocParameter(name = "endTime", type = Long.class,
                     description = "Filter out alerts created after this time.",
                     allowableValues = "Timestamp in millisecond since epoch."),
             @DocParameter(name = "alertIds",
@@ -179,7 +181,9 @@ public class AlertsHandler {
                     description = "Filter out alerts with some lifecycle after this time.",
                     allowableValues = "Timestamp in millisecond since epoch."),
             @DocParameter(name = "thin", type = Boolean.class,
-                    description = "Return only thin alerts, do not include: evalSets, resolvedEvalSets.")
+                    description = "Return only thin alerts, do not include: evalSets, resolvedEvalSets."),
+            @DocParameter(name = "latestOnly", type = Boolean.class,
+                    description = "Return only the latest alert per trigger")
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Successfully fetched list of alerts.", response = Alert.class, responseContainer = "List"),
@@ -841,6 +845,7 @@ public class AlertsHandler {
         Long startStatusTime = null;
         Long endStatusTime = null;
         boolean thin = false;
+        boolean latestOnly = false;
 
         if (params.get(PARAM_START_TIME) != null) {
             startTime = Long.valueOf(params.get(PARAM_START_TIME));
@@ -893,8 +898,11 @@ public class AlertsHandler {
         if (params.get(PARAM_THIN) != null) {
             thin = Boolean.valueOf(params.get(PARAM_THIN));
         }
+        if (params.get(PARAM_LATEST_ONLY)!=null) {
+            latestOnly = Boolean.valueOf(params.get(PARAM_LATEST_ONLY));
+        }
         return new AlertsCriteria(startTime, endTime, alertIds, triggerIds, statuses, severities,
                 unifiedTagQuery, startResolvedTime, endResolvedTime, startAckTime, endAckTime, startStatusTime,
-                endStatusTime, thin);
+                endStatusTime, thin, latestOnly );
     }
 }

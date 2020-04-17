@@ -12,9 +12,11 @@ import static org.hawkular.alerts.engine.util.Utils.extractSeverity;
 import static org.hawkular.alerts.engine.util.Utils.extractStatus;
 import static org.hawkular.alerts.engine.util.Utils.extractTriggerIds;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -548,6 +550,25 @@ public class IspnAlertsServiceImpl implements AlertsService {
             }
             return (Alert) ispnEvent.getEvent();
         }).collect(Collectors.toList());
+
+
+        if (criteria != null && criteria.isLatestOnly()) {
+            // Deduplicate the potentially huge list by time
+            Map<String, Alert> latestAlerts = new HashMap<>(alerts.size());
+            for (Alert a : alerts) {
+                String tid = a.getTrigger().getId();
+                if (!latestAlerts.containsKey(tid)) {
+                    latestAlerts.put(tid, a);
+                } else {
+                    long stored = latestAlerts.get(tid).getCtime();
+                    if (stored < a.getCtime()) {
+                        latestAlerts.put(tid, a);
+                    }
+                }
+            }
+            alerts = new ArrayList<>(latestAlerts.values());
+        }
+
         if (alerts.isEmpty()) {
             return new Page<>(alerts, pager, 0);
         } else {
