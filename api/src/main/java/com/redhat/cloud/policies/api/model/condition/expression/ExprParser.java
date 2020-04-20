@@ -303,6 +303,7 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
         }
 
         private Object decodeKeyToValue(String eventField) {
+            eventField = eventField.toLowerCase();
             Object sEventValue = null;
             if (TENANT_ID.equals(eventField)) {
                 sEventValue = value.getTenantId();
@@ -327,7 +328,7 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
 
                 // Allow matching of keys with dot in them if they're escaped correctly
                 String[] subMap = key.split(KEY_REGEXP, 2);
-                String innerKey = subMap[0].replace("\\.", ".");
+                String innerKey = subMap[0].replace("\\.", ".").toLowerCase();
                 Object innerValue = value.getFacts().get(innerKey);
 
                 while(subMap.length > 1) {
@@ -359,7 +360,7 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
         String strValue = null;
         if (value.STRING() != null) {
             strValue = value.STRING().getSymbol().getText();
-            strValue = strValue.replaceAll("^(['\"])(.*)\\1$", "$2");
+            strValue = strValue.replaceAll("^(['\"])(.*)\\1$", "$2").toLowerCase();
         }
 
         return strValue;
