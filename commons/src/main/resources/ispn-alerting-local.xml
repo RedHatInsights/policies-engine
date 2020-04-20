@@ -31,7 +31,7 @@
       <persistence passivation="false">
         <!-- xmlns="urn:infinispan:config:store:rocksdb:10.1" schemaLocation="https://infinispan.org/schemas/infinispan-config-10.1.xsd"  -->
         <rocksdb-store xmlns="urn:infinispan:config:store:rocksdb:10.1" path="rocksdb/data" preload="false" fetch-state="false">
-          <expiration path="${hawkular.data}/alerting/rocksdb/expired"/>
+          <expiration path="rocksdb/expired"/>
           <property name="database.max_background_compactions">2</property>
           <compression type="LZ4"/>
         </rocksdb-store>
@@ -60,7 +60,7 @@
       <transaction mode="NON_XA" />
       <persistence>
       <rocksdb-store xmlns="urn:infinispan:config:store:rocksdb:10.1" path="rocksdb/data" preload="false" fetch-state="false">
-        <expiration path="${hawkular.data}/alerting/rocksdb/expired"/>
+        <expiration path="rocksdb/expired"/>
         <property name="database.max_background_compactions">2</property>
       </rocksdb-store>
       </persistence>
@@ -71,7 +71,7 @@
       <persistence passivation="false">
         <!-- xmlns="urn:infinispan:config:store:rocksdb:10.1" schemaLocation="https://infinispan.org/schemas/infinispan-config-10.1.xsd"  -->
         <rocksdb-store xmlns="urn:infinispan:config:store:rocksdb:10.1" path="rocksdb/data" preload="false" fetch-state="false">
-          <expiration path="${hawkular.data}/alerting/rocksdb/expired"/>
+          <expiration path="rocksdb/expired"/>
           <property name="database.max_background_compactions">2</property>
         </rocksdb-store>
       </persistence>
@@ -82,7 +82,7 @@
       <persistence passivation="false">
         <!-- xmlns="urn:infinispan:config:store:rocksdb:10.1" schemaLocation="https://infinispan.org/schemas/infinispan-config-10.1.xsd"  -->
         <rocksdb-store xmlns="urn:infinispan:config:store:rocksdb:10.1" path="rocksdb/data" preload="false" fetch-state="false">
-          <expiration path="${hawkular.data}/alerting/rocksdb/expired"/>
+          <expiration path="rocksdb/expired"/>
           <property name="database.max_background_compactions">2</property>
         </rocksdb-store>
       </persistence>
