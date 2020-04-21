@@ -195,7 +195,9 @@ public class AlertsHandler {
                         Pager pager = ResponseUtil.extractPaging(routing.request().params());
                         AlertsCriteria criteria = buildCriteria(routing.request().params());
                         Page<Alert> alertPage = alertsService.getAlerts(tenantId, criteria, pager);
-                        log.debugf("Alerts: %s", alertPage);
+                        if(log.isTraceEnabled()) {
+                            log.tracef("Alerts: %s", alertPage);
+                        }
                         future.complete(alertPage);
                     } catch (IllegalArgumentException e) {
                         throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());

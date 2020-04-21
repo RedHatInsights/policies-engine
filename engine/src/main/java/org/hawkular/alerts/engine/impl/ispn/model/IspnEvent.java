@@ -11,6 +11,7 @@ import org.hibernate.search.annotations.Analyzer;
 import org.hibernate.search.annotations.Field;
 import org.hibernate.search.annotations.FieldBridge;
 import org.hibernate.search.annotations.Indexed;
+import org.hibernate.search.annotations.SortableField;
 import org.hibernate.search.annotations.Store;
 
 /**
@@ -27,6 +28,7 @@ public class IspnEvent implements Serializable {
     private String tenantId;
 
     @Field(store = Store.YES, analyze = Analyze.NO)
+    @SortableField
     private String id;
 
     @Field(store = Store.YES, analyze = Analyze.YES)
@@ -38,6 +40,7 @@ public class IspnEvent implements Serializable {
     private String triggerId;
 
     @Field(store = Store.YES, analyze = Analyze.NO)
+    @SortableField
     private long ctime;
 
     @Field(store = Store.YES, analyze = Analyze.NO)
@@ -51,10 +54,6 @@ public class IspnEvent implements Serializable {
 
     @Field(store = Store.YES, analyze = Analyze.NO)
     private String category;
-
-//    @Field(store = Store.YES, analyze = Analyze.NO)
-//    @FieldBridge(impl = FactsBridge.class)
-//    private Map<String, Object> facts;
 
     private Event event;
 

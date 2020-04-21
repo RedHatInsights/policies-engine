@@ -34,6 +34,7 @@ import org.hawkular.alerts.api.model.paging.AlertComparator;
 import org.hawkular.alerts.api.model.paging.EventComparator;
 import org.hawkular.alerts.api.model.paging.Order;
 import org.hawkular.alerts.api.model.paging.Page;
+import org.hawkular.alerts.api.model.paging.PageContext;
 import org.hawkular.alerts.api.model.paging.Pager;
 import org.hawkular.alerts.api.model.trigger.Mode;
 import org.hawkular.alerts.api.model.trigger.Trigger;
@@ -52,6 +53,7 @@ import org.hawkular.alerts.log.AlertingLogger;
 import org.hawkular.commons.log.MsgLogging;
 import org.infinispan.Cache;
 import org.infinispan.query.Search;
+import org.infinispan.query.dsl.Query;
 import org.infinispan.query.dsl.QueryFactory;
 
 /**
@@ -412,7 +414,7 @@ public class IspnAlertsServiceImpl implements AlertsService {
             throw new IllegalArgumentException("TenantIds must be not null");
         }
         boolean filter = (null != criteria && criteria.hasCriteria());
-        if (filter) {
+        if (filter && log.isDebugEnabled()) {
             log.debugf("getAlerts criteria: %s", criteria.toString());
         }
 
@@ -537,7 +539,7 @@ public class IspnAlertsServiceImpl implements AlertsService {
            }
         }
 
-        List<IspnEvent> ispnEvents = queryFactory.create(query.toString()).list();
+        List<IspnEvent> ispnEvents = getEventItems(query, pager);
         List<Alert> alerts = ispnEvents.stream().map(ispnEvent -> {
             if (criteria != null && criteria.isThin()) {
                 Alert alert = new Alert((Alert) ispnEvent.getEvent());
@@ -553,6 +555,52 @@ public class IspnAlertsServiceImpl implements AlertsService {
         } else {
             return preparePage(alerts, pager);
         }
+    }
+
+    // TODO Paging is not properly handled - the returned size is going to be invalid and not all fields are sort supported
+
+    private List<IspnEvent> getEventItems(StringBuilder builder, Pager pager) {
+        // Parse and do the first ordering at the Infinispan level (for @SortableFields)
+        if (pager != null && pager.getOrder() != null && !pager.getOrder().isEmpty() && pager.getOrder().get(0).isSpecific()) {
+            log.debugf("Pager: %s", pager.toString());
+            builder.append("ORDER BY ");
+
+            if (AlertComparator.Field.ALERT_ID.getText().equals(pager.getOrder().get(0).getField())) {
+                builder.append("id ");
+            } else if (AlertComparator.Field.CTIME.getText().equals(pager.getOrder().get(0).getField())) {
+                // The generated alert ids include ctime, so this should sort them correctly
+                builder.append("ctime ");
+            } else {
+                builder.append("id ");
+            }
+
+            if (pager.getOrder().get(0).getDirection() == Order.Direction.DESCENDING) {
+                builder.append("DESC");
+            } else {
+                builder.append("ASC");
+            }
+            pager.getOrder().remove(0);
+        } else {
+            // Force id sorting by DESCENDING (newest events / alerts first) to be the natural order
+            builder.append("ORDER BY ctime DESC");
+        }
+
+        Query parsedQuery = queryFactory.create(builder.toString());
+        if(log.isDebugEnabled()) {
+            log.debugf("ParsedQuery: %s", parsedQuery.getQueryString());
+        }
+
+        // Do limitations at Infinispan level if possible
+        if(pager != null) {
+            if(pager.getStart() > 0) {
+                parsedQuery.startOffset(pager.getStart());
+            }
+            if(pager.getPageSize() != PageContext.UNLIMITED_PAGE_SIZE) {
+                parsedQuery.maxResults(pager.getPageSize());
+            }
+        }
+
+        return parsedQuery.list();
     }
 
     @Override
@@ -580,7 +628,7 @@ public class IspnAlertsServiceImpl implements AlertsService {
             throw new IllegalArgumentException("TenantIds must be not null");
         }
         boolean filter = (null != criteria && criteria.hasCriteria());
-        if (filter) {
+        if (filter && log.isDebugEnabled()) {
             log.debugf("getEvents criteria: %s", criteria.toString());
         }
 
@@ -661,7 +709,7 @@ public class IspnAlertsServiceImpl implements AlertsService {
             }
         }
 
-        List<IspnEvent> ispnEvents = queryFactory.create(query.toString()).list();
+        List<IspnEvent> ispnEvents = getEventItems(query, pager);
         List<Event> events = ispnEvents.stream().map(e -> e.getEvent()).collect(Collectors.toList());
         if (events.isEmpty()) {
             return new Page<>(events, pager, 0);
@@ -845,6 +893,7 @@ public class IspnAlertsServiceImpl implements AlertsService {
     }
 
     // Private methods
+    // TODO Merge preparePage and prepareEventsPage, EventComparator and AlertsComparator
 
     private Page<Alert> preparePage(List<Alert> alerts, Pager pager) {
         if (pager != null) {
@@ -950,7 +999,6 @@ public class IspnAlertsServiceImpl implements AlertsService {
         } catch (Exception e) {
             log.errorDatabaseException(e.getMessage());
         }
-
     }
 
     private Page<Event> prepareEventsPage(List<Event> events, Pager pager) {
