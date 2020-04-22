@@ -42,7 +42,7 @@ import org.hawkular.alerts.engine.service.PartitionTriggerListener;
 import org.hawkular.alerts.engine.service.RulesEngine;
 import org.hawkular.alerts.engine.util.MissingState;
 import org.hawkular.alerts.log.AlertingLogger;
-import org.hawkular.commons.log.MsgLogging;
+import org.hawkular.alerts.log.MsgLogging;
 
 /**
  * Implementation for {@link org.hawkular.alerts.api.services.AlertsService}.

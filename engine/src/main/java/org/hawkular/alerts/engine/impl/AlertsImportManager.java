@@ -6,8 +6,8 @@ import java.util.List;
 import org.hawkular.alerts.api.model.action.ActionDefinition;
 import org.hawkular.alerts.api.model.export.Definitions;
 import org.hawkular.alerts.api.model.trigger.FullTrigger;
-import org.hawkular.commons.log.MsgLogger;
-import org.hawkular.commons.log.MsgLogging;
+import org.hawkular.alerts.log.MsgLogger;
+import org.hawkular.alerts.log.MsgLogging;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 

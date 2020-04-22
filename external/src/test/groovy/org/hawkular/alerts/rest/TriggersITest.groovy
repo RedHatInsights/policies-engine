@@ -11,8 +11,8 @@ import org.hawkular.alerts.api.model.condition.ThresholdCondition
 import org.hawkular.alerts.api.model.dampening.Dampening
 import org.hawkular.alerts.api.model.trigger.Mode
 import org.hawkular.alerts.api.model.trigger.Trigger
-import org.hawkular.commons.log.MsgLogger
-import org.hawkular.commons.log.MsgLogging
+import org.hawkular.alerts.log.MsgLogger
+import org.hawkular.alerts.log.MsgLogging
 import org.junit.jupiter.api.Test
 
 import static org.junit.jupiter.api.Assertions.assertEquals

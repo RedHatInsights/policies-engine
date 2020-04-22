@@ -14,7 +14,7 @@ link:http://www.hawkular.org/docs/rest/rest-alerts-v2.html[Hawkular Alerting RES
 
 ``external`` module depends on ``engine``
 
-``engine`` module depends on ``commons`` and ``api``
+``engine`` module depends on ``api``
 
 == Run
 

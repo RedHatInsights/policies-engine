@@ -19,8 +19,8 @@ import org.hawkular.alerts.api.services.DistributedEvent;
 import org.hawkular.alerts.api.services.DistributedListener;
 import org.hawkular.alerts.engine.service.PartitionManager;
 import org.hawkular.alerts.engine.service.PartitionTriggerListener;
-import org.hawkular.commons.log.MsgLogger;
-import org.hawkular.commons.log.MsgLogging;
+import org.hawkular.alerts.log.MsgLogger;
+import org.hawkular.alerts.log.MsgLogging;
 
 /**
  * Register DefinitionListener and ActionListener instances.

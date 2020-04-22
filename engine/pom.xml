@@ -22,12 +22,6 @@
       <version>${project.version}</version>
     </dependency>
 
-    <dependency>
-      <groupId>com.redhat.cloud.policies</groupId>
-      <artifactId>policies-engine-commons</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-
     <!-- Drools / KIE -->
     <dependency>
       <groupId>org.kie</groupId>

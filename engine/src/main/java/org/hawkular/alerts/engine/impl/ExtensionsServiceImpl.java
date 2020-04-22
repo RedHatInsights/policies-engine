@@ -6,8 +6,8 @@ import java.util.Set;
 import org.hawkular.alerts.api.services.DataExtension;
 import org.hawkular.alerts.api.services.EventExtension;
 import org.hawkular.alerts.api.services.ExtensionsService;
-import org.hawkular.commons.log.MsgLogger;
-import org.hawkular.commons.log.MsgLogging;
+import org.hawkular.alerts.log.MsgLogger;
+import org.hawkular.alerts.log.MsgLogging;
 
 /**
  * @author Jay Shaughnessy

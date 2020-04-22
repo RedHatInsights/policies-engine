@@ -14,18 +14,6 @@ import java.math.BigDecimal;
 import java.util.BitSet;
 import java.util.Map;
 
-/*
-    TODO: How would we understand:
-        "0:GeoIP-1.5.0-11.el7" type of package versions for greater than, less than?
-        {
-        "name": "RHN Tools .."
-        } for example for contains in installed repository check?
-
-    TODO We might need to compare with version knowledge also (based on the demo), like version >= 5.7.2 or < 3.0.0
-    TODO "before/after" requires date understanding also
-    TODO "is before", "is after"
- */
-
 public class ExprParser extends ExpressionBaseVisitor<Boolean> {
 
     private static final String TENANT_ID = "tenantId";

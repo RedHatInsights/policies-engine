@@ -1,14 +1,13 @@
 package org.hawkular.alerts.engine.cache;
 
 import org.eclipse.microprofile.config.ConfigProvider;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.hawkular.alerts.api.model.condition.CompareCondition;
 import org.hawkular.alerts.api.model.condition.Condition;
 import org.hawkular.alerts.api.model.trigger.TriggerKey;
 import org.hawkular.alerts.api.services.DefinitionsService;
 import org.hawkular.alerts.filter.CacheKey;
 import org.hawkular.alerts.log.AlertingLogger;
-import org.hawkular.commons.log.MsgLogging;
+import org.hawkular.alerts.log.MsgLogging;
 import org.infinispan.Cache;
 
 import java.util.Collection;

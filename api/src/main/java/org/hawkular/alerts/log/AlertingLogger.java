@@ -1,6 +1,5 @@
 package org.hawkular.alerts.log;
 
-import org.hawkular.commons.log.MsgLogger;
 import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.LogMessage;
 import org.jboss.logging.annotations.Message;

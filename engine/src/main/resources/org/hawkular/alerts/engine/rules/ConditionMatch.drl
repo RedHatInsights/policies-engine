@@ -38,7 +38,7 @@ import org.hawkular.alerts.engine.util.CompareData;
 import org.hawkular.alerts.engine.util.MissingState;
 import org.hawkular.alerts.engine.util.NelsonData;
 import org.hawkular.alerts.engine.util.RateData;
-import org.hawkular.commons.log.MsgLogger;
+import org.hawkular.alerts.log.MsgLogger;
 
 import java.util.ArrayList;
 import java.util.Set;

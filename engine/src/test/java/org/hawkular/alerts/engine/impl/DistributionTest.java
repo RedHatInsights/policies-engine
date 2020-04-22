@@ -3,8 +3,8 @@ package org.hawkular.alerts.engine.impl;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import org.hawkular.alerts.engine.impl.PartitionManagerImpl.PartitionEntry;
-import org.hawkular.commons.log.MsgLogger;
-import org.hawkular.commons.log.MsgLogging;
+import org.hawkular.alerts.log.MsgLogger;
+import org.hawkular.alerts.log.MsgLogging;
 import org.junit.Test;
 
 import java.util.ArrayList;
