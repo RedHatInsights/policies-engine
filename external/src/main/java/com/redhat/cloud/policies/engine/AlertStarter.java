@@ -15,9 +15,12 @@ import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
 
+import static org.hawkular.alerts.api.util.Util.isEmpty;
+
 @ApplicationScoped
 public class AlertStarter {
     public static MsgLogger LOGGER = MsgLogging.getMsgLogger(AlertStarter.class);
+    private final static String BUILD_COMMIT_ENV_NAME = "OPENSHIFT_BUILD_COMMIT";
 
     @Inject
     AlertsStandalone alerts;
@@ -54,6 +57,11 @@ public class AlertStarter {
     void initialize() {
         // PluginRegister is already using CDI, but we want it to initialize after Alerts has started
         pluginRegister.init();
-        LOGGER.info("Started Policies Engine");
+        String commit = System.getenv(BUILD_COMMIT_ENV_NAME);
+        if(!isEmpty(commit)) {
+            LOGGER.infof("Started Policies Engine, build: %s", commit);
+        } else {
+            LOGGER.info("Started Policies Engine");
+        }
     }
 }
