@@ -9,17 +9,15 @@ import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 
 import org.eclipse.microprofile.config.ConfigProvider;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.hawkular.alerts.api.model.data.Data;
 import org.hawkular.alerts.api.model.event.Event;
 import org.hawkular.alerts.api.services.DefinitionsService;
 import org.hawkular.alerts.engine.service.AlertsEngine;
 import org.hawkular.alerts.engine.service.IncomingDataManager;
 import org.hawkular.alerts.engine.service.PartitionManager;
-import org.hawkular.alerts.engine.service.RulesEngine;
 import org.hawkular.alerts.filter.CacheClient;
-import org.hawkular.commons.log.MsgLogger;
-import org.hawkular.commons.log.MsgLogging;
+import org.hawkular.alerts.log.MsgLogger;
+import org.hawkular.alerts.log.MsgLogging;
 
 /**
  * @author Jay Shaughnessy

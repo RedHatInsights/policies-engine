@@ -8,8 +8,8 @@ import org.hawkular.alerts.api.model.condition.Condition
 import org.hawkular.alerts.api.model.trigger.Mode
 import org.hawkular.alerts.api.model.trigger.Trigger
 import org.hawkular.alerts.api.model.trigger.TriggerType
-import org.hawkular.commons.log.MsgLogger
-import org.hawkular.commons.log.MsgLogging
+import org.hawkular.alerts.log.MsgLogger
+import org.hawkular.alerts.log.MsgLogging
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestMethodOrder
 import org.junit.jupiter.api.MethodOrderer

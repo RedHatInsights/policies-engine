@@ -1,7 +1,7 @@
-package org.hawkular.alerts.cache;
+package org.hawkular.alerts.engine.cache;
 
-import org.hawkular.commons.log.MsgLogger;
-import org.hawkular.commons.log.MsgLogging;
+import org.hawkular.alerts.log.MsgLogger;
+import org.hawkular.alerts.log.MsgLogging;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 

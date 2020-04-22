@@ -6,8 +6,8 @@ import io.vertx.ext.web.RoutingContext;
 import com.redhat.cloud.policies.engine.actions.QuarkusActionPluginRegister;
 import org.hawkular.alerts.api.doc.*;
 import org.hawkular.alerts.api.services.DefinitionsService;
-import org.hawkular.commons.log.MsgLogger;
-import org.hawkular.commons.log.MsgLogging;
+import org.hawkular.alerts.log.MsgLogger;
+import org.hawkular.alerts.log.MsgLogging;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.event.Observes;

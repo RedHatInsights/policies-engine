@@ -18,8 +18,8 @@ import org.hawkular.alerts.api.model.action.Action;
 import org.hawkular.alerts.api.model.condition.ConditionEval;
 import org.hawkular.alerts.api.model.condition.EventConditionEval;
 import org.hawkular.alerts.api.model.trigger.Trigger;
-import org.hawkular.commons.log.MsgLogger;
-import org.hawkular.commons.log.MsgLogging;
+import org.hawkular.alerts.log.MsgLogger;
+import org.hawkular.alerts.log.MsgLogging;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.Dependent;

@@ -27,8 +27,8 @@ import org.hawkular.alerts.engine.tags.parser.TagQueryBaseListener;
 import org.hawkular.alerts.engine.tags.parser.TagQueryLexer;
 import org.hawkular.alerts.engine.tags.parser.TagQueryParser;
 import org.hawkular.alerts.engine.tags.parser.TagQueryParser.TagexpContext;
-import org.hawkular.commons.log.MsgLogger;
-import org.hawkular.commons.log.MsgLogging;
+import org.hawkular.alerts.log.MsgLogger;
+import org.hawkular.alerts.log.MsgLogging;
 
 /**
  * @author Jay Shaughnessy

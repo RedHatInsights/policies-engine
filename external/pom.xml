@@ -16,11 +16,14 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
   </properties>
   <dependencies>
+    <!-- Internal -->
     <dependency>
       <groupId>com.redhat.cloud.policies</groupId>
       <artifactId>policies-engine-engine</artifactId>
       <version>${project.version}</version>
     </dependency>
+
+    <!-- Quarkus -->
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-rest-client</artifactId>
@@ -63,6 +66,8 @@
       <groupId>io.smallrye.reactive</groupId>
       <artifactId>smallrye-axle-web-client</artifactId>
     </dependency>
+
+    <!-- Groovy tests -->
     <dependency>
       <groupId>org.codehaus.groovy.modules.http-builder</groupId>
       <artifactId>http-builder</artifactId>

@@ -82,7 +82,6 @@
       </activation>
       <modules>
         <module>api</module>
-        <module>commons</module>
         <module>engine</module>
         <module>external</module>
       </modules>

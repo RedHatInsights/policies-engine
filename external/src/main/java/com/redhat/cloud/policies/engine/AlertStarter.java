@@ -7,8 +7,8 @@ import org.hawkular.alerts.AlertsStandalone;
 import org.hawkular.alerts.api.services.ActionsService;
 import org.hawkular.alerts.api.services.AlertsService;
 import org.hawkular.alerts.api.services.DefinitionsService;
-import org.hawkular.commons.log.MsgLogger;
-import org.hawkular.commons.log.MsgLogging;
+import org.hawkular.alerts.log.MsgLogger;
+import org.hawkular.alerts.log.MsgLogging;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;

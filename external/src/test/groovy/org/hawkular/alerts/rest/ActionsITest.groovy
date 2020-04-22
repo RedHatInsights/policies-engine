@@ -9,8 +9,8 @@ import org.hawkular.alerts.api.model.data.Data
 import org.hawkular.alerts.api.model.trigger.Mode
 import org.hawkular.alerts.api.model.trigger.Trigger
 import org.hawkular.alerts.api.model.trigger.TriggerAction
-import org.hawkular.commons.log.MsgLogger
-import org.hawkular.commons.log.MsgLogging
+import org.hawkular.alerts.log.MsgLogger
+import org.hawkular.alerts.log.MsgLogging
 import org.junit.jupiter.api.Test
 
 import static org.hawkular.alerts.api.model.event.Alert.Status

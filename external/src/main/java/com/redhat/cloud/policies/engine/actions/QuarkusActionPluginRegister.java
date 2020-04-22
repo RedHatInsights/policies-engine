@@ -5,7 +5,7 @@ import org.hawkular.alerts.actions.api.Plugin;
 import org.hawkular.alerts.api.services.ActionsService;
 import org.hawkular.alerts.api.services.DefinitionsService;
 import org.hawkular.alerts.log.AlertingLogger;
-import org.hawkular.commons.log.MsgLogging;
+import org.hawkular.alerts.log.MsgLogging;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Any;

@@ -9,8 +9,8 @@ import org.hawkular.alerts.api.doc.DocResponse;
 import org.hawkular.alerts.api.doc.DocResponses;
 import org.hawkular.alerts.api.model.export.Definitions;
 import org.hawkular.alerts.api.services.DefinitionsService;
-import org.hawkular.commons.log.MsgLogger;
-import org.hawkular.commons.log.MsgLogging;
+import org.hawkular.alerts.log.MsgLogger;
+import org.hawkular.alerts.log.MsgLogging;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;

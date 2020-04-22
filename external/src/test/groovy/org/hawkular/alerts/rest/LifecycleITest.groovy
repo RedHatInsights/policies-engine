@@ -10,8 +10,8 @@ import org.hawkular.alerts.api.model.event.Alert
 import org.hawkular.alerts.api.model.trigger.FullTrigger
 import org.hawkular.alerts.api.model.trigger.Mode
 import org.hawkular.alerts.api.model.trigger.Trigger
-import org.hawkular.commons.log.MsgLogger
-import org.hawkular.commons.log.MsgLogging
+import org.hawkular.alerts.log.MsgLogger
+import org.hawkular.alerts.log.MsgLogging
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.TestMethodOrder
 import org.junit.jupiter.api.Test

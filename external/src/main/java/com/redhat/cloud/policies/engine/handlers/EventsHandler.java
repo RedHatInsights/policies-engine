@@ -13,8 +13,8 @@ import org.hawkular.alerts.api.model.paging.Page;
 import org.hawkular.alerts.api.model.paging.Pager;
 import org.hawkular.alerts.api.services.AlertsService;
 import org.hawkular.alerts.api.services.EventsCriteria;
-import org.hawkular.commons.log.MsgLogger;
-import org.hawkular.commons.log.MsgLogging;
+import org.hawkular.alerts.log.MsgLogger;
+import org.hawkular.alerts.log.MsgLogging;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;

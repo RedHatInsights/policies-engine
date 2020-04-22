@@ -1,4 +1,4 @@
-package org.hawkular.commons.log;
+package org.hawkular.alerts.log;
 
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.annotations.MessageLogger;

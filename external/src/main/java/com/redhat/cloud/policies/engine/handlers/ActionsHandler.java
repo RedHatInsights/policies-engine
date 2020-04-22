@@ -15,8 +15,8 @@ import org.hawkular.alerts.api.services.DefinitionsService;
 import com.redhat.cloud.policies.engine.handlers.util.ResponseUtil;
 import com.redhat.cloud.policies.engine.handlers.util.ResponseUtil.ApiDeleted;
 import com.redhat.cloud.policies.engine.handlers.util.ResponseUtil.ApiError;
-import org.hawkular.commons.log.MsgLogger;
-import org.hawkular.commons.log.MsgLogging;
+import org.hawkular.alerts.log.MsgLogger;
+import org.hawkular.alerts.log.MsgLogging;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
