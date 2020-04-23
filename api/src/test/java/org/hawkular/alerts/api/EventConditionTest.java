@@ -16,44 +16,6 @@ import static org.junit.Assert.assertTrue;
  */
 public class EventConditionTest {
 
-    // TODO: tenant expressions may need to be removed because I think the event and condition will always be in the
-    // same tenant.
-    @Test
-    public void testTenantIdExpression() {
-
-        EventCondition condition = new EventCondition("tenant", "trigger-1", "app.war",
-                "tenantId = 'my-organization'");
-        Event event1 = new Event();
-        event1.setTenantId("my-organization");
-
-        assertTrue(condition.match(event1));
-
-        Event event2 = new Event();
-        event2.setTenantId("my-organization2");
-
-        assertFalse(condition.match(event2));
-
-//        condition.setExpression("tenantId starts 'my-organiz'");
-//
-//        assertTrue(condition.match(event1));
-//        assertTrue(condition.match(event2));
-
-//        condition.setExpression("tenantId ends '2'");
-//
-//        assertFalse(condition.match(event1));
-//        assertTrue(condition.match(event2));
-
-        condition.setExpression("tenantId contains 'organization'");
-
-        assertTrue(condition.match(event1));
-        assertTrue(condition.match(event2));
-
-//        condition.setExpression("tenantId matches 'my-organization.*'");
-//
-//        assertTrue(condition.match(event1));
-//        assertTrue(condition.match(event2));
-    }
-
     @Test
     public void testCategoryExpressionWithSpaces() {
 

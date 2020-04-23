@@ -13,10 +13,10 @@ import org.hawkular.alerts.api.model.event.Event;
 import java.math.BigDecimal;
 import java.util.BitSet;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class ExprParser extends ExpressionBaseVisitor<Boolean> {
 
-    private static final String TENANT_ID = "tenantId";
     private static final String ID = "id";
     private static final String CTIME = "ctime";
     private static final String TEXT = "text";
@@ -24,7 +24,8 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
     private static final String TAGS = "tags.";
     private static final String FACTS = "facts.";
 
-    private static final String KEY_REGEXP = "(?<!\\\\)\\.";
+    private static final Pattern KEY_REGEXP = Pattern.compile("(?<!\\\\)\\.");
+    private static final Pattern ESCAPE_CLEANER_REGEXP = Pattern.compile("^(['\"])(.*)\\1$");
 
     static ParseTree createParserTree(String expression, ANTLRErrorListener errorListener) {
         CharStream cs = CharStreams.fromString(expression);
@@ -150,7 +151,7 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
                 return false;
             }
 
-            String targetValueStr = targetValue.toString();
+            String targetValueStr = cleanString(targetValue.toString());
             BigDecimal targetValueDecimal = null;
 
             // Fact comparison value
@@ -189,13 +190,13 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
                         return false;
                     }
                     if (targetValueDecimal != null) {
-                        targetValueStr = targetValueDecimal.toString();
+                        targetValueStr = cleanString(targetValueDecimal.toString());
                     }
-                    strValue = decimalValue.toString();
+                    strValue = cleanString(decimalValue.toString());
                 }
 
                 if(targetValueStr == null) {
-                    targetValueStr = targetValue.toString();
+                    targetValueStr = cleanString(targetValue.toString());
                 }
             } catch(NumberFormatException e) {
                 e.printStackTrace();
@@ -305,9 +306,7 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
         private Object decodeKeyToValue(String eventField) {
             eventField = eventField.toLowerCase();
             Object sEventValue = null;
-            if (TENANT_ID.equals(eventField)) {
-                sEventValue = value.getTenantId();
-            } else if (ID.equals(eventField)) {
+            if (ID.equals(eventField)) {
                 sEventValue = value.getId();
             } else if (CTIME.equals(eventField)) {
                 sEventValue = value.getCtime();
@@ -327,13 +326,13 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
                 String key = eventField.substring(6);
 
                 // Allow matching of keys with dot in them if they're escaped correctly
-                String[] subMap = key.split(KEY_REGEXP, 2);
+                String[] subMap = KEY_REGEXP.split(key, 2);
                 String innerKey = subMap[0].replace("\\.", ".").toLowerCase();
                 Object innerValue = value.getFacts().get(innerKey);
 
                 while(subMap.length > 1) {
                     if(innerValue instanceof Map) {
-                        subMap = subMap[1].split(KEY_REGEXP, 2);
+                        subMap = KEY_REGEXP.split(subMap[1], 2);
                         innerKey = subMap[0].replace("\\.", ".");
                         innerValue = ((Map) innerValue).get(innerKey);
                     } else {
@@ -351,7 +350,7 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
     static boolean arrayContains(Iterable<?> targetValue, String matcher) {
         boolean anyMatch = false;
         for (Object o : targetValue) {
-            anyMatch |= o.toString().equals(matcher);
+            anyMatch |= cleanString(o.toString()).equals(matcher);
         }
         return anyMatch;
     }
@@ -360,10 +359,14 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
         String strValue = null;
         if (value.STRING() != null) {
             strValue = value.STRING().getSymbol().getText();
-            strValue = strValue.replaceAll("^(['\"])(.*)\\1$", "$2").toLowerCase();
+            strValue = cleanString(strValue);
         }
 
         return strValue;
+    }
+
+    static String cleanString(String strValue) {
+        return ESCAPE_CLEANER_REGEXP.matcher(strValue).replaceAll("$2").toLowerCase();
     }
 }
 
