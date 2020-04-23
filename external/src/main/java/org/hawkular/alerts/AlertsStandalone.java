@@ -6,10 +6,17 @@ import org.hawkular.alerts.api.services.ActionsService;
 import org.hawkular.alerts.api.services.AlertsService;
 import org.hawkular.alerts.api.services.DefinitionsService;
 import org.hawkular.alerts.api.services.StatusService;
-import org.hawkular.alerts.engine.cache.IspnCacheManager;
 import org.hawkular.alerts.engine.cache.ActionsCacheManager;
+import org.hawkular.alerts.engine.cache.IspnCacheManager;
 import org.hawkular.alerts.engine.cache.PublishCacheManager;
-import org.hawkular.alerts.engine.impl.*;
+import org.hawkular.alerts.engine.impl.AlertsContext;
+import org.hawkular.alerts.engine.impl.AlertsEngineImpl;
+import org.hawkular.alerts.engine.impl.DataDrivenGroupCacheManager;
+import org.hawkular.alerts.engine.impl.DroolsRulesEngineImpl;
+import org.hawkular.alerts.engine.impl.ExtensionsServiceImpl;
+import org.hawkular.alerts.engine.impl.IncomingDataManagerImpl;
+import org.hawkular.alerts.engine.impl.PartitionManagerImpl;
+import org.hawkular.alerts.engine.impl.StatusServiceImpl;
 import org.hawkular.alerts.engine.impl.ispn.IspnActionsServiceImpl;
 import org.hawkular.alerts.engine.impl.ispn.IspnAlertsServiceImpl;
 import org.hawkular.alerts.engine.impl.ispn.IspnDefinitionsServiceImpl;
@@ -20,6 +27,8 @@ import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.query.Search;
 import org.infinispan.query.SearchManager;
 
+import javax.inject.Singleton;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -30,6 +39,7 @@ import static org.hawkular.alerts.api.util.Util.isEmpty;
  *
  * @author Lucas Ponce
  */
+@Singleton
 public class AlertsStandalone {
     private static final MsgLogger log = MsgLogging.getMsgLogger(AlertsStandalone.class);
     private static ExecutorService executor;
@@ -86,10 +96,12 @@ public class AlertsStandalone {
             long startReindex = System.currentTimeMillis();
             SearchManager searchManager = Search
                     .getSearchManager(IspnCacheManager.getCacheManager().getCache("backend"));
-            searchManager.getMassIndexer().start();
-            long stopReindex = System.currentTimeMillis();
-            log.info("Reindexing Ispn [backend] completed in [" + (stopReindex - startReindex) + " ms]");
-
+            CompletableFuture<Void> reIndexingFuture = searchManager.getMassIndexer().startAsync();
+            reIndexingFuture.thenAcceptAsync(empty -> {
+                long stopReindex = System.currentTimeMillis();
+                log.info("Reindexing Ispn [backend] completed in [" + (stopReindex - startReindex) + " ms]");
+                ispnReindex = false;
+            });
         }
 
         ispnActions = new IspnActionsServiceImpl();
@@ -181,4 +193,7 @@ public class AlertsStandalone {
         return status;
     }
 
+    public boolean isReindexing() {
+        return ispnReindex;
+    }
 }
