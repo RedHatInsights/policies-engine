@@ -10,14 +10,14 @@ import org.hawkular.alerts.api.services.DefinitionsService;
 import org.hawkular.alerts.log.MsgLogger;
 import org.hawkular.alerts.log.MsgLogging;
 
-import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import static org.hawkular.alerts.api.util.Util.isEmpty;
 
-@ApplicationScoped
+@Singleton
 public class AlertStarter {
     public static MsgLogger LOGGER = MsgLogging.getMsgLogger(AlertStarter.class);
     private final static String BUILD_COMMIT_ENV_NAME = "OPENSHIFT_BUILD_COMMIT";
