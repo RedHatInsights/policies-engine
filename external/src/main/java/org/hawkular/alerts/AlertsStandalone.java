@@ -97,7 +97,11 @@ public class AlertsStandalone {
             SearchManager searchManager = Search
                     .getSearchManager(IspnCacheManager.getCacheManager().getCache("backend"));
             CompletableFuture<Void> reIndexingFuture = searchManager.getMassIndexer().startAsync();
-            reIndexingFuture.thenAcceptAsync(empty -> {
+            reIndexingFuture.whenComplete((empty, error) -> {
+                if(error != null) {
+                    error.printStackTrace();
+                }
+                log.infof("MassIndexer isRunning: %s", searchManager.getMassIndexer().isRunning());
                 long stopReindex = System.currentTimeMillis();
                 log.info("Reindexing Ispn [backend] completed in [" + (stopReindex - startReindex) + " ms]");
                 ispnReindex = false;
