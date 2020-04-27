@@ -67,9 +67,15 @@ public class AlertStarter {
         // PluginRegister is already using CDI, but we want it to initialize after Alerts has started
         alerts.init()
                 .whenComplete((empty, error) -> {
-                    pluginRegister.init();
-                    ((StatusServiceImpl) statusService).setStarted(true);
-                    LOGGER.info("Started Policies Engine");
+                    if(error != null) {
+                        LOGGER.error(error);
+                        error.printStackTrace();
+                        alerts.stop();
+                    } else {
+                        pluginRegister.init();
+                        ((StatusServiceImpl) statusService).setStarted(true);
+                        LOGGER.info("Started Policies Engine");
+                    }
         });
     }
 }
