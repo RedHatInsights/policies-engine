@@ -7,6 +7,8 @@ import org.hawkular.alerts.AlertsStandalone;
 import org.hawkular.alerts.api.services.ActionsService;
 import org.hawkular.alerts.api.services.AlertsService;
 import org.hawkular.alerts.api.services.DefinitionsService;
+import org.hawkular.alerts.api.services.StatusService;
+import org.hawkular.alerts.engine.impl.StatusServiceImpl;
 import org.hawkular.alerts.log.MsgLogger;
 import org.hawkular.alerts.log.MsgLogging;
 
@@ -28,6 +30,9 @@ public class AlertStarter {
     @Inject
     QuarkusActionPluginRegister pluginRegister;
 
+    @Inject
+    StatusService statusService;
+
     @Produces
     public AlertsService getAlertService() {
         return alerts.getAlertsService();
@@ -44,7 +49,12 @@ public class AlertStarter {
     }
 
     void startApp(@Observes StartupEvent startup) {
-        LOGGER.info("Application created, starting Policies Engine.");
+        String commit = System.getenv(BUILD_COMMIT_ENV_NAME);
+        if(!isEmpty(commit)) {
+            LOGGER.infof("Starting Policies Engine, build: %s", commit);
+        } else {
+            LOGGER.info("Starting Policies Engine.");
+        }
         initialize();
     }
 
@@ -53,15 +63,13 @@ public class AlertStarter {
         alerts.stop();
     }
 
-//    @PostConstruct
     void initialize() {
         // PluginRegister is already using CDI, but we want it to initialize after Alerts has started
-        pluginRegister.init();
-        String commit = System.getenv(BUILD_COMMIT_ENV_NAME);
-        if(!isEmpty(commit)) {
-            LOGGER.infof("Started Policies Engine, build: %s", commit);
-        } else {
-            LOGGER.info("Started Policies Engine");
-        }
+        alerts.init()
+                .whenComplete((empty, error) -> {
+                    pluginRegister.init();
+                    ((StatusServiceImpl) statusService).setStarted(true);
+                    LOGGER.info("Started Policies Engine");
+        });
     }
 }

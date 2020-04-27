@@ -1,5 +1,6 @@
 package org.hawkular.alerts;
 
+import com.redhat.cloud.policies.engine.actions.QuarkusActionPluginRegister;
 import io.quarkus.runtime.LaunchMode;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.hawkular.alerts.api.services.ActionsService;
@@ -26,8 +27,12 @@ import org.hawkular.alerts.log.MsgLogging;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.query.Search;
 import org.infinispan.query.SearchManager;
+import org.infinispan.query.impl.massindex.DistributedExecutorMassIndexer;
 
+import javax.enterprise.inject.Produces;
+import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.lang.reflect.Field;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -44,7 +49,10 @@ public class AlertsStandalone {
     private static final MsgLogger log = MsgLogging.getMsgLogger(AlertsStandalone.class);
     private static ExecutorService executor;
 
-//    @ConfigProperty(name = "engine.backend.ispn.reindex", defaultValue = "false")
+    @Inject
+    QuarkusActionPluginRegister pluginRegister;
+
+    //    @ConfigProperty(name = "engine.backend.ispn.reindex", defaultValue = "false")
     private boolean ispnReindex;
 
     private ActionsCacheManager actionsCacheManager;
@@ -64,7 +72,7 @@ public class AlertsStandalone {
     private PublishCacheManager publishCacheManager;
 
     public AlertsStandalone() {
-        log.info("Hawkular Alerting uses Infinispan backend");
+        log.info("Policies Engine uses Infinispan backend");
 
         if((LaunchMode.current() == LaunchMode.DEVELOPMENT || LaunchMode.current() == LaunchMode.TEST) && isEmpty(System.getProperty("hawkular.data"))) {
             System.setProperty("hawkular.data", "target/hawkular.data");
@@ -89,24 +97,6 @@ public class AlertsStandalone {
         publishCacheManager = new PublishCacheManager();
 
         ispnReindex = ConfigProvider.getConfig().getValue("engine.backend.ispn.reindex", Boolean.class);
-
-        if (this.ispnReindex) {
-            log.info("Hawkular Alerting started with hawkular-alerts.backend-reindex=true");
-            log.info("Reindexing Ispn [backend] started.");
-            long startReindex = System.currentTimeMillis();
-            SearchManager searchManager = Search
-                    .getSearchManager(IspnCacheManager.getCacheManager().getCache("backend"));
-            CompletableFuture<Void> reIndexingFuture = searchManager.getMassIndexer().startAsync();
-            reIndexingFuture.whenComplete((empty, error) -> {
-                if(error != null) {
-                    error.printStackTrace();
-                }
-                log.infof("MassIndexer isRunning: %s", searchManager.getMassIndexer().isRunning());
-                long stopReindex = System.currentTimeMillis();
-                log.info("Reindexing Ispn [backend] completed in [" + (stopReindex - startReindex) + " ms]");
-                ispnReindex = false;
-            });
-        }
 
         ispnActions = new IspnActionsServiceImpl();
         ispnAlerts = new IspnAlertsServiceImpl();
@@ -159,20 +149,43 @@ public class AlertsStandalone {
         publishCacheManager.setPublishDataIdsCache(cacheManager.getCache("dataIds"));
 
         status.setPartitionManager(partitionManager);
+    }
 
-        // Initialization needs order
+    public CompletableFuture<Void> init() {
+        return CompletableFuture.runAsync(() -> {
+            if (this.ispnReindex) {
+                log.info("Reindexing of Infinispan [backend] started.");
+                status.setReindexing(true);
+                long startReindex = System.currentTimeMillis();
+                SearchManager searchManager = Search
+                        .getSearchManager(IspnCacheManager.getCacheManager().getCache("backend"));
+                DistributedExecutorMassIndexer massIndexer = (DistributedExecutorMassIndexer) searchManager.getMassIndexer();
+                try {
+                    patchMassIndexer(massIndexer);
+                } catch (Exception e) {
+                    // We'll handle this later
+                    throw new RuntimeException(e);
+                }
+                // Lets block instead of async
+                massIndexer.start();
+                long stopReindex = System.currentTimeMillis();
+                log.info("Reindexing of Infinispan [backend] completed in [" + (stopReindex - startReindex) + " ms]");
+                ispnReindex = false;
+                status.setReindexing(false);
+            }
+            // Initialization needs order and needs to be done after reindexing
+            ispnAlerts.init();
+            ispnDefinitions.init();
+            ispnActions.init();
 
-        ispnAlerts.init();
-        ispnDefinitions.init();
-        ispnActions.init();
-
-        partitionManager.init();
-        alertsContext.init();
-        dataDrivenGroupCacheManager.init();
-        actionsCacheManager.init();
-        publishCacheManager.init();
-        extensions.init();
-        engine.initServices();
+            partitionManager.init();
+            alertsContext.init();
+            dataDrivenGroupCacheManager.init();
+            actionsCacheManager.init();
+            publishCacheManager.init();
+            extensions.init();
+            engine.initServices();
+        });
     }
 
     public void stop() {
@@ -193,11 +206,21 @@ public class AlertsStandalone {
         return ispnActions;
     }
 
+    @Produces
     public StatusService getStatusService() {
         return status;
     }
 
     public boolean isReindexing() {
         return ispnReindex;
+    }
+
+    /**
+     * Workaround until ISPN-11710 is fixed
+     */
+    private void patchMassIndexer(DistributedExecutorMassIndexer massIndexer) throws Exception {
+        Field f = massIndexer.getClass().getDeclaredField("localExecutor");
+        f.setAccessible(true);
+        f.set(massIndexer, executor);
     }
 }
