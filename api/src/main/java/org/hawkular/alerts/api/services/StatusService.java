@@ -17,6 +17,18 @@ public interface StatusService {
     boolean isStarted();
 
     /**
+     * @return true if all the checks pass
+     */
+    boolean isHealthy();
+
+    /**
+     * Show additional information about status of different components.
+     *
+     * @return
+     */
+    Map<String, String> getAdditionalStatus();
+
+    /**
      * @return true if system is running on a distributed scenario.
      *         false if system is running on a standalone scenario.
      */

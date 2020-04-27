@@ -20,6 +20,7 @@ import org.hawkular.alerts.api.model.trigger.Mode;
 import org.hawkular.alerts.api.model.trigger.Trigger;
 import org.hawkular.alerts.api.model.trigger.TriggerAction;
 import org.hawkular.alerts.api.services.DefinitionsService;
+import org.hawkular.alerts.api.services.StatusService;
 import org.junit.jupiter.api.*;
 import org.reactivestreams.Publisher;
 
@@ -37,9 +38,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ReceiverTest {
 
+    @Inject
+    StatusService statusService;
+
     @BeforeAll
-    void init() {
+    void init() throws InterruptedException {
         System.setProperty("hawkular.data", "./target/hawkular.data");
+        for(int i = 0; i < 100; i++) {
+            if(statusService.isHealthy()) {
+                break;
+            }
+            Thread.sleep(100);
+        }
     }
 
     @Inject
