@@ -1,6 +1,7 @@
 package org.hawkular.alerts;
 
 import com.redhat.cloud.policies.engine.actions.QuarkusActionPluginRegister;
+import com.redhat.cloud.policies.engine.workaround.NoTimeoutClusterExecutor;
 import io.quarkus.runtime.LaunchMode;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.hawkular.alerts.api.services.ActionsService;
@@ -222,5 +223,9 @@ public class AlertsStandalone {
         Field f = massIndexer.getClass().getDeclaredField("localExecutor");
         f.setAccessible(true);
         f.set(massIndexer, executor);
+
+        Field f2 = massIndexer.getClass().getDeclaredField("executor");
+        f2.setAccessible(true);
+        f2.set(massIndexer, new NoTimeoutClusterExecutor(executor));
     }
 }

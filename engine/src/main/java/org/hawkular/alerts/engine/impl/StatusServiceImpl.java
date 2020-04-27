@@ -1,13 +1,13 @@
 package org.hawkular.alerts.engine.impl;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.hawkular.alerts.api.services.StatusService;
 import org.hawkular.alerts.engine.cache.IspnCacheManager;
 import org.hawkular.alerts.engine.service.PartitionManager;
 import org.infinispan.health.CacheHealth;
 import org.infinispan.health.Health;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.infinispan.health.HealthStatus.HEALTHY;
 
@@ -46,7 +46,7 @@ public class StatusServiceImpl implements StatusService {
 
     @Override
     public Map<String, String> getAdditionalStatus() {
-        return null;
+        return this.statusNotes;
     }
 
     public void setStarted(boolean started) {

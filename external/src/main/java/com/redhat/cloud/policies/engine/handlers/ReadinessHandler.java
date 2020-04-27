@@ -27,11 +27,11 @@ public class ReadinessHandler implements HealthCheck {
                 .state(statusService.isHealthy());
 
         if(!statusService.isStarted()) {
-            response = response.withData("starting", "true");
+            response.withData("starting", "true");
         }
 
         for (Map.Entry<String, String> addE : statusService.getAdditionalStatus().entrySet()) {
-            response = response.withData(addE.getKey(), addE.getValue());
+            response.withData(addE.getKey(), addE.getValue());
         }
 
         if(statusService.isDistributed()) {
