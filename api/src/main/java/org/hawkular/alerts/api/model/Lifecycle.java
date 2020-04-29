@@ -50,6 +50,12 @@ public class Lifecycle implements Serializable {
         this.stime = stime;
     }
 
+    public Lifecycle(String status, long stime, List<Note> notes) {
+        this.status = status;
+        this.stime = stime;
+        this.notes = notes;
+    }
+
     public String getStatus() {
         return status;
     }

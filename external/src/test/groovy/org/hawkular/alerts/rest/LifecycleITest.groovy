@@ -141,8 +141,8 @@ class LifecycleITest extends AbstractQuarkusITestBase {
         assertEquals(200, resp.status)
         assertEquals("RESOLVED", resp.data[0].status)
         assertEquals(2, resp.data[0].lifecycle.size())
-        assertEquals("testUser", resp.data[0].lifecycle[1].user)
-        assertEquals("testNotes", resp.data[0].notes[0].text)
+        assertEquals("testUser", resp.data[0].lifecycle[1].notes[0].user)
+        assertEquals("testNotes", resp.data[0].lifecycle[1].notes[0].text)
         assertNull(resp.data[0].resolvedEvalSets)
         assertNotNull(resp.data[0].trigger.context);
         Map<String, String> alertContext = (Map<String, String>)resp.data[0].trigger.context;
@@ -287,8 +287,8 @@ class LifecycleITest extends AbstractQuarkusITestBase {
         assertEquals("ACKNOWLEDGED", resp.data[0].status)
         assertEquals("HIGH", resp.data[0].severity)
         assertEquals(2, resp.data[0].lifecycle.size())
-        assertEquals("testUser", resp.data[0].lifecycle[1].user)
-        assertEquals("testNotes", resp.data[0].notes[0].text)
+        assertEquals("testUser", resp.data[0].lifecycle[1].notes[0].user)
+        assertEquals("testNotes", resp.data[0].lifecycle[1].notes[0].text)
 
         // FETCH trigger and make sure it's still enabled (note - we can't check the mode as that is runtime
         // info and not supplied in the returned json)
@@ -323,7 +323,6 @@ class LifecycleITest extends AbstractQuarkusITestBase {
         assertEquals(1, resp.data.size())
         assertEquals("RESOLVED", resp.data[0].status)
         assertEquals(3, resp.data[0].lifecycle.size())
-        assertEquals("AutoResolve", resp.data[0].lifecycle[2].user)
     }
 
     @Test
@@ -558,7 +557,6 @@ class LifecycleITest extends AbstractQuarkusITestBase {
         assertEquals(1, resp.data.size())
         assertEquals("RESOLVED", resp.data[0].status)
         assertEquals(3, resp.data[0].lifecycle.size())
-        assertEquals("AutoResolve", resp.data[0].lifecycle[2].user)
         assertNotNull(resp.data[0].evalSets)
         assertNotNull(resp.data[0].resolvedEvalSets)
         assertFalse(resp.data[0].evalSets.isEmpty())
@@ -569,7 +567,6 @@ class LifecycleITest extends AbstractQuarkusITestBase {
         assertEquals(200, resp.status)
         assertEquals("RESOLVED", resp.data[0].status)
         assertEquals(3, resp.data[0].lifecycle.size())
-        assertEquals("AutoResolve", resp.data[0].lifecycle[2].user)
         assertNull(resp.data[0].evalSets)
         assertNull(resp.data[0].resolvedEvalSets)
     }

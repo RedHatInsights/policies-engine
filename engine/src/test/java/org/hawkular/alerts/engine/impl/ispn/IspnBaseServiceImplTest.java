@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.hawkular.alerts.api.exception.NotFoundException;
+import org.hawkular.alerts.api.model.Note;
 import org.hawkular.alerts.api.model.Severity;
 import org.hawkular.alerts.api.model.action.ActionDefinition;
 import org.hawkular.alerts.api.model.condition.AvailabilityCondition;
@@ -149,11 +150,11 @@ public abstract class IspnBaseServiceImplTest {
                             break;
                         case 1:
                             alertX.setSeverity(Severity.LOW);
-                            alertX.addLifecycle(Alert.Status.ACKNOWLEDGED, "user1", alert + 1);
+                            alertX.addLifecycle(Alert.Status.ACKNOWLEDGED, alert + 1, List.of(new Note("user1", "")));
                             break;
                         case 0:
                             alertX.setSeverity(Severity.MEDIUM);
-                            alertX.addLifecycle(Alert.Status.RESOLVED, "user2", alert + 1);
+                            alertX.addLifecycle(Alert.Status.RESOLVED, alert + 1, List.of(new Note("user2", "")));
                     }
                     newAlerts.add(alertX);
                 }

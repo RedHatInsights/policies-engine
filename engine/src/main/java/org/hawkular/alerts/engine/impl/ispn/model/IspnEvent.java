@@ -70,7 +70,7 @@ public class IspnEvent implements Serializable {
         }
         if (event instanceof Alert) {
             this.event = new Alert((Alert) event);
-            this.status = ((Alert) event).getCurrentLifecycle().getStatus().name();
+            this.status = ((Alert) event).getCurrentLifecycle().getStatus();
             this.stime = ((Alert) event).getCurrentLifecycle().getStime();
             this.severity = ((Alert) event).getSeverity().name();
         } else {
