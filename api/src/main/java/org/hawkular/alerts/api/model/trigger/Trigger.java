@@ -1,23 +1,26 @@
 package org.hawkular.alerts.api.model.trigger;
 
-import static org.hawkular.alerts.api.util.Util.isEmpty;
-
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import org.hawkular.alerts.api.doc.DocModel;
 import org.hawkular.alerts.api.doc.DocModelProperty;
+import org.hawkular.alerts.api.model.Lifecycle;
 import org.hawkular.alerts.api.model.Severity;
 import org.hawkular.alerts.api.model.data.Data;
 import org.hawkular.alerts.api.model.event.EventType;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
+
+import static org.hawkular.alerts.api.util.Util.isEmpty;
 
 /**
  * A Trigger definition.  A Trigger can fire an Alert or an Event.
@@ -156,6 +159,11 @@ public class Trigger implements Serializable {
     @JsonInclude
     String source;
 
+    @DocModelProperty(description = "List of lifecycle events this trigger has generated.",
+            position = 22)
+    @JsonInclude(Include.NON_EMPTY)
+    List<Lifecycle> lifecycle = new ArrayList<>();
+
     /** Used internally by the rules engine. Indicates current mode of a trigger: FIRING or AUTORESOLVE. */
     @JsonIgnore
     private Mode mode;
@@ -229,6 +237,11 @@ public class Trigger implements Serializable {
         this.type = trigger.getType();
         this.source = trigger.getSource();
         this.severity = trigger.getSeverity();
+        this.lifecycle = new ArrayList<>();
+        trigger.getLifecycle().stream()
+                .forEach(l -> {
+                    this.lifecycle.add(new Lifecycle(l));
+                });
 
         this.mode = trigger.getMode() != null ? trigger.getMode() : Mode.FIRING;
         this.match = trigger.getMode() == Mode.FIRING ? trigger.getFiringMatch() : trigger.getAutoResolveMatch();
@@ -541,6 +554,14 @@ public class Trigger implements Serializable {
         setMatch(this.mode == Mode.FIRING ? getFiringMatch() : getAutoResolveMatch());
     }
 
+    public List<Lifecycle> getLifecycle() {
+        return lifecycle;
+    }
+
+    public void setLifecycle(List<Lifecycle> lifecycle) {
+        this.lifecycle = lifecycle;
+    }
+
     @JsonIgnore
     public Match getMatch() {
         return match;
@@ -568,24 +589,16 @@ public class Trigger implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
-
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         Trigger trigger = (Trigger) o;
-
-        if (id != null ? !id.equals(trigger.id) : trigger.id != null)
-            return false;
-        return !(tenantId != null ? !tenantId.equals(trigger.tenantId) : trigger.tenantId != null);
-
+        return Objects.equals(tenantId, trigger.tenantId) &&
+                Objects.equals(id, trigger.id);
     }
 
     @Override
     public int hashCode() {
-        int result = id != null ? id.hashCode() : 0;
-        result = 31 * result + (tenantId != null ? tenantId.hashCode() : 0);
-        return result;
+        return Objects.hash(tenantId, id);
     }
 
     public boolean isSame(Trigger t) {
@@ -615,7 +628,7 @@ public class Trigger implements Serializable {
     }
 
     private boolean same(Object s1, Object s2) {
-        return null == s1 ? null == s2 : s1.equals(s2);
+        return Objects.equals(s1, s2);
     }
 
     @Override
@@ -630,4 +643,7 @@ public class Trigger implements Serializable {
                 + ", mode=" + mode + ", tags=" + tags + "]";
     }
 
+    public enum LifecycleType {
+        ALERT_GENERATED, AUTO_DISABLE, AUTO_RESOLVE, DISABLE, ENABLE
+    };
 }
