@@ -26,6 +26,9 @@ public class ExprEvaluationTest {
         expr = "facts.a = 'b'";
         assertTrue(ExprParser.evaluate(event, expr));
 
+        expr = "facts.A = 'B'";
+        assertTrue(ExprParser.evaluate(event, expr));
+
         expr = "facts.a != 'c'";
         assertTrue(ExprParser.evaluate(event, expr));
 

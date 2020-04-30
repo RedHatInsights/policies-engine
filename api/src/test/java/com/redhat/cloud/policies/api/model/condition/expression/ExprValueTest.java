@@ -51,6 +51,10 @@ public class ExprValueTest {
 
         expr = "facts.a = [b, c, a]";
         assertFalse(ExprParser.evaluate(event, expr));
+
+        // Case-insensitive matching must work inside arrays also
+        expr = "facts.a = [b, C, d]";
+        assertTrue(ExprParser.evaluate(event, expr));
     }
 
     @Test
@@ -67,6 +71,10 @@ public class ExprValueTest {
         assertTrue(ExprParser.evaluate(event, expr));
 
         expr = "facts.a contains ['b']";
+        assertTrue(ExprParser.evaluate(event, expr));
+
+        // Case-insensitive
+        expr = "facts.a contains ['B']";
         assertTrue(ExprParser.evaluate(event, expr));
 
         // Empty array matches always
@@ -95,6 +103,10 @@ public class ExprValueTest {
         assertTrue(ExprParser.evaluate(event, expr));
 
         expr = "facts.a contains ['b']";
+        assertTrue(ExprParser.evaluate(event, expr));
+
+        // Case-insensitive
+        expr = "facts.A contains ['B']";
         assertTrue(ExprParser.evaluate(event, expr));
 
         // Empty array matches always
