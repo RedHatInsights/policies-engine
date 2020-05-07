@@ -85,7 +85,7 @@ public class IspnActionsServiceImplTest extends IspnBaseServiceImplTest {
             trigger.addAction(triggerAction0);
             TriggerAction triggerAction1 = new TriggerAction("tenant0", "plugin0", "action1");
             trigger.addAction(triggerAction1);
-            definitions.updateTrigger("tenant0", trigger);
+            definitions.updateTrigger("tenant0", trigger, true);
 
             Trigger updated = definitions.getTrigger("tenant0", "trigger0");
             assertTrue(trigger != updated);

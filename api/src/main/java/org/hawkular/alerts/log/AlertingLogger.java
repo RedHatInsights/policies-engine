@@ -51,11 +51,11 @@ public interface AlertingLogger extends MsgLogger {
     void errorCannotInitializeAlertsService(String msg);
 
     @LogMessage(level = Logger.Level.INFO)
-    @Message(id = 220014, value = "Hawkular Alerts deployed in single node mode")
+    @Message(id = 220014, value = "Policies Engine deployed in single node mode")
     void infoPartitionManagerDisabled();
 
     @LogMessage(level = Logger.Level.INFO)
-    @Message(id = 220015, value = "Hawkular Alerts deployed in distributed mode")
+    @Message(id = 220015, value = "Policies Engine deployed in distributed mode")
     void infoPartitionManagerEnabled();
 
     @LogMessage(level = Logger.Level.ERROR)
@@ -89,6 +89,10 @@ public interface AlertingLogger extends MsgLogger {
     @LogMessage(level = Logger.Level.INFO)
     @Message(id = 220023, value = "Init Actions Cache")
     void infoInitActionsCache();
+
+    @LogMessage(level = Logger.Level.ERROR)
+    @Message(id = 220024, value = "Unable to update trigger [%s/%s] lifecycle events: %s")
+    void unableToUpdateTriggerLifecycle(String tenantId, String triggerId, String msg);
 
     @LogMessage(level = Logger.Level.INFO)
     @Message(id = 240001, value = "Plugin [%s] has received an action message: [%s]")

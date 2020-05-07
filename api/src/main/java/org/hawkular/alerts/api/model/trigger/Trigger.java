@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import org.hawkular.alerts.api.doc.DocModel;
 import org.hawkular.alerts.api.doc.DocModelProperty;
 import org.hawkular.alerts.api.model.Lifecycle;
+import org.hawkular.alerts.api.model.Note;
 import org.hawkular.alerts.api.model.Severity;
 import org.hawkular.alerts.api.model.data.Data;
 import org.hawkular.alerts.api.model.event.EventType;
@@ -238,7 +239,7 @@ public class Trigger implements Serializable {
         this.source = trigger.getSource();
         this.severity = trigger.getSeverity();
         this.lifecycle = new ArrayList<>();
-        trigger.getLifecycle().stream()
+        trigger.getLifecycle()
                 .forEach(l -> {
                     this.lifecycle.add(new Lifecycle(l));
                 });
@@ -555,11 +556,25 @@ public class Trigger implements Serializable {
     }
 
     public List<Lifecycle> getLifecycle() {
+        if(lifecycle == null) {
+            lifecycle = new ArrayList<>();
+        }
         return lifecycle;
     }
 
     public void setLifecycle(List<Lifecycle> lifecycle) {
         this.lifecycle = lifecycle;
+    }
+
+    public void addLifecycle(TriggerLifecycle event, long stime, Note note) {
+        if(stime == 0) {
+            stime = System.currentTimeMillis();
+        }
+        Lifecycle lifecycle = new Lifecycle(event.name(), stime);
+        if(note != null) {
+            lifecycle.addNote(note);
+        }
+        getLifecycle().add(lifecycle);
     }
 
     @JsonIgnore
@@ -643,7 +658,7 @@ public class Trigger implements Serializable {
                 + ", mode=" + mode + ", tags=" + tags + "]";
     }
 
-    public enum LifecycleType {
-        ALERT_GENERATED, AUTO_DISABLE, AUTO_RESOLVE, DISABLE, ENABLE
+    public enum TriggerLifecycle {
+        ALERT_GENERATE, AUTO_DISABLE, AUTO_RESOLVE, DISABLE, ENABLE
     };
 }

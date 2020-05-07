@@ -180,7 +180,7 @@ public class IspnDefinitionsServiceImplTest extends IspnBaseServiceImplTest {
 
         trigger.setDescription("This is a long description for Trigger1 Test");
         trigger.addTag("tag1", "value1");
-        definitions.updateTrigger(TENANT, trigger);
+        definitions.updateTrigger(TENANT, trigger, true);
 
         Trigger updated = definitions.getTrigger(TENANT, "trigger1");
         assertEquals(trigger.getDescription(), updated.getDescription());
@@ -188,7 +188,7 @@ public class IspnDefinitionsServiceImplTest extends IspnBaseServiceImplTest {
 
         try {
             trigger.setId("trigger2");
-            definitions.updateTrigger(TENANT, trigger);
+            definitions.updateTrigger(TENANT, trigger, true);
         } catch (NotFoundException e) {
             // Expected
         }

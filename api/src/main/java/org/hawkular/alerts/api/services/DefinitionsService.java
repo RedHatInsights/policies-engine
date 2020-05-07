@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hawkular.alerts.api.exception.NotFoundException;
+import org.hawkular.alerts.api.model.Note;
 import org.hawkular.alerts.api.model.action.ActionDefinition;
 import org.hawkular.alerts.api.model.condition.Condition;
 import org.hawkular.alerts.api.model.dampening.Dampening;
@@ -70,6 +71,16 @@ public interface DefinitionsService {
      * @throws Exception If the <code>Trigger</code> does not exist.
      */
     void updateFullTrigger(String tenantId, FullTrigger fullTrigger) throws Exception;
+
+    /**
+     * Add lifecycle event to an existing trigger. This will not reload the trigger.
+     *
+     * @param tenantId Trigger's tenant
+     * @param triggerId Trigger's unique identifier
+     * @param lifecycle Lifecycle event to be added
+     * @throws Exception In case of any error
+     */
+    void addLifecycleToTrigger(String tenantId, String triggerId, Trigger.TriggerLifecycle lifecycle) throws Exception;
 
     /**
      * <p>
@@ -175,11 +186,12 @@ public interface DefinitionsService {
      * </p>
      * @param tenantId Tenant where trigger is updated
      * @param trigger Existing trigger to be updated
+     * @param reload Override the reload process
      * @throws NotFoundException if trigger is not found
      * @throws Exception on any problem
      * @see {@link #updateGroupTrigger(String, Trigger)} for updating a group trigger
      */
-    Trigger updateTrigger(String tenantId, Trigger trigger) throws Exception;
+    Trigger updateTrigger(String tenantId, Trigger trigger, boolean reload) throws Exception;
 
     /**
      * Update the group <code>Trigger</code>. <code>Conditions</code> and <code>Dampening</code> are
@@ -204,11 +216,12 @@ public interface DefinitionsService {
      * @param tenantId Tenant where trigger is updated
      * @param groupTriggerIds Comma-separated list of existing group triggerIds to be updated.
      * @param enabled The desired enablement state
+     * @param note Who enabled and a possible comment
      * @throws NotFoundException if a trigger is not found
      * @throws Exception on any problem
      * @see {@link #updateGroupTriggerEnablement(String, Trigger)} for updating a group trigger
      */
-    void updateGroupTriggerEnablement(String tenantId, String groupTriggerIds, boolean enabled) throws Exception;
+    void updateGroupTriggerEnablement(String tenantId, String groupTriggerIds, boolean enabled, Note note) throws Exception;
 
     /**
      * Update and persist <code>Trigger</code> enablement state. The Alerts engine will be updated
@@ -216,11 +229,12 @@ public interface DefinitionsService {
      * @param tenantId Tenant where trigger is updated
      * @param triggerIds Comma-separated list of existing triggerIds to be updated.
      * @param enabled The desired enablement state
+     * @param note Who enabled and a possible comment
      * @throws NotFoundException if a trigger is not found
      * @throws Exception on any problem
      * @see {@link #updateGroupTriggerEnablement(String, Trigger)} for updating a group trigger
      */
-    void updateTriggerEnablement(String tenantId, String triggerIds, boolean enabled) throws Exception;
+    void updateTriggerEnablement(String tenantId, String triggerIds, boolean enabled, Note note) throws Exception;
 
     /**
      * Get a stored Trigger for a specific Tenant.

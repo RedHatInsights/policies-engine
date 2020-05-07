@@ -20,6 +20,8 @@ import com.google.common.hash.Hashing;
 import org.hawkular.alerts.api.exception.FoundException;
 import org.hawkular.alerts.api.exception.NotFoundException;
 import org.hawkular.alerts.api.json.GroupMemberInfo;
+import org.hawkular.alerts.api.model.Lifecycle;
+import org.hawkular.alerts.api.model.Note;
 import org.hawkular.alerts.api.model.action.ActionDefinition;
 import org.hawkular.alerts.api.model.condition.AvailabilityCondition;
 import org.hawkular.alerts.api.model.condition.CompareCondition;
@@ -377,7 +379,7 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
                 if ((keepNonOrphans && !member.isOrphan()) || (keepOrphans && member.isOrphan())) {
                     member.setMemberOf(null);
                     member.setType(TriggerType.STANDARD);
-                    updateTrigger(member);
+                    updateTrigger(member, true);
                     continue;
                 }
 
@@ -456,7 +458,7 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
                 if (trigger.isGroup()) {
                     updateGroupTrigger(tenantId, trigger);
                 } else {
-                    updateTrigger(trigger);
+                    updateTrigger(trigger, true);
                 }
             } else {
                 log.debugf("Skipping trigger update, no difference between old %s and new %s", existingTrigger,
@@ -544,7 +546,7 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
     }
 
     @Override
-    public Trigger updateTrigger(String tenantId, Trigger trigger) throws Exception {
+    public Trigger updateTrigger(String tenantId, Trigger trigger, boolean reload) throws Exception {
         if (isEmpty(tenantId)) {
             throw new IllegalArgumentException("TenantId must be not null");
         }
@@ -572,7 +574,7 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
                 throw new IllegalArgumentException("Orphan status can not be changed by this method.");
             }
         }
-        return updateTrigger(trigger);
+        return updateTrigger(trigger, reload);
     }
 
     @Override
@@ -604,10 +606,10 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
 
             for (Trigger member : memberTriggers) {
                 copyGroupTrigger(groupTrigger, member, false);
-                updateTrigger(member);
+                updateTrigger(member, true);
             }
 
-            return updateTrigger(groupTrigger);
+            return updateTrigger(groupTrigger, true);
 
         } finally {
             releaseNotifications();
@@ -615,7 +617,7 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
     }
 
     @Override
-    public void updateGroupTriggerEnablement(String tenantId, String groupTriggerIds, boolean enabled)
+    public void updateGroupTriggerEnablement(String tenantId, String groupTriggerIds, boolean enabled, Note note)
             throws Exception {
         if (isEmpty(tenantId)) {
             throw new IllegalArgumentException("TenantId must be not null");
@@ -649,8 +651,8 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
             for (Trigger groupTrigger : filteredGroupTriggers) {
                 Collection<Trigger> memberTriggers = getMemberTriggers(tenantId, groupTrigger.getId(), false);
 
-                updateTriggerEnablement(tenantId, memberTriggers, enabled);
-                updateTriggerEnablement(tenantId, Collections.singleton(groupTrigger), enabled);
+                updateTriggerEnablement(tenantId, memberTriggers, enabled, note);
+                updateTriggerEnablement(tenantId, Collections.singleton(groupTrigger), enabled, note);
             }
         } finally {
             releaseNotifications();
@@ -658,7 +660,7 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
     }
 
     @Override
-    public void updateTriggerEnablement(String tenantId, String triggerIds, boolean enabled) throws Exception {
+    public void updateTriggerEnablement(String tenantId, String triggerIds, boolean enabled, Note note) throws Exception {
         if (isEmpty(tenantId)) {
             throw new IllegalArgumentException("TenantId must be not null");
         }
@@ -684,7 +686,7 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
             filteredTriggers.add(existingTrigger);
         }
 
-        updateTriggerEnablement(tenantId, filteredTriggers, enabled);
+        updateTriggerEnablement(tenantId, filteredTriggers, enabled, note);
     }
 
     @Override
@@ -821,7 +823,7 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
 
         member.setType(TriggerType.ORPHAN);
 
-        return updateTrigger(member);
+        return updateTrigger(member, true);
     }
 
     @Override
@@ -1935,15 +1937,23 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
                 new DefinitionsEvent(DefinitionsEvent.Type.TRIGGER_REMOVE, tenantId, triggerId, trigger.getTags()));
     }
 
-    private Trigger updateTrigger(Trigger trigger) throws Exception {
+    public void addLifecycleToTrigger(String tenantId, String triggerId, Trigger.TriggerLifecycle lifecycle) throws Exception {
+        Trigger trigger = getTrigger(tenantId, triggerId);
+        trigger.addLifecycle(lifecycle, 0, null);
+        updateTrigger(trigger, false);
+    }
+
+    private Trigger updateTrigger(Trigger trigger, boolean reload) throws Exception {
         String pk = pk(trigger);
         backend.put(pk, new IspnTrigger(trigger));
 
-        if (null != alertsEngine) {
+        if (null != alertsEngine && reload) {
             alertsEngine.reloadTrigger(trigger.getTenantId(), trigger.getId());
         }
 
-        notifyListeners(new DefinitionsEvent(DefinitionsEvent.Type.TRIGGER_UPDATE, trigger));
+        if(reload) {
+            notifyListeners(new DefinitionsEvent(DefinitionsEvent.Type.TRIGGER_UPDATE, trigger));
+        }
 
         return trigger;
     }
@@ -2042,7 +2052,7 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
         return member;
     }
 
-    private void updateTriggerEnablement(String tenantId, Collection<Trigger> triggers, boolean enabled)
+    private void updateTriggerEnablement(String tenantId, Collection<Trigger> triggers, boolean enabled, Note note)
             throws Exception {
 
         try {
@@ -2050,7 +2060,9 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
 
             for (Trigger trigger : triggers) {
                 trigger.setEnabled(enabled);
-                updateTrigger(trigger);
+                Trigger.TriggerLifecycle updatedCycle = enabled ? Trigger.TriggerLifecycle.ENABLE : Trigger.TriggerLifecycle.DISABLE;
+                trigger.addLifecycle(updatedCycle, System.currentTimeMillis(), note);
+                updateTrigger(trigger, true);
             }
         } finally {
             releaseNotifications();

@@ -80,6 +80,10 @@ public class Lifecycle implements Serializable {
         this.notes = notes;
     }
 
+    public void addNote(Note note) {
+        notes.add(note);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -11,6 +11,7 @@ import org.hawkular.alerts.api.exception.NotFoundException;
 import org.hawkular.alerts.api.json.GroupConditionsInfo;
 import org.hawkular.alerts.api.json.GroupMemberInfo;
 import org.hawkular.alerts.api.json.UnorphanMemberInfo;
+import org.hawkular.alerts.api.model.Note;
 import org.hawkular.alerts.api.model.condition.Condition;
 import org.hawkular.alerts.api.model.dampening.Dampening;
 import org.hawkular.alerts.api.model.paging.Page;
@@ -910,7 +911,7 @@ public class TriggersHandler {
                         if (isGroup) {
                             definitionsService.updateGroupTrigger(tenantId, trigger);
                         } else {
-                            definitionsService.updateTrigger(tenantId, trigger);
+                            definitionsService.updateTrigger(tenantId, trigger, true);
                         }
                         log.debugf("Trigger: %s", trigger);
                         future.complete();
@@ -1337,7 +1338,7 @@ public class TriggersHandler {
             @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void setTriggersEnabled(RoutingContext routingContext) {
-        setTriggersEnabled(routingContext, false);
+        setTriggersEnabled(routingContext, false, parseNotes(routingContext));
     }
 
     @DocPath(method = PUT,
@@ -1354,7 +1355,7 @@ public class TriggersHandler {
             @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void setTriggerEnabled(RoutingContext routingContext) {
-        setTriggersEnabled(routingContext, false);
+        setTriggersEnabled(routingContext, false, parseNotes(routingContext));
     }
 
     @DocPath(method = DELETE,
@@ -1371,7 +1372,7 @@ public class TriggersHandler {
             @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void setTriggerDisabled(RoutingContext routingContext) {
-        setTriggersEnabled(routingContext, false);
+        setTriggersEnabled(routingContext, false, parseNotes(routingContext));
     }
 
     @DocPath(method = PUT,
@@ -1391,10 +1392,10 @@ public class TriggersHandler {
             @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void setGroupTriggersEnabled(RoutingContext routingContext) {
-        setTriggersEnabled(routingContext, true);
+        setTriggersEnabled(routingContext, true, parseNotes(routingContext));
     }
 
-    void setTriggersEnabled(RoutingContext routing, boolean isGroup) {
+    void setTriggersEnabled(RoutingContext routing, boolean isGroup, Note note) {
         routing.vertx()
                 .executeBlocking(future -> {
                     String tenantId = ResponseUtil.checkTenant(routing);
@@ -1428,9 +1429,9 @@ public class TriggersHandler {
                             }
                         }
                         if (isGroup) {
-                            definitionsService.updateGroupTriggerEnablement(tenantId, triggerIds, enabled);
+                            definitionsService.updateGroupTriggerEnablement(tenantId, triggerIds, enabled, note);
                         } else {
-                            definitionsService.updateTriggerEnablement(tenantId, triggerIds, enabled);
+                            definitionsService.updateTriggerEnablement(tenantId, triggerIds, enabled, note);
                         }
                         future.complete();
                     } catch (NotFoundException e) {
@@ -1442,6 +1443,11 @@ public class TriggersHandler {
                         throw new ResponseUtil.InternalServerException(e.toString());
                     }
                 }, res -> ResponseUtil.result(routing, res));
+    }
+
+    Note parseNotes(RoutingContext routing) {
+        String enabledBy = routing.request().getParam("enabledBy");
+        return new Note(enabledBy, "");
     }
 
     TriggersCriteria buildCriteria(MultiMap params) {

@@ -80,7 +80,7 @@ class LifecycleITest extends AbstractQuarkusITestBase {
         assertEquals(1, resp.data.size())
 
         // ENABLE Trigger
-        resp = client.put(path: "triggers/enabled", query: [triggerIds:"test-autodisable-trigger",enabled:true])
+        resp = client.put(path: "triggers/enabled", query: [triggerIds:"test-autodisable-trigger",enabled:true,enabledBy:"t01"])
         assertEquals(200, resp.status)
 
         // FETCH trigger and make sure it's as expected
@@ -159,15 +159,15 @@ class LifecycleITest extends AbstractQuarkusITestBase {
     @Test
     void t021_verifyTriggerEvaluationTimeStability() {
         // Disable && re-enable, trigger time should stay the same
-        logger.info( "Running t011_verifyTriggerEvaluationTime")
+        logger.info( "Running t021_verifyTriggerEvaluationTime")
         def resp = client.get(path: "triggers/trigger/test-autodisable-trigger");
         assertEquals(200, resp.status)
         assertEquals("test-autodisable-trigger", resp.data.trigger.name)
         def lastEvaluation = resp.data.conditions[0].lastEvaluation
         assertTrue(lastEvaluation > 0)
 
-        // Disable it
-        resp = client.delete(path: "triggers/test-autodisable-trigger/enable")
+        // Disable it (it's already disabled - but this shouldn't change anything)
+        resp = client.delete(path: "triggers/test-autodisable-trigger/enable", query: [enabledBy:"t021"])
         assertEquals(200, resp.status)
 
         // Verify the lastEvaluated did not change
@@ -176,7 +176,7 @@ class LifecycleITest extends AbstractQuarkusITestBase {
         assertEquals(lastEvaluation, resp.data.conditions[0].lastEvaluation)
 
         // Enable it
-        resp = client.put(path: "triggers/test-autodisable-trigger/enable")
+        resp = client.put(path: "triggers/test-autodisable-trigger/enable", query: [enabledBy:"t021"])
         assertEquals(200, resp.status)
 
         // Verify the lastEvaluated did not change
@@ -323,6 +323,19 @@ class LifecycleITest extends AbstractQuarkusITestBase {
         assertEquals(1, resp.data.size())
         assertEquals("RESOLVED", resp.data[0].status)
         assertEquals(3, resp.data[0].lifecycle.size())
+    }
+
+    @Test
+    void t031_verifyTriggerLifecycle() {
+        logger.info( "Running t022_verifyTriggerLifecycle")
+        def resp = client.get(path: "triggers/trigger/test-autoresolve-trigger");
+        assertEquals(200, resp.status)
+        assertEquals("test-autoresolve-trigger", resp.data.trigger.name)
+
+        assertEquals(2, resp.data.trigger.lifecycle.size())
+        // AUTO_RESOLVE / AUTO_DISABLE are not added to the lifecycle at this point
+        assertEquals(Trigger.TriggerLifecycle.ENABLE.name(), resp.data.trigger.lifecycle[0].status)
+        assertEquals(Trigger.TriggerLifecycle.ALERT_GENERATE.name(), resp.data.trigger.lifecycle[1].status)
     }
 
     @Test

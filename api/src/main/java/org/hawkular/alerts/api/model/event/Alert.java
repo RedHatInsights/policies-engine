@@ -172,7 +172,7 @@ public class Alert extends Event {
     public void addNote(Note note) {
         Lifecycle currentLifecycle = getCurrentLifecycle();
         if(currentLifecycle != null) {
-            currentLifecycle.getNotes().add(note);
+            currentLifecycle.addNote(note);
         }
     }
 
