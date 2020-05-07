@@ -299,10 +299,11 @@ public class TriggersHandler {
                         throw new ResponseUtil.BadRequestException("FullTrigger can not be null.");
                     }
                     trigger = fullTrigger.getTrigger();
-                    trigger.addLifecycle(Trigger.TriggerLifecycle.MODIFIED, 0, parseNotes(routing));
                     if (null == trigger) {
                         throw new ResponseUtil.BadRequestException("FullTrigger.Trigger can not be null.");
                     }
+                    trigger.getLifecycle().clear();
+                    trigger.addLifecycle(Trigger.TriggerLifecycle.MODIFIED, 0, parseNotes(routing));
                     trigger.setId(triggerId);
                     if (!ResponseUtil.checkTags(trigger)) {
                         throw new ResponseUtil.BadRequestException(
@@ -921,6 +922,7 @@ public class TriggersHandler {
                     if (!ResponseUtil.checkTags(trigger)) {
                         throw new ResponseUtil.BadRequestException("Tags " + trigger.getTags() + " must be non empty.");
                     }
+                    trigger.getLifecycle().clear();
                     trigger.addLifecycle(Trigger.TriggerLifecycle.MODIFIED, 0, parseNotes(routing));
                     try {
                         if (isGroup) {

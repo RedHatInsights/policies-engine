@@ -461,9 +461,13 @@ public class IspnDefinitionsServiceImplTest extends IspnBaseServiceImplTest {
 
         FullTrigger fT2 = definitions.getFullTrigger(TENANT, fullTrigger.getTrigger().getId());
         List<Lifecycle> lifecycle = fT2.getTrigger().getLifecycle();
-        lifecycle.forEach(System.out::println);
         // Created and Modified
         assertEquals(2, lifecycle.size());
+
+        String actionId = fullTrigger.getTrigger().getActions().iterator().next().getActionId();
+        definitions.removeTrigger(TENANT, "trigger1");
+        definitions.removeActionDefinition(TENANT, "pluginM", actionId);
+        definitions.removeActionPlugin("pluginM");
     }
 
 }

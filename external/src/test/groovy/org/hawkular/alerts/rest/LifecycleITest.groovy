@@ -332,10 +332,11 @@ class LifecycleITest extends AbstractQuarkusITestBase {
         assertEquals(200, resp.status)
         assertEquals("test-autoresolve-trigger", resp.data.trigger.name)
 
-        assertEquals(2, resp.data.trigger.lifecycle.size())
+        assertEquals(3, resp.data.trigger.lifecycle.size())
         // AUTO_RESOLVE / AUTO_DISABLE are not added to the lifecycle at this point
-        assertEquals(Trigger.TriggerLifecycle.ENABLE.name(), resp.data.trigger.lifecycle[0].status)
-        assertEquals(Trigger.TriggerLifecycle.ALERT_GENERATE.name(), resp.data.trigger.lifecycle[1].status)
+        assertEquals(Trigger.TriggerLifecycle.CREATED.name(), resp.data.trigger.lifecycle[0].status)
+        assertEquals(Trigger.TriggerLifecycle.ENABLE.name(), resp.data.trigger.lifecycle[1].status)
+        assertEquals(Trigger.TriggerLifecycle.ALERT_GENERATE.name(), resp.data.trigger.lifecycle[2].status)
     }
 
     @Test
