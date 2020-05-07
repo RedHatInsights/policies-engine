@@ -20,7 +20,6 @@ import com.google.common.hash.Hashing;
 import org.hawkular.alerts.api.exception.FoundException;
 import org.hawkular.alerts.api.exception.NotFoundException;
 import org.hawkular.alerts.api.json.GroupMemberInfo;
-import org.hawkular.alerts.api.model.Lifecycle;
 import org.hawkular.alerts.api.model.Note;
 import org.hawkular.alerts.api.model.action.ActionDefinition;
 import org.hawkular.alerts.api.model.condition.AvailabilityCondition;
