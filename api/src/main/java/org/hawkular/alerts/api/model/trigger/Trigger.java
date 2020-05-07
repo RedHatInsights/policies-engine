@@ -566,6 +566,13 @@ public class Trigger implements Serializable {
         this.lifecycle = lifecycle;
     }
 
+    /**
+     * Adds a lifecycle event to the trigger
+     *
+     * @param event Lifecycle event which happened
+     * @param stime Lifecycle time. If set to 0, it is autoset.
+     * @param note Additional note
+     */
     public void addLifecycle(TriggerLifecycle event, long stime, Note note) {
         if(stime == 0) {
             stime = System.currentTimeMillis();
@@ -659,6 +666,6 @@ public class Trigger implements Serializable {
     }
 
     public enum TriggerLifecycle {
-        ALERT_GENERATE, AUTO_DISABLE, AUTO_RESOLVE, DISABLE, ENABLE
+        ALERT_GENERATE, AUTO_DISABLE, AUTO_RESOLVE, DISABLE, ENABLE, CREATED, MODIFIED
     };
 }

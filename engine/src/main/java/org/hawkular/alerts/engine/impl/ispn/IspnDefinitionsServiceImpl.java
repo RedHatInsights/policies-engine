@@ -449,6 +449,9 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
             }
         }
 
+        existingTrigger.getLifecycle().addAll(trigger.getLifecycle());
+        trigger.setLifecycle(existingTrigger.getLifecycle());
+
         try {
             deferNotifications();
 
@@ -574,6 +577,8 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
                 throw new IllegalArgumentException("Orphan status can not be changed by this method.");
             }
         }
+        existingTrigger.getLifecycle().addAll(trigger.getLifecycle());
+        trigger.setLifecycle(existingTrigger.getLifecycle());
         return updateTrigger(trigger, reload);
     }
 
