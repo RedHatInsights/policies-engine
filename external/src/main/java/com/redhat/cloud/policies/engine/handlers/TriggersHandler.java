@@ -1473,6 +1473,9 @@ public class TriggersHandler {
     Note parseNotes(RoutingContext routing) {
         String user = routing.request().getParam("user");
         String text = routing.request().getParam("text");
+        if(isEmpty(user) && isEmpty(text)) {
+            return null;
+        }
         return new Note(user, text);
     }
 
