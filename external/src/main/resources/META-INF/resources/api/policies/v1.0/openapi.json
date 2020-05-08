@@ -179,6 +179,24 @@
                         "schema": {
                             "type": "boolean"
                         }
+                    },
+                    {
+                        "name": "user",
+                        "in": "query",
+                        "description": "User who created the trigger",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "text",
+                        "in": "query",
+                        "description": "Additional description for the note",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "requestBody": {
@@ -247,6 +265,24 @@
                         "required": false,
                         "schema": {
                             "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "user",
+                        "in": "query",
+                        "description": "User who modified the trigger",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "text",
+                        "in": "query",
+                        "description": "Additional description for the note",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 ],
@@ -529,7 +565,24 @@
                 "summary": "Create a new group trigger.",
                 "description": "Returns created group trigger.",
                 "parameters": [
-                    
+                    {
+                        "name": "user",
+                        "in": "query",
+                        "description": "User who created the trigger",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "text",
+                        "in": "query",
+                        "description": "Additional description for the note",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
                 ],
                 "requestBody": {
                     "description": "Group member trigger to be created.",
@@ -983,6 +1036,24 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "user",
+                        "in": "query",
+                        "description": "User who updated the trigger",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "text",
+                        "in": "query",
+                        "description": "Additional description for the note",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "requestBody": {
@@ -1137,6 +1208,24 @@
                         "in": "path",
                         "description": "Trigger definition id to be updated.",
                         "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "user",
+                        "in": "query",
+                        "description": "User who created the trigger",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "text",
+                        "in": "query",
+                        "description": "Additional description for the note",
+                        "required": false,
                         "schema": {
                             "type": "string"
                         }
@@ -1800,6 +1889,24 @@
                         "schema": {
                             "type": "boolean"
                         }
+                    },
+                    {
+                        "name": "user",
+                        "in": "query",
+                        "description": "User who enabled or disabled the trigger",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "text",
+                        "in": "query",
+                        "description": "Additional description for the note",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
@@ -1852,6 +1959,24 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "user",
+                        "in": "query",
+                        "description": "User who enabled the trigger",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "text",
+                        "in": "query",
+                        "description": "Additional description for the note",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
@@ -1899,6 +2024,24 @@
                         "in": "path",
                         "description": "Trigger definition id to be disabled.",
                         "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "user",
+                        "in": "query",
+                        "description": "User who disabled the trigger",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "text",
+                        "in": "query",
+                        "description": "Additional description for the note",
+                        "required": false,
                         "schema": {
                             "type": "string"
                         }
@@ -1962,6 +2105,24 @@
                         "required": true,
                         "schema": {
                             "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "user",
+                        "in": "query",
+                        "description": "User who enabled or disabled the group trigger",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "text",
+                        "in": "query",
+                        "description": "Additional description for the note",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 ],
@@ -3166,6 +3327,64 @@
                 }
             }
         },
+        "/events/event/{eventId}": {
+            "get": {
+                "summary": "Get an existing Event.",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "eventId",
+                        "in": "path",
+                        "description": "Event id to be deleted.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "thin",
+                        "in": "query",
+                        "description": "Return only a thin event, do not include: evalSets, dampening.",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success, Event found.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Event"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Event not found.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/events/tags": {
             "put": {
                 "summary": "Add tags to existing Events.",
@@ -3383,64 +3602,6 @@
                 }
             }
         },
-        "/events/event/{eventId}": {
-            "get": {
-                "summary": "Get an existing Event.",
-                "description": "",
-                "parameters": [
-                    {
-                        "name": "eventId",
-                        "in": "path",
-                        "description": "Event id to be deleted.",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "thin",
-                        "in": "query",
-                        "description": "Return only a thin event, do not include: evalSets, dampening.",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Success, Event found.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Event"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Event not found.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ApiError"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ApiError"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/events/data": {
             "post": {
                 "summary": "Send events to the engine for processing/condition evaluation. ",
@@ -3482,6 +3643,108 @@
                     },
                     "500": {
                         "description": "Internal server error.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/events/watch": {
+            "get": {
+                "summary": "Watch events with optional filtering.",
+                "description": "Return a stream of events ordered by ctime. + \n + \nIf not criteria defined, it fetches all events stored in the system. + \nTags Query language (BNF): + \n[source] \n---- \n<tag_query> ::= ( <expression> | \"(\" <object> \")\" | <object> <logical_operator> <object> ) \n<expression> ::= ( <tag_name> | <not> <tag_name> | <tag_name> <boolean_operator> <tag_value> | <tag_name> <array_operator> <array> ) \n<not> ::= [ \"NOT\" | \"not\" ] \n<logical_operator> ::= [ \"AND\" | \"OR\" | \"and\" | \"or\" ] \n<boolean_operator> ::= [ \"==\" | \"!=\" ] \n<array_operator> ::= [ \"IN\" | \"NOT IN\" | \"in\" | \"not in\" ] \n<array> ::= ( \"[\" \"]\" | \"[\" ( \",\" <tag_value> )* ) \n<tag_name> ::= <identifier> \n<tag_value> ::= ( \"'\" <regexp> \"'\" | <simple_value> ) \n; \n; <identifier> and <simple_value> follow pattern [a-zA-Z_0-9][\\-a-zA-Z_0-9]* \n; <regexp> follows any valid Java Regular Expression format \n---- \n",
+                "parameters": [
+                    {
+                        "name": "startTime",
+                        "in": "query",
+                        "description": "Filter out events created before this time.",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "endTime",
+                        "in": "query",
+                        "description": "Filter out events created after this time.",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "eventIds",
+                        "in": "query",
+                        "description": "Filter out events for unspecified eventIds.",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "triggerIds",
+                        "in": "query",
+                        "description": "Filter out events for unspecified triggers.",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "categories",
+                        "in": "query",
+                        "description": "Filter out events for unspecified categories.",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "tags",
+                        "in": "query",
+                        "description": "[DEPRECATED] Filter out events for unspecified tags.",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "tagQuery",
+                        "in": "query",
+                        "description": "Filter out events for unspecified tags.",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "watchInterval",
+                        "in": "query",
+                        "description": "Define interval when watcher notifications will be sent.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "thin",
+                        "in": "query",
+                        "description": "Return only thin events, do not include: evalSets.",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Errors will close the stream. Description is sent before stream is closed.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -3647,108 +3910,6 @@
                     },
                     "500": {
                         "description": "Internal server error.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ApiError"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/events/watch": {
-            "get": {
-                "summary": "Watch events with optional filtering.",
-                "description": "Return a stream of events ordered by ctime. + \n + \nIf not criteria defined, it fetches all events stored in the system. + \nTags Query language (BNF): + \n[source] \n---- \n<tag_query> ::= ( <expression> | \"(\" <object> \")\" | <object> <logical_operator> <object> ) \n<expression> ::= ( <tag_name> | <not> <tag_name> | <tag_name> <boolean_operator> <tag_value> | <tag_name> <array_operator> <array> ) \n<not> ::= [ \"NOT\" | \"not\" ] \n<logical_operator> ::= [ \"AND\" | \"OR\" | \"and\" | \"or\" ] \n<boolean_operator> ::= [ \"==\" | \"!=\" ] \n<array_operator> ::= [ \"IN\" | \"NOT IN\" | \"in\" | \"not in\" ] \n<array> ::= ( \"[\" \"]\" | \"[\" ( \",\" <tag_value> )* ) \n<tag_name> ::= <identifier> \n<tag_value> ::= ( \"'\" <regexp> \"'\" | <simple_value> ) \n; \n; <identifier> and <simple_value> follow pattern [a-zA-Z_0-9][\\-a-zA-Z_0-9]* \n; <regexp> follows any valid Java Regular Expression format \n---- \n",
-                "parameters": [
-                    {
-                        "name": "startTime",
-                        "in": "query",
-                        "description": "Filter out events created before this time.",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "endTime",
-                        "in": "query",
-                        "description": "Filter out events created after this time.",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "eventIds",
-                        "in": "query",
-                        "description": "Filter out events for unspecified eventIds.",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "triggerIds",
-                        "in": "query",
-                        "description": "Filter out events for unspecified triggers.",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "categories",
-                        "in": "query",
-                        "description": "Filter out events for unspecified categories.",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "tags",
-                        "in": "query",
-                        "description": "[DEPRECATED] Filter out events for unspecified tags.",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "tagQuery",
-                        "in": "query",
-                        "description": "Filter out events for unspecified tags.",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "watchInterval",
-                        "in": "query",
-                        "description": "Define interval when watcher notifications will be sent.",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "format": "int64"
-                        }
-                    },
-                    {
-                        "name": "thin",
-                        "in": "query",
-                        "description": "Return only thin events, do not include: evalSets.",
-                        "required": false,
-                        "schema": {
-                            "type": "boolean"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Errors will close the stream. Description is sent before stream is closed.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -4398,22 +4559,89 @@
     },
     "components": {
         "schemas": {
-            "GroupConditionsInfo": {
-                "description": "A convenience class used in the REST API to POST a new Group Condition. + \n + \nA group-level condition uses dataId tokens for the dataIds defined in the condition.  + \nThe group members must then replace the tokens with actual dataIds. + \n + \nFor example, we may define a group ThresholdCondition like ( $SystemLoad$ > 80 ). + \nEach member must then replace $SystemLoad$ with the actual system load dataId for that member. + \n + \nThe dataIdMemberMap is a map of the dataId tokens in the group conditions to the actual dataIds + \nused for the current member triggers. + \nBecause most condition types have only one dataId the map will typically have 1 entry per condition. + \nBut because a condition could have multiple dataIds (e.g CompareCondition has dataId and data2Id), + \nit may have more entries than conditions. + \nThe inner map maps member triggerIds to the dataId to be used for that member trigger for the given token. + \nIt should have 1 entry for each member trigger. + \n + \nFor example, let's define a group trigger with two conditions: + \n + \nThresholdCondition( $SystemLoad$ > 80 ) + \nThresholdCondition( $HeapUsed$ > 70 ) + \n + \nIf the group has two current members, with triggerId's Member1 and Member2, + \nthe map would look like this: + \n + \n{ + \n\"$SystemLoad$\":{\"Member1\":\"Member1SystemLoad\", \"Member2\":\"Member2SystemLoad\"}, + \n\"$HeapUsed$\":{\"Member1\":\"Member1HeapUsed\", \"Member2\":\"Member2HeapUsed\"} + \n} + \n + \nSo, in the example the actual $SystemLoad$ dataIds would be Member1SystemLoad and Member2SystemLoad. + \nWith this Map we can now add the group-level conditions and also the two member-level conditions + \nto each member + \n + \nA NOTE ABOUT EXTERNAL CONDITIONS. <code>ExternalCondition.expression</code> will automatically have the + \nsame token replacement performed. So, all occurrences of the dataId token found in the expression, + \nwill be replaced with the mapping. This allows the expression of a group external condition to be + \nautomatically customized to the member.",
+            "Action": {
+                "description": "An action represents a consequence of an event. + \n + \nAn Action object represents a particular action linked with a specific event. + \nAction objects are generated by the Alerting engine and processed by plugins. + \nAn Action object stores the eventId property and optionally may contain the full Event object. + \nAn Action may store the result of the processing by a plugin. + \n",
                 "properties": {
-                    "conditions": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/Condition"
-                        },
-                        "description": "A list of conditions for a Group Trigger."
+                    "eventId": {
+                        "type": "string",
+                        "description": "Event id from where this action is generated."
                     },
-                    "dataIdMemberMap": {
+                    "ctime": {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "Time when this action was generated."
+                    },
+                    "event": {
+                        "$ref": "#/components/schemas/Event",
+                        "description": "Attached Event from where this action is generated."
+                    },
+                    "result": {
+                        "type": "string",
+                        "description": "Result of action processing."
+                    }
+                }
+            },
+            "Condition": {
+                "description": "A base class for condition definition. ",
+                "properties": {
+                    "tenantId": {
+                        "type": "string",
+                        "description": "Tenant id owner of this condition."
+                    },
+                    "triggerId": {
+                        "type": "string",
+                        "description": "The owning trigger."
+                    },
+                    "triggerMode": {
+                        "type": "string",
+                        "enum": [
+                            "FIRING",
+                            "AUTORESOLVE"
+                        ],
+                        "description": "The owning trigger's mode when this condition is active."
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "AVAILABILITY",
+                            "COMPARE",
+                            "STRING",
+                            "THRESHOLD",
+                            "RANGE",
+                            "EXTERNAL",
+                            "EVENT",
+                            "RATE",
+                            "MISSING",
+                            "NELSON"
+                        ],
+                        "description": "The type of the condition defined. Each type has its specific properties defined on its subtype of condition."
+                    },
+                    "conditionSetSize": {
+                        "type": "integer",
+                        "format": "int32",
+                        "description": "Number of conditions associated with a particular trigger. This is a read-only value defined by the system."
+                    },
+                    "conditionSetIndex": {
+                        "type": "integer",
+                        "format": "int32",
+                        "description": "Index of the current condition. This is a read-only value defined by the system."
+                    },
+                    "conditionId": {
+                        "type": "string",
+                        "description": "A composed key for the condition. This is a read-only value defined by the system."
+                    },
+                    "context": {
                         "type": "object",
-                        "additionalProperties": {
-                            "type": "string"
-                        },
-                        "description": "A map of the dataId tokens in the group conditions to the actual dataIds used for the current member triggers. Can be empty if the group has no existing members."
+                        "description": "Properties defined by the user for this condition."
+                    },
+                    "displayString": {
+                        "type": "string",
+                        "description": "A canonical display string for the condition expression. Can be null until the condition is fully defined."
+                    },
+                    "lastEvaluation": {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "Last time this trigger was evaluated."
                     }
                 }
             },
@@ -4447,145 +4675,6 @@
                         "type": "integer",
                         "format": "int32",
                         "description": "Deleted items."
-                    }
-                }
-            },
-            "Dampening": {
-                "description": "A representation of dampening status. + \n + \nIt\u2019s often the case that you don\u2019t want a trigger to fire every time a condition set is met. + \nInstead, you want to ensure that the issue is not a spike of activity. + \nHawkular Alerting provides several ways of ensuring triggers fire only as desired. + \n + \nThis is a Trigger Dampening in Hawkular Alerting terminology. + \n + \nDampening types: + \n + \nSTRICT + \n + \n- N consecutive true evaluations. + \n- Useful for ignoring spikes in activity or waiting for a prolonged event. + \n + \nRELAXED_COUNT + \n + \n- N true evaluations out of M total evaluations. + \n- Useful for ignoring short spikes in activity but catching frequently spiking activity. + \n + \nRELAXED_TIME + \n + \n- N true evaluations in T time. + \n- Useful for ignoring short spikes in activity but catching frequently spiking activity. \n + \nSTRICT_TIME + \n + \n- Only true evaluations for at least T time. + \n- Useful for reporting a continued aberration. + \n + \nSTRICT_TIMEOUT + \n + \n- Only true evaluations for T time. + \n- Useful for reporting a continued aberration with a more guaranteed firing time. + \n",
-                "properties": {
-                    "tenantId": {
-                        "type": "string",
-                        "description": "Tenant id owner of this dampening."
-                    },
-                    "triggerId": {
-                        "type": "string",
-                        "description": "The owning trigger."
-                    },
-                    "triggerMode": {
-                        "type": "string",
-                        "enum": [
-                            "FIRING",
-                            "AUTORESOLVE"
-                        ],
-                        "description": "The owning trigger's mode when this dampening is active."
-                    },
-                    "type": {
-                        "type": "string",
-                        "enum": [
-                            "STRICT",
-                            "RELAXED_COUNT",
-                            "RELAXED_TIME",
-                            "STRICT_TIME",
-                            "STRICT_TIMEOUT"
-                        ],
-                        "description": "The type of the dampening."
-                    },
-                    "evalTrueSetting": {
-                        "type": "integer",
-                        "format": "int32",
-                        "description": "Number of required true evaluations for STRICT, RELAXED_COUNT, RELAXED_TIME"
-                    },
-                    "evalTotalSetting": {
-                        "type": "integer",
-                        "format": "int32",
-                        "description": "Number of allowed evaluation attempts for RELAXED_COUNT"
-                    },
-                    "evalTimeSetting": {
-                        "type": "integer",
-                        "format": "int64",
-                        "description": "Time period in milliseconds for RELAXED_TIME, STRICT_TIME, STRICT_TIMEOUT"
-                    },
-                    "dampeningId": {
-                        "type": "string",
-                        "description": "A composed key for the dampening. This is a read-only value defined by the system."
-                    }
-                }
-            },
-            "Event": {
-                "description": "An Alert is an Event. + \n + \nFor the most part an Event can be thought of as an Alert without life-cycle. + \n + \nAlerts are always generated by a Trigger. + \n + \nEvents may be generated by a Trigger or may be created directly via the API. + \n",
-                "properties": {
-                    "eventType": {
-                        "type": "string",
-                        "description": "Indicate if this object is an EVENT or an ALERT. This is a read-only field controlled by the system for serialization purposes."
-                    },
-                    "tenantId": {
-                        "type": "string",
-                        "description": "Tenant id owner of this event."
-                    },
-                    "id": {
-                        "type": "string",
-                        "description": "Unique identifier for this event."
-                    },
-                    "ctime": {
-                        "type": "integer",
-                        "format": "int64",
-                        "description": "Creation time for this event."
-                    },
-                    "dataSource": {
-                        "type": "string",
-                        "description": "Optional dataSource for Event. Used for <<Trigger>> in <<EventCondition>> to evaluate events with triplet [tenantId, source, dataId] as unique identifier."
-                    },
-                    "dataId": {
-                        "type": "string",
-                        "description": "Data identifier used for Events condition evaluation. Events must supply a valid dataId to be considered for <<EventCondition>> evaluation. + \nDataIds in an events context should incorporate the source of the event (for uniqueness). + \nEvents generated from a <<Trigger>> will have dataId set to the triggerId, therefore allowing chaining with other <<EventCondition>>. "
-                    },
-                    "category": {
-                        "type": "string",
-                        "description": "Category of Event. Suitable for display. + \nAlerts will use ALERT category. + \nEvents generated from <<Trigger>> will use Trigger.eventCategory or TRIGGER category as default.",
-                        "default": "ALERT or TRIGGER"
-                    },
-                    "text": {
-                        "type": "string",
-                        "description": "Description of the event. Suitable for display. + \nEvents generated from <<Trigger>> will use Trigger.eventText or Trigger.description/Trigger.name as default."
-                    },
-                    "context": {
-                        "type": "object",
-                        "description": "Properties defined by the user for this event. + \n Events generated from <<Trigger>> will use Trigger.context. + \nContext cannot be used as part of Event conditions expressions or criteria in finder methods."
-                    },
-                    "tags": {
-                        "type": "object",
-                        "description": "Tags defined by the user for this event. + \n Events generated from <<Trigger>> will use Trigger.tags. + \nTags can be used as part of Event conditions expressions and criteria in finder methods. + \nTag value cannot be null."
-                    },
-                    "trigger": {
-                        "$ref": "#/components/schemas/Trigger",
-                        "description": "Trigger that created the event. + \n Null for API-generated Events."
-                    },
-                    "dampening": {
-                        "$ref": "#/components/schemas/Dampening",
-                        "description": "Dampening defined when the event was created. + \n Null for API-generated Events."
-                    },
-                    "evalSets": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/ConditionEval"
-                        },
-                        "description": "The Eval Sets that fired the trigger. + \n Null for API-generated Events."
-                    }
-                }
-            },
-            "ApiError": {
-                "description": "Payload for a REST error response.",
-                "properties": {
-                    "errorMsg": {
-                        "type": "string",
-                        "description": "The error message."
-                    }
-                }
-            },
-            "UnorphanMemberInfo": {
-                "description": "A convenience class used in the REST API to un-orphan an orphan group Member Trigger. + \n + \nA group-level condition uses dataId tokens for the dataIds defined in the condition. + \nThe group members must then replace the tokens with actual dataIds. + \n + \nFor example, we may define a group ThresholdCondition like ( $SystemLoad$ > 80 ). + \nEach member must then replace $SystemLoad$ with the actual system load dataId for that member. + \nThe dataIdMap is a map of the dataId tokens in the group conditions to the actual dataIds to + \nbe used for the member being added. For example, assume the group trigger has two conditions defined: + \n + \nThresholdCondition( $SystemLoad$ > 80 ) and ThresholdCondition( $HeapUsed$ > 70 ) + \n + \nAnd now let's assume we are adding a new member, Member1.  The map would look like this: + \n + \n{ \"$SystemLoad$\":\"Member1SystemLoad\", \"$HeapUsed$\":\"Member1HeapUsed\" } + \n + \nSo, in the example the actual dataIds would be Member1SystemLoad and Member1HeapUsed. + \nWith this Map we can now add the new member trigger. + \n + \nA NOTE ABOUT EXTERNAL CONDITIONS. ExternalCondition.expression will automatically have the + \nsame token replacement performed. So, all occurrences of the dataId token found in the expression, + \nwill be replaced with the mapping. + \nThis allows the expression of a group external condition to be automatically customized to the member.",
-                "properties": {
-                    "memberContext": {
-                        "type": "object",
-                        "description": "Trigger context for member Trigger."
-                    },
-                    "memberTags": {
-                        "type": "object",
-                        "description": "Trigger tags for member Trigger."
-                    },
-                    "dataIdMap": {
-                        "type": "object",
-                        "description": "A map of the dataId tokens in the group conditions to the actual dataIds to be used for the member being added. + \nCan be empty if the group has no current conditions."
                     }
                 }
             },
@@ -4752,6 +4841,241 @@
                     "source": {
                         "type": "string",
                         "description": "Extended mechanism to match trigger conditions against Data with [source, dataId] identifiers. In this way it is possible to qualify triggers and data with a source such that a trigger only evaluates data having the same source."
+                    },
+                    "lifecycle": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Lifecycle"
+                        },
+                        "description": "List of lifecycle events this trigger has generated."
+                    }
+                }
+            },
+            "UnorphanMemberInfo": {
+                "description": "A convenience class used in the REST API to un-orphan an orphan group Member Trigger. + \n + \nA group-level condition uses dataId tokens for the dataIds defined in the condition. + \nThe group members must then replace the tokens with actual dataIds. + \n + \nFor example, we may define a group ThresholdCondition like ( $SystemLoad$ > 80 ). + \nEach member must then replace $SystemLoad$ with the actual system load dataId for that member. + \nThe dataIdMap is a map of the dataId tokens in the group conditions to the actual dataIds to + \nbe used for the member being added. For example, assume the group trigger has two conditions defined: + \n + \nThresholdCondition( $SystemLoad$ > 80 ) and ThresholdCondition( $HeapUsed$ > 70 ) + \n + \nAnd now let's assume we are adding a new member, Member1.  The map would look like this: + \n + \n{ \"$SystemLoad$\":\"Member1SystemLoad\", \"$HeapUsed$\":\"Member1HeapUsed\" } + \n + \nSo, in the example the actual dataIds would be Member1SystemLoad and Member1HeapUsed. + \nWith this Map we can now add the new member trigger. + \n + \nA NOTE ABOUT EXTERNAL CONDITIONS. ExternalCondition.expression will automatically have the + \nsame token replacement performed. So, all occurrences of the dataId token found in the expression, + \nwill be replaced with the mapping. + \nThis allows the expression of a group external condition to be automatically customized to the member.",
+                "properties": {
+                    "memberContext": {
+                        "type": "object",
+                        "description": "Trigger context for member Trigger."
+                    },
+                    "memberTags": {
+                        "type": "object",
+                        "description": "Trigger tags for member Trigger."
+                    },
+                    "dataIdMap": {
+                        "type": "object",
+                        "description": "A map of the dataId tokens in the group conditions to the actual dataIds to be used for the member being added. + \nCan be empty if the group has no current conditions."
+                    }
+                }
+            },
+            "Dampening": {
+                "description": "A representation of dampening status. + \n + \nIt\u2019s often the case that you don\u2019t want a trigger to fire every time a condition set is met. + \nInstead, you want to ensure that the issue is not a spike of activity. + \nHawkular Alerting provides several ways of ensuring triggers fire only as desired. + \n + \nThis is a Trigger Dampening in Hawkular Alerting terminology. + \n + \nDampening types: + \n + \nSTRICT + \n + \n- N consecutive true evaluations. + \n- Useful for ignoring spikes in activity or waiting for a prolonged event. + \n + \nRELAXED_COUNT + \n + \n- N true evaluations out of M total evaluations. + \n- Useful for ignoring short spikes in activity but catching frequently spiking activity. + \n + \nRELAXED_TIME + \n + \n- N true evaluations in T time. + \n- Useful for ignoring short spikes in activity but catching frequently spiking activity. \n + \nSTRICT_TIME + \n + \n- Only true evaluations for at least T time. + \n- Useful for reporting a continued aberration. + \n + \nSTRICT_TIMEOUT + \n + \n- Only true evaluations for T time. + \n- Useful for reporting a continued aberration with a more guaranteed firing time. + \n",
+                "properties": {
+                    "tenantId": {
+                        "type": "string",
+                        "description": "Tenant id owner of this dampening."
+                    },
+                    "triggerId": {
+                        "type": "string",
+                        "description": "The owning trigger."
+                    },
+                    "triggerMode": {
+                        "type": "string",
+                        "enum": [
+                            "FIRING",
+                            "AUTORESOLVE"
+                        ],
+                        "description": "The owning trigger's mode when this dampening is active."
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "STRICT",
+                            "RELAXED_COUNT",
+                            "RELAXED_TIME",
+                            "STRICT_TIME",
+                            "STRICT_TIMEOUT"
+                        ],
+                        "description": "The type of the dampening."
+                    },
+                    "evalTrueSetting": {
+                        "type": "integer",
+                        "format": "int32",
+                        "description": "Number of required true evaluations for STRICT, RELAXED_COUNT, RELAXED_TIME"
+                    },
+                    "evalTotalSetting": {
+                        "type": "integer",
+                        "format": "int32",
+                        "description": "Number of allowed evaluation attempts for RELAXED_COUNT"
+                    },
+                    "evalTimeSetting": {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "Time period in milliseconds for RELAXED_TIME, STRICT_TIME, STRICT_TIMEOUT"
+                    },
+                    "dampeningId": {
+                        "type": "string",
+                        "description": "A composed key for the dampening. This is a read-only value defined by the system."
+                    }
+                }
+            },
+            "Alert": {
+                "description": "Alerts are generated when an Alert Trigger fires, based on a set of defined conditions + \nthat have been matched, possibly more than once or have held true over a period of time. + \n + \nWhen fired the trigger can perform actions based on plugins (e-mail, sms, etc). + \n + \nAlerts then start moving through the Open, Acknowledged, Resolved life-cycle. + \n + \n- Open status represents an alert which has not been seen/taken yet by any user. + \n- Acknowledge status represents an alert which has been seen/taken by any user and it is pending resolution. + \n- Resolved status represents an alert which problem has been resolved. + \n + \nAlerts can be resolved automatically using AUTORESOLVE <<Trigger>> conditions or manually via API. + \n + \nAlert can attach a list of notes defined by the user. + \n + \nThere are many options on triggers to help ensure that alerts are not generated too frequently, + \nincluding ways of automatically disabling and enabling the trigger. + \n",
+                "properties": {
+                    "severity": {
+                        "type": "string",
+                        "enum": [
+                            "LOW",
+                            "MEDIUM",
+                            "HIGH",
+                            "CRITICAL"
+                        ],
+                        "description": "Severity set for a <<Trigger>> and assigned to an alert when it is generated.",
+                        "default": "MEDIUM"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "OPEN",
+                            "ACKNOWLEDGED",
+                            "RESOLVED"
+                        ],
+                        "description": "Lifecycle current status."
+                    },
+                    "lifecycle": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Lifecycle"
+                        },
+                        "description": "List of lifecycle states that this alert has navigated."
+                    },
+                    "resolvedEvalSets": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ConditionEval"
+                        },
+                        "description": "The Eval Sets that resolved the <<Trigger>> in AUTORESOLVE mode. + \n Null for non AUTORESOLVE triggers."
+                    }
+                }
+            },
+            "ApiError": {
+                "description": "Payload for a REST error response.",
+                "properties": {
+                    "errorMsg": {
+                        "type": "string",
+                        "description": "The error message."
+                    }
+                }
+            },
+            "GroupConditionsInfo": {
+                "description": "A convenience class used in the REST API to POST a new Group Condition. + \n + \nA group-level condition uses dataId tokens for the dataIds defined in the condition.  + \nThe group members must then replace the tokens with actual dataIds. + \n + \nFor example, we may define a group ThresholdCondition like ( $SystemLoad$ > 80 ). + \nEach member must then replace $SystemLoad$ with the actual system load dataId for that member. + \n + \nThe dataIdMemberMap is a map of the dataId tokens in the group conditions to the actual dataIds + \nused for the current member triggers. + \nBecause most condition types have only one dataId the map will typically have 1 entry per condition. + \nBut because a condition could have multiple dataIds (e.g CompareCondition has dataId and data2Id), + \nit may have more entries than conditions. + \nThe inner map maps member triggerIds to the dataId to be used for that member trigger for the given token. + \nIt should have 1 entry for each member trigger. + \n + \nFor example, let's define a group trigger with two conditions: + \n + \nThresholdCondition( $SystemLoad$ > 80 ) + \nThresholdCondition( $HeapUsed$ > 70 ) + \n + \nIf the group has two current members, with triggerId's Member1 and Member2, + \nthe map would look like this: + \n + \n{ + \n\"$SystemLoad$\":{\"Member1\":\"Member1SystemLoad\", \"Member2\":\"Member2SystemLoad\"}, + \n\"$HeapUsed$\":{\"Member1\":\"Member1HeapUsed\", \"Member2\":\"Member2HeapUsed\"} + \n} + \n + \nSo, in the example the actual $SystemLoad$ dataIds would be Member1SystemLoad and Member2SystemLoad. + \nWith this Map we can now add the group-level conditions and also the two member-level conditions + \nto each member + \n + \nA NOTE ABOUT EXTERNAL CONDITIONS. <code>ExternalCondition.expression</code> will automatically have the + \nsame token replacement performed. So, all occurrences of the dataId token found in the expression, + \nwill be replaced with the mapping. This allows the expression of a group external condition to be + \nautomatically customized to the member.",
+                "properties": {
+                    "conditions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Condition"
+                        },
+                        "description": "A list of conditions for a Group Trigger."
+                    },
+                    "dataIdMemberMap": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string"
+                        },
+                        "description": "A map of the dataId tokens in the group conditions to the actual dataIds used for the current member triggers. Can be empty if the group has no existing members."
+                    }
+                }
+            },
+            "Data": {
+                "description": "A base class for incoming data into alerts subsystem. + \nAll Data has TenantId, Id and a timestamp. + \nAn Id should be unique within the tenant. + \nThe timestamp is used to ensure that data is time-ordered when being sent into the alerting engine. + \nIf not assigned the timestamp will be assigned to current time.",
+                "properties": {
+                    "tenantId": {
+                        "type": "string",
+                        "description": "Tenant id owner of this data."
+                    },
+                    "source": {
+                        "type": "string",
+                        "description": "Extended mechanism to match trigger conditions against Data with [source, dataId] identifiers. In this way it is possible to qualify triggers and data with a source such that a trigger only evaluates data having the same source."
+                    },
+                    "id": {
+                        "type": "string",
+                        "description": "Data id unique within the tenant."
+                    },
+                    "timestamp": {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "Timestamp for the data.",
+                        "default": "If not assigned, timestamp will be assigned to current time."
+                    },
+                    "value": {
+                        "type": "string",
+                        "description": "Value for single-value condition types."
+                    },
+                    "context": {
+                        "type": "object",
+                        "description": "Properties defined by the user for this data. Context is propagated on generated Events/Alerts."
+                    }
+                }
+            },
+            "Event": {
+                "description": "An Alert is an Event. + \n + \nFor the most part an Event can be thought of as an Alert without life-cycle. + \n + \nAlerts are always generated by a Trigger. + \n + \nEvents may be generated by a Trigger or may be created directly via the API. + \n",
+                "properties": {
+                    "eventType": {
+                        "type": "string",
+                        "description": "Indicate if this object is an EVENT or an ALERT. This is a read-only field controlled by the system for serialization purposes."
+                    },
+                    "tenantId": {
+                        "type": "string",
+                        "description": "Tenant id owner of this event."
+                    },
+                    "id": {
+                        "type": "string",
+                        "description": "Unique identifier for this event."
+                    },
+                    "ctime": {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "Creation time for this event."
+                    },
+                    "dataSource": {
+                        "type": "string",
+                        "description": "Optional dataSource for Event. Used for <<Trigger>> in <<EventCondition>> to evaluate events with triplet [tenantId, source, dataId] as unique identifier."
+                    },
+                    "dataId": {
+                        "type": "string",
+                        "description": "Data identifier used for Events condition evaluation. Events must supply a valid dataId to be considered for <<EventCondition>> evaluation. + \nDataIds in an events context should incorporate the source of the event (for uniqueness). + \nEvents generated from a <<Trigger>> will have dataId set to the triggerId, therefore allowing chaining with other <<EventCondition>>. "
+                    },
+                    "category": {
+                        "type": "string",
+                        "description": "Category of Event. Suitable for display. + \nAlerts will use ALERT category. + \nEvents generated from <<Trigger>> will use Trigger.eventCategory or TRIGGER category as default.",
+                        "default": "ALERT or TRIGGER"
+                    },
+                    "text": {
+                        "type": "string",
+                        "description": "Description of the event. Suitable for display. + \nEvents generated from <<Trigger>> will use Trigger.eventText or Trigger.description/Trigger.name as default."
+                    },
+                    "context": {
+                        "type": "object",
+                        "description": "Properties defined by the user for this event. + \n Events generated from <<Trigger>> will use Trigger.context. + \nContext cannot be used as part of Event conditions expressions or criteria in finder methods."
+                    },
+                    "tags": {
+                        "type": "object",
+                        "description": "Tags defined by the user for this event. + \n Events generated from <<Trigger>> will use Trigger.tags. + \nTags can be used as part of Event conditions expressions and criteria in finder methods. + \nTag value cannot be null."
+                    },
+                    "trigger": {
+                        "$ref": "#/components/schemas/Trigger",
+                        "description": "Trigger that created the event. + \n Null for API-generated Events."
+                    },
+                    "dampening": {
+                        "$ref": "#/components/schemas/Dampening",
+                        "description": "Dampening defined when the event was created. + \n Null for API-generated Events."
+                    },
+                    "evalSets": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ConditionEval"
+                        },
+                        "description": "The Eval Sets that fired the trigger. + \n Null for API-generated Events."
                     }
                 }
             },
@@ -4791,169 +5115,6 @@
                     }
                 }
             },
-            "Action": {
-                "description": "An action represents a consequence of an event. + \n + \nAn Action object represents a particular action linked with a specific event. + \nAction objects are generated by the Alerting engine and processed by plugins. + \nAn Action object stores the eventId property and optionally may contain the full Event object. + \nAn Action may store the result of the processing by a plugin. + \n",
-                "properties": {
-                    "eventId": {
-                        "type": "string",
-                        "description": "Event id from where this action is generated."
-                    },
-                    "ctime": {
-                        "type": "integer",
-                        "format": "int64",
-                        "description": "Time when this action was generated."
-                    },
-                    "event": {
-                        "$ref": "#/components/schemas/Event",
-                        "description": "Attached Event from where this action is generated."
-                    },
-                    "result": {
-                        "type": "string",
-                        "description": "Result of action processing."
-                    }
-                }
-            },
-            "Condition": {
-                "description": "A base class for condition definition. ",
-                "properties": {
-                    "tenantId": {
-                        "type": "string",
-                        "description": "Tenant id owner of this condition."
-                    },
-                    "triggerId": {
-                        "type": "string",
-                        "description": "The owning trigger."
-                    },
-                    "triggerMode": {
-                        "type": "string",
-                        "enum": [
-                            "FIRING",
-                            "AUTORESOLVE"
-                        ],
-                        "description": "The owning trigger's mode when this condition is active."
-                    },
-                    "type": {
-                        "type": "string",
-                        "enum": [
-                            "AVAILABILITY",
-                            "COMPARE",
-                            "STRING",
-                            "THRESHOLD",
-                            "RANGE",
-                            "EXTERNAL",
-                            "EVENT",
-                            "RATE",
-                            "MISSING",
-                            "NELSON"
-                        ],
-                        "description": "The type of the condition defined. Each type has its specific properties defined on its subtype of condition."
-                    },
-                    "conditionSetSize": {
-                        "type": "integer",
-                        "format": "int32",
-                        "description": "Number of conditions associated with a particular trigger. This is a read-only value defined by the system."
-                    },
-                    "conditionSetIndex": {
-                        "type": "integer",
-                        "format": "int32",
-                        "description": "Index of the current condition. This is a read-only value defined by the system."
-                    },
-                    "conditionId": {
-                        "type": "string",
-                        "description": "A composed key for the condition. This is a read-only value defined by the system."
-                    },
-                    "context": {
-                        "type": "object",
-                        "description": "Properties defined by the user for this condition."
-                    },
-                    "displayString": {
-                        "type": "string",
-                        "description": "A canonical display string for the condition expression. Can be null until the condition is fully defined."
-                    },
-                    "lastEvaluation": {
-                        "type": "integer",
-                        "format": "int64",
-                        "description": "Last time this trigger was evaluated."
-                    }
-                }
-            },
-            "Data": {
-                "description": "A base class for incoming data into alerts subsystem. + \nAll Data has TenantId, Id and a timestamp. + \nAn Id should be unique within the tenant. + \nThe timestamp is used to ensure that data is time-ordered when being sent into the alerting engine. + \nIf not assigned the timestamp will be assigned to current time.",
-                "properties": {
-                    "tenantId": {
-                        "type": "string",
-                        "description": "Tenant id owner of this data."
-                    },
-                    "source": {
-                        "type": "string",
-                        "description": "Extended mechanism to match trigger conditions against Data with [source, dataId] identifiers. In this way it is possible to qualify triggers and data with a source such that a trigger only evaluates data having the same source."
-                    },
-                    "id": {
-                        "type": "string",
-                        "description": "Data id unique within the tenant."
-                    },
-                    "timestamp": {
-                        "type": "integer",
-                        "format": "int64",
-                        "description": "Timestamp for the data.",
-                        "default": "If not assigned, timestamp will be assigned to current time."
-                    },
-                    "value": {
-                        "type": "string",
-                        "description": "Value for single-value condition types."
-                    },
-                    "context": {
-                        "type": "object",
-                        "description": "Properties defined by the user for this data. Context is propagated on generated Events/Alerts."
-                    }
-                }
-            },
-            "Alert": {
-                "description": "Alerts are generated when an Alert Trigger fires, based on a set of defined conditions + \nthat have been matched, possibly more than once or have held true over a period of time. + \n + \nWhen fired the trigger can perform actions based on plugins (e-mail, sms, etc). + \n + \nAlerts then start moving through the Open, Acknowledged, Resolved life-cycle. + \n + \n- Open status represents an alert which has not been seen/taken yet by any user. + \n- Acknowledge status represents an alert which has been seen/taken by any user and it is pending resolution. + \n- Resolved status represents an alert which problem has been resolved. + \n + \nAlerts can be resolved automatically using AUTORESOLVE <<Trigger>> conditions or manually via API. + \n + \nAlert can attach a list of notes defined by the user. + \n + \nThere are many options on triggers to help ensure that alerts are not generated too frequently, + \nincluding ways of automatically disabling and enabling the trigger. + \n",
-                "properties": {
-                    "severity": {
-                        "type": "string",
-                        "enum": [
-                            "LOW",
-                            "MEDIUM",
-                            "HIGH",
-                            "CRITICAL"
-                        ],
-                        "description": "Severity set for a <<Trigger>> and assigned to an alert when it is generated.",
-                        "default": "MEDIUM"
-                    },
-                    "status": {
-                        "type": "string",
-                        "enum": [
-                            "OPEN",
-                            "ACKNOWLEDGED",
-                            "RESOLVED"
-                        ],
-                        "description": "Lifecycle current status."
-                    },
-                    "notes": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/Note"
-                        },
-                        "description": "Notes attached with this alert."
-                    },
-                    "lifecycle": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/LifeCycle"
-                        },
-                        "description": "List of lifecycle states that this alert has navigated."
-                    },
-                    "resolvedEvalSets": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/ConditionEval"
-                        },
-                        "description": "The Eval Sets that resolved the <<Trigger>> in AUTORESOLVE mode. + \n Null for non AUTORESOLVE triggers."
-                    }
-                }
-            },
             "Definitions": {
                 "description": "Representation of a list of full triggers (trigger, dampenings and conditions),group members triggers and actions definitions. + \nUsed for bulk import/export operations.",
                 "properties": {
@@ -4980,144 +5141,6 @@
                     }
                 }
             },
-            "TimeConstraint": {
-                "description": "Define a time interval (startTime, endTime) used as a constraint for action execution. + \nTime interval can be defined in an absolute or relative expression. + \n + \nAn absolute time interval uses the pattern yyyy.MM.dd[,HH:mm] for startTime and endTime properties. + \nFor example, these representations are valid absolute expressions for time interval: + \n + \n{startTime: \"2016.02.01\", endTime: \"2016.03.01\", relative: false} + \n{startTime: \"2016.02.01,09:00\", endTime: \"2016.03.01,18:00\", relative: false} + \n + \nAbsolute time interval are marked with flag relative set to false. + \nHour and minutes can be optional in absolute format, by default it takes 00:00 value. + \n + \nA relative interval is used for repetitive expressions. + \nIt can be defined an interval between months (i.e. December to March), between days of the week + \n (i.e. Sunday to Friday), between hours and minutes (i.e. 23:00 to 04:30), or a combination of month, + \nday of the week and/or hours and minutes. + \nRelative interval uses the pattern [MMM],[WWW],[HH:mm] where months and days of the week can be used in long or short format. + \nSame pattern should be applied to both startTime and endTime properties. + \nFor example, these representations are valid relative expressions for time interval: + \n + \n{startTime: \"Jul\", endTime: \"Dec\", relative: true} + \n{startTime: \"July\", endTime: \"December\", relative: true} + \n + \nAll dates within July and December months will be valid. + \n + \n{startTime: \"Jul,Mon\", endTime: \"Dec,Fri\", relative: true} + \n{startTime: \"July,Monday\", endTime: \"December,Friday\", relative: true} + \n + \nAll dates within July and December months and within Monday and Friday days are valid. + \nSo, a Sunday day of August will not be valid according previous example. + \n + \n{startTime: \"Jul,Mon,09:00\", endTime: \"Dec,Fri,18:00\", relative: true} + \n{startTime: \"July,Monday\", endTime: \"December,Friday\", relative: true} + \n + \nAll dates within July and December months and within Monday and Friday days and time between 09:00 and18:00 are valid. + \nSo, a Monday day of August at 18:01 will not be valid according previous example. + \n + \n{startTime:\"Monday,09:00\", endTime:\"Friday,18:00\", relative: true} + \n{startTime:\"Mon,09:00\", endTime:\"Fri,18:00\", relative: true} + \n + \nAll dates within Monday and Friday day and time between 09:00 and 18:00 will be valid. + \nSo, a Monday at 18:01 will not be valid according previous example. + \n + \n{startTime:\"July,09:00\", endTime:\"August,18:00\", relative: true} + \n{startTime:\"Jul,09:00\", endTime:\"Aug,18:00\", relative: true} + \n + \nAll dates within July and December months and time between 09:00 and 18:00 are valid. + \nA day of August at 18:01 will not be valid according previous example. + \n + \n{startTime:\"09:00\", endTime:\"18:00\", relative: true} + \n + \nAll times within 09:00 and 18:00 are valid. + \n + \nTimeConstraint inRange property defines whether a given time must fall inside or outside + \nthe defined interval. Setting inRange == true means the constraint will be satisfied if a + \ngiven date is within the interval (taking the limits as inclusive). By setting + \ninRange == false the constraint is satisfied if a given date is outside of the interval. + \nBy default, inRange == true. + \nFor example, + \n + \n{startTime:\"09:00\", endTime:\"18:00\", relative: true, inRange: true} + \n + \nAll times within 09:00 and 18:00 are satisfied by the interval. + \n + \n{startTime:\"09:00\", endTime:\"18:00\", relative: true, inRange: false} + \n + \nAll times from 18:01 to 08:59 are satisfied in the interval. + \n + \nBy default the defined absolute or relative intervals use the default time zone (of the server). + \nThis can be unpredictable unless the server time zone is well known and acceptable.  It is + \nrecommended to explicitly set the time zone for which the TimeConstraint intervals are applicable. + \nThis is done by setting the timeZoneName property. + \nFor example, here is a TimeConstraint for business hours: + \n + \n        {startTime:\"09:00\", endTime:\"18:00\"} + \n + \nIf the server is running in London then this reflects business hours in London. But perhaps the + \nadmins are in New York and the TimeConstraint should actually reflect their local time zone. + \nIn that case use: + \n + \n        {startTime:\"09:00\", endTime:\"18:00\", timeZoneName: \"America/New_York\", relative: true} + \n + \nIt is also possible to use a GMT-relative value: + \n + \n        {startTime:\"09:00\", endTime:\"18:00\", timeZoneName: \"GMT-5:00\", relative: true} + \n",
-                "properties": {
-                    "startTime": {
-                        "type": "string",
-                        "description": "Define the start of the time interval. It can be in absolute or relative format."
-                    },
-                    "endTime": {
-                        "type": "string",
-                        "description": "Define the end of the time interval. It can be in absolute or relative format."
-                    },
-                    "relative": {
-                        "type": "boolean",
-                        "description": "Define if startTime and endTime properties are defined in absolute or relative format.",
-                        "default": "true"
-                    },
-                    "inRange": {
-                        "type": "boolean",
-                        "description": "Indicate if time constraint is satisfied when a given timestamp is inside or outside the interval.",
-                        "default": "true"
-                    },
-                    "timeZoneName": {
-                        "type": "string",
-                        "description": "Indicate the time zone in which the times are expressed. If not specified the server's default time zone is applied. Time zone is expressed in standard Area/Location format. It is recommended to specify the time zone unless you are sure of the server environment."
-                    }
-                }
-            },
-            "CompareCondition": {
-                "description": "A numeric comparison condition. + \n + \nExamples: + \nX > 80% of Y, FreeSpace < 20% of TotalSpace + \n",
-                "properties": {
-                    "operator": {
-                        "type": "string",
-                        "enum": [
-                            "LT",
-                            "GT",
-                            "LTE",
-                            "GTE"
-                        ],
-                        "description": "Compare operator [LT (<), GT (>), LTE (<=), GTE (>=)]."
-                    },
-                    "data2Id": {
-                        "type": "string",
-                        "description": "Data identifier of the metric used for comparison."
-                    },
-                    "data2Multiplier": {
-                        "type": "number",
-                        "format": "double",
-                        "description": "Straight multiplier to be applied to data2Id on the comparison. Final comparison expression can be read as \"dataId <operator> data2Multiplier*data2Id\"."
-                    }
-                }
-            },
-            "EventCondition": {
-                "description": "An EventCondition is used for condition evaluations over Event data using expressions.\n",
-                "properties": {
-                    "expression": {
-                        "type": "string",
-                        "description": "Event expression used for this condition."
-                    }
-                }
-            },
-            "LifeCycle": {
-                "description": "A lifecycle state representation.",
-                "properties": {
-                    "status": {
-                        "type": "string",
-                        "enum": [
-                            "OPEN",
-                            "ACKNOWLEDGED",
-                            "RESOLVED"
-                        ],
-                        "description": "The status of this lifecycle.",
-                        "default": "OPEN"
-                    },
-                    "user": {
-                        "type": "string",
-                        "description": "The user who creates the state + \nOpen statutes are created by 'system' + \nIn AUTORESOLVE triggers Resolved statutes are create by 'AutoResolve'."
-                    },
-                    "stime": {
-                        "type": "integer",
-                        "format": "int64",
-                        "description": "Creation time for this state."
-                    }
-                }
-            },
-            "RateCondition": {
-                "description": "A threshold condition against rate of change over time. + \n + \nTypically used for \"counter\" metrics, that continuously increase or decrease. + \nGiven the last two datums for dataId: + \n + \ndeltaTime   = datum.time - prevDatum.time + \ndeltaValue  = datum.value - prevData.value + \nperiods     = deltaTime / <conditionPeriod> + \nrate        = deltaValue / periods + \nmatch       = rate <conditionOperator> <conditionThreshold> + \n + \nIn other words, take the rate of change for the most recent datums and compare it to the threshold. + \nFor example, + \nLet's say we have a metric, sessionCount, that increments for each new session.  If the sessionCount increases too quickly, say more than 20 per minute, we want an alert.  We'd want: + \n + \nRateCondition( 'SessionCount', INCREASING, MINUTE, GT, 20 ) + \n + \nBy specifying the SessionCount data as increasing, we know to ignore/reset if the previous session count is less than the current session count.  This indicates that maybe the counter was reset (maybe due to a restart). + \n + \nNote that rate of change is always determined as an absolute value. So threshold values should be >= 0.",
-                "properties": {
-                    "direction": {
-                        "type": "string",
-                        "enum": [
-                            "DECREASING",
-                            "INCREASING",
-                            "NA"
-                        ],
-                        "description": "Indicate if a metric is increasing/decreasing."
-                    },
-                    "period": {
-                        "type": "string",
-                        "enum": [
-                            "SECOND",
-                            "MINUTE",
-                            "HOUR",
-                            "DAY",
-                            "WEEK"
-                        ],
-                        "description": "Time period used for the evaluation."
-                    },
-                    "operator": {
-                        "type": "string",
-                        "enum": [
-                            "LT",
-                            "GT",
-                            "LTE",
-                            "GTE"
-                        ],
-                        "description": "Compare operator [LT (<), GT (>), LTE (<=), GTE (>=)]."
-                    },
-                    "threshold": {
-                        "type": "number",
-                        "format": "double",
-                        "description": "Condition threshold."
-                    }
-                }
-            },
-            "AvailabilityCondition": {
-                "description": "An availability condition definition. + \n + \nExamples: + \nX is DOWN",
-                "properties": {
-                    "operator": {
-                        "type": "string",
-                        "enum": [
-                            "DOWN",
-                            "NOT_UP",
-                            "UP"
-                        ],
-                        "description": "Availability operator."
-                    }
-                }
-            },
             "MissingCondition": {
                 "description": "A MissingCondition is used to evaluate when a data or an event has not been received on time interval. + \n + \nA MissingCondition will be evaluated to true when a data/event has not been received in the last interval time, in milliseconds, starting to count from trigger was enabled or last received data/event.",
                 "properties": {
@@ -5125,26 +5148,6 @@
                         "type": "integer",
                         "format": "int64",
                         "description": "A time interval defined in milliseconds."
-                    }
-                }
-            },
-            "ThresholdCondition": {
-                "description": "A numeric threshold condition.",
-                "properties": {
-                    "operator": {
-                        "type": "string",
-                        "enum": [
-                            "LT",
-                            "GT",
-                            "LTE",
-                            "GTE"
-                        ],
-                        "description": "Compare operator [LT (<), GT (>), LTE (<=), GTE (>=)]."
-                    },
-                    "threshold": {
-                        "type": "number",
-                        "format": "double",
-                        "description": "Condition threshold."
                     }
                 }
             },
@@ -5195,66 +5198,12 @@
                     }
                 }
             },
-            "TriggerAction": {
-                "description": "Links an <<ActionDefinition>> with a <<Trigger>>.\n\nThe TriggerAction can override the constraints set on the <<ActionDefintion>>.\nIf a <<TriggerAction>> defines any constraints the <<ActionDefinition>> constraints will be ignored.\nIf a <<TriggerAction>> defines no constraints the <<ActionDefinition>> constraints will be used.\nIf a <<TriggerAction>> defines properties and no actionId, the <<ActionDefinition>> will be created.\n",
+            "EventCondition": {
+                "description": "An EventCondition is used for condition evaluations over Event data using expressions.\n",
                 "properties": {
-                    "tenantId": {
-                        "type": "string",
-                        "description": "Tenant id owner of this trigger."
-                    },
-                    "actionPlugin": {
-                        "type": "string",
-                        "description": "Action plugin identifier."
-                    },
-                    "actionId": {
-                        "type": "string",
-                        "description": "Action definition identifier."
-                    },
-                    "properties": {
-                        "type": "object",
-                        "description": "Plugin properties. Each plugin defines its own specific properties that can be supplied at action definition level. If properties is given, actionId must be empty as it is generated."
-                    },
-                    "states": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "description": "A list of Alert.Status restricting active states for this action."
-                    },
-                    "calendar": {
-                        "$ref": "#/components/schemas/TimeConstraint",
-                        "description": "A TimeConstraint restricting active times for this action."
-                    }
-                }
-            },
-            "ExternalCondition": {
-                "description": "An ExternalCondition is used for condition evaluations performed outside of the Alerting engine. + \n + \nThe external engine will send StringData providing the data for which the external evaluation  + \nhas already evaluated to true. + \n + \nThe Alerting engine assumes a true evaluation for the data being sent in from the external engine. In other words, every <<ExternalConditionEval>> will have a true evaluation and therefore, for triggers with only a single external condition, and with default dampening, an alert will be fired for each data submission.",
-                "properties": {
-                    "alerterId": {
-                        "type": "string",
-                        "description": "An identifier assigned by the external alerter to identify this condition as being handled by that. It should be unique enough such that external AlerterIds are unique."
-                    },
                     "expression": {
                         "type": "string",
-                        "description": "The operator/pattern/expression/description of the external condition. The use of this field is up to the external engine, It may be a pattern, expression or operator used to configure/drive an external evaluation engine or may just be a static description of the externally defined event."
-                    }
-                }
-            },
-            "Note": {
-                "description": "A simple note representation.",
-                "properties": {
-                    "user": {
-                        "type": "string",
-                        "description": "The user who creates the note."
-                    },
-                    "ctime": {
-                        "type": "integer",
-                        "format": "int64",
-                        "description": "Note creation time."
-                    },
-                    "text": {
-                        "type": "string",
-                        "description": "The note text."
+                        "description": "Event expression used for this condition."
                     }
                 }
             },
@@ -5281,6 +5230,19 @@
                         "type": "boolean",
                         "description": "Flag to indicate whether pattern should ignore case in the string operator expression.",
                         "default": "false"
+                    }
+                }
+            },
+            "ExternalCondition": {
+                "description": "An ExternalCondition is used for condition evaluations performed outside of the Alerting engine. + \n + \nThe external engine will send StringData providing the data for which the external evaluation  + \nhas already evaluated to true. + \n + \nThe Alerting engine assumes a true evaluation for the data being sent in from the external engine. In other words, every <<ExternalConditionEval>> will have a true evaluation and therefore, for triggers with only a single external condition, and with default dampening, an alert will be fired for each data submission.",
+                "properties": {
+                    "alerterId": {
+                        "type": "string",
+                        "description": "An identifier assigned by the external alerter to identify this condition as being handled by that. It should be unique enough such that external AlerterIds are unique."
+                    },
+                    "expression": {
+                        "type": "string",
+                        "description": "The operator/pattern/expression/description of the external condition. The use of this field is up to the external engine, It may be a pattern, expression or operator used to configure/drive an external evaluation engine or may just be a static description of the externally defined event."
                     }
                 }
             },
@@ -5319,6 +5281,234 @@
                     }
                 }
             },
+            "AvailabilityCondition": {
+                "description": "An availability condition definition. + \n + \nExamples: + \nX is DOWN",
+                "properties": {
+                    "operator": {
+                        "type": "string",
+                        "enum": [
+                            "DOWN",
+                            "NOT_UP",
+                            "UP"
+                        ],
+                        "description": "Availability operator."
+                    }
+                }
+            },
+            "ThresholdCondition": {
+                "description": "A numeric threshold condition.",
+                "properties": {
+                    "operator": {
+                        "type": "string",
+                        "enum": [
+                            "LT",
+                            "GT",
+                            "LTE",
+                            "GTE"
+                        ],
+                        "description": "Compare operator [LT (<), GT (>), LTE (<=), GTE (>=)]."
+                    },
+                    "threshold": {
+                        "type": "number",
+                        "format": "double",
+                        "description": "Condition threshold."
+                    }
+                }
+            },
+            "TimeConstraint": {
+                "description": "Define a time interval (startTime, endTime) used as a constraint for action execution. + \nTime interval can be defined in an absolute or relative expression. + \n + \nAn absolute time interval uses the pattern yyyy.MM.dd[,HH:mm] for startTime and endTime properties. + \nFor example, these representations are valid absolute expressions for time interval: + \n + \n{startTime: \"2016.02.01\", endTime: \"2016.03.01\", relative: false} + \n{startTime: \"2016.02.01,09:00\", endTime: \"2016.03.01,18:00\", relative: false} + \n + \nAbsolute time interval are marked with flag relative set to false. + \nHour and minutes can be optional in absolute format, by default it takes 00:00 value. + \n + \nA relative interval is used for repetitive expressions. + \nIt can be defined an interval between months (i.e. December to March), between days of the week + \n (i.e. Sunday to Friday), between hours and minutes (i.e. 23:00 to 04:30), or a combination of month, + \nday of the week and/or hours and minutes. + \nRelative interval uses the pattern [MMM],[WWW],[HH:mm] where months and days of the week can be used in long or short format. + \nSame pattern should be applied to both startTime and endTime properties. + \nFor example, these representations are valid relative expressions for time interval: + \n + \n{startTime: \"Jul\", endTime: \"Dec\", relative: true} + \n{startTime: \"July\", endTime: \"December\", relative: true} + \n + \nAll dates within July and December months will be valid. + \n + \n{startTime: \"Jul,Mon\", endTime: \"Dec,Fri\", relative: true} + \n{startTime: \"July,Monday\", endTime: \"December,Friday\", relative: true} + \n + \nAll dates within July and December months and within Monday and Friday days are valid. + \nSo, a Sunday day of August will not be valid according previous example. + \n + \n{startTime: \"Jul,Mon,09:00\", endTime: \"Dec,Fri,18:00\", relative: true} + \n{startTime: \"July,Monday\", endTime: \"December,Friday\", relative: true} + \n + \nAll dates within July and December months and within Monday and Friday days and time between 09:00 and18:00 are valid. + \nSo, a Monday day of August at 18:01 will not be valid according previous example. + \n + \n{startTime:\"Monday,09:00\", endTime:\"Friday,18:00\", relative: true} + \n{startTime:\"Mon,09:00\", endTime:\"Fri,18:00\", relative: true} + \n + \nAll dates within Monday and Friday day and time between 09:00 and 18:00 will be valid. + \nSo, a Monday at 18:01 will not be valid according previous example. + \n + \n{startTime:\"July,09:00\", endTime:\"August,18:00\", relative: true} + \n{startTime:\"Jul,09:00\", endTime:\"Aug,18:00\", relative: true} + \n + \nAll dates within July and December months and time between 09:00 and 18:00 are valid. + \nA day of August at 18:01 will not be valid according previous example. + \n + \n{startTime:\"09:00\", endTime:\"18:00\", relative: true} + \n + \nAll times within 09:00 and 18:00 are valid. + \n + \nTimeConstraint inRange property defines whether a given time must fall inside or outside + \nthe defined interval. Setting inRange == true means the constraint will be satisfied if a + \ngiven date is within the interval (taking the limits as inclusive). By setting + \ninRange == false the constraint is satisfied if a given date is outside of the interval. + \nBy default, inRange == true. + \nFor example, + \n + \n{startTime:\"09:00\", endTime:\"18:00\", relative: true, inRange: true} + \n + \nAll times within 09:00 and 18:00 are satisfied by the interval. + \n + \n{startTime:\"09:00\", endTime:\"18:00\", relative: true, inRange: false} + \n + \nAll times from 18:01 to 08:59 are satisfied in the interval. + \n + \nBy default the defined absolute or relative intervals use the default time zone (of the server). + \nThis can be unpredictable unless the server time zone is well known and acceptable.  It is + \nrecommended to explicitly set the time zone for which the TimeConstraint intervals are applicable. + \nThis is done by setting the timeZoneName property. + \nFor example, here is a TimeConstraint for business hours: + \n + \n        {startTime:\"09:00\", endTime:\"18:00\"} + \n + \nIf the server is running in London then this reflects business hours in London. But perhaps the + \nadmins are in New York and the TimeConstraint should actually reflect their local time zone. + \nIn that case use: + \n + \n        {startTime:\"09:00\", endTime:\"18:00\", timeZoneName: \"America/New_York\", relative: true} + \n + \nIt is also possible to use a GMT-relative value: + \n + \n        {startTime:\"09:00\", endTime:\"18:00\", timeZoneName: \"GMT-5:00\", relative: true} + \n",
+                "properties": {
+                    "startTime": {
+                        "type": "string",
+                        "description": "Define the start of the time interval. It can be in absolute or relative format."
+                    },
+                    "endTime": {
+                        "type": "string",
+                        "description": "Define the end of the time interval. It can be in absolute or relative format."
+                    },
+                    "relative": {
+                        "type": "boolean",
+                        "description": "Define if startTime and endTime properties are defined in absolute or relative format.",
+                        "default": "true"
+                    },
+                    "inRange": {
+                        "type": "boolean",
+                        "description": "Indicate if time constraint is satisfied when a given timestamp is inside or outside the interval.",
+                        "default": "true"
+                    },
+                    "timeZoneName": {
+                        "type": "string",
+                        "description": "Indicate the time zone in which the times are expressed. If not specified the server's default time zone is applied. Time zone is expressed in standard Area/Location format. It is recommended to specify the time zone unless you are sure of the server environment."
+                    }
+                }
+            },
+            "TriggerAction": {
+                "description": "Links an <<ActionDefinition>> with a <<Trigger>>.\n\nThe TriggerAction can override the constraints set on the <<ActionDefintion>>.\nIf a <<TriggerAction>> defines any constraints the <<ActionDefinition>> constraints will be ignored.\nIf a <<TriggerAction>> defines no constraints the <<ActionDefinition>> constraints will be used.\nIf a <<TriggerAction>> defines properties and no actionId, the <<ActionDefinition>> will be created.\n",
+                "properties": {
+                    "tenantId": {
+                        "type": "string",
+                        "description": "Tenant id owner of this trigger."
+                    },
+                    "actionPlugin": {
+                        "type": "string",
+                        "description": "Action plugin identifier."
+                    },
+                    "actionId": {
+                        "type": "string",
+                        "description": "Action definition identifier."
+                    },
+                    "properties": {
+                        "type": "object",
+                        "description": "Plugin properties. Each plugin defines its own specific properties that can be supplied at action definition level. If properties is given, actionId must be empty as it is generated."
+                    },
+                    "states": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "A list of Alert.Status restricting active states for this action."
+                    },
+                    "calendar": {
+                        "$ref": "#/components/schemas/TimeConstraint",
+                        "description": "A TimeConstraint restricting active times for this action."
+                    }
+                }
+            },
+            "CompareCondition": {
+                "description": "A numeric comparison condition. + \n + \nExamples: + \nX > 80% of Y, FreeSpace < 20% of TotalSpace + \n",
+                "properties": {
+                    "operator": {
+                        "type": "string",
+                        "enum": [
+                            "LT",
+                            "GT",
+                            "LTE",
+                            "GTE"
+                        ],
+                        "description": "Compare operator [LT (<), GT (>), LTE (<=), GTE (>=)]."
+                    },
+                    "data2Id": {
+                        "type": "string",
+                        "description": "Data identifier of the metric used for comparison."
+                    },
+                    "data2Multiplier": {
+                        "type": "number",
+                        "format": "double",
+                        "description": "Straight multiplier to be applied to data2Id on the comparison. Final comparison expression can be read as \"dataId <operator> data2Multiplier*data2Id\"."
+                    }
+                }
+            },
+            "RateCondition": {
+                "description": "A threshold condition against rate of change over time. + \n + \nTypically used for \"counter\" metrics, that continuously increase or decrease. + \nGiven the last two datums for dataId: + \n + \ndeltaTime   = datum.time - prevDatum.time + \ndeltaValue  = datum.value - prevData.value + \nperiods     = deltaTime / <conditionPeriod> + \nrate        = deltaValue / periods + \nmatch       = rate <conditionOperator> <conditionThreshold> + \n + \nIn other words, take the rate of change for the most recent datums and compare it to the threshold. + \nFor example, + \nLet's say we have a metric, sessionCount, that increments for each new session.  If the sessionCount increases too quickly, say more than 20 per minute, we want an alert.  We'd want: + \n + \nRateCondition( 'SessionCount', INCREASING, MINUTE, GT, 20 ) + \n + \nBy specifying the SessionCount data as increasing, we know to ignore/reset if the previous session count is less than the current session count.  This indicates that maybe the counter was reset (maybe due to a restart). + \n + \nNote that rate of change is always determined as an absolute value. So threshold values should be >= 0.",
+                "properties": {
+                    "direction": {
+                        "type": "string",
+                        "enum": [
+                            "DECREASING",
+                            "INCREASING",
+                            "NA"
+                        ],
+                        "description": "Indicate if a metric is increasing/decreasing."
+                    },
+                    "period": {
+                        "type": "string",
+                        "enum": [
+                            "SECOND",
+                            "MINUTE",
+                            "HOUR",
+                            "DAY",
+                            "WEEK"
+                        ],
+                        "description": "Time period used for the evaluation."
+                    },
+                    "operator": {
+                        "type": "string",
+                        "enum": [
+                            "LT",
+                            "GT",
+                            "LTE",
+                            "GTE"
+                        ],
+                        "description": "Compare operator [LT (<), GT (>), LTE (<=), GTE (>=)]."
+                    },
+                    "threshold": {
+                        "type": "number",
+                        "format": "double",
+                        "description": "Condition threshold."
+                    }
+                }
+            },
+            "Lifecycle": {
+                "description": "A lifecycle event representation.",
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "description": "The event type of this lifecycle."
+                    },
+                    "stime": {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "Creation time for this state."
+                    },
+                    "notes": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Note"
+                        },
+                        "description": "Notes attached to this lifecycle event"
+                    }
+                }
+            },
+            "Note": {
+                "description": "A simple note representation.",
+                "properties": {
+                    "user": {
+                        "type": "string",
+                        "description": "User who created this note."
+                    },
+                    "ctime": {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "Note creation time."
+                    },
+                    "text": {
+                        "type": "string",
+                        "description": "The note text."
+                    }
+                }
+            },
+            "CompareConditionEval": {
+                "description": "An evaluation state for compare condition.",
+                "properties": {
+                    "value1": {
+                        "type": "number",
+                        "format": "double",
+                        "description": "Numeric value used for dataId."
+                    },
+                    "value2": {
+                        "type": "number",
+                        "format": "double",
+                        "description": "Numeric value used for data2Id."
+                    },
+                    "context2": {
+                        "type": "object",
+                        "description": "Properties defined by the user at Data level on the data2Id used for this evaluation."
+                    }
+                }
+            },
+            "ExternalConditionEval": {
+                "description": "An evaluation state for an external condition. + \nNote that external conditions may report a Data value or an Event.",
+                "properties": {
+                    "value": {
+                        "type": "string",
+                        "description": "String value used for dataId."
+                    },
+                    "event": {
+                        "$ref": "#/components/schemas/Event",
+                        "description": "Event value used for dataId."
+                    }
+                }
+            },
             "RateConditionEval": {
                 "description": "An evaluation state for rate condition.",
                 "properties": {
@@ -5349,21 +5539,17 @@
                     }
                 }
             },
-            "ExternalConditionEval": {
-                "description": "An evaluation state for an external condition. + \nNote that external conditions may report a Data value or an Event.",
+            "StringConditionEval": {
+                "description": "An evaluation state for string condition.",
                 "properties": {
                     "value": {
                         "type": "string",
-                        "description": "String value used for dataId."
-                    },
-                    "event": {
-                        "$ref": "#/components/schemas/Event",
-                        "description": "Event value used for dataId."
+                        "description": "String value for dataId used in the evaluation."
                     }
                 }
             },
-            "ThresholdConditionEval": {
-                "description": "An evaluation state for threshold condition.",
+            "ThresholdRangeConditionEval": {
+                "description": "An evaluation state for threshold range condition.",
                 "properties": {
                     "value": {
                         "type": "number",
@@ -5386,18 +5572,13 @@
                     }
                 }
             },
-            "MissingConditionEval": {
-                "description": "An evaluation state for missing condition.",
+            "ThresholdConditionEval": {
+                "description": "An evaluation state for threshold condition.",
                 "properties": {
-                    "previousTime": {
-                        "type": "integer",
-                        "format": "int64",
-                        "description": "Time when trigger was enabled or last time a data/event was received."
-                    },
-                    "time": {
-                        "type": "integer",
-                        "format": "int64",
-                        "description": "Time when most recently evaluation of missing condition."
+                    "value": {
+                        "type": "number",
+                        "format": "double",
+                        "description": "Numeric value for dataId used in the evaluation."
                     }
                 }
             },
@@ -5410,41 +5591,18 @@
                     }
                 }
             },
-            "CompareConditionEval": {
-                "description": "An evaluation state for compare condition.",
+            "MissingConditionEval": {
+                "description": "An evaluation state for missing condition.",
                 "properties": {
-                    "value1": {
-                        "type": "number",
-                        "format": "double",
-                        "description": "Numeric value used for dataId."
+                    "previousTime": {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "Time when trigger was enabled or last time a data/event was received."
                     },
-                    "value2": {
-                        "type": "number",
-                        "format": "double",
-                        "description": "Numeric value used for data2Id."
-                    },
-                    "context2": {
-                        "type": "object",
-                        "description": "Properties defined by the user at Data level on the data2Id used for this evaluation."
-                    }
-                }
-            },
-            "StringConditionEval": {
-                "description": "An evaluation state for string condition.",
-                "properties": {
-                    "value": {
-                        "type": "string",
-                        "description": "String value for dataId used in the evaluation."
-                    }
-                }
-            },
-            "ThresholdRangeConditionEval": {
-                "description": "An evaluation state for threshold range condition.",
-                "properties": {
-                    "value": {
-                        "type": "number",
-                        "format": "double",
-                        "description": "Numeric value for dataId used in the evaluation."
+                    "time": {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "Time when most recently evaluation of missing condition."
                     }
                 }
             }

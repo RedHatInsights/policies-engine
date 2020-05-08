@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -13,6 +14,7 @@ import io.quarkus.runtime.configuration.QuarkusConfigFactory;
 import io.smallrye.config.SmallRyeConfig;
 import org.hawkular.alerts.api.exception.FoundException;
 import org.hawkular.alerts.api.exception.NotFoundException;
+import org.hawkular.alerts.api.model.Lifecycle;
 import org.hawkular.alerts.api.model.action.ActionDefinition;
 import org.hawkular.alerts.api.model.condition.AvailabilityCondition;
 import org.hawkular.alerts.api.model.condition.AvailabilityCondition.Operator;
@@ -180,7 +182,7 @@ public class IspnDefinitionsServiceImplTest extends IspnBaseServiceImplTest {
 
         trigger.setDescription("This is a long description for Trigger1 Test");
         trigger.addTag("tag1", "value1");
-        definitions.updateTrigger(TENANT, trigger);
+        definitions.updateTrigger(TENANT, trigger, true);
 
         Trigger updated = definitions.getTrigger(TENANT, "trigger1");
         assertEquals(trigger.getDescription(), updated.getDescription());
@@ -188,7 +190,7 @@ public class IspnDefinitionsServiceImplTest extends IspnBaseServiceImplTest {
 
         try {
             trigger.setId("trigger2");
-            definitions.updateTrigger(TENANT, trigger);
+            definitions.updateTrigger(TENANT, trigger, true);
         } catch (NotFoundException e) {
             // Expected
         }
@@ -412,6 +414,58 @@ public class IspnDefinitionsServiceImplTest extends IspnBaseServiceImplTest {
 
         definitions.removeTrigger(TENANT, "trigger1");
         definitions.removeTrigger(TENANT, "trigger2");
+        definitions.removeActionDefinition(TENANT, "pluginM", actionId);
+        definitions.removeActionPlugin("pluginM");
+    }
+
+    @Test
+    public void testLifecycleHistory() throws Exception {
+        Map<String, String> props = new HashMap<>();
+        props.put("_managed", "true");
+        props.put("id", "");
+        definitions.addActionPlugin("pluginM", props);
+
+        TriggerAction action = new TriggerAction();
+        action.setActionPlugin("pluginM");
+        Map<String, String> actionProps = new HashMap<>();
+        actionProps.put("id", "abcdefghjikl");
+        action.setProperties(actionProps);
+
+        FullTrigger fullTrigger = new FullTrigger();
+        Trigger trigger = new Trigger();
+        Set<TriggerAction> actionSet = new HashSet<>();
+        actionSet.add(action);
+        trigger.setActions(actionSet);
+        trigger.setId("trigger1");
+        trigger.addLifecycle(Trigger.TriggerLifecycle.CREATED, 0, null);
+
+        fullTrigger.setTrigger(trigger);
+        definitions.createFullTrigger(TENANT, fullTrigger);
+
+        // Try to update first with null trigger (should get NotFoundException)
+        fullTrigger.setTrigger(null);
+
+        try {
+            definitions.updateFullTrigger(TENANT, fullTrigger);
+            fail("Should have gotten IllegalArgumentException");
+        } catch(IllegalArgumentException e) { }
+
+        fullTrigger = definitions.getFullTrigger(TENANT, "trigger1");
+        // Created only
+        assertEquals(1, fullTrigger.getTrigger().getLifecycle().size());
+
+        fullTrigger.getTrigger().setEnabled(true);
+        fullTrigger.getTrigger().getLifecycle().clear();
+        fullTrigger.getTrigger().addLifecycle(Trigger.TriggerLifecycle.MODIFIED, 0, null);
+        definitions.updateFullTrigger(TENANT, fullTrigger);
+
+        FullTrigger fT2 = definitions.getFullTrigger(TENANT, fullTrigger.getTrigger().getId());
+        List<Lifecycle> lifecycle = fT2.getTrigger().getLifecycle();
+        // Created and Modified
+        assertEquals(2, lifecycle.size());
+
+        String actionId = fullTrigger.getTrigger().getActions().iterator().next().getActionId();
+        definitions.removeTrigger(TENANT, "trigger1");
         definitions.removeActionDefinition(TENANT, "pluginM", actionId);
         definitions.removeActionPlugin("pluginM");
     }

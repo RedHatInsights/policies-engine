@@ -34,6 +34,7 @@ import org.hawkular.alerts.api.services.DefinitionsService;
 import org.hawkular.alerts.api.services.EventExtension;
 import org.hawkular.alerts.api.services.ExtensionsService;
 import org.hawkular.alerts.engine.impl.AlertsEngineCache.DataEntry;
+import org.hawkular.alerts.engine.impl.ispn.IspnDefinitionsServiceImpl;
 import org.hawkular.alerts.engine.service.AlertsEngine;
 import org.hawkular.alerts.engine.service.PartitionDataListener;
 import org.hawkular.alerts.engine.service.PartitionManager;
@@ -89,6 +90,9 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
 //    @ConfigProperty(name = "engine.alerts.engine-extensions")
     boolean engineExtensions;
 
+//    @ConfigProperty(name = "engine.alerts.condition-evaluation-time")
+    boolean updateLastEvaluated;
+
     RulesEngine rules;
 
     DefinitionsService definitions;
@@ -117,6 +121,7 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
         delay = ConfigProvider.getConfig().getValue("engine.alerts.engine-delay", Integer.class);
         period = ConfigProvider.getConfig().getValue("engine.alerts.engine-period", Integer.class);
         engineExtensions = ConfigProvider.getConfig().getValue("engine.alerts.engine-extensions", Boolean.class);
+        updateLastEvaluated = ConfigProvider.getConfig().getValue("engine.alerts.condition-evaluation-time", Boolean.class);
         wakeUpTimer = new Timer("AlertsEngineImpl-Timer");
     }
 
@@ -196,6 +201,7 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
         autoResolvedTriggers.clear();
         disabledTriggers.clear();
         missingStates.clear();
+        evaluatedConditions.clear();
 
         rulesTask = new RulesInvoker();
         wakeUpTimer.schedule(rulesTask, delay, period);
@@ -285,7 +291,6 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
         Trigger trigger = null;
         try {
             trigger = definitions.getTrigger(tenantId, triggerId);
-
         } catch (Exception e) {
             log.debug(e.getMessage(), e);
             log.errorDefinitionsService("Trigger", e.getMessage());
@@ -387,7 +392,6 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
         Trigger loadedTrigger = null;
         try {
             loadedTrigger = (Trigger) rules.getFact(trigger);
-
         } catch (Exception e) {
             log.errorf("Failed to get Trigger from engine %s: %s", trigger, e);
         }
@@ -546,7 +550,6 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
     private TreeSet<Event> processEventsExtensions(TreeSet<Event> events) {
         Set<EventExtension> extensions = extensionsService.getEventExtensions();
         for (EventExtension extension : extensions) {
-            log.infof("Processing with %s\n", extension.getClass().toString());
             events = extension.processEvents(events);
         }
         return events;
@@ -587,7 +590,6 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
                 try {
                     if (newData.isEmpty() && newEvents.isEmpty()) {
                         rules.fireNoData();
-
                     } else {
                         if (!newData.isEmpty()) {
                             rules.addData(newData);
@@ -603,8 +605,7 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
                         rules.fire();
                     }
 
-                    alertsService.addAlerts(alerts);
-                    alerts.clear();
+                    handleAlerts();
                     alertsService.persistEvents(events);
                     if (distributed && !events.isEmpty()) {
                         /*
@@ -663,12 +664,20 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
         }
     }
 
+    private void handleAlerts() throws Exception {
+        alertsService.addAlerts(alerts);
+        for (Alert alert : alerts) {
+            definitions.addLifecycleToTrigger(alert.getTenantId(), alert.getTriggerId(), Trigger.TriggerLifecycle.ALERT_GENERATE);
+        }
+        alerts.clear();
+    }
+
     private void handleDisabledTriggers() {
         try {
             for (Trigger t : disabledTriggers) {
                 try {
-                    definitions.updateTriggerEnablement(t.getTenantId(), t.getId(), false);
-
+                    // TODO This will now generate "DISABLED" .. not AUTO_DISABLED
+                    definitions.updateTriggerEnablement(t.getTenantId(), t.getId(), false, null);
                 } catch (Exception e) {
                     log.errorf(e, "Failed to persist updated trigger. Could not autoDisable %s.", t);
                 }
@@ -688,8 +697,8 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
                 // otherwise, manually reload the trigger back into the engine (in firing mode).
                 if (t.isAutoResolveAlerts()) {
                     try {
-                        alertsService.resolveAlertsForTrigger(t.getTenantId(), t.getId(), "AutoResolve",
-                                "Trigger AutoResolve=True", entry.getValue());
+                        alertsService.resolveAlertsForTrigger(t.getTenantId(), t.getId(), null,
+                                null, entry.getValue());
                     } catch (Exception e) {
                         manualReload = true;
                         log.errorf("Failed to resolve Alerts. Could not AutoResolve alerts for trigger %s.", t);
@@ -728,19 +737,21 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
     }
 
     private void handleConditionEvaluationTimes() {
-        HashMap<ConditionKey, Set<Condition>> groupedConditionUpdates = new HashMap<>();
-        for (Condition evaluatedCondition : evaluatedConditions) {
-            ConditionKey condKey = new ConditionKey(evaluatedCondition.getTenantId(), evaluatedCondition.getTriggerId());
-            Set<Condition> conditions = groupedConditionUpdates.get(condKey);
-            if(conditions == null) {
-                conditions = new HashSet<>();
+        if(updateLastEvaluated) {
+            HashMap<ConditionKey, Set<Condition>> groupedConditionUpdates = new HashMap<>();
+            for (Condition evaluatedCondition : evaluatedConditions) {
+                ConditionKey condKey = new ConditionKey(evaluatedCondition.getTenantId(), evaluatedCondition.getTriggerId());
+                Set<Condition> conditions = groupedConditionUpdates.get(condKey);
+                if(conditions == null) {
+                    conditions = new HashSet<>();
+                }
+                conditions.add(evaluatedCondition);
+                groupedConditionUpdates.put(condKey, conditions);
             }
-            conditions.add(evaluatedCondition);
-            groupedConditionUpdates.put(condKey, conditions);
-        }
 
-        for (Entry<ConditionKey, Set<Condition>> condEntry : groupedConditionUpdates.entrySet()) {
-            definitions.updateConditions(condEntry.getKey().getTenantId(), condEntry.getKey().getTriggerId(), condEntry.getValue());
+            for (Entry<ConditionKey, Set<Condition>> condEntry : groupedConditionUpdates.entrySet()) {
+                definitions.updateConditions(condEntry.getKey().getTenantId(), condEntry.getKey().getTriggerId(), condEntry.getValue());
+            }
         }
 
         evaluatedConditions.clear();

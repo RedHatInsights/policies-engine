@@ -522,13 +522,13 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
         alerts.addNote("tenant0", alertId, "xyz1", "Note1");
 
         Alert alert = alerts.getAlert("tenant0", alertId, false);
-        assertEquals(1, alert.getNotes().size());
+        assertEquals(1, alert.getCurrentLifecycle().getNotes().size());
 
         alerts.addNote("tenant0", alertId, "xyz2", "Note2");
         alerts.addNote("tenant0", alertId, "xyz3", "Note3");
 
         alert = alerts.getAlert("tenant0", alertId, false);
-        assertEquals(3, alert.getNotes().size());
+        assertEquals(3, alert.getCurrentLifecycle().getNotes().size());
 
         deleteTestAlerts(numTenants);
     }

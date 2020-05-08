@@ -11,6 +11,7 @@ import org.hawkular.alerts.api.exception.NotFoundException;
 import org.hawkular.alerts.api.json.GroupConditionsInfo;
 import org.hawkular.alerts.api.json.GroupMemberInfo;
 import org.hawkular.alerts.api.json.UnorphanMemberInfo;
+import org.hawkular.alerts.api.model.Note;
 import org.hawkular.alerts.api.model.condition.Condition;
 import org.hawkular.alerts.api.model.dampening.Dampening;
 import org.hawkular.alerts.api.model.paging.Page;
@@ -195,7 +196,9 @@ public class TriggersHandler {
     @DocParameters(value = {
             @DocParameter(required = true, body = true, type = FullTrigger.class,
                     description = "FullTrigger (trigger, dampenings, conditions) to be created."),
-            @DocParameter(name = "dry", type = Boolean.class, description = "Process the trigger (validate), but do not store it.")
+            @DocParameter(name = "dry", type = Boolean.class, description = "Process the trigger (validate), but do not store it."),
+            @DocParameter(name = "user", description = "User who created the trigger"),
+            @DocParameter(name = "text", description = "Additional description for the note")
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, FullTrigger created.", response = FullTrigger.class),
@@ -222,6 +225,8 @@ public class TriggersHandler {
 
                     Trigger trigger = fullTrigger.getTrigger();
                     trigger.setTenantId(tenantId);
+                    Note note = parseNotes(routing);
+                    trigger.addLifecycle(Trigger.TriggerLifecycle.CREATED, 0, note);
                     if (isEmpty(trigger.getId())) {
                         trigger.setId(Trigger.generateId());
                     } else {
@@ -265,7 +270,9 @@ public class TriggersHandler {
                     description = "Trigger definition id to be updated."),
             @DocParameter(required = true, body = true, type = FullTrigger.class,
                     description = "FullTrigger (trigger, dampenings, conditions) to be created."),
-            @DocParameter(name = "dry", type = Boolean.class, description = "Process the trigger (validate), but do not store it.")
+            @DocParameter(name = "dry", type = Boolean.class, description = "Process the trigger (validate), but do not store it."),
+            @DocParameter(name = "user", description = "User who modified the trigger"),
+            @DocParameter(name = "text", description = "Additional description for the note")
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, FullTrigger updated.", response = FullTrigger.class),
@@ -295,6 +302,8 @@ public class TriggersHandler {
                     if (null == trigger) {
                         throw new ResponseUtil.BadRequestException("FullTrigger.Trigger can not be null.");
                     }
+                    trigger.getLifecycle().clear();
+                    trigger.addLifecycle(Trigger.TriggerLifecycle.MODIFIED, 0, parseNotes(routing));
                     trigger.setId(triggerId);
                     if (!ResponseUtil.checkTags(trigger)) {
                         throw new ResponseUtil.BadRequestException(
@@ -391,7 +400,9 @@ public class TriggersHandler {
             notes = "Returns created group trigger.")
     @DocParameters(value = {
             @DocParameter(required = true, body = true, type = Trigger.class,
-                    description = "Group member trigger to be created.")
+                    description = "Group member trigger to be created."),
+            @DocParameter(name = "user", description = "User who created the trigger"),
+            @DocParameter(name = "text", description = "Additional description for the note")
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Group Trigger Created.", response = Trigger.class),
@@ -430,6 +441,7 @@ public class TriggersHandler {
                             throw new ResponseUtil.BadRequestException("Trigger with ID [" + trigger.getId() + "] exists.");
                         }
                     }
+                    trigger.addLifecycle(Trigger.TriggerLifecycle.CREATED, 0, parseNotes(routing));
                     if (!ResponseUtil.checkTags(trigger)) {
                         throw new ResponseUtil.BadRequestException("Tags " + trigger.getTags() + " must be non empty.");
                     }
@@ -855,7 +867,9 @@ public class TriggersHandler {
             @DocParameter(name = "triggerId", required = true, path = true,
                     description = "Trigger definition id to be updated."),
             @DocParameter(required = true, body = true, type = Trigger.class,
-                    description = "Updated trigger definition.")
+                    description = "Updated trigger definition."),
+            @DocParameter(name = "user", description = "User who created the trigger"),
+            @DocParameter(name = "text", description = "Additional description for the note")
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Trigger updated.", response = Trigger.class),
@@ -874,7 +888,9 @@ public class TriggersHandler {
             @DocParameter(name = "groupId", required = true, path = true,
                     description = "Group Trigger definition id to be updated."),
             @DocParameter(required = true, body = true, type = Trigger.class,
-                    description = "Updated group trigger definition.")
+                    description = "Updated group trigger definition."),
+            @DocParameter(name = "user", description = "User who updated the trigger"),
+            @DocParameter(name = "text", description = "Additional description for the note")
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Group Trigger updated.", response = Trigger.class),
@@ -906,11 +922,13 @@ public class TriggersHandler {
                     if (!ResponseUtil.checkTags(trigger)) {
                         throw new ResponseUtil.BadRequestException("Tags " + trigger.getTags() + " must be non empty.");
                     }
+                    trigger.getLifecycle().clear();
+                    trigger.addLifecycle(Trigger.TriggerLifecycle.MODIFIED, 0, parseNotes(routing));
                     try {
                         if (isGroup) {
                             definitionsService.updateGroupTrigger(tenantId, trigger);
                         } else {
-                            definitionsService.updateTrigger(tenantId, trigger);
+                            definitionsService.updateTrigger(tenantId, trigger, true);
                         }
                         log.debugf("Trigger: %s", trigger);
                         future.complete();
@@ -1329,6 +1347,8 @@ public class TriggersHandler {
                     allowableValues = "Comma separated list of triggerIds to be enabled or disabled."),
             @DocParameter(name = "enabled", required = true, type = Boolean.class,
                     description = "Set enabled or disabled."),
+            @DocParameter(name = "user", description = "User who enabled or disabled the trigger"),
+            @DocParameter(name = "text", description = "Additional description for the note")
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Triggers updated."),
@@ -1337,7 +1357,7 @@ public class TriggersHandler {
             @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void setTriggersEnabled(RoutingContext routingContext) {
-        setTriggersEnabled(routingContext, false);
+        setTriggersEnabled(routingContext, false, parseNotes(routingContext));
     }
 
     @DocPath(method = PUT,
@@ -1345,7 +1365,9 @@ public class TriggersHandler {
             name = "Enable trigger.")
     @DocParameters(value = {
             @DocParameter(name = "triggerId", required = true, path = true,
-                    description = "Trigger definition id to be enabled.")
+                    description = "Trigger definition id to be enabled."),
+            @DocParameter(name = "user", description = "User who enabled the trigger"),
+            @DocParameter(name = "text", description = "Additional description for the note")
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Trigger enabled."),
@@ -1354,7 +1376,7 @@ public class TriggersHandler {
             @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void setTriggerEnabled(RoutingContext routingContext) {
-        setTriggersEnabled(routingContext, false);
+        setTriggersEnabled(routingContext, false, parseNotes(routingContext));
     }
 
     @DocPath(method = DELETE,
@@ -1362,7 +1384,9 @@ public class TriggersHandler {
             name = "Disable trigger,")
     @DocParameters(value = {
             @DocParameter(name = "triggerId", required = true, path = true,
-                    description = "Trigger definition id to be disabled.")
+                    description = "Trigger definition id to be disabled."),
+            @DocParameter(name = "user", description = "User who disabled the trigger"),
+            @DocParameter(name = "text", description = "Additional description for the note")
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Trigger disabled."),
@@ -1371,7 +1395,7 @@ public class TriggersHandler {
             @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void setTriggerDisabled(RoutingContext routingContext) {
-        setTriggersEnabled(routingContext, false);
+        setTriggersEnabled(routingContext, false, parseNotes(routingContext));
     }
 
     @DocPath(method = PUT,
@@ -1383,6 +1407,8 @@ public class TriggersHandler {
                     allowableValues = "Comma separated list of group triggerIds to be enabled or disabled."),
             @DocParameter(name = "enabled", required = true, type = Boolean.class,
                     description = "Set enabled or disabled."),
+            @DocParameter(name = "user", description = "User who enabled or disabled the group trigger"),
+            @DocParameter(name = "text", description = "Additional description for the note")
     })
     @DocResponses(value = {
             @DocResponse(code = 200, message = "Success, Group Triggers updated."),
@@ -1391,10 +1417,10 @@ public class TriggersHandler {
             @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void setGroupTriggersEnabled(RoutingContext routingContext) {
-        setTriggersEnabled(routingContext, true);
+        setTriggersEnabled(routingContext, true, parseNotes(routingContext));
     }
 
-    void setTriggersEnabled(RoutingContext routing, boolean isGroup) {
+    void setTriggersEnabled(RoutingContext routing, boolean isGroup, Note note) {
         routing.vertx()
                 .executeBlocking(future -> {
                     String tenantId = ResponseUtil.checkTenant(routing);
@@ -1428,9 +1454,9 @@ public class TriggersHandler {
                             }
                         }
                         if (isGroup) {
-                            definitionsService.updateGroupTriggerEnablement(tenantId, triggerIds, enabled);
+                            definitionsService.updateGroupTriggerEnablement(tenantId, triggerIds, enabled, note);
                         } else {
-                            definitionsService.updateTriggerEnablement(tenantId, triggerIds, enabled);
+                            definitionsService.updateTriggerEnablement(tenantId, triggerIds, enabled, note);
                         }
                         future.complete();
                     } catch (NotFoundException e) {
@@ -1442,6 +1468,15 @@ public class TriggersHandler {
                         throw new ResponseUtil.InternalServerException(e.toString());
                     }
                 }, res -> ResponseUtil.result(routing, res));
+    }
+
+    Note parseNotes(RoutingContext routing) {
+        String user = routing.request().getParam("user");
+        String text = routing.request().getParam("text");
+        if(isEmpty(user) && isEmpty(text)) {
+            return null;
+        }
+        return new Note(user, text);
     }
 
     TriggersCriteria buildCriteria(MultiMap params) {

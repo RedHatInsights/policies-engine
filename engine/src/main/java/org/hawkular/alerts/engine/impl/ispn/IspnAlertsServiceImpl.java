@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.eclipse.microprofile.config.ConfigProvider;
+import org.hawkular.alerts.api.model.Note;
 import org.hawkular.alerts.api.model.Severity;
 import org.hawkular.alerts.api.model.condition.ConditionEval;
 import org.hawkular.alerts.api.model.data.Data;
@@ -211,20 +212,17 @@ public class IspnAlertsServiceImpl implements AlertsService {
             return;
         }
 
-        if (isEmpty(ackBy)) {
-            ackBy = "unknown";
-        }
-        if (isEmpty(ackNotes)) {
-            ackNotes = "none";
-        }
-
         AlertsCriteria criteria = new AlertsCriteria();
         criteria.setAlertIds(alertIds);
         List<Alert> alertsToAck = getAlerts(tenantId, criteria, null);
 
+        long timestamp = System.currentTimeMillis();
         for (Alert alert : alertsToAck) {
-            alert.addNote(ackBy, ackNotes);
-            alert.addLifecycle(Status.ACKNOWLEDGED, ackBy, System.currentTimeMillis());
+            List<Note> notes = null;
+            if(!isEmpty(ackBy)) {
+                notes = List.of(new Note(ackBy, ackNotes));
+            }
+            alert.addLifecycle(Status.ACKNOWLEDGED, timestamp, notes);
             store(alert);
             sendAction(alert);
         }
@@ -328,7 +326,7 @@ public class IspnAlertsServiceImpl implements AlertsService {
             return;
         }
 
-        alert.addNote(user, text);
+        alert.addNote(new Note(user, System.currentTimeMillis(), text));
 
         store(alert);
     }
@@ -801,19 +799,20 @@ public class IspnAlertsServiceImpl implements AlertsService {
         List<Alert> alertsToResolve = getAlerts(tenantId, criteria, null);
 
         // resolve the alerts
+        long timestamp = System.currentTimeMillis();
         for (Alert alert : alertsToResolve) {
-            alert.addNote(resolvedBy, resolvedNotes);
+            List<Note> notes = List.of(new Note(resolvedBy, timestamp, resolvedNotes));
             alert.setResolvedEvalSets(resolvedEvalSets);
-            alert.addLifecycle(Status.RESOLVED, resolvedBy, System.currentTimeMillis());
+            alert.addLifecycle(Status.RESOLVED, timestamp, notes);
             store(alert);
             sendAction(alert);
         }
 
         // gather the triggerIds of the triggers we need to check for resolve options
-        Set<String> triggerIds = alertsToResolve.stream().map(alert -> alert.getTriggerId()).collect(Collectors.toSet());
+        Set<String> triggerIds = alertsToResolve.stream().map(Alert::getTriggerId).collect(Collectors.toSet());
 
         // handle resolve options
-        triggerIds.stream().forEach(tid -> handleResolveOptions(tenantId, tid, true));
+        triggerIds.forEach(tid -> handleResolveOptions(tenantId, tid, true));
 
     }
 
@@ -826,28 +825,24 @@ public class IspnAlertsServiceImpl implements AlertsService {
             throw new IllegalArgumentException("TriggerId must be not null");
         }
 
-        if (isEmpty(resolvedBy)) {
-            resolvedBy = "unknown";
-        }
-        if (isEmpty(resolvedNotes)) {
-            resolvedNotes = "none";
-        }
-
         AlertsCriteria criteria = new AlertsCriteria();
         criteria.setTriggerId(triggerId);
         criteria.setStatusSet(EnumSet.complementOf(EnumSet.of(Status.RESOLVED)));
         List<Alert> alertsToResolve = getAlerts(tenantId, criteria, null);
 
+        long timestamp = System.currentTimeMillis();
         for (Alert alert : alertsToResolve) {
-            alert.addNote(resolvedBy, resolvedNotes);
+            List<Note> notes = null;
+            if(!isEmpty(resolvedBy)) {
+                notes = List.of(new Note(resolvedBy, timestamp, resolvedNotes));
+            }
             alert.setResolvedEvalSets(resolvedEvalSets);
-            alert.addLifecycle(Status.RESOLVED, resolvedBy, System.currentTimeMillis());
+            alert.addLifecycle(Status.RESOLVED, timestamp, notes);
             store(alert);
             sendAction(alert);
         }
 
         handleResolveOptions(tenantId, triggerId, false);
-
     }
 
     @Override
@@ -992,7 +987,7 @@ public class IspnAlertsServiceImpl implements AlertsService {
             // or perform an explicit reload to reset to firing mode.
             if (setEnabled) {
                 trigger.setEnabled(true);
-                definitionsService.updateTrigger(tenantId, trigger);
+                definitionsService.updateTrigger(tenantId, trigger, true);
             } else {
                 alertsEngine.reloadTrigger(tenantId, triggerId);
             }

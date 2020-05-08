@@ -144,6 +144,7 @@ public class RulesEngineTest {
         Collections.sort(alerts, (Alert a1, Alert a2) -> a1.getTriggerId().compareTo(a2.getTriggerId()));
 
         Alert a = alerts.get(0);
+        assertEquals("tenant", a.getTenantId());
         assertEquals(a.getTriggerId(), "trigger-1", a.getTriggerId());
         assertEquals(a.getEvalSets().toString(), 1, a.getEvalSets().size());
         Set<ConditionEval> eval = a.getEvalSets().get(0);
@@ -156,6 +157,7 @@ public class RulesEngineTest {
         Double v = e.getValue();
         assertTrue(e.toString(), v.equals(5.0D));
         assertEquals(e.getCondition().toString(), "NumericData-01", e.getCondition().getDataId());
+        assertTrue(evaluatedConditions.contains(e.getCondition()));
 
         a = alerts.get(1);
         assertEquals(a.getTriggerId(), "trigger-2", a.getTriggerId());
@@ -170,6 +172,7 @@ public class RulesEngineTest {
         v = e.getValue();
         assertTrue(e.toString(), v.equals(5.0D) || v.equals(10.0D));
         assertEquals(e.getCondition().toString(), "NumericData-01", e.getCondition().getDataId());
+        assertTrue(evaluatedConditions.contains(e.getCondition()));
 
         a = alerts.get(2);
         assertEquals(a.getTriggerId(), "trigger-2", a.getTriggerId());
@@ -185,8 +188,8 @@ public class RulesEngineTest {
         v = e.getValue();
         assertTrue(e.toString(), v.equals(5.0D) || v.equals(10.0D));
         assertEquals(e.getCondition().toString(), "NumericData-01", e.getCondition().getDataId());
-
         assertTrue(e.getCondition().getDataId().equals("NumericData-01"));
+        assertTrue(evaluatedConditions.contains(e.getCondition()));
 
         a = alerts.get(3);
         assertEquals(a.getTriggerId(), "trigger-3", a.getTriggerId());
@@ -201,6 +204,7 @@ public class RulesEngineTest {
         v = e.getValue();
         assertTrue(e.toString(), v.equals(15.0D));
         assertEquals(e.getCondition().toString(), "NumericData-01", e.getCondition().getDataId());
+        assertTrue(evaluatedConditions.contains(e.getCondition()));
 
         a = alerts.get(4);
         assertEquals(a.getTriggerId(), "trigger-4", a.getTriggerId());
@@ -215,6 +219,7 @@ public class RulesEngineTest {
         v = e.getValue();
         assertTrue(e.toString(), v.equals(15.0D) || v.equals(10.0D));
         assertEquals(e.getCondition().toString(), "NumericData-01", e.getCondition().getDataId());
+        assertTrue(evaluatedConditions.contains(e.getCondition()));
 
         a = alerts.get(5);
         assertEquals(a.getTriggerId(), "trigger-4", a.getTriggerId());
@@ -230,6 +235,7 @@ public class RulesEngineTest {
         v = e.getValue();
         assertTrue(e.toString(), v.equals(15.0D) || v.equals(10.0D));
         assertEquals(e.getCondition().toString(), "NumericData-01", e.getCondition().getDataId());
+        assertTrue(evaluatedConditions.contains(e.getCondition()));
     }
 
     @Test

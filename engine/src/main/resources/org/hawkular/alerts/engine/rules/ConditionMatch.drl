@@ -559,7 +559,7 @@ rule AlertOnSatisfiedDampening
             newEvent = new Alert( $t.getTenantId(), $t, $d, $d.getSatisfyingEvals() );
             // Adding an Alert will implicitly add the related Event
             alerts.add((Alert)newEvent);
-
+            $t.addLifecycle(Trigger.TriggerLifecycle.ALERT_GENERATE, 0, null);
         } else {
             if (log != null && log.isDebugEnabled() && $t.getEventType() == EventType.EVENT) {
                 log.debugf("Event! Dampening Satisfied! %s", $d.log());
@@ -581,7 +581,9 @@ rule AlertOnSatisfiedDampening
         insert( $d );
 
         if ($t.isAutoResolve()) {
-            log.debugf("Setting Trigger to AutoResolve Mode! %s", $t);
+            if (log != null && log.isDebugEnabled()) {
+                log.debugf("Setting Trigger to AutoResolve Mode! %s", $t);
+            }
             modify($t) {
                setMode(Mode.AUTORESOLVE)
             }
@@ -595,7 +597,6 @@ rule AlertOnSatisfiedDampening
             disabledTriggers.add( $t );
 
             delete( $t );
-
         } else {
             if (log != null && log.isDebugEnabled()) {
                 log.debugf("Trigger remains in Firing mode, AutoDisable and AutoResolve not set. %s", $t);
@@ -618,7 +619,6 @@ rule SetFiringModeOnSatisfiedDampening
         // only the Trigger instance placed into autoResolvedTriggers.
         $t.setMode(Mode.FIRING);
         autoResolvedTriggers.put( $t, $d.getSatisfyingEvals() );
-
         delete( $t );
 end
 

@@ -173,9 +173,8 @@ public class JsonTest {
                     "]," +
                 "\"severity\":\"MEDIUM\"," +
                 "\"status\":\"OPEN\"," +
-                "\"lifecycle\":[{\"status\":\"OPEN\",\"user\":\"system\",\"stime\":1}]," +
-                "\"notes\":[{\"user\":\"user1\",\"ctime\":1,\"text\":\"The comment 1\"}," +
-                           "{\"user\":\"user2\",\"ctime\":2,\"text\":\"The comment 2\"}" +
+                "\"lifecycle\":[{\"status\":\"OPEN\",\"stime\":1,\"notes\":[{\"user\": \"user1\",\"ctime\":2,\"text\":\"The comment 1\"}," +
+                           "{\"user\":\"user2\",\"ctime\":3,\"text\":\"The comment 2\"}]}" +
                           "]," +
                 "\"context\":{\"n1\":\"v1\",\"n2\":\"v2\"}}";
 
@@ -189,8 +188,9 @@ public class JsonTest {
         assertEquals(2, alert.getContext().size());
         assertEquals("v1", alert.getContext().get("n1"));
         assertEquals("v2", alert.getContext().get("n2"));
-        assertEquals(Alert.Status.OPEN, alert.getCurrentLifecycle().getStatus());
-        assertEquals("system", alert.getCurrentLifecycle().getUser());
+        assertEquals(Alert.Status.OPEN.name(), alert.getCurrentLifecycle().getStatus());
+        assertEquals(2, alert.getCurrentLifecycle().getNotes().size());
+        assertEquals("user2", alert.getCurrentLifecycle().getNotes().get(1).getUser());
         assertEquals(1, alert.getCurrentLifecycle().getStime());
         assertNotNull(alert.getLastOpenTime());
         assertEquals(1, alert.getLastOpenTime().longValue());
