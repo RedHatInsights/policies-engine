@@ -32,15 +32,15 @@
         <!-- xmlns="urn:infinispan:config:store:rocksdb:10.1" schemaLocation="https://infinispan.org/schemas/infinispan-config-10.1.xsd"  -->
         <rocksdb-store xmlns="urn:infinispan:config:store:rocksdb:10.1" path="rocksdb/data" preload="false" fetch-state="false">
           <property name="database.max_background_compactions">1</property>
-          <property name="database.max_open_files">-1</property>
+          <property name="database.max_open_files">50</property>
           <property name="database.db_write_buffer_size">256 * 1024 * 1024</property>
           <property name="database.keep_log_file_num">1</property>
           <property name="data.level_compaction_dynamic_level_bytes">true</property>
-          <property name="data.periodic_compaction_seconds">86400</property>
+<!--          <property name="data.periodic_compaction_seconds">86400</property>-->
           <property name="data.write_buffer_size">64 * 1024 * 1024</property>
           <property name="data.target_file_size_base">64 * 1024 * 1024</property>
           <property name="data.max_bytes_for_level_base">512 * 1024 * 1024</property>
-          <property name="data.level0_file_num_compaction_trigger">10</property>
+          <property name="data.level0_file_num_compaction_trigger">2</property>
           <compression type="LZ4"/>
         </rocksdb-store>
       </persistence>
