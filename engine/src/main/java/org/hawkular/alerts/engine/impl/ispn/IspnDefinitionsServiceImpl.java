@@ -1448,6 +1448,7 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
             throw new IllegalArgumentException("actionPlugin must be not null");
         }
         IspnActionPlugin found = (IspnActionPlugin) backend.get(pk(actionPlugin));
+        // TODO AddFullTrigger will fail to NPE he possif the actionPlugin is incorrectly typed
         return found == null ? null : found.getDefaultProperties();
     }
 
@@ -1877,21 +1878,22 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
                         }
                     });
 
-            Collection<ActionDefinition> actionDefinitions = getActionDefinitions(trigger.getTenantId());
-
             // Check existence of targeted actionDefinitions
             trigger.getActions().stream()
                     .filter(actionDefinition -> !isEmpty(actionDefinition.getActionId()))
                     .forEach(actionDefinition -> {
-                actionDefinition.setTenantId(trigger.getTenantId());
-                boolean found = actionDefinitions.stream()
-                        .anyMatch(a -> a.getActionPlugin().equals(actionDefinition.getActionPlugin())
-                                && a.getActionId().equals(actionDefinition.getActionId()));
-                if(!found) {
-                    throw new IllegalArgumentException("Action " + actionDefinition.getActionId() + " on plugin: "
-                            + actionDefinition.getActionPlugin() + " is not found");
-                }
-            });
+                        actionDefinition.setTenantId(trigger.getTenantId());
+                        ActionDefinition foundDefinition = null;
+                        try {
+                            foundDefinition = getActionDefinition(actionDefinition.getTenantId(), actionDefinition.getActionPlugin(), actionDefinition.getActionId());
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                        if (foundDefinition == null) {
+                            throw new IllegalArgumentException("Action " + actionDefinition.getActionId() + " on plugin: "
+                                    + actionDefinition.getActionPlugin() + " is not found");
+                        }
+                    });
         }
 
         String pk = pk(trigger);
@@ -2210,16 +2212,6 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
                 .build()
                 .list();
         return actionDefinitions.stream().map(a -> a.getActionDefinition()).collect(Collectors.toList());
-    }
-
-    private List<ActionDefinition> getActionDefinitions(String tenantId, String actionPlugin) throws Exception {
-        List<IspnActionDefinition> actionDefinitions = queryFactory.from(IspnActionDefinition.class)
-                .having("tenantId")
-                .eq(tenantId)
-                .and().having("actionPlugin").eq(actionPlugin)
-                .build()
-                .list();
-        return actionDefinitions.stream().map(IspnActionDefinition::getActionDefinition).collect(Collectors.toList());
     }
 
     private Collection<Condition> mapConditions(List<IspnCondition> ispnConditions) {
