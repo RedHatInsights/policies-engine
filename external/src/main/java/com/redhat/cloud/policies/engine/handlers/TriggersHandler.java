@@ -1,6 +1,9 @@
 package com.redhat.cloud.policies.engine.handlers;
 
 import com.redhat.cloud.policies.engine.handlers.util.ResponseUtil;
+import io.opentracing.Scope;
+import io.opentracing.Span;
+import io.opentracing.Tracer;
 import io.vertx.core.MultiMap;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
@@ -65,6 +68,9 @@ public class TriggersHandler {
 
     @Inject
     DefinitionsService definitionsService;
+
+    @Inject
+    Tracer tracer;
 
     @PostConstruct
     public void init(@Observes Router router) {
@@ -211,6 +217,7 @@ public class TriggersHandler {
                 .executeBlocking(future -> {
                     String tenantId = ResponseUtil.checkTenant(routing);
                     String json = routing.getBodyAsString();
+                    Span serverSpan = getServerSpan(routing);
                     Boolean dryRun = Boolean.valueOf(routing.request().getParam("dry"));
                     FullTrigger fullTrigger;
                     try {
@@ -234,7 +241,7 @@ public class TriggersHandler {
                         trigger.setId(Trigger.generateId());
                     } else {
                         Trigger found = null;
-                        try {
+                        try (Scope ignored = tracer.buildSpan("getTrigger").asChildOf(serverSpan).startActive(true)) {
                             found = definitionsService.getTrigger(tenantId, trigger.getId());
                         } catch (NotFoundException e) {
                             // Expected
@@ -249,7 +256,8 @@ public class TriggersHandler {
                     if (!ResponseUtil.checkTags(trigger)) {
                         throw new ResponseUtil.BadRequestException("Tags " + trigger.getTags() + " must be non empty.");
                     }
-                    try {
+                    try (Scope ignored = tracer.buildSpan("createFullTrigger").asChildOf(serverSpan).startActive(true)) {
+                        ignored.span().setTag("dryRun",dryRun);
                         if(!dryRun) {
                             definitionsService.createFullTrigger(tenantId, fullTrigger);
                         }
@@ -422,6 +430,7 @@ public class TriggersHandler {
     void createTrigger(RoutingContext routing, boolean isGroup) {
         routing.vertx()
                 .executeBlocking(future -> {
+                    Span serverSpan = getServerSpan(routing);
                     String tenantId = ResponseUtil.checkTenant(routing);
                     String json = routing.getBodyAsString();
                     Trigger trigger;
@@ -435,7 +444,7 @@ public class TriggersHandler {
                         trigger.setId(Trigger.generateId());
                     } else {
                         Trigger found = null;
-                        try {
+                        try (Scope ignored = tracer.buildSpan("getTrigger").asChildOf(serverSpan).startActive(true)) {
                             found = definitionsService.getTrigger(tenantId, trigger.getId());
                         } catch (NotFoundException e) {
                             // expected
@@ -451,7 +460,7 @@ public class TriggersHandler {
                     if (!ResponseUtil.checkTags(trigger)) {
                         throw new ResponseUtil.BadRequestException("Tags " + trigger.getTags() + " must be non empty.");
                     }
-                    try {
+                    try (Scope ignored = tracer.buildSpan("addNewTrigger").asChildOf(serverSpan).startActive(true)) {
                         if (isGroup) {
                             definitionsService.addGroupTrigger(tenantId, trigger);
                         } else {
@@ -674,13 +683,23 @@ public class TriggersHandler {
     public void findTriggers(RoutingContext routing) {
         routing.vertx()
                 .executeBlocking(future -> {
+                    Span serverSpan = getServerSpan(routing);
                     String tenantId = ResponseUtil.checkTenant(routing);
                     try {
                         ResponseUtil.checkForUnknownQueryParams(routing.request().params(), queryParamValidationMap.get(FIND_TRIGGERS));
-                        Pager pager = ResponseUtil.extractPaging(routing.request().params());
-                        TriggersCriteria criteria = buildCriteria(routing.request().params());
-                        Page<Trigger> triggerPage = definitionsService.getTriggers(tenantId, criteria, pager);
-                        log.debugf("Triggers: %s", triggerPage);
+                      Pager pager;
+                      try (Scope ignored = tracer.buildSpan("extractPaging").asChildOf(serverSpan).startActive(true)) {
+                          pager = ResponseUtil.extractPaging(routing.request().params());
+                        }
+                        TriggersCriteria criteria;
+                      try (Scope ignored = tracer.buildSpan("buildCriteria").asChildOf(serverSpan).startActive(true)) {
+                        criteria = buildCriteria(routing.request().params());
+                      }
+                      Page<Trigger> triggerPage;
+                      try (Scope ignored = tracer.buildSpan("getTriggers").asChildOf(serverSpan).startActive(true)) {
+                        triggerPage = definitionsService.getTriggers(tenantId, criteria, pager);
+                      }
+                      log.debugf("Triggers: %s", triggerPage);
                         future.complete(triggerPage);
                     } catch (IllegalArgumentException e) {
                         throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
@@ -691,7 +710,11 @@ public class TriggersHandler {
                 }, res -> ResponseUtil.result(routing, res));
     }
 
-    @DocPath(method = GET,
+  private Span getServerSpan(RoutingContext routing) {
+    return routing.get("io.opentracing.contrib.vertx.ext.web.TracingHandler.severSpan");
+  }
+
+  @DocPath(method = GET,
             path = "/{triggerId}/dampenings/{dampeningId}",
             name = "Get an existing dampening.")
     @DocParameters(value = {
