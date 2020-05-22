@@ -1914,6 +1914,13 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
         String tenantId = trigger.getTenantId();
         String triggerId = trigger.getId();
         try {
+            // Trigger should be removed from the alerts engine.
+            if (null != alertsEngine) {
+                alertsEngine.removeTrigger(tenantId, triggerId);
+            }
+
+            // See ISPN-11890 - RocksDB is not part of the transaction correctly so this can fail partly
+            // and we will receive inconsistent state. Not really dangerous, but causes a logging event.
             backend.startBatch();
 
             backend.remove(pkFromTriggerId(tenantId, triggerId));
@@ -1930,13 +1937,6 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
             }
             log.errorDatabaseException(e.getMessage());
             throw e;
-        }
-
-        /*
-            Trigger should be removed from the alerts engine.
-         */
-        if (null != alertsEngine) {
-            alertsEngine.removeTrigger(tenantId, triggerId);
         }
 
         notifyListeners(
