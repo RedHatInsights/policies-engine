@@ -406,26 +406,7 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
             throw new IllegalArgumentException("FullTrigger.Trigger is type MEMBER and must be updated via the group");
         }
         if (!isEmpty(trigger.getActions())) {
-            trigger.getActions().stream()
-                    .filter(action -> isEmpty(action.getActionId()))
-                    .forEach(action -> {
-                        try {
-                            if (isManaged(action.getActionPlugin())) {
-                                ActionDefinition managedActionDefinition = getActionDefinition(tenantId, action.getActionPlugin(), getManagedId(action.getActionPlugin(), action.getProperties()));
-                                if (managedActionDefinition != null) {
-                                    action.setActionId(managedActionDefinition.getActionId());
-                                }
-                            }
-                        } catch (Exception e) {
-                            if(e instanceof IllegalArgumentException) {
-                                throw (IllegalArgumentException) e;
-                            }
-                            throw new RuntimeException(e);
-                        }
-                        if (isEmpty(action.getActionId())) {
-                            throw new IllegalArgumentException("Supplied actionId could not be found");
-                        }
-                    });
+            enrichManagedActionPluginId(trigger);
         }
 
         checkTenantId(tenantId, trigger);
@@ -1858,25 +1839,29 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
         return Boolean.parseBoolean(managed);
     }
 
+    private void enrichManagedActionPluginId(Trigger trigger) {
+        trigger.getActions().stream()
+                .filter(action -> isEmpty(action.getActionId()))
+                .forEach(action -> {
+                    try {
+                        if (isManaged(action.getActionPlugin())) {
+                            ActionDefinition managedActionDefinition = getActionDefinition(trigger.getTenantId(), action.getActionPlugin(), getManagedId(action.getActionPlugin(), action.getProperties()));
+                            if (managedActionDefinition == null) {
+                                managedActionDefinition = createManagedActionDefinition(action);
+                                addActionDefinition(trigger.getTenantId(), managedActionDefinition);
+                            }
+                            action.setActionId(managedActionDefinition.getActionId());
+                        }
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
     private void addTrigger(Trigger trigger) throws Exception {
         if (trigger.getActions() != null) {
             // Verify managed actionDefinitions
-            trigger.getActions().stream()
-                    .filter(action -> isEmpty(action.getActionId()))
-                    .forEach(action -> {
-                        try {
-                            if(isManaged(action.getActionPlugin())) {
-                                ActionDefinition managedActionDefinition = getActionDefinition(trigger.getTenantId(), action.getActionPlugin(), getManagedId(action.getActionPlugin(), action.getProperties()));
-                                if(managedActionDefinition == null) {
-                                    managedActionDefinition = createManagedActionDefinition(action);
-                                    addActionDefinition(trigger.getTenantId(), managedActionDefinition);
-                                }
-                                action.setActionId(managedActionDefinition.getActionId());
-                            }
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
+            enrichManagedActionPluginId(trigger);
 
             // Check existence of targeted actionDefinitions
             trigger.getActions().stream()
