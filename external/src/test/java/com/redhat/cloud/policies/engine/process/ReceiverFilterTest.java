@@ -73,4 +73,15 @@ public class ReceiverFilterTest {
         assertEquals(0, processingErrors.getCount());
     }
 
+    @Test
+    public void testInventoryIdIsStored() throws Exception {
+        InputStream is = getClass().getClassLoader().getResourceAsStream("input/host.json");
+        String inputJson = IOUtils.toString(is, StandardCharsets.UTF_8);
+
+        CompletionStage<Void> voidCompletionStage = receiver.processAsync(Message.of(inputJson));
+        voidCompletionStage.toCompletableFuture().get();
+
+        assertEquals("ba11a21a-8b22-431b-9b4b-b06006472d54", mockedAlertsService.getPushedEvents().get(0).getTags().get(Receiver.INVENTORY_ID_FIELD));
+    }
+
 }
