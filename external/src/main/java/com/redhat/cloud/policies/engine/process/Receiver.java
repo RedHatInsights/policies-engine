@@ -34,6 +34,8 @@ public class Receiver {
     public static final String CATEGORY_NAME = "insight_report";
     public static final String INSIGHT_ID_FIELD = "insights_id";
     public static final String DISPLAY_NAME_FIELD = "display_name";
+    public static final String INVENTORY_ID_FIELD = "inventory_id";
+    public static final String HOST_ID = "id";
 
     private static final String HOST_FIELD = "host";
     private static final String TENANT_ID_FIELD = "account";
@@ -89,6 +91,7 @@ public class Receiver {
                     // Indexed searchable events
                     Map<String, String> tagsMap = new HashMap<>();
                     tagsMap.put(DISPLAY_NAME_FIELD, displayName);
+                    tagsMap.put(INVENTORY_ID_FIELD, json.getString(HOST_ID));
                     event.setTags(tagsMap);
 
                     // Additional context for processing
