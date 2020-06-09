@@ -265,7 +265,8 @@ public class Event implements Comparable<Event>, Serializable {
 
     public Event(String tenantId, Trigger trigger, Dampening dampening, List<Set<ConditionEval>> evalSets) {
         this.tenantId = tenantId;
-        this.trigger = trigger;
+        this.trigger = new Trigger(trigger);
+        this.trigger.getLifecycle().clear(); // This isn't relevant to event's lifecycle
         this.dampening = dampening;
         this.evalSets = evalSets;
         this.eventType = EventType.EVENT.name();

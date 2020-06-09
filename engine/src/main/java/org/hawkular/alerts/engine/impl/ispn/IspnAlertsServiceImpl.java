@@ -81,9 +81,12 @@ public class IspnAlertsServiceImpl implements AlertsService {
     long eventLifespanInHours;
     long alertsLifespanInHours;
 
+    boolean saveThinAlerts = false;
+
     public void init() {
         alertsLifespanInHours = ConfigProvider.getConfig().getValue("engine.backend.ispn.alerts-lifespan", Long.class);
         eventLifespanInHours = ConfigProvider.getConfig().getValue("engine.backend.ispn.events-lifespan", Long.class);
+        saveThinAlerts = ConfigProvider.getConfig().getValue("engine.backend.ispn.alerts-thin", Boolean.class);
         backend = IspnCacheManager.getCacheManager().getCache("backend");
         if (backend == null) {
             log.error("Ispn backend cache not found. Check configuration.");
@@ -238,6 +241,12 @@ public class IspnAlertsServiceImpl implements AlertsService {
         }
         log.debugf("Adding %s alerts", alerts.size());
         for (Alert alert : alerts) {
+            if(saveThinAlerts) {
+                // This reduces the storage requirements by not storing runtime evaluation information
+                alert.setDampening(null);
+                alert.setEvalSets(null);
+                alert.setResolvedEvalSets(null);
+            }
             store(alert);
         }
     }

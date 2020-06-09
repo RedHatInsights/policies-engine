@@ -15,23 +15,32 @@ import io.quarkus.runtime.configuration.ConfigUtils;
 import io.quarkus.runtime.configuration.QuarkusConfigFactory;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.config.SmallRyeConfig;
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.hawkular.alerts.api.model.Severity;
 import org.hawkular.alerts.api.model.event.Alert;
 import org.hawkular.alerts.api.model.event.Event;
+import org.hawkular.alerts.api.model.paging.Page;
 import org.hawkular.alerts.api.services.AlertsCriteria;
 import org.hawkular.alerts.api.services.EventsCriteria;
 import org.hawkular.alerts.log.MsgLogger;
 import org.hawkular.alerts.log.MsgLogging;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /**
  * @author Jay Shaughnessy
  * @author Lucas Ponce
  */
 @QuarkusTest
+@RunWith(Parameterized.class)
 public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
     static final MsgLogger log = MsgLogging.getMsgLogger(IspnAlertsServiceImplTest.class);
+
+    @Parameterized.Parameter(0)
+    public boolean thinAlertsOnly;
 
     @BeforeClass
     public static void init() {
@@ -42,6 +51,16 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
         alerts.init();
     }
 
+    @Parameterized.Parameters(name = "thin-alerts = {0}")
+    public static Object[] settings() {
+        return new Object[]{false, true};
+    }
+
+    @BeforeEach
+    void modifySettings() {
+        alerts.saveThinAlerts = thinAlertsOnly;
+    }
+
     @Test
     public void addAlerts() throws Exception {
         int numTenants = 2;
@@ -50,13 +69,23 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
         createTestAlerts(numTenants, numTriggers, numAlerts);
 
         Set<String> tenantIds = new HashSet<>();
-        tenantIds.add("tenant0");
-        tenantIds.add("tenant1");
+        for(int i = 0; i < numTenants; i++) {
+            tenantIds.add("tenant" + i);
+        }
 
-        assertEquals(2 * 5 * 100, alerts.getAlerts(tenantIds, null, null).size());
+        Page<Alert> addedAlerts = alerts.getAlerts(tenantIds, null, null);
+        assertEquals(numTenants * numTriggers * numAlerts, addedAlerts.size());
+
+        if(alerts.saveThinAlerts) {
+            for (Alert a : addedAlerts) {
+                assertNull(a.getDampening());
+                assertNull(a.getEvalSets());
+                assertNull(a.getResolvedEvalSets());
+            }
+        }
 
         tenantIds.remove("tenant0");
-        assertEquals(1 * 5 * 100, alerts.getAlerts(tenantIds, null, null).size());
+        assertEquals((numTenants - 1) * numTriggers * numAlerts, alerts.getAlerts(tenantIds, null, null).size());
 
         List<Alert> testAlerts = alerts.getAlerts(tenantIds, null, null);
         tenantIds.clear();
