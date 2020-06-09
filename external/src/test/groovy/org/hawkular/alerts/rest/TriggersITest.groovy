@@ -16,6 +16,7 @@ import org.hawkular.alerts.log.MsgLogging
 import org.junit.jupiter.api.Test
 
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertNotEquals
 import static org.junit.jupiter.api.Assertions.assertTrue
 import static org.junit.jupiter.api.Assertions.assertNotNull
 
@@ -798,8 +799,7 @@ class TriggersITest extends AbstractQuarkusITestBase {
         def prevActionId = trigger.actions.get(0).actionId
         trigger.actions.get(0).actionId = null
         resp = client.put(path: "triggers/trigger/full-test-trigger-1", body: fullTrigger)
-        // No managed id was created in previous section as the id was defined in the create, thus update will fail
-        assertEquals(400, resp.status)
+        assertEquals(200, resp.status)
         trigger.actions.get(0).actionId = prevActionId
 
         // re-get the test trigger
@@ -807,7 +807,12 @@ class TriggersITest extends AbstractQuarkusITestBase {
         resp = client.get(path: "triggers/trigger/full-test-trigger-1");
         assertEquals(200, resp.status)
         fullTrigger = resp.data;
-        assertEquals(prevFullTrigger, fullTrigger);
+        // actionId has changed to a managed one since we didn't enter any
+        assertNotEquals(prevActionId, fullTrigger.trigger.actions.get(0).actionId)
+        assertTrue(fullTrigger.trigger.actions[0].actionId.startsWith("_managed"))
+
+        // Set to original id
+        trigger.actions.get(0).actionId = prevActionId
 
         // try an update with changes
         trigger = fullTrigger.trigger;
