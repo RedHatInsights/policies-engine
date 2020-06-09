@@ -138,7 +138,7 @@ public class AlertsHandler {
             @DocParameter(name = "startTime", type = Long.class,
                     description = "Filter out alerts created before this time.",
                     allowableValues = "Timestamp in millisecond since epoch."),
-            @DocParameter(name = "entTime", type = Long.class,
+            @DocParameter(name = "endTime", type = Long.class,
                     description = "Filter out alerts created after this time.",
                     allowableValues = "Timestamp in millisecond since epoch."),
             @DocParameter(name = "alertIds",
