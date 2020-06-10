@@ -20,7 +20,14 @@ import org.hawkular.alerts.api.model.condition.AvailabilityCondition;
 import org.hawkular.alerts.api.model.condition.AvailabilityCondition.Operator;
 import org.hawkular.alerts.api.model.condition.Condition;
 import org.hawkular.alerts.api.model.dampening.Dampening;
+import org.hawkular.alerts.api.model.event.Alert;
+import org.hawkular.alerts.api.model.paging.AlertComparator;
+import org.hawkular.alerts.api.model.paging.Order;
+import org.hawkular.alerts.api.model.paging.Page;
+import org.hawkular.alerts.api.model.paging.Pager;
+import org.hawkular.alerts.api.model.paging.TriggerComparator;
 import org.hawkular.alerts.api.model.trigger.*;
+import org.hawkular.alerts.api.services.AlertsCriteria;
 import org.hawkular.alerts.api.services.TriggersCriteria;
 import org.hawkular.alerts.log.MsgLogger;
 import org.hawkular.alerts.log.MsgLogging;
@@ -470,4 +477,103 @@ public class IspnDefinitionsServiceImplTest extends IspnBaseServiceImplTest {
         definitions.removeActionPlugin("pluginM");
     }
 
+    @Test
+    public void getTriggersWithPaging() throws Exception {
+        int numTenants = 1;
+        int numTriggers = 1000;
+        createTestTriggers(numTenants, numTriggers);
+
+        String tenantIds = "tenant0";
+
+        TriggersCriteria criteria = new TriggersCriteria();
+        Pager pager = Pager.builder()
+                .orderBy(Order.by(TriggerComparator.Field.ID.getName(), Order.Direction.DESCENDING))
+                .withPageSize(50)
+                .build();
+
+        Page<Trigger> triggerPage = definitions.getTriggers(tenantIds, criteria, pager);
+        assertEquals(50, triggerPage.size());
+
+        // Take last full page
+        pager = Pager.builder()
+                .orderBy(Order.by(TriggerComparator.Field.ID.getName(), Order.Direction.DESCENDING))
+                .withPageSize(50)
+                .withStartPage(19)
+                .build();
+
+        triggerPage = definitions.getTriggers(tenantIds, criteria, pager);
+        assertEquals(50, triggerPage.size());
+
+        Trigger alert = triggerPage.get(49);
+        assertEquals("trigger0", alert.getId());
+
+        pager = Pager.builder()
+                .orderBy(Order.by(TriggerComparator.Field.ID.getName(), Order.Direction.DESCENDING))
+                .withPageSize(50)
+                .withStartPage(20)
+                .build();
+
+        triggerPage = definitions.getTriggers(tenantIds, criteria, pager);
+        assertEquals(0, triggerPage.size());
+
+        deleteTestTriggers(numTenants, numTriggers);
+
+        // Test with 101 and 99 alerts (near the page boundary)
+
+        createTestTriggers(1,  99);
+        pager = Pager.builder()
+                .orderBy(Order.by(TriggerComparator.Field.ID.getName(), Order.Direction.DESCENDING))
+                .withPageSize(50)
+                .withStartPage(0)
+                .build();
+
+        triggerPage = definitions.getTriggers(tenantIds, criteria, pager);
+        assertEquals(50, triggerPage.size());
+        assertEquals("trigger98", triggerPage.get(0).getId());
+
+        pager = Pager.builder()
+                .orderBy(Order.by(TriggerComparator.Field.ID.getName(), Order.Direction.DESCENDING))
+                .withPageSize(50)
+                .withStartPage(1)
+                .build();
+        triggerPage = definitions.getTriggers(tenantIds, criteria, pager);
+
+        assertEquals(49, triggerPage.size());
+        assertEquals("trigger0", triggerPage.get(48).getId());
+
+        deleteTestTriggers(1, 99);
+
+        // 101
+
+        createTestTriggers(1, 101);
+        pager = Pager.builder()
+                .orderBy(Order.by(TriggerComparator.Field.ID.getName(), Order.Direction.DESCENDING))
+                .withPageSize(50)
+                .withStartPage(0)
+                .build();
+
+        triggerPage = definitions.getTriggers(tenantIds, criteria, pager);
+        assertEquals(50, triggerPage.size());
+
+        pager = Pager.builder()
+                .orderBy(Order.by(TriggerComparator.Field.ID.getName(), Order.Direction.DESCENDING))
+                .withPageSize(50)
+                .withStartPage(1)
+                .build();
+
+        triggerPage = definitions.getTriggers(tenantIds, criteria, pager);
+        assertEquals(50, triggerPage.size());
+
+        pager = Pager.builder()
+                .orderBy(Order.by(TriggerComparator.Field.ID.getName(), Order.Direction.DESCENDING))
+                .withPageSize(50)
+                .withStartPage(2)
+                .build();
+
+        triggerPage = definitions.getTriggers(tenantIds, criteria, pager);
+        assertEquals(1, triggerPage.size());
+        assertEquals("trigger0", triggerPage.get(0).getId());
+
+        deleteTestTriggers(1, 101);
+    }
 }
