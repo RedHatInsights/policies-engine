@@ -1971,7 +1971,7 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
                 pager = Pager.builder()
                         .withPageSize(pager.getPageSize())
                         .withStartPage(pager.getPageNumber())
-                        .orderBy(TriggerComparator.Field.NAME.getName(), Order.Direction.DESCENDING).build();
+                        .orderBy(TriggerComparator.Field.NAME.getName(), Order.Direction.ASCENDING).build();
             }
             List<Trigger> ordered = triggers;
             if (pager.getOrder() != null) {
