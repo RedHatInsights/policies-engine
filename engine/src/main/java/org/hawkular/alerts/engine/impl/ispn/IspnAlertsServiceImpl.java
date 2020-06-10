@@ -586,16 +586,12 @@ public class IspnAlertsServiceImpl implements AlertsService {
             } else {
                 builder.append("ASC");
             }
-            pager.getOrder().remove(0);
         } else {
             // Force id sorting by DESCENDING (newest events / alerts first) to be the natural order
             builder.append("ORDER BY ctime DESC");
         }
 
         Query parsedQuery = queryFactory.create(builder.toString());
-        if(log.isDebugEnabled()) {
-            log.debugf("ParsedQuery: %s", parsedQuery.getQueryString());
-        }
 
         // Do limitations at Infinispan level if possible
         if(pager != null) {
@@ -605,6 +601,9 @@ public class IspnAlertsServiceImpl implements AlertsService {
             if(pager.getPageSize() != PageContext.UNLIMITED_PAGE_SIZE) {
                 parsedQuery.maxResults(pager.getPageSize());
             }
+        }
+        if(log.isDebugEnabled()) {
+            log.debugf("ParsedQuery: %s, maxResults: %d, startOffset: %d", parsedQuery.getQueryString(), parsedQuery.getMaxResults(), parsedQuery.getStartOffset());
         }
 
         return parsedQuery.list();
@@ -907,34 +906,25 @@ public class IspnAlertsServiceImpl implements AlertsService {
                 pager = Pager.builder()
                         .withPageSize(pager.getPageSize())
                         .withStartPage(pager.getPageNumber())
-                        .orderBy(AlertComparator.Field.ALERT_ID.getText(), Order.Direction.DESCENDING).build();
+                        .orderBy(AlertComparator.Field.ALERT_ID.getText(), Order.Direction.ASCENDING).build();
             }
-            List<Alert> ordered = alerts;
             if (pager.getOrder() != null) {
                 pager.getOrder().stream()
                         .filter(o -> o.getField() != null && o.getDirection() != null)
                         .forEach(o -> {
                             AlertComparator comparator = new AlertComparator(o.getField(), o.getDirection());
-                            Collections.sort(ordered, comparator);
+                            alerts.sort(comparator);
                         });
             }
-            if (!pager.isLimited() || ordered.size() < pager.getStart()) {
-                pager = new Pager(0, ordered.size(), pager.getOrder());
-                return new Page<>(ordered, pager, ordered.size());
-            }
-            if (pager.getEnd() >= ordered.size()) {
-                return new Page<>(ordered.subList(pager.getStart(), ordered.size()), pager, ordered.size());
-            }
-            return new Page<>(ordered.subList(pager.getStart(), pager.getEnd()), pager, ordered.size());
         } else {
             AlertComparator.Field defaultField = AlertComparator.Field.ALERT_ID;
             Order.Direction defaultDirection = Order.Direction.ASCENDING;
-            AlertComparator comparator = new AlertComparator(defaultField.getText(), defaultDirection.ASCENDING);
+            AlertComparator comparator = new AlertComparator(defaultField.getText(), defaultDirection);
             pager = Pager.builder().withPageSize(alerts.size()).orderBy(defaultField.getText(), defaultDirection)
                     .build();
-            Collections.sort(alerts, comparator);
-            return new Page<>(alerts, pager, alerts.size());
+            alerts.sort(comparator);
         }
+        return new Page<>(alerts, pager, alerts.size());
     }
 
     private void sendAction(Alert a) {
@@ -1013,26 +1003,17 @@ public class IspnAlertsServiceImpl implements AlertsService {
                 pager = Pager.builder()
                         .withPageSize(pager.getPageSize())
                         .withStartPage(pager.getPageNumber())
-                        .orderBy(EventComparator.Field.ID.getName(), Order.Direction.DESCENDING).build();
+                        .orderBy(EventComparator.Field.ID.getName(), Order.Direction.ASCENDING).build();
             }
-            List<Event> ordered = events;
             if (pager.getOrder() != null) {
                 pager.getOrder()
                         .stream()
                         .filter(o -> o.getField() != null && o.getDirection() != null)
                         .forEach(o -> {
                             EventComparator comparator = new EventComparator(o.getField(), o.getDirection());
-                            Collections.sort(ordered, comparator);
+                            events.sort(comparator);
                         });
             }
-            if (!pager.isLimited() || ordered.size() < pager.getStart()) {
-                pager = new Pager(0, ordered.size(), pager.getOrder());
-                return new Page<>(ordered, pager, ordered.size());
-            }
-            if (pager.getEnd() >= ordered.size()) {
-                return new Page<>(ordered.subList(pager.getStart(), ordered.size()), pager, ordered.size());
-            }
-            return new Page<>(ordered.subList(pager.getStart(), pager.getEnd()), pager, ordered.size());
         } else {
             EventComparator.Field defaultField = EventComparator.Field.ID;
             Order.Direction defaultDirection = Order.Direction.ASCENDING;
@@ -1040,8 +1021,8 @@ public class IspnAlertsServiceImpl implements AlertsService {
                     defaultDirection).build();
             EventComparator comparator = new EventComparator(defaultField.getName(), defaultDirection);
             Collections.sort(events, comparator);
-            return new Page<>(events, pager, events.size());
         }
+        return new Page<>(events, pager, events.size());
     }
 
 }

@@ -19,9 +19,13 @@ import org.eclipse.microprofile.config.ConfigProvider;
 import org.hawkular.alerts.api.model.Severity;
 import org.hawkular.alerts.api.model.event.Alert;
 import org.hawkular.alerts.api.model.event.Event;
+import org.hawkular.alerts.api.model.paging.AlertComparator;
+import org.hawkular.alerts.api.model.paging.Order;
 import org.hawkular.alerts.api.model.paging.Page;
+import org.hawkular.alerts.api.model.paging.Pager;
 import org.hawkular.alerts.api.services.AlertsCriteria;
 import org.hawkular.alerts.api.services.EventsCriteria;
+import org.hawkular.alerts.engine.impl.AlertsContext;
 import org.hawkular.alerts.log.MsgLogger;
 import org.hawkular.alerts.log.MsgLogging;
 import org.junit.BeforeClass;
@@ -926,5 +930,215 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
         assertEquals(1, tag1Events.size());
 
         deleteTestEvents(numTenants);
+    }
+
+    @Test
+    public void queryAlertsWithPaging() throws Exception {
+        int numTenants = 1;
+        int numTriggers = 10;
+        int numAlerts = 100;
+        createTestAlerts(numTenants, numTriggers, numAlerts);
+
+        Set<String> tenantIds = new HashSet<>();
+        tenantIds.add("tenant0");
+
+        AlertsCriteria criteria = new AlertsCriteria();
+        Pager pager = Pager.builder()
+                .orderBy(Order.by(AlertComparator.Field.CTIME.getText(), Order.Direction.DESCENDING))
+                .withPageSize(50)
+                .build();
+
+        Page<Alert> alertPage = alerts.getAlerts(tenantIds, criteria, pager);
+        assertEquals(50, alertPage.size());
+
+        // Take last full page
+        pager = Pager.builder()
+                .orderBy(Order.by(AlertComparator.Field.CTIME.getText(), Order.Direction.DESCENDING))
+                .withPageSize(50)
+                .withStartPage(19)
+                .build();
+
+        alertPage = alerts.getAlerts(tenantIds, criteria, pager);
+        assertEquals(50, alertPage.size());
+
+        Alert alert = alertPage.get(49);
+        assertEquals(1, alert.getCtime());
+
+        pager = Pager.builder()
+                .orderBy(Order.by(AlertComparator.Field.CTIME.getText(), Order.Direction.DESCENDING))
+                .withPageSize(50)
+                .withStartPage(20)
+                .build();
+
+        alertPage = alerts.getAlerts(tenantIds, criteria, pager);
+        assertEquals(0, alertPage.size());
+
+        deleteTestAlerts(numTenants);
+
+        // Test with 101 and 99 alerts (near the page boundary)
+
+        createTestAlerts(1, 1, 99);
+        pager = Pager.builder()
+                .orderBy(Order.by(AlertComparator.Field.CTIME.getText(), Order.Direction.DESCENDING))
+                .withPageSize(50)
+                .withStartPage(0)
+                .build();
+
+        alertPage = alerts.getAlerts(tenantIds, criteria, pager);
+        assertEquals(50, alertPage.size());
+        assertEquals(99, alertPage.get(0).getCtime());
+
+        pager = Pager.builder()
+                .orderBy(Order.by(AlertComparator.Field.CTIME.getText(), Order.Direction.DESCENDING))
+                .withPageSize(50)
+                .withStartPage(1)
+                .build();
+        alertPage = alerts.getAlerts(tenantIds, criteria, pager);
+
+        assertEquals(49, alertPage.size());
+        assertEquals(1, alertPage.get(48).getCtime());
+
+        deleteTestAlerts(1);
+
+        // 101
+
+        createTestAlerts(1, 1, 101);
+        pager = Pager.builder()
+                .orderBy(Order.by(AlertComparator.Field.CTIME.getText(), Order.Direction.DESCENDING))
+                .withPageSize(50)
+                .withStartPage(0)
+                .build();
+
+        alertPage = alerts.getAlerts(tenantIds, criteria, pager);
+        assertEquals(50, alertPage.size());
+        assertEquals(101, alertPage.get(0).getCtime());
+
+        pager = Pager.builder()
+                .orderBy(Order.by(AlertComparator.Field.CTIME.getText(), Order.Direction.DESCENDING))
+                .withPageSize(50)
+                .withStartPage(1)
+                .build();
+
+        alertPage = alerts.getAlerts(tenantIds, criteria, pager);
+        assertEquals(50, alertPage.size());
+        assertEquals(2, alertPage.get(49).getCtime());
+
+        pager = Pager.builder()
+                .orderBy(Order.by(AlertComparator.Field.CTIME.getText(), Order.Direction.DESCENDING))
+                .withPageSize(50)
+                .withStartPage(2)
+                .build();
+
+        alertPage = alerts.getAlerts(tenantIds, criteria, pager);
+        assertEquals(1, alertPage.size());
+        assertEquals(1, alertPage.get(0).getCtime());
+
+        deleteTestAlerts(1);
+    }
+
+    @Test
+    public void queryEventsWithPaging() throws Exception {
+        // This is copy of the previous queryAlertsWithPaging as they use different implementation of the
+        // almost same code.
+        int numTenants = 1;
+        int numTriggers = 10;
+        int numAlerts = 100;
+        createTestEvents(numTenants, numTriggers, numAlerts);
+
+        Set<String> tenantIds = new HashSet<>();
+        tenantIds.add("tenant0");
+
+        EventsCriteria criteria = new EventsCriteria();
+        Pager pager = Pager.builder()
+                .orderBy(Order.by(AlertComparator.Field.CTIME.getText(), Order.Direction.DESCENDING))
+                .withPageSize(50)
+                .build();
+
+        Page<Event> alertPage = alerts.getEvents(tenantIds, criteria, pager);
+        assertEquals(50, alertPage.size());
+
+        // Take last full page
+        pager = Pager.builder()
+                .orderBy(Order.by(AlertComparator.Field.CTIME.getText(), Order.Direction.DESCENDING))
+                .withPageSize(50)
+                .withStartPage(19)
+                .build();
+
+        alertPage = alerts.getEvents(tenantIds, criteria, pager);
+        assertEquals(50, alertPage.size());
+
+        Event alert = alertPage.get(49);
+        assertEquals(1, alert.getCtime());
+
+        pager = Pager.builder()
+                .orderBy(Order.by(AlertComparator.Field.CTIME.getText(), Order.Direction.DESCENDING))
+                .withPageSize(50)
+                .withStartPage(20)
+                .build();
+
+        alertPage = alerts.getEvents(tenantIds, criteria, pager);
+        assertEquals(0, alertPage.size());
+
+        deleteTestEvents(numTenants);
+
+        // Test with 101 and 99 alerts (near the page boundary)
+
+        createTestEvents(1, 1, 99);
+        pager = Pager.builder()
+                .orderBy(Order.by(AlertComparator.Field.CTIME.getText(), Order.Direction.DESCENDING))
+                .withPageSize(50)
+                .withStartPage(0)
+                .build();
+
+        alertPage = alerts.getEvents(tenantIds, criteria, pager);
+        assertEquals(50, alertPage.size());
+        assertEquals(99, alertPage.get(0).getCtime());
+
+        pager = Pager.builder()
+                .orderBy(Order.by(AlertComparator.Field.CTIME.getText(), Order.Direction.DESCENDING))
+                .withPageSize(50)
+                .withStartPage(1)
+                .build();
+        alertPage = alerts.getEvents(tenantIds, criteria, pager);
+
+        assertEquals(49, alertPage.size());
+        assertEquals(1, alertPage.get(48).getCtime());
+
+        deleteTestEvents(1);
+
+        // 101
+
+        createTestEvents(1, 1, 101);
+        pager = Pager.builder()
+                .orderBy(Order.by(AlertComparator.Field.CTIME.getText(), Order.Direction.DESCENDING))
+                .withPageSize(50)
+                .withStartPage(0)
+                .build();
+
+        alertPage = alerts.getEvents(tenantIds, criteria, pager);
+        assertEquals(50, alertPage.size());
+        assertEquals(101, alertPage.get(0).getCtime());
+
+        pager = Pager.builder()
+                .orderBy(Order.by(AlertComparator.Field.CTIME.getText(), Order.Direction.DESCENDING))
+                .withPageSize(50)
+                .withStartPage(1)
+                .build();
+
+        alertPage = alerts.getEvents(tenantIds, criteria, pager);
+        assertEquals(50, alertPage.size());
+        assertEquals(2, alertPage.get(49).getCtime());
+
+        pager = Pager.builder()
+                .orderBy(Order.by(AlertComparator.Field.CTIME.getText(), Order.Direction.DESCENDING))
+                .withPageSize(50)
+                .withStartPage(2)
+                .build();
+
+        alertPage = alerts.getEvents(tenantIds, criteria, pager);
+        assertEquals(1, alertPage.size());
+        assertEquals(1, alertPage.get(0).getCtime());
+
+        deleteTestEvents(1);
     }
 }

@@ -180,7 +180,7 @@ public abstract class IspnBaseServiceImplTest {
                 Trigger triggerX = new Trigger(tenantId, triggerId, "Trigger " + triggerId);
                 for (int event = 0; event < numEvents; event++) {
                     String eventId = "event" + count;
-                    long eventTime = event;
+                    long eventTime = event + 1;
                     String category = "category" + (event % 2);
                     String text = "this is text key" + (event % 2) + " for event";
                     Map<String, String> context = new HashMap<>();
