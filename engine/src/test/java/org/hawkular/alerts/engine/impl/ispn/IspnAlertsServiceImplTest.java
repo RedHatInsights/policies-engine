@@ -950,6 +950,7 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
 
         Page<Alert> alertPage = alerts.getAlerts(tenantIds, criteria, pager);
         assertEquals(50, alertPage.size());
+        assertEquals(1000, alertPage.getTotalSize());
 
         // Take last full page
         pager = Pager.builder()
@@ -960,6 +961,7 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
 
         alertPage = alerts.getAlerts(tenantIds, criteria, pager);
         assertEquals(50, alertPage.size());
+        assertEquals(1000, alertPage.getTotalSize());
 
         Alert alert = alertPage.get(49);
         assertEquals(1, alert.getCtime());
@@ -972,6 +974,7 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
 
         alertPage = alerts.getAlerts(tenantIds, criteria, pager);
         assertEquals(0, alertPage.size());
+        assertEquals(1000, alertPage.getTotalSize());
 
         deleteTestAlerts(numTenants);
 
@@ -987,6 +990,7 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
         alertPage = alerts.getAlerts(tenantIds, criteria, pager);
         assertEquals(50, alertPage.size());
         assertEquals(99, alertPage.get(0).getCtime());
+        assertEquals(99, alertPage.getTotalSize());
 
         pager = Pager.builder()
                 .orderBy(Order.by(AlertComparator.Field.CTIME.getText(), Order.Direction.DESCENDING))
@@ -997,6 +1001,7 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
 
         assertEquals(49, alertPage.size());
         assertEquals(1, alertPage.get(48).getCtime());
+        assertEquals(99, alertPage.getTotalSize());
 
         deleteTestAlerts(1);
 
@@ -1012,6 +1017,7 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
         alertPage = alerts.getAlerts(tenantIds, criteria, pager);
         assertEquals(50, alertPage.size());
         assertEquals(101, alertPage.get(0).getCtime());
+        assertEquals(101, alertPage.getTotalSize());
 
         pager = Pager.builder()
                 .orderBy(Order.by(AlertComparator.Field.CTIME.getText(), Order.Direction.DESCENDING))
@@ -1022,6 +1028,7 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
         alertPage = alerts.getAlerts(tenantIds, criteria, pager);
         assertEquals(50, alertPage.size());
         assertEquals(2, alertPage.get(49).getCtime());
+        assertEquals(101, alertPage.getTotalSize());
 
         pager = Pager.builder()
                 .orderBy(Order.by(AlertComparator.Field.CTIME.getText(), Order.Direction.DESCENDING))
@@ -1032,6 +1039,7 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
         alertPage = alerts.getAlerts(tenantIds, criteria, pager);
         assertEquals(1, alertPage.size());
         assertEquals(1, alertPage.get(0).getCtime());
+        assertEquals(101, alertPage.getTotalSize());
 
         deleteTestAlerts(1);
     }
@@ -1056,6 +1064,7 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
 
         Page<Event> alertPage = alerts.getEvents(tenantIds, criteria, pager);
         assertEquals(50, alertPage.size());
+        assertEquals(1000, alertPage.getTotalSize());
 
         // Take last full page
         pager = Pager.builder()
@@ -1066,6 +1075,7 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
 
         alertPage = alerts.getEvents(tenantIds, criteria, pager);
         assertEquals(50, alertPage.size());
+        assertEquals(1000, alertPage.getTotalSize());
 
         Event alert = alertPage.get(49);
         assertEquals(1, alert.getCtime());
@@ -1078,6 +1088,7 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
 
         alertPage = alerts.getEvents(tenantIds, criteria, pager);
         assertEquals(0, alertPage.size());
+        assertEquals(1000, alertPage.getTotalSize());
 
         deleteTestEvents(numTenants);
 
@@ -1093,6 +1104,7 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
         alertPage = alerts.getEvents(tenantIds, criteria, pager);
         assertEquals(50, alertPage.size());
         assertEquals(99, alertPage.get(0).getCtime());
+        assertEquals(99, alertPage.getTotalSize());
 
         pager = Pager.builder()
                 .orderBy(Order.by(AlertComparator.Field.CTIME.getText(), Order.Direction.DESCENDING))
@@ -1103,6 +1115,7 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
 
         assertEquals(49, alertPage.size());
         assertEquals(1, alertPage.get(48).getCtime());
+        assertEquals(99, alertPage.getTotalSize());
 
         deleteTestEvents(1);
 
@@ -1118,6 +1131,7 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
         alertPage = alerts.getEvents(tenantIds, criteria, pager);
         assertEquals(50, alertPage.size());
         assertEquals(101, alertPage.get(0).getCtime());
+        assertEquals(101, alertPage.getTotalSize());
 
         pager = Pager.builder()
                 .orderBy(Order.by(AlertComparator.Field.CTIME.getText(), Order.Direction.DESCENDING))
@@ -1128,6 +1142,7 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
         alertPage = alerts.getEvents(tenantIds, criteria, pager);
         assertEquals(50, alertPage.size());
         assertEquals(2, alertPage.get(49).getCtime());
+        assertEquals(101, alertPage.getTotalSize());
 
         pager = Pager.builder()
                 .orderBy(Order.by(AlertComparator.Field.CTIME.getText(), Order.Direction.DESCENDING))
@@ -1138,6 +1153,7 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
         alertPage = alerts.getEvents(tenantIds, criteria, pager);
         assertEquals(1, alertPage.size());
         assertEquals(1, alertPage.get(0).getCtime());
+        assertEquals(101, alertPage.getTotalSize());
 
         deleteTestEvents(1);
     }

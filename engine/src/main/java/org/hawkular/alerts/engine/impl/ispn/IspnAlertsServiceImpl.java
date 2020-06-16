@@ -546,7 +546,7 @@ public class IspnAlertsServiceImpl implements AlertsService {
            }
         }
 
-        List<IspnEvent> ispnEvents = getEventItems(query, pager);
+        Page<IspnEvent> ispnEvents = getEventItems(query, pager);
         List<Alert> alerts = ispnEvents.stream().map(ispnEvent -> {
             if (criteria != null && criteria.isThin()) {
                 Alert alert = new Alert((Alert) ispnEvent.getEvent());
@@ -558,15 +558,15 @@ public class IspnAlertsServiceImpl implements AlertsService {
             return (Alert) ispnEvent.getEvent();
         }).collect(Collectors.toList());
         if (alerts.isEmpty()) {
-            return new Page<>(alerts, pager, 0);
+            return new Page<>(alerts, pager, ispnEvents.getTotalSize());
         } else {
-            return preparePage(alerts, pager);
+            return preparePage(alerts, pager, ispnEvents.getTotalSize());
         }
     }
 
     // TODO Paging is not properly handled - the returned size is going to be invalid and not all fields are sort supported
 
-    private List<IspnEvent> getEventItems(StringBuilder builder, Pager pager) {
+    private Page<IspnEvent> getEventItems(StringBuilder builder, Pager pager) {
         // Parse and do the first ordering at the Infinispan level (for @SortableFields)
         if (pager != null && pager.getOrder() != null && !pager.getOrder().isEmpty() && pager.getOrder().get(0).isSpecific()) {
             log.debugf("Pager: %s", pager.toString());
@@ -592,9 +592,13 @@ public class IspnAlertsServiceImpl implements AlertsService {
         }
 
         Query parsedQuery = queryFactory.create(builder.toString());
+        long totalSize = parsedQuery.getResultSize();
 
         // Do limitations at Infinispan level if possible
         if(pager != null) {
+            // We need to create a new one, as ISPN would otherwise just reuse the previous results,
+            // not applying the paging
+            parsedQuery = queryFactory.create(builder.toString());
             if(pager.getStart() > 0) {
                 parsedQuery.startOffset(pager.getStart());
             }
@@ -606,7 +610,9 @@ public class IspnAlertsServiceImpl implements AlertsService {
             log.debugf("ParsedQuery: %s, maxResults: %d, startOffset: %d", parsedQuery.getQueryString(), parsedQuery.getMaxResults(), parsedQuery.getStartOffset());
         }
 
-        return parsedQuery.list();
+        List<IspnEvent> list = parsedQuery.list();
+        Page page = new Page(list, pager, totalSize);
+        return page;
     }
 
     @Override
@@ -715,12 +721,12 @@ public class IspnAlertsServiceImpl implements AlertsService {
             }
         }
 
-        List<IspnEvent> ispnEvents = getEventItems(query, pager);
+        Page<IspnEvent> ispnEvents = getEventItems(query, pager);
         List<Event> events = ispnEvents.stream().map(e -> e.getEvent()).collect(Collectors.toList());
         if (events.isEmpty()) {
-            return new Page<>(events, pager, 0);
+            return new Page<>(events, pager, ispnEvents.getTotalSize());
         } else {
-            return prepareEventsPage(events, pager);
+            return prepareEventsPage(events, pager, ispnEvents.getTotalSize());
         }
     }
 
@@ -898,7 +904,7 @@ public class IspnAlertsServiceImpl implements AlertsService {
     // Private methods
     // TODO Merge preparePage and prepareEventsPage, EventComparator and AlertsComparator
 
-    private Page<Alert> preparePage(List<Alert> alerts, Pager pager) {
+    private Page<Alert> preparePage(List<Alert> alerts, Pager pager, long totalSize) {
         if (pager != null) {
             if (pager.getOrder() != null
                     && !pager.getOrder().isEmpty()
@@ -924,7 +930,7 @@ public class IspnAlertsServiceImpl implements AlertsService {
                     .build();
             alerts.sort(comparator);
         }
-        return new Page<>(alerts, pager, alerts.size());
+        return new Page<>(alerts, pager, totalSize);
     }
 
     private void sendAction(Alert a) {
@@ -995,7 +1001,7 @@ public class IspnAlertsServiceImpl implements AlertsService {
         }
     }
 
-    private Page<Event> prepareEventsPage(List<Event> events, Pager pager) {
+    private Page<Event> prepareEventsPage(List<Event> events, Pager pager, long totalSize) {
         if (pager != null) {
             if (pager.getOrder() != null
                     && !pager.getOrder().isEmpty()
@@ -1022,7 +1028,7 @@ public class IspnAlertsServiceImpl implements AlertsService {
             EventComparator comparator = new EventComparator(defaultField.getName(), defaultDirection);
             Collections.sort(events, comparator);
         }
-        return new Page<>(events, pager, events.size());
+        return new Page<>(events, pager, totalSize);
     }
 
 }
