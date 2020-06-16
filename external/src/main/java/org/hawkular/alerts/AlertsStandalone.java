@@ -1,7 +1,6 @@
 package org.hawkular.alerts;
 
 import com.redhat.cloud.policies.engine.actions.QuarkusActionPluginRegister;
-import com.redhat.cloud.policies.engine.workaround.NoTimeoutClusterExecutor;
 import io.quarkus.runtime.LaunchMode;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.hawkular.alerts.api.services.ActionsService;
@@ -33,7 +32,6 @@ import org.infinispan.query.impl.massindex.DistributedExecutorMassIndexer;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.lang.reflect.Field;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -161,12 +159,6 @@ public class AlertsStandalone {
                 SearchManager searchManager = Search
                         .getSearchManager(IspnCacheManager.getCacheManager().getCache("backend"));
                 DistributedExecutorMassIndexer massIndexer = (DistributedExecutorMassIndexer) searchManager.getMassIndexer();
-                try {
-                    patchMassIndexer(massIndexer);
-                } catch (Exception e) {
-                    // We'll handle this later
-                    throw new RuntimeException(e);
-                }
                 // Lets block instead of async
                 massIndexer.start();
                 long stopReindex = System.currentTimeMillis();
@@ -214,18 +206,5 @@ public class AlertsStandalone {
 
     public boolean isReindexing() {
         return ispnReindex;
-    }
-
-    /**
-     * Workaround until ISPN-11710 is fixed
-     */
-    private void patchMassIndexer(DistributedExecutorMassIndexer massIndexer) throws Exception {
-        Field f = massIndexer.getClass().getDeclaredField("localExecutor");
-        f.setAccessible(true);
-        f.set(massIndexer, executor);
-
-        Field f2 = massIndexer.getClass().getDeclaredField("executor");
-        f2.setAccessible(true);
-        f2.set(massIndexer, new NoTimeoutClusterExecutor(executor));
     }
 }

@@ -76,6 +76,6 @@ public class AlertStarter {
                         ((StatusServiceImpl) statusService).setStarted(true);
                         LOGGER.info("Started Policies Engine");
                     }
-        });
+        }).join();
     }
 }
