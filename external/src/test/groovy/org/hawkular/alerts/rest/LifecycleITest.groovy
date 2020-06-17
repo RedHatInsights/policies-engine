@@ -597,14 +597,10 @@ class LifecycleITest extends AbstractQuarkusITestBase {
         assertEquals(200, resp.status)
         assertEquals(3, resp.data.size())
 
-        // log.info(resp.headers)
-
         resp = client.get(path: "",
                 query: [startTime:start,triggerIds:"test-manual-trigger",statuses:"OPEN,RESOLVED", page: "1", per_page: "3"] )
         assertEquals(200, resp.status)
         assertEquals(2, resp.data.size())
-
-        // log.info(resp.headers)
     }
 
     @Test
