@@ -557,11 +557,8 @@ public class IspnAlertsServiceImpl implements AlertsService {
             }
             return (Alert) ispnEvent.getEvent();
         }).collect(Collectors.toList());
-//        if (alerts.isEmpty()) {
-//            return new Page<>(alerts, pager, ispnEvents.getTotalSize());
-//        } else {
-            return preparePage(alerts, pager, ispnEvents.getTotalSize());
-//        }
+
+        return preparePage(alerts, pager, ispnEvents.getTotalSize());
     }
 
     // TODO Paging is not properly handled - the returned size is going to be invalid and not all fields are sort supported
