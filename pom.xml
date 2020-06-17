@@ -67,6 +67,20 @@
       </dependency>
 
       <dependency>
+        <groupId>org.infinispan</groupId>
+        <artifactId>infinispan-cachestore-rocksdb</artifactId>
+        <version>10.1.9-20200617.110454-2</version>
+      </dependency>
+      <!-- Infinispan BOM, needs to be before Quarkus -->
+      <dependency>
+        <groupId>org.infinispan</groupId>
+        <artifactId>infinispan-bom</artifactId>
+        <version>${version.org.infinispan}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <dependency>
         <groupId>io.quarkus</groupId>
         <artifactId>quarkus-bom</artifactId>
         <version>${quarkus.version}</version>
@@ -149,5 +163,4 @@
       </plugin>
     </plugins>
   </build>
-
 </project>

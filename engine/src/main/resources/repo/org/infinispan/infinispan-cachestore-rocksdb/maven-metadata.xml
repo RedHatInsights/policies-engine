@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <groupId>org.infinispan</groupId>
+  <artifactId>infinispan-cachestore-rocksdb</artifactId>
+  <versioning>
+    <versions>
+      <version>10.1.9-SNAPSHOT</version>
+    </versions>
+    <lastUpdated>20200617110454</lastUpdated>
+  </versioning>
+</metadata>
