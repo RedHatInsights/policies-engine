@@ -557,11 +557,11 @@ public class IspnAlertsServiceImpl implements AlertsService {
             }
             return (Alert) ispnEvent.getEvent();
         }).collect(Collectors.toList());
-        if (alerts.isEmpty()) {
-            return new Page<>(alerts, pager, ispnEvents.getTotalSize());
-        } else {
+//        if (alerts.isEmpty()) {
+//            return new Page<>(alerts, pager, ispnEvents.getTotalSize());
+//        } else {
             return preparePage(alerts, pager, ispnEvents.getTotalSize());
-        }
+//        }
     }
 
     // TODO Paging is not properly handled - the returned size is going to be invalid and not all fields are sort supported
@@ -610,8 +610,7 @@ public class IspnAlertsServiceImpl implements AlertsService {
             log.debugf("ParsedQuery: %s, maxResults: %d, startOffset: %d", parsedQuery.getQueryString(), parsedQuery.getMaxResults(), parsedQuery.getStartOffset());
         }
 
-        List<IspnEvent> list = parsedQuery.list();
-        Page page = new Page(list, pager, totalSize);
+        Page page = new Page(parsedQuery.list(), pager, totalSize);
         return page;
     }
 
@@ -723,11 +722,7 @@ public class IspnAlertsServiceImpl implements AlertsService {
 
         Page<IspnEvent> ispnEvents = getEventItems(query, pager);
         List<Event> events = ispnEvents.stream().map(e -> e.getEvent()).collect(Collectors.toList());
-        if (events.isEmpty()) {
-            return new Page<>(events, pager, ispnEvents.getTotalSize());
-        } else {
-            return prepareEventsPage(events, pager, ispnEvents.getTotalSize());
-        }
+        return prepareEventsPage(events, pager, ispnEvents.getTotalSize());
     }
 
     @Override
