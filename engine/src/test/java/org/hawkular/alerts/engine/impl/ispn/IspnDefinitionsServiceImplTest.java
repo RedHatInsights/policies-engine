@@ -493,6 +493,7 @@ public class IspnDefinitionsServiceImplTest extends IspnBaseServiceImplTest {
 
         Page<Trigger> triggerPage = definitions.getTriggers(tenantIds, criteria, pager);
         assertEquals(50, triggerPage.size());
+        assertEquals(1000, triggerPage.getTotalSize());
 
         // Take last full page
         pager = Pager.builder()
@@ -503,6 +504,7 @@ public class IspnDefinitionsServiceImplTest extends IspnBaseServiceImplTest {
 
         triggerPage = definitions.getTriggers(tenantIds, criteria, pager);
         assertEquals(50, triggerPage.size());
+        assertEquals(1000, triggerPage.getTotalSize());
 
         Trigger alert = triggerPage.get(49);
         assertEquals("trigger0", alert.getId());
@@ -515,6 +517,7 @@ public class IspnDefinitionsServiceImplTest extends IspnBaseServiceImplTest {
 
         triggerPage = definitions.getTriggers(tenantIds, criteria, pager);
         assertEquals(0, triggerPage.size());
+        assertEquals(1000, triggerPage.getTotalSize());
 
         deleteTestTriggers(numTenants, numTriggers);
 
@@ -530,6 +533,7 @@ public class IspnDefinitionsServiceImplTest extends IspnBaseServiceImplTest {
         triggerPage = definitions.getTriggers(tenantIds, criteria, pager);
         assertEquals(50, triggerPage.size());
         assertEquals("trigger98", triggerPage.get(0).getId());
+        assertEquals(99, triggerPage.getTotalSize());
 
         pager = Pager.builder()
                 .orderBy(Order.by(TriggerComparator.Field.ID.getName(), Order.Direction.DESCENDING))
@@ -540,6 +544,7 @@ public class IspnDefinitionsServiceImplTest extends IspnBaseServiceImplTest {
 
         assertEquals(49, triggerPage.size());
         assertEquals("trigger0", triggerPage.get(48).getId());
+        assertEquals(99, triggerPage.getTotalSize());
 
         deleteTestTriggers(1, 99);
 
@@ -554,6 +559,7 @@ public class IspnDefinitionsServiceImplTest extends IspnBaseServiceImplTest {
 
         triggerPage = definitions.getTriggers(tenantIds, criteria, pager);
         assertEquals(50, triggerPage.size());
+        assertEquals(101, triggerPage.getTotalSize());
 
         pager = Pager.builder()
                 .orderBy(Order.by(TriggerComparator.Field.ID.getName(), Order.Direction.DESCENDING))
@@ -563,6 +569,7 @@ public class IspnDefinitionsServiceImplTest extends IspnBaseServiceImplTest {
 
         triggerPage = definitions.getTriggers(tenantIds, criteria, pager);
         assertEquals(50, triggerPage.size());
+        assertEquals(101, triggerPage.getTotalSize());
 
         pager = Pager.builder()
                 .orderBy(Order.by(TriggerComparator.Field.ID.getName(), Order.Direction.DESCENDING))
@@ -573,6 +580,7 @@ public class IspnDefinitionsServiceImplTest extends IspnBaseServiceImplTest {
         triggerPage = definitions.getTriggers(tenantIds, criteria, pager);
         assertEquals(1, triggerPage.size());
         assertEquals("trigger0", triggerPage.get(0).getId());
+        assertEquals(101, triggerPage.getTotalSize());
 
         deleteTestTriggers(1, 101);
     }
