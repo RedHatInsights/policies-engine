@@ -70,6 +70,7 @@
     <dependency>
       <groupId>org.infinispan</groupId>
       <artifactId>infinispan-cachestore-rocksdb</artifactId>
+      <version>10.1.9-20200617.110454-2</version>
     </dependency>
 
     <dependency>
@@ -197,4 +198,11 @@
       </build>
     </profile>
   </profiles>
+
+  <repositories>
+    <repository>
+      <id>filerepo</id>
+      <url>file:///${project.basedir}/src/main/resources/repo</url>
+    </repository>
+  </repositories>
 </project>

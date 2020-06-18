@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<features name="infinispan-cachestore-rocksdb-10.1.9-SNAPSHOT" xmlns="http://karaf.apache.org/xmlns/features/v1.4.0">
+   <repository>mvn:org.infinispan/infinispan-core/10.1.9-SNAPSHOT/xml/features</repository>
+
+   <feature name="infinispan-cachestore-rocksdb" version="10.1.9-SNAPSHOT">
+      <feature>transaction</feature>
+      <feature version="10.1.9-SNAPSHOT">infinispan-core</feature>
+
+      <bundle>mvn:org.infinispan/infinispan-cachestore-rocksdb/10.1.9-SNAPSHOT</bundle>
+      <bundle>wrap:mvn:org.rocksdb/rocksdbjni/6.2.2</bundle>
+   </feature>
+</features>
