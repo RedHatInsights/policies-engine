@@ -201,7 +201,7 @@
 
   <repositories>
     <repository>
-      <id>local</id>
+      <id>filerepo</id>
       <url>file:///${project.basedir}/src/main/resources/repo</url>
     </repository>
   </repositories>
