@@ -67,11 +67,10 @@
     </dependency>
 
     <!-- Infinispan -->
-<!--    <dependency>-->
-<!--      <groupId>org.infinispan</groupId>-->
-<!--      <artifactId>infinispan-cachestore-rocksdb</artifactId>-->
-<!--      <version>10.1.9-20200617.110454-2</version>-->
-<!--    </dependency>-->
+    <dependency>
+      <groupId>org.infinispan</groupId>
+      <artifactId>infinispan-cachestore-rocksdb</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>org.infinispan</groupId>
