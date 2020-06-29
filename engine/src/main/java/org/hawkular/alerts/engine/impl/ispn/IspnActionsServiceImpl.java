@@ -1,16 +1,6 @@
 package org.hawkular.alerts.engine.impl.ispn;
 
-import static org.hawkular.alerts.api.util.Util.isEmpty;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.hawkular.alerts.api.model.action.Action;
 import org.hawkular.alerts.api.model.action.ActionDefinition;
 import org.hawkular.alerts.api.model.event.Event;
@@ -25,8 +15,8 @@ import org.hawkular.alerts.api.services.ActionListener;
 import org.hawkular.alerts.api.services.ActionsCriteria;
 import org.hawkular.alerts.api.services.ActionsService;
 import org.hawkular.alerts.api.services.DefinitionsService;
-import org.hawkular.alerts.engine.cache.IspnCacheManager;
 import org.hawkular.alerts.engine.cache.ActionsCacheManager;
+import org.hawkular.alerts.engine.cache.IspnCacheManager;
 import org.hawkular.alerts.engine.impl.AlertsContext;
 import org.hawkular.alerts.engine.impl.ispn.model.IspnAction;
 import org.hawkular.alerts.engine.util.ActionsValidator;
@@ -35,6 +25,18 @@ import org.hawkular.alerts.log.MsgLogging;
 import org.infinispan.Cache;
 import org.infinispan.query.Search;
 import org.infinispan.query.dsl.QueryFactory;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import static org.hawkular.alerts.api.util.Util.isEmpty;
 
 /**
  * Infinispan implementation of {@link org.hawkular.alerts.api.services.ActionsService}.
@@ -58,6 +60,11 @@ public class IspnActionsServiceImpl implements ActionsService {
 
     QueryFactory queryFactory;
 
+    /**
+     * Set the TTL of actions to the same as TTL of Alerts
+     */
+    long alertsLifespanInHours;
+
     public void init() {
         backend = IspnCacheManager.getCacheManager().getCache("backend");
         if (backend == null) {
@@ -65,6 +72,7 @@ public class IspnActionsServiceImpl implements ActionsService {
             throw new RuntimeException("backend cache not found");
         }
         queryFactory = Search.getQueryFactory(backend);
+        alertsLifespanInHours = ConfigProvider.getConfig().getValue("engine.backend.ispn.alerts-lifespan", Long.class);
     }
 
     public void setAlertsContext(AlertsContext alertsContext) {
@@ -395,10 +403,13 @@ public class IspnActionsServiceImpl implements ActionsService {
             action.setResult(WAITING_RESULT);
         }
         try {
-            backend.put(IspnPk.pk(action), new IspnAction(action));
+            if(alertsLifespanInHours < 0) {
+                backend.put(IspnPk.pk(action), new IspnAction(action));
+            } else {
+                backend.put(IspnPk.pk(action), new IspnAction(action), alertsLifespanInHours, TimeUnit.HOURS);
+            }
         } catch (Exception e) {
             log.errorDatabaseException(e.getMessage());
         }
     }
-
 }
