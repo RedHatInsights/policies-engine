@@ -5,6 +5,8 @@ import org.hawkular.alerts.engine.cache.IspnCacheManager;
 import org.hawkular.alerts.log.AlertingLogger;
 import org.hawkular.alerts.log.MsgLogging;
 import org.infinispan.Cache;
+import org.infinispan.persistence.manager.PersistenceManager;
+import org.infinispan.persistence.rocksdb.RocksDBStore;
 import org.infinispan.query.Search;
 import org.infinispan.query.dsl.QueryFactory;
 
@@ -12,6 +14,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class IspnAdminService {
@@ -57,7 +60,7 @@ public class IspnAdminService {
                 });
     }
 
-    public String getDataStatistics() {
+    public void printDataStatistics() {
         final long maxExpireTimeForAlerts = getAlertLatestExpireTime();
         final Map<String, AtomicLong> keyStats = new HashMap<>();
         // var allows accessing these params inside lambda
@@ -103,19 +106,30 @@ public class IspnAdminService {
         });
 
 
-        StringBuilder builder = new StringBuilder();
+        log.info("Statistics from scanning Infinispan's backend cache:");
+        log.infof("\tTotal key count: %d", stats.totalCount);
+        log.infof("\tExpired events from key parsing: %d", stats.expiredEvents);
+        log.infof("\tExpired actions from key parsing: %d", stats.expiredActions);
 
-        builder.append("Statistics from scanning Infinispan's backend cache:\n");
-        builder.append(String.format("\tTotal key count: %d\n", stats.totalCount));
-        builder.append(String.format("\tExpired events from key parsing: %d\n", stats.expiredEvents));
-        builder.append(String.format("\tExpired actions from key parsing: %d\n", stats.expiredActions));
-
-        builder.append("\tDetailed key counts:\n");
+        log.info("\tDetailed key counts:");
         for (Map.Entry<String, AtomicLong> ae : keyStats.entrySet()) {
-            builder.append(String.format("\t\t%s\t\t%d\n", ae.getKey(), ae.getValue().get()));
+            log.infof("\t\t%s\t\t%d", ae.getKey(), ae.getValue().get());
         }
-        builder.append("\n");
+    }
 
-        return builder.toString();
+    public void executeRocksDBCompaction() throws Exception {
+        log.info("Executing manual compaction in RocksDB");
+        PersistenceManager component = backend.getAdvancedCache().getComponentRegistry().getComponent(PersistenceManager.class);
+        Set<RocksDBStore> stores = component.getStores(RocksDBStore.class);
+        log.infof("Starting to compact %d stores", stores.size());
+        for (RocksDBStore store : stores) {
+            try {
+                store.compact();
+            } catch(Throwable t) {
+                t.printStackTrace();
+                log.errorf("Failed to execute compaction");
+            }
+        }
+        log.info("Finished RocksDB Compaction");
     }
 }

@@ -9,12 +9,13 @@ import org.hawkular.alerts.api.doc.DocResponse;
 import org.hawkular.alerts.api.doc.DocResponses;
 import org.hawkular.alerts.api.services.StatusService;
 import org.hawkular.alerts.engine.impl.ispn.IspnAdminService;
+import org.hawkular.alerts.log.MsgLogger;
+import org.hawkular.alerts.log.MsgLogging;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
-
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -25,6 +26,8 @@ import static org.hawkular.alerts.api.doc.DocConstants.PUT;
 @DocEndpoint(value = "/admin", description = "Administrative tools")
 @ApplicationScoped
 public class AdminHandler {
+
+    private static final MsgLogger log = MsgLogging.getMsgLogger(AdminHandler.class);
 
     @Inject
     IspnAdminService adminService;
@@ -41,16 +44,44 @@ public class AdminHandler {
         String path = "/admin";
         router.put(path + "/cleanup").handler(this::cleanupExpiredItems);
         router.get(path + "/stats").handler(this::getKeyStatistics);
+        router.put(path + "/rocksdb/compact").handler(this::rocksOperations);
     }
 
     void executeCleanup() {
         executorService.submit(() -> {
             try {
-                statusService.setAdditionalStatus("expireJob", "running");
+                statusService.setAdditionalStatus("operation", "running key cleanup");
                 adminService.deleteExpiredKeys();
             } finally {
                 blockRunning.lazySet(false);
-                statusService.setAdditionalStatus("expireJob", null);
+                statusService.setAdditionalStatus("operation", null);
+            }
+        });
+    }
+
+    void executeManualCompaction() {
+        executorService.submit(() -> {
+            try {
+                statusService.setAdditionalStatus("operation", "running rocksdb compaction");
+                adminService.executeRocksDBCompaction();
+            } catch (Exception e) {
+                log.error("Failed to compact RocksDB");
+                e.printStackTrace();
+            } finally {
+                blockRunning.lazySet(false);
+                statusService.setAdditionalStatus("operation", null);
+            }
+        });
+    }
+
+    void executeStatistics() {
+        executorService.submit(() -> {
+            try {
+                statusService.setAdditionalStatus("operation", "parsing key statistics");
+                adminService.printDataStatistics();
+            } finally {
+                blockRunning.lazySet(false);
+                statusService.setAdditionalStatus("operation", null);
             }
         });
     }
@@ -58,9 +89,9 @@ public class AdminHandler {
     @DocPath(method = PUT,
             path = "/cleanup",
             name = "Delete expired / invalid items from the cache.",
-            notes = "This will update liveness handler with expireJob annotation and return immediately.")
+            notes = "This will update liveness handler with operation annotation and return immediately.")
     @DocResponses(value = {
-            @DocResponse(code = 200, message = "Success, processing results.", response = String.class),
+            @DocResponse(code = 204, message = "Success, processing results.", response = String.class),
             @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void cleanupExpiredItems(RoutingContext routing) {
@@ -69,26 +100,48 @@ public class AdminHandler {
         if(blockRunning.compareAndSet(false, true)) {
             executeCleanup();
             routing.response()
-                    .setStatusCode(200)
+                    .setStatusCode(204)
                     .end();
         } else {
-            ResponseUtil.badRequest(routing, "Cleanup is already running");
+            ResponseUtil.badRequest(routing, "Blocking RocksDB operation is already running");
         }
     }
 
     @DocPath(method = GET,
             path = "/stats",
-            name = "Get detailed key statistics from Infinispan ")
+            name = "Get detailed key statistics from Infinispan ",
+            notes = "This will update liveness handler with operation annotation and return immediately.")
     @DocResponses(value = {
-            @DocResponse(code = 200, message = "Success, Statistics as plain text body.", response = String.class),
+            @DocResponse(code = 204, message = "Success, processing results.", response = String.class),
             @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
     public void getKeyStatistics(RoutingContext routing) {
-        routing.vertx().executeBlocking(future -> {
-            String dataStatistics = adminService.getDataStatistics();
+        if(blockRunning.compareAndSet(false, true)) {
+            executeStatistics();
+            routing.response()
+                    .setStatusCode(204)
+                    .end();
+        } else {
+            ResponseUtil.badRequest(routing, "Blocking RocksDB operation is already running");
+        }
+    }
 
-            future.complete(dataStatistics);
-
-        }, res -> ResponseUtil.result(routing, res));
+    @DocPath(method = PUT,
+            path = "/rocksdb/compact",
+            name = "Do manual compaction for all Infinispan RocksDB stores",
+            notes = "This will update liveness handler with operation annotation and return immediately.")
+    @DocResponses(value = {
+            @DocResponse(code = 204, message = "Success, processing results.", response = String.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
+    })
+    public void rocksOperations(RoutingContext routing) {
+        if(blockRunning.compareAndSet(false, true)) {
+            executeManualCompaction();
+            routing.response()
+                    .setStatusCode(204)
+                    .end();
+        } else {
+            ResponseUtil.badRequest(routing, "Blocking RocksDB operation is already running");
+        }
     }
 }
