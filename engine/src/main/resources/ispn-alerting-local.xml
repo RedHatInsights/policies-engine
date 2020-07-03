@@ -41,6 +41,8 @@
           <property name="data.target_file_size_base">67108864</property>
           <property name="data.max_bytes_for_level_base">536870912</property>
           <property name="data.level0_file_num_compaction_trigger">2</property>
+          <property name="data.compression">kLZ4Compression</property>
+          <property name="data.bottommost_compression">kZSTD</property>
           <compression type="LZ4"/>
         </rocksdb-store>
       </persistence>

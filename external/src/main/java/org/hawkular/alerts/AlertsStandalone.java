@@ -19,6 +19,7 @@ import org.hawkular.alerts.engine.impl.IncomingDataManagerImpl;
 import org.hawkular.alerts.engine.impl.PartitionManagerImpl;
 import org.hawkular.alerts.engine.impl.StatusServiceImpl;
 import org.hawkular.alerts.engine.impl.ispn.IspnActionsServiceImpl;
+import org.hawkular.alerts.engine.impl.ispn.IspnAdminService;
 import org.hawkular.alerts.engine.impl.ispn.IspnAlertsServiceImpl;
 import org.hawkular.alerts.engine.impl.ispn.IspnDefinitionsServiceImpl;
 import org.hawkular.alerts.filter.CacheClient;
@@ -69,6 +70,7 @@ public class AlertsStandalone {
     private StatusServiceImpl status;
     private PartitionManagerImpl partitionManager;
     private PublishCacheManager publishCacheManager;
+    private IspnAdminService adminService;
 
     public AlertsStandalone() {
         log.info("Policies Engine uses Infinispan backend");
@@ -94,6 +96,7 @@ public class AlertsStandalone {
         incoming = new IncomingDataManagerImpl();
         actionsCacheManager = new ActionsCacheManager();
         publishCacheManager = new PublishCacheManager();
+        adminService = new IspnAdminService();
 
         ispnReindex = ConfigProvider.getConfig().getValue("engine.backend.ispn.reindex", Boolean.class);
 
@@ -170,6 +173,7 @@ public class AlertsStandalone {
             ispnAlerts.init();
             ispnDefinitions.init();
             ispnActions.init();
+            adminService.init();
 
             partitionManager.init();
             alertsContext.init();
@@ -202,6 +206,11 @@ public class AlertsStandalone {
     @Produces
     public StatusService getStatusService() {
         return status;
+    }
+
+    @Produces
+    public IspnAdminService getAdminService() {
+        return adminService;
     }
 
     public boolean isReindexing() {

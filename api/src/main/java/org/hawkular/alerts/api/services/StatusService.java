@@ -29,6 +29,15 @@ public interface StatusService {
     Map<String, String> getAdditionalStatus();
 
     /**
+     * Add or update additional status information. If value is set to null,
+     * the key is deleted
+     *
+     * @param key JSON key
+     * @param value JSON value
+     */
+    void setAdditionalStatus(String key, String value);
+
+    /**
      * @return true if system is running on a distributed scenario.
      *         false if system is running on a standalone scenario.
      */

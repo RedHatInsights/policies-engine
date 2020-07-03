@@ -49,6 +49,15 @@ public class StatusServiceImpl implements StatusService {
         return this.statusNotes;
     }
 
+    @Override
+    public void setAdditionalStatus(String key, String value) {
+        if(value == null) {
+            this.statusNotes.remove(key);
+        } else {
+            this.statusNotes.put(key, value);
+        }
+    }
+
     public void setStarted(boolean started) {
         this.started = started;
     }
