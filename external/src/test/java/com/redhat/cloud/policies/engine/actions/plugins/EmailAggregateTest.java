@@ -1,5 +1,7 @@
 package com.redhat.cloud.policies.engine.actions.plugins;
 
+import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
 import com.redhat.cloud.policies.engine.process.Receiver;
 import io.quarkus.test.junit.QuarkusTest;
 import io.reactivex.subscribers.TestSubscriber;
@@ -46,7 +48,7 @@ public class EmailAggregateTest {
         trigger.setName(triggerName);
 
         Event event = new Event();
-        Map<String, String> tagsMap = new HashMap<>();
+        Multimap<String, String> tagsMap = MultimapBuilder.hashKeys().hashSetValues().build();
         tagsMap.put(Receiver.DISPLAY_NAME_FIELD, "localhost");
         event.setTags(tagsMap);
         event.setTrigger(trigger);

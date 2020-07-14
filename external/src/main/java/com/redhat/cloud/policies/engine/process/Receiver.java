@@ -1,5 +1,7 @@
 package com.redhat.cloud.policies.engine.process;
 
+import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -108,7 +110,7 @@ public class Receiver {
 
                     Event event = new Event(tenantId, UUID.randomUUID().toString(), INSIGHTS_REPORT_DATA_ID, CATEGORY_NAME, text);
                     // Indexed searchable events
-                    Map<String, String> tagsMap = new HashMap<>();
+                    Multimap<String, String> tagsMap = MultimapBuilder.hashKeys().hashSetValues().build();
                     tagsMap.put(DISPLAY_NAME_FIELD, displayName);
                     tagsMap.put(INVENTORY_ID_FIELD, json.getString(HOST_ID));
                     event.setTags(tagsMap);

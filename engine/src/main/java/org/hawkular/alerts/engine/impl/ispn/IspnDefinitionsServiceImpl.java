@@ -14,6 +14,7 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.Multimap;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
@@ -185,7 +186,7 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
 
     @Override
     public Trigger addMemberTrigger(String tenantId, String groupId, String memberId, String memberName,
-            String memberDescription, Map<String, String> memberContext, Map<String, String> memberTags,
+            String memberDescription, Map<String, String> memberContext, Multimap<String, String> memberTags,
             Map<String, String> dataIdMap) throws Exception {
 
         if (isEmpty(tenantId)) {
@@ -790,7 +791,7 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
 
     @Override
     public Trigger unorphanMemberTrigger(String tenantId, String memberId, Map<String, String> memberContext,
-            Map<String, String> memberTags, Map<String, String> dataIdMap) throws Exception {
+            Multimap<String, String> memberTags, Map<String, String> dataIdMap) throws Exception {
         if (isEmpty(tenantId)) {
             throw new IllegalArgumentException("TenantId must be not null");
         }

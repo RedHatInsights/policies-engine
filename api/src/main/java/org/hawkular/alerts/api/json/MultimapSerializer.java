@@ -20,7 +20,6 @@ public class MultimapSerializer extends JsonSerializer<Multimap<String, String>>
         jsonGenerator.writeStartObject();
         for (Map.Entry<String, String> entry : map.entries()) {
             if(entry.getValue() != null && entry.getValue().length() > 0) {
-                System.out.printf("Adding: %s\n", entry.getValue());
                 jsonGenerator.writeStringField(entry.getKey(), entry.getValue());
             }
         }

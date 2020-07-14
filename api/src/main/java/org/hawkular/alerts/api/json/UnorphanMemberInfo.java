@@ -2,6 +2,7 @@ package org.hawkular.alerts.api.json;
 
 import java.util.Map;
 
+import com.google.common.collect.Multimap;
 import org.hawkular.alerts.api.doc.DocModel;
 import org.hawkular.alerts.api.doc.DocModelProperty;
 
@@ -50,7 +51,7 @@ public class UnorphanMemberInfo {
     @DocModelProperty(description = "Trigger tags for member Trigger.",
             position = 2,
             required = true)
-    private Map<String, String> memberTags;
+    private Multimap<String, String> memberTags;
 
     @DocModelProperty(description = "A map of the dataId tokens in the group conditions to the actual dataIds to " +
             "be used for the member being added. + \n" +
@@ -63,7 +64,7 @@ public class UnorphanMemberInfo {
         // for json construction
     }
 
-    public UnorphanMemberInfo(Map<String, String> memberContext, Map<String, String> memberTags,
+    public UnorphanMemberInfo(Map<String, String> memberContext, Multimap<String, String> memberTags,
             Map<String, String> dataIdMap) {
         super();
         this.memberContext = memberContext;
@@ -83,7 +84,7 @@ public class UnorphanMemberInfo {
         this.memberContext = memberContext;
     }
 
-    public Map<String, String> getMemberTags() {
+    public Multimap<String, String> getMemberTags() {
         return memberTags;
     }
 
@@ -91,7 +92,7 @@ public class UnorphanMemberInfo {
      * @param memberTags Members inherit the group trigger tags. If not null this adds additional, or
      *                      overrides existing, tags.
      */
-    public void setMemberTags(Map<String, String> memberTags) {
+    public void setMemberTags(Multimap<String, String> memberTags) {
         this.memberTags = memberTags;
     }
 

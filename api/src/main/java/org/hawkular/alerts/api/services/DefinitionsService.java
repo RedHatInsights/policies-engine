@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Multimap;
 import org.hawkular.alerts.api.exception.NotFoundException;
 import org.hawkular.alerts.api.model.Note;
 import org.hawkular.alerts.api.model.action.ActionDefinition;
@@ -138,7 +139,7 @@ public interface DefinitionsService {
      * <code>dataIdMap</code> parameter.
      */
     Trigger addMemberTrigger(String tenantId, String groupId, String memberId, String memberName,
-            String memberDescription, Map<String, String> memberContext, Map<String, String> memberTags,
+            String memberDescription, Map<String, String> memberContext, Multimap<String, String> memberTags,
             Map<String, String> dataIdMap)
             throws Exception;
 
@@ -309,7 +310,7 @@ public interface DefinitionsService {
      * of setting the <code>dataIdMap</code>.
      */
     Trigger unorphanMemberTrigger(String tenantId, String memberId, Map<String, String> memberContext,
-            Map<String, String> memberTags, Map<String, String> dataIdMap) throws Exception;
+            Multimap<String, String> memberTags, Map<String, String> dataIdMap) throws Exception;
 
     /*
         CRUD interface for Dampening
