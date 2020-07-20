@@ -36,6 +36,7 @@ public class Receiver {
     public static final String DISPLAY_NAME_FIELD = "display_name";
     public static final String INVENTORY_ID_FIELD = "inventory_id";
     public static final String HOST_ID = "id";
+    public static final String FQDN_NAME_FIELD = "fqdn";
 
     private static final String HOST_FIELD = "host";
     private static final String TENANT_ID_FIELD = "account";
@@ -100,7 +101,11 @@ public class Receiver {
                     event.setContext(contextMap);
 
                     JsonObject sp = json.getJsonObject(SYSTEM_PROFILE_FIELD);
-                    event.setFacts(parseSystemProfile(sp));
+                    Map<String, Object> systemProfile = parseSystemProfile(sp);
+
+                    systemProfile.put(FQDN_NAME_FIELD, json.getString(FQDN_NAME_FIELD));
+
+                    event.setFacts(systemProfile);
                     return event;
                 }).thenAcceptAsync(event -> {
                     if(event == null) {
