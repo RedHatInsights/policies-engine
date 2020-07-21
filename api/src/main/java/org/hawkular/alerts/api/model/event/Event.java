@@ -12,6 +12,7 @@ import java.util.UUID;
 import org.hawkular.alerts.api.doc.DocModel;
 import org.hawkular.alerts.api.doc.DocModelProperty;
 import org.hawkular.alerts.api.model.condition.ConditionEval;
+import org.hawkular.alerts.api.model.condition.EventConditionEval;
 import org.hawkular.alerts.api.model.dampening.Dampening;
 import org.hawkular.alerts.api.model.data.Data;
 import org.hawkular.alerts.api.model.trigger.Trigger;
@@ -289,6 +290,18 @@ public class Event implements Comparable<Event>, Serializable {
         }
         this.tags = trigger.getTags();
         this.facts = new HashMap<>();
+
+        // Copy tags from the input evalSets also
+        if(evalSets != null) {
+            for (Set<ConditionEval> evalSet : evalSets) {
+                for (ConditionEval conditionEval : evalSet) {
+                    if(conditionEval instanceof EventConditionEval) {
+                        EventConditionEval eventEval = (EventConditionEval) conditionEval;
+                        this.tags.putAll(eventEval.getValue().getTags());
+                    }
+                }
+            }
+        }
     }
 
     public String getEventType() {
