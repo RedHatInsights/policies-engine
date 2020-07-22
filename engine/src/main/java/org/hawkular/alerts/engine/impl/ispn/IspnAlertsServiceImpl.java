@@ -561,8 +561,6 @@ public class IspnAlertsServiceImpl implements AlertsService {
         return preparePage(alerts, pager, ispnEvents.getTotalSize());
     }
 
-    // TODO Paging is not properly handled - the returned size is going to be invalid and not all fields are sort supported
-
     private Page<IspnEvent> getEventItems(StringBuilder builder, Pager pager) {
         // Parse and do the first ordering at the Infinispan level (for @SortableFields)
         if (pager != null && pager.getOrder() != null && !pager.getOrder().isEmpty() && pager.getOrder().get(0).isSpecific()) {
@@ -593,14 +591,17 @@ public class IspnAlertsServiceImpl implements AlertsService {
 
         // Do limitations at Infinispan level if possible
         if(pager != null) {
-            // We need to create a new one, as ISPN would otherwise just reuse the previous results,
-            // not applying the paging
-            parsedQuery = queryFactory.create(builder.toString());
-            if(pager.getStart() > 0) {
-                parsedQuery.startOffset(pager.getStart());
-            }
-            if(pager.getPageSize() != PageContext.UNLIMITED_PAGE_SIZE) {
-                parsedQuery.maxResults(pager.getPageSize());
+//            // If we sort outside the ISPN, we need to also filter result set outside
+            if(isServerSideSorted(pager)) {
+                // We need to create a new one, as ISPN would otherwise just reuse the previous results,
+                // not applying the paging
+                parsedQuery = queryFactory.create(builder.toString());
+                if (pager.getStart() > 0) {
+                    parsedQuery.startOffset(pager.getStart());
+                }
+                if (pager.getPageSize() != PageContext.UNLIMITED_PAGE_SIZE) {
+                    parsedQuery.maxResults(pager.getPageSize());
+                }
             }
         }
         if(log.isDebugEnabled()) {
@@ -893,6 +894,15 @@ public class IspnAlertsServiceImpl implements AlertsService {
         parser.resolveQuery(tagQuery, query);
     }
 
+    private boolean isServerSideSorted(Pager pager) {
+        if(pager == null || pager.getOrder() == null || pager.getOrder().isEmpty()) {
+            return true;
+        }
+        String field = pager.getOrder().get(0).getField();
+        return field == null || AlertComparator.Field.ALERT_ID.getText().equals(field)
+                || AlertComparator.Field.CTIME.getText().equals(field);
+    }
+
     // Private methods
     // TODO Merge preparePage and prepareEventsPage, EventComparator and AlertsComparator
 
@@ -914,6 +924,13 @@ public class IspnAlertsServiceImpl implements AlertsService {
                             alerts.sort(comparator);
                         });
             }
+            if(!isServerSideSorted(pager) && pager.isLimited()) {
+                // We need to filter the amounts here
+                if(pager.getEnd() >= alerts.size()) {
+                    return new Page<>(alerts.subList(pager.getStart(), alerts.size()), pager, alerts.size());
+                }
+                return new Page<>(alerts.subList(pager.getStart(), pager.getEnd()), pager, alerts.size());
+            }
         } else {
             AlertComparator.Field defaultField = AlertComparator.Field.ALERT_ID;
             Order.Direction defaultDirection = Order.Direction.ASCENDING;
@@ -922,6 +939,7 @@ public class IspnAlertsServiceImpl implements AlertsService {
                     .build();
             alerts.sort(comparator);
         }
+
         return new Page<>(alerts, pager, totalSize);
     }
 
@@ -1011,6 +1029,26 @@ public class IspnAlertsServiceImpl implements AlertsService {
                             EventComparator comparator = new EventComparator(o.getField(), o.getDirection());
                             events.sort(comparator);
                         });
+            }
+            if(!isServerSideSorted(pager) && pager.isLimited()) {
+                /*
+            if (!pager.isLimited() || ordered.size() < pager.getStart()) {
+                pager = new Pager(0, ordered.size(), pager.getOrder());
+                return new Page<>(ordered, pager, ordered.size());
+            }
+            if (pager.getEnd() >= ordered.size()) {
+                return new Page<>(ordered.subList(pager.getStart(), ordered.size()), pager, ordered.size());
+            }
+            return new Page<>(ordered.subList(pager.getStart(), pager.getEnd()), pager, ordered.size());
+                 */
+
+                // TODO What if the start is larger than the amount? Will it crash?
+
+                // We need to filter the amounts here
+                if(pager.getEnd() >= events.size()) {
+                    return new Page<>(events.subList(pager.getStart(), events.size()), pager, events.size());
+                }
+                return new Page<>(events.subList(pager.getStart(), pager.getEnd()), pager, events.size());
             }
         } else {
             EventComparator.Field defaultField = EventComparator.Field.ID;

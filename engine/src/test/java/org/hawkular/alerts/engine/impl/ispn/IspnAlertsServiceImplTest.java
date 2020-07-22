@@ -1,6 +1,7 @@
 package org.hawkular.alerts.engine.impl.ispn;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
@@ -15,7 +16,6 @@ import io.quarkus.runtime.configuration.ConfigUtils;
 import io.quarkus.runtime.configuration.QuarkusConfigFactory;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.config.SmallRyeConfig;
-import org.eclipse.microprofile.config.ConfigProvider;
 import org.hawkular.alerts.api.model.Severity;
 import org.hawkular.alerts.api.model.event.Alert;
 import org.hawkular.alerts.api.model.event.Event;
@@ -25,7 +25,6 @@ import org.hawkular.alerts.api.model.paging.Page;
 import org.hawkular.alerts.api.model.paging.Pager;
 import org.hawkular.alerts.api.services.AlertsCriteria;
 import org.hawkular.alerts.api.services.EventsCriteria;
-import org.hawkular.alerts.engine.impl.AlertsContext;
 import org.hawkular.alerts.log.MsgLogger;
 import org.hawkular.alerts.log.MsgLogging;
 import org.junit.BeforeClass;
@@ -315,6 +314,13 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
         criteria.setTagQuery("xyztag1 != 'value0' or xyztag2 != 'value0'");
         List<Alert> tag1NotValue0Tag2NotValue0Alerts = alerts.getAlerts(tenantIds, criteria, null);
         assertEquals(8, tag1NotValue0Tag2NotValue0Alerts.size());
+
+        // Test paging and sorting?
+        Pager pager = Pager.builder()
+                .orderBy(Order.by(AlertComparator.Field.CTIME.getText(), Order.Direction.DESCENDING))
+                .withPageSize(50)
+                .build();
+
 
         deleteTestAlerts(numTenants);
     }
@@ -619,6 +625,8 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
         List<Alert> nonTaggedAlerts = alerts.getAlerts("tenant0", null, null);
         assertEquals(1, nonTaggedAlerts.size());
 
+        int existingTagCount = nonTaggedAlerts.get(0).getTags().size();
+
         String alertId = nonTaggedAlerts.iterator().next().getAlertId();
         Map<String, String> tags = new HashMap<>();
         tags.put("tag1", "value1");
@@ -628,12 +636,12 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
 
         Alert alert = alerts.getAlert("tenant0", alertId, false);
 
-        assertEquals(3, alert.getTags().size());
+        assertEquals(existingTagCount+3, alert.getTags().size());
 
         alerts.removeAlertTags("tenant0", Arrays.asList(alertId), Arrays.asList("tag1", "tag2"));
 
         alert = alerts.getAlert("tenant0", alertId, false);
-        assertEquals(1, alert.getTags().size());
+        assertEquals(existingTagCount+1, alert.getTags().size());
         assertEquals("value3", alert.getTags().get("tag3"));
 
         deleteTestAlerts(numTenants);
@@ -770,6 +778,9 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
         criteria.setTagQuery("tag1 != 'value0' or tag2 != 'value0'");
         List<Event> tag1NotValue0Tag2NotValue0Events = alerts.getEvents(tenantIds, criteria, null);
         assertEquals(8, tag1NotValue0Tag2NotValue0Events.size());
+
+        // Test sorting
+
 
         deleteTestEvents(numTenants);
     }
@@ -1040,6 +1051,80 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
         assertEquals(1, alertPage.size());
         assertEquals(1, alertPage.get(0).getCtime());
         assertEquals(101, alertPage.getTotalSize());
+
+        deleteTestAlerts(1);
+
+        // Test context and tags sorting
+        createTestAlerts(1, 1, 51);
+
+        pager = Pager.builder()
+                .orderBy(Order.by("context.division", Order.Direction.DESCENDING))
+                .withPageSize(30)
+                .withStartPage(0)
+                .build();
+
+        alertPage = alerts.getAlerts(tenantIds, criteria, pager);
+        assertEquals(30, alertPage.size());
+        assertEquals(51, alertPage.getTotalSize());
+
+        Map<String, String> context = alertPage.get(0).getContext();
+        assertNotNull(context);
+        long division = Long.parseLong(context.get("division"));
+        assertEquals(2, division);
+
+        // 2 = 0 -> 16, 1 = 17 -> 33, 0 = 34 - 50
+
+        pager = Pager.builder()
+                .orderBy(Order.by("context.division", Order.Direction.DESCENDING))
+                .withPageSize(30)
+                .withStartPage(1)
+                .build();
+
+        alertPage = alerts.getAlerts(tenantIds, criteria, pager);
+        assertEquals(21, alertPage.size());
+        assertEquals(51, alertPage.getTotalSize());
+        context = alertPage.get(0).getContext();
+        assertNotNull(context);
+        division = Long.parseLong(context.get("division"));
+        assertEquals(1, division);
+
+        context = alertPage.get(11).getContext();
+        assertNotNull(context);
+        division = Long.parseLong(context.get("division"));
+        assertEquals(0, division);
+
+        // Tags
+        pager = Pager.builder()
+                .orderBy(Order.by("tags.division", Order.Direction.ASCENDING))
+                .withPageSize(30)
+                .withStartPage(0)
+                .build();
+
+        alertPage = alerts.getAlerts(tenantIds, criteria, pager);
+        assertEquals(30, alertPage.size());
+        assertEquals(51, alertPage.getTotalSize());
+
+        Map<String, String> tags = alertPage.get(0).getTags();
+        assertNotNull(tags);
+        assertEquals("alert0", tags.get("division"));
+
+        pager = Pager.builder()
+                .orderBy(Order.by("tags.division", Order.Direction.ASCENDING))
+                .withPageSize(30)
+                .withStartPage(1)
+                .build();
+
+        alertPage = alerts.getAlerts(tenantIds, criteria, pager);
+        assertEquals(21, alertPage.size());
+        assertEquals(51, alertPage.getTotalSize());
+
+        tags = alertPage.get(0).getTags();
+        assertNotNull(tags);
+        assertEquals("alert1", tags.get("division"));
+
+        tags = alertPage.get(11).getTags();
+        assertNotNull(tags);
+        assertEquals("alert2", tags.get("division"));
 
         deleteTestAlerts(1);
     }

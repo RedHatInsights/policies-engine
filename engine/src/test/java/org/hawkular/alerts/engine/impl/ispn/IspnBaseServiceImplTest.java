@@ -144,6 +144,15 @@ public abstract class IspnBaseServiceImplTest {
                     // Hack to set up the right ctime for tests
                     alertX.setCtime(alert + 1);
                     alertX.getCurrentLifecycle().setStime(alert + 1);
+
+                    Map<String, String> contextMap = new HashMap<>();
+                    contextMap.put("division", String.valueOf(alert % 3));
+                    alertX.setContext(contextMap);
+
+                    Map<String, String> tagsMap = new HashMap<>();
+                    tagsMap.put("division", "alert" + String.valueOf(alert % 3));
+                    alertX.setTags(tagsMap);
+
                     switch (alert % 3) {
                         case 2:
                             alertX.setSeverity(Severity.CRITICAL);
