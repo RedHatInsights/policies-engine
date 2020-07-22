@@ -69,13 +69,16 @@ public final class Order {
         }
 
         public static Direction fromShortString(String shortString) {
-            switch (shortString) {
+            if (shortString == null) {
+                throw new IllegalArgumentException("Short order direction must not be null");
+            }
+            switch (shortString.toLowerCase()) {
                 case "asc":
                     return ASCENDING;
                 case "desc":
                     return DESCENDING;
                 default:
-                    throw new IllegalArgumentException("Unkown short ordering direction representation: " +
+                    throw new IllegalArgumentException("Unknown short ordering direction representation: " +
                             shortString);
             }
         }
