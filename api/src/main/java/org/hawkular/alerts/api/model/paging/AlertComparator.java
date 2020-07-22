@@ -19,7 +19,8 @@ public class AlertComparator implements Comparator<Alert> {
         SEVERITY("severity"),
         STATUS("status"),
         STIME("stime"),
-        CONTEXT("context");
+        CONTEXT("context"),
+        TAGS("tags");
 
         private String text;
 
@@ -40,6 +41,8 @@ public class AlertComparator implements Comparator<Alert> {
                 // context.<key>
                 if (CONTEXT == f && text.toLowerCase().startsWith("context.")) {
                     return f;
+                } else if (TAGS == f && text.toLowerCase().startsWith("tags.")) {
+                    return f;
                 } else if (f.getText().compareToIgnoreCase(text) == 0) {
                     return f;
                 }
@@ -47,11 +50,11 @@ public class AlertComparator implements Comparator<Alert> {
             return ALERT_ID;
         }
 
-        public static String getContextKey(String context) {
-            if (context == null || context.trim().isEmpty() || !context.toLowerCase().startsWith("context.")) {
+        public static String getContextKey(String context, String prefix) {
+            if (context == null || context.trim().isEmpty() || !context.toLowerCase().startsWith(prefix)) {
                 return "";
             }
-            return context.substring(8);
+            return context.substring(prefix.length());
         }
     };
 
@@ -66,7 +69,9 @@ public class AlertComparator implements Comparator<Alert> {
     public AlertComparator(String field, Order.Direction direction) {
         this.field = Field.getField(field);
         if (Field.CONTEXT == this.field) {
-            this.contextKey = Field.getContextKey(field);
+            this.contextKey = Field.getContextKey(field, "context.");
+        } else if(Field.TAGS == this.field) {
+            this.contextKey = Field.getContextKey(field, "tags.");
         }
         this.direction = direction;
     }
@@ -119,6 +124,8 @@ public class AlertComparator implements Comparator<Alert> {
                     return -1;
                 }
                 return o1.getStatus().compareTo(o2.getStatus()) * iOrder;
+            case TAGS:
+                // Use the CONTEXT processing, so fallthrough, POL-51 will change this behavior
             case CONTEXT:
                 if (o1.getContext() == null && o2.getContext() == null) {
                     return 0;

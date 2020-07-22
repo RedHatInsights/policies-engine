@@ -561,8 +561,6 @@ public class IspnAlertsServiceImpl implements AlertsService {
         return preparePage(alerts, pager, ispnEvents.getTotalSize());
     }
 
-    // TODO Paging is not properly handled - the returned size is going to be invalid and not all fields are sort supported
-
     private Page<IspnEvent> getEventItems(StringBuilder builder, Pager pager) {
         // Parse and do the first ordering at the Infinispan level (for @SortableFields)
         if (pager != null && pager.getOrder() != null && !pager.getOrder().isEmpty() && pager.getOrder().get(0).isSpecific()) {
@@ -593,14 +591,17 @@ public class IspnAlertsServiceImpl implements AlertsService {
 
         // Do limitations at Infinispan level if possible
         if(pager != null) {
-            // We need to create a new one, as ISPN would otherwise just reuse the previous results,
-            // not applying the paging
-            parsedQuery = queryFactory.create(builder.toString());
-            if(pager.getStart() > 0) {
-                parsedQuery.startOffset(pager.getStart());
-            }
-            if(pager.getPageSize() != PageContext.UNLIMITED_PAGE_SIZE) {
-                parsedQuery.maxResults(pager.getPageSize());
+//            // If we sort outside the ISPN, we need to also filter result set outside
+            if(isServerSideSorted(pager.getOrder().get(0).getField())) {
+                // We need to create a new one, as ISPN would otherwise just reuse the previous results,
+                // not applying the paging
+                parsedQuery = queryFactory.create(builder.toString());
+                if (pager.getStart() > 0) {
+                    parsedQuery.startOffset(pager.getStart());
+                }
+                if (pager.getPageSize() != PageContext.UNLIMITED_PAGE_SIZE) {
+                    parsedQuery.maxResults(pager.getPageSize());
+                }
             }
         }
         if(log.isDebugEnabled()) {
@@ -893,6 +894,11 @@ public class IspnAlertsServiceImpl implements AlertsService {
         parser.resolveQuery(tagQuery, query);
     }
 
+    private boolean isServerSideSorted(String field) {
+        return field.equals(AlertComparator.Field.ALERT_ID.getText())
+                || field.equals(AlertComparator.Field.CTIME.getText());
+    }
+
     // Private methods
     // TODO Merge preparePage and prepareEventsPage, EventComparator and AlertsComparator
 
@@ -922,6 +928,14 @@ public class IspnAlertsServiceImpl implements AlertsService {
                     .build();
             alerts.sort(comparator);
         }
+        if(!isServerSideSorted(pager.getOrder().get(0).getField())) {
+            // We need to filter the amounts here
+            if(pager.isLimited() && pager.getEnd() >= alerts.size()) {
+                return new Page<>(alerts.subList(pager.getStart(), alerts.size()), pager, alerts.size());
+            }
+            return new Page<>(alerts.subList(pager.getStart(), pager.getEnd()), pager, alerts.size());
+        }
+
         return new Page<>(alerts, pager, totalSize);
     }
 
