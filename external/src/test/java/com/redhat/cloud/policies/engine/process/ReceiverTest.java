@@ -14,11 +14,15 @@ import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.hawkular.alerts.api.model.action.ActionDefinition;
 import org.hawkular.alerts.api.model.condition.Condition;
 import org.hawkular.alerts.api.model.condition.EventCondition;
+import org.hawkular.alerts.api.model.event.Alert;
 import org.hawkular.alerts.api.model.event.EventType;
+import org.hawkular.alerts.api.model.paging.Page;
 import org.hawkular.alerts.api.model.trigger.FullTrigger;
 import org.hawkular.alerts.api.model.trigger.Mode;
 import org.hawkular.alerts.api.model.trigger.Trigger;
 import org.hawkular.alerts.api.model.trigger.TriggerAction;
+import org.hawkular.alerts.api.services.AlertsCriteria;
+import org.hawkular.alerts.api.services.AlertsService;
 import org.hawkular.alerts.api.services.DefinitionsService;
 import org.hawkular.alerts.api.services.StatusService;
 import org.junit.jupiter.api.*;
@@ -62,6 +66,9 @@ public class ReceiverTest {
 
     @Inject
     DefinitionsService definitionsService;
+
+    @Inject
+    AlertsService alertsService;
 
     @Inject
     @RegistryType(type = MetricRegistry.Type.APPLICATION)
@@ -140,6 +147,14 @@ public class ReceiverTest {
         Counter hostEgressProcessingErrors = metricRegistry.getCounters().get(errorCount);
         assertEquals(1, hostEgressProcessingErrors.getCount());
         testSubscriber.dispose(); // In current smallrye-messaging, can't resubscribe even after dispose.
+
+        // Verify the alert includes the tags from the event
+        AlertsCriteria criteria = new AlertsCriteria();
+        criteria.setTagQuery("display_name = 'VM'");
+        Page<Alert> alerts = alertsService.getAlerts(TENANT_ID, criteria, null);
+
+        // 4, because we have two triggers and we send the correct input twice
+        assertEquals(4, alerts.size());
     }
 
     @AfterAll
