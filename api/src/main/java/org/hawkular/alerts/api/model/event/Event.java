@@ -288,7 +288,8 @@ public class Event implements Comparable<Event>, Serializable {
         } else {
             this.text = isEmpty(trigger.getDescription()) ? trigger.getName() : trigger.getDescription();
         }
-        this.tags = trigger.getTags();
+        this.tags = new HashMap<>();
+        this.tags.putAll(trigger.getTags());
         this.facts = new HashMap<>();
 
         // Copy tags from the input evalSets also
