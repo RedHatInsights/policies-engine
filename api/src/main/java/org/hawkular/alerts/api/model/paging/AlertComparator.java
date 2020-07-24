@@ -125,7 +125,22 @@ public class AlertComparator implements Comparator<Alert> {
                 }
                 return o1.getStatus().compareTo(o2.getStatus()) * iOrder;
             case TAGS:
-                // Use the CONTEXT processing, so fallthrough, POL-51 will change this behavior
+                if (o1.getTags() == null && o2.getTags() == null) {
+                    return 0;
+                }
+                if (o1.getTags().isEmpty() && o2.getTags().isEmpty()) {
+                    return 0;
+                }
+                if (!o1.getTags().containsKey(contextKey) && !o2.getTags().containsKey(contextKey)) {
+                    return 0;
+                }
+                if (!o1.getTags().containsKey(contextKey) && o2.getTags().containsKey(contextKey)) {
+                    return 1;
+                }
+                if (!o1.getTags().containsKey(contextKey) && !o2.getTags().containsKey(contextKey)) {
+                    return -1;
+                }
+                return o1.getTags().get(contextKey).compareTo(o2.getTags().get(contextKey)) * iOrder;
             case CONTEXT:
                 if (o1.getContext() == null && o2.getContext() == null) {
                     return 0;
