@@ -75,8 +75,8 @@ public class Receiver {
                 }).thenApplyAsync(json -> {
                     if (json.containsKey(TYPE_FIELD)) {
                         String eventType = json.getString(TYPE_FIELD);
-                        if (eventType.equals("delete")) {
-                            log.info("Got a delete request");
+                        if (!eventType.equals("created") && !eventType.equals("updated")) {
+                            log.infof("Got a request with type='%s', ignoring ", eventType);
                             return null;
                         } else {
                             return json;
