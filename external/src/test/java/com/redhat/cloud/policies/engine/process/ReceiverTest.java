@@ -57,7 +57,7 @@ public class ReceiverTest {
     }
 
     @Inject
-    @Channel("host-egress")
+    @Channel("events")
     Emitter<String> hostEmitter;
 
     @Inject
