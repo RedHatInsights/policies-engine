@@ -29,7 +29,7 @@ import static org.hawkular.alerts.api.util.Util.isEmpty;
 public class Receiver {
     private final MsgLogger log = MsgLogging.getMsgLogger(Receiver.class);
 
-    public static final String INSIGHTS_REPORT_DATA_ID = "platform.inventory.host-egress";
+    public static final String INSIGHTS_REPORT_DATA_ID = "platform.inventory.events";
 
     public static final String CATEGORY_NAME = "insight_report";
     public static final String INSIGHT_ID_FIELD = "insights_id";
@@ -39,6 +39,7 @@ public class Receiver {
     public static final String FQDN_NAME_FIELD = "fqdn";
 
     private static final String HOST_FIELD = "host";
+    private static final String TYPE_FIELD = "type";
     private static final String TENANT_ID_FIELD = "account";
     private static final String SYSTEM_PROFILE_FIELD = "system_profile";
     private static final String NETWORK_INTERFACES_FIELD = "network_interfaces";
@@ -59,19 +60,34 @@ public class Receiver {
     @Metric(absolute = true, name = "engine.input.processed.errors", tags = {"queue=host-egress"})
     Counter processingErrors;
 
-    @Incoming("host-egress")
+    @Incoming("events")
     @Acknowledgment(Acknowledgment.Strategy.MANUAL)
     public CompletionStage<Void> processAsync(Message<String> input) {
         return
                 CompletableFuture.supplyAsync(() -> {
                     // smallrye-messaging 1.1.0 and up has its own metric for received messages
                     incomingMessagesCount.inc();
-                    if(log.isTraceEnabled()) {
+                    if (log.isTraceEnabled()) {
                         log.tracef("Received message, input payload: %s", input.getPayload());
                     }
                     JsonObject json = new JsonObject(input.getPayload());
                     return json;
                 }).thenApplyAsync(json -> {
+                    if (json.containsKey(TYPE_FIELD)) {
+                        String eventType = json.getString(TYPE_FIELD);
+                        if (!eventType.equals("created") && !eventType.equals("updated")) {
+                            log.infof("Got a request with type='%s', ignoring ", eventType);
+                            return null;
+                        } else {
+                            return json;
+                        }
+                    } else {
+                        return json;
+                    }
+                }).thenApplyAsync(json -> {
+                    if (json == null) { // Previous stage was a delete and passed null
+                        return null;
+                    }
                     if(json.containsKey(HOST_FIELD)) {
                         json = json.getJsonObject(HOST_FIELD);
                     } else {
