@@ -29,7 +29,9 @@ import static org.hawkular.alerts.api.util.Util.isEmpty;
 public class Receiver {
     private final MsgLogger log = MsgLogging.getMsgLogger(Receiver.class);
 
-    public static final String INSIGHTS_REPORT_DATA_ID = "platform.inventory.events";
+    // This needs to be the same value as set in the ui-backend Condition class.
+    // This must not be modified unless the data in ISPN is migrated to a new value
+    public static final String INSIGHTS_REPORT_DATA_ID = "platform.inventory.host-egress";
 
     public static final String CATEGORY_NAME = "insight_report";
     public static final String INSIGHT_ID_FIELD = "insights_id";
@@ -57,6 +59,10 @@ public class Receiver {
     Counter incomingMessagesCount;
 
     @Inject
+    @Metric(absolute = true, name = "engine.input.rejected", tags = {"queue=host-egress"})
+    Counter rejectedCount;
+
+    @Inject
     @Metric(absolute = true, name = "engine.input.processed.errors", tags = {"queue=host-egress"})
     Counter processingErrors;
 
@@ -76,18 +82,14 @@ public class Receiver {
                     if (json.containsKey(TYPE_FIELD)) {
                         String eventType = json.getString(TYPE_FIELD);
                         if (!eventType.equals("created") && !eventType.equals("updated")) {
-                            log.infof("Got a request with type='%s', ignoring ", eventType);
+                            if (log.isDebugEnabled()) {
+                                log.debugf("Got a request with type='%s', ignoring ", eventType);
+                            }
+                            rejectedCount.inc();
                             return null;
-                        } else {
-                            return json;
                         }
-                    } else {
-                        return json;
                     }
-                }).thenApplyAsync(json -> {
-                    if (json == null) { // Previous stage was a delete and passed null
-                        return null;
-                    }
+
                     if(json.containsKey(HOST_FIELD)) {
                         json = json.getJsonObject(HOST_FIELD);
                     } else {
