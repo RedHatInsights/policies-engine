@@ -34,6 +34,7 @@
     <version.org.apache.maven.plugins.maven-jar-plugin>3.0.2</version.org.apache.maven.plugins.maven-jar-plugin>
     <version.org.apache.maven.plugins.maven-resources-plugin>3.0.2</version.org.apache.maven.plugins.maven-resources-plugin>
     <version.org.apache.maven.plugins.maven-compiler-plugin>3.8.1</version.org.apache.maven.plugins.maven-compiler-plugin>
+    <version.org.codehaus.mojo.exec-maven-plugin>3.0.0</version.org.codehaus.mojo.exec-maven-plugin>
 
     <!-- Rest of them -->
     <version.junit>4.13</version.junit> <!-- External module uses Quarkus' JUnit 5 -->
@@ -156,10 +157,11 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
-        <version>3.0.0</version>
+        <version>${version.org.codehaus.mojo.exec-maven-plugin}</version>
         <configuration>
-          <executable>helpers/create_manifest.sh</executable>
+          <executable>${project.basedir}/helpers/create_manifest.sh</executable>
         </configuration>
+        <inherited>false</inherited>
         <executions>
           <execution>
             <goals>
