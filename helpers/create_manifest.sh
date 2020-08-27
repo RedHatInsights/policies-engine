@@ -10,11 +10,4 @@ PROJECT=policies
 SUB_PROJECT=engine
 
 #----------
-
-TMP_FILE=$(mktemp manifest.XXXXX)
-
-
-mvn dependency:list | grep -e ':compile$' -e ':runtime$' | sed -e 's/\[INFO\] *//' -e 's/:compile$//' > $TMP_FILE
-cat $TMP_FILE | sed -e "s/^/service-${PROJECT}\/${SUB_PROJECT}:/"  > manifest.txt
-
-rm $TMP_FILE
+mvn dependency:list | grep -v 'policies-engine' | grep -e ':compile$' -e ':runtime$' | sed -e 's/\[INFO\] *//' -e 's/:compile$//' -e 's/:runtime$//' | sed -e "s/^/service-${PROJECT}\/${SUB_PROJECT}:/" | sort | uniq > manifest.txt
