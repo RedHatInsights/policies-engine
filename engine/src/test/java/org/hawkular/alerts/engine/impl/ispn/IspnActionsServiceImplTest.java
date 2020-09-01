@@ -1,12 +1,5 @@
 package org.hawkular.alerts.engine.impl.ispn;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import io.quarkus.runtime.configuration.ConfigUtils;
 import io.quarkus.runtime.configuration.QuarkusConfigFactory;
 import io.smallrye.config.SmallRyeConfig;
@@ -16,13 +9,20 @@ import org.hawkular.alerts.api.model.trigger.Trigger;
 import org.hawkular.alerts.api.model.trigger.TriggerAction;
 import org.hawkular.alerts.api.services.ActionsCriteria;
 import org.hawkular.alerts.api.services.AlertsCriteria;
-import org.hawkular.alerts.engine.cache.IspnCacheManager;
 import org.hawkular.alerts.engine.cache.ActionsCacheManager;
+import org.hawkular.alerts.engine.cache.IspnCacheManager;
 import org.hawkular.alerts.engine.impl.AlertsContext;
 import org.hawkular.alerts.log.MsgLogger;
 import org.hawkular.alerts.log.MsgLogging;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Jay Shaughnessy
@@ -77,7 +77,7 @@ public class IspnActionsServiceImplTest extends IspnBaseServiceImplTest {
         try {
             createTestPluginsAndActions(numTenants, numPlugins, numActions);
             createTestTriggers(numTenants, numTriggers);
-            createTestAlerts(numTenants, numTriggers, numAlerts);
+            long startTime = createTestAlerts(numTenants, numTriggers, numAlerts);
 
             Trigger trigger = definitions.getTrigger("tenant0", "trigger0");
 
@@ -143,14 +143,14 @@ public class IspnActionsServiceImplTest extends IspnBaseServiceImplTest {
             assertNotNull(existingActions);
             assertEquals(1, existingActions.size());
 
-            actionsCriteria.setEndTime(0L);
-            actionsCriteria.setStartTime(0L);
+            actionsCriteria.setEndTime(startTime);
+            actionsCriteria.setStartTime(startTime);
             existingActions = actions.getActions("tenant0", actionsCriteria, null);
             assertNotNull(existingActions);
             assertEquals(0, existingActions.size());
 
             actionsCriteria.setEndTime(System.currentTimeMillis());
-            actionsCriteria.setStartTime(0L);
+            actionsCriteria.setStartTime(startTime);
             existingActions = actions.getActions("tenant0", actionsCriteria, null);
             assertNotNull(existingActions);
             assertEquals(1, existingActions.size());

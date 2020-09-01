@@ -1,27 +1,5 @@
 package org.hawkular.alerts.engine.impl.ispn;
 
-import static org.hawkular.alerts.api.util.Util.isEmpty;
-import static org.hawkular.alerts.engine.impl.ispn.IspnPk.pk;
-import static org.hawkular.alerts.engine.impl.ispn.IspnPk.pkFromEventId;
-import static org.hawkular.alerts.engine.tags.ExpressionTagQueryParser.ExpressionTagResolver.EQ;
-import static org.hawkular.alerts.engine.tags.ExpressionTagQueryParser.ExpressionTagResolver.NEQ;
-import static org.hawkular.alerts.engine.util.Utils.extractAlertIds;
-import static org.hawkular.alerts.engine.util.Utils.extractCategories;
-import static org.hawkular.alerts.engine.util.Utils.extractEventIds;
-import static org.hawkular.alerts.engine.util.Utils.extractSeverity;
-import static org.hawkular.alerts.engine.util.Utils.extractStatus;
-import static org.hawkular.alerts.engine.util.Utils.extractTriggerIds;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.hawkular.alerts.api.model.Note;
 import org.hawkular.alerts.api.model.Severity;
@@ -56,6 +34,30 @@ import org.infinispan.Cache;
 import org.infinispan.query.Search;
 import org.infinispan.query.dsl.Query;
 import org.infinispan.query.dsl.QueryFactory;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import static org.hawkular.alerts.api.util.Util.isEmpty;
+import static org.hawkular.alerts.engine.impl.ispn.IspnPk.pk;
+import static org.hawkular.alerts.engine.impl.ispn.IspnPk.pkFromEventId;
+import static org.hawkular.alerts.engine.tags.ExpressionTagQueryParser.ExpressionTagResolver.EQ;
+import static org.hawkular.alerts.engine.tags.ExpressionTagQueryParser.ExpressionTagResolver.NEQ;
+import static org.hawkular.alerts.engine.util.Utils.extractAlertIds;
+import static org.hawkular.alerts.engine.util.Utils.extractCategories;
+import static org.hawkular.alerts.engine.util.Utils.extractEventIds;
+import static org.hawkular.alerts.engine.util.Utils.extractSeverity;
+import static org.hawkular.alerts.engine.util.Utils.extractStatus;
+import static org.hawkular.alerts.engine.util.Utils.extractTriggerIds;
 
 /**
  * @author Jay Shaughnessy
@@ -468,6 +470,14 @@ public class IspnAlertsServiceImpl implements AlertsService {
                 }
                 query.append(") ");
            }
+           // Set the query starting point to the earliest retention time to prevent incorrect
+           // return of the Query maxResults
+           long earliestRetentionTime = Instant.now().minus(alertsLifespanInHours, ChronoUnit.HOURS).toEpochMilli();
+
+           if(criteria.getStartTime() == null || criteria.getStartTime() < earliestRetentionTime) {
+               criteria.setStartTime(earliestRetentionTime);
+           }
+
            if (criteria.hasCTimeCriteria()) {
                 query.append("and (");
                 if (criteria.getStartTime() != null) {
@@ -691,6 +701,15 @@ public class IspnAlertsServiceImpl implements AlertsService {
                 }
                 query.append(") ");
             }
+
+            // Alerts are also events, so we need to pick the largest one. This does not prevent the error with maxResults sadly
+            long largestRetention = Math.max(alertsLifespanInHours, eventLifespanInHours);
+            long earliestRetentionTime = Instant.now().minus(largestRetention, ChronoUnit.HOURS).toEpochMilli();
+
+            if(criteria.getStartTime() == null || criteria.getStartTime() < earliestRetentionTime) {
+                criteria.setStartTime(earliestRetentionTime);
+            }
+
             if (criteria.hasCTimeCriteria()) {
                 query.append("and (");
                 if (criteria.getStartTime() != null) {

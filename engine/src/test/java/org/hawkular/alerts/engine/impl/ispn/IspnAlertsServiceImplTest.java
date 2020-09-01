@@ -1,17 +1,5 @@
 package org.hawkular.alerts.engine.impl.ispn;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import io.quarkus.runtime.configuration.ConfigUtils;
 import io.quarkus.runtime.configuration.QuarkusConfigFactory;
 import io.quarkus.test.junit.QuarkusTest;
@@ -32,6 +20,18 @@ import org.junit.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 /**
  * @author Jay Shaughnessy
@@ -354,14 +354,14 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
         int numTenants = 1;
         int numTriggers = 5;
         int numAlerts = 5;
-        createTestAlerts(numTenants, numTriggers, numAlerts);
+        long startTime = createTestAlerts(numTenants, numTriggers, numAlerts);
 
         Set<String> tenantIds = new HashSet<>();
         tenantIds.add("tenant0");
 
         AlertsCriteria criteria = new AlertsCriteria();
-        criteria.setStartTime(2L);
-        criteria.setEndTime(2L);
+        criteria.setStartTime(startTime + 2L);
+        criteria.setEndTime(startTime + 2L);
 
         List<Alert> ctime2Alerts = alerts.getAlerts(tenantIds, criteria, null);
         assertEquals(5, ctime2Alerts.size());
@@ -378,13 +378,13 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
         int numTenants = 1;
         int numTriggers = 5;
         int numAlerts = 5;
-        createTestAlerts(numTenants, numTriggers, numAlerts);
+        long startTime = createTestAlerts(numTenants, numTriggers, numAlerts);
 
         Set<String> tenantIds = new HashSet<>();
         tenantIds.add("tenant0");
 
         AlertsCriteria criteria = new AlertsCriteria();
-        criteria.setStartResolvedTime(1L);
+        criteria.setStartResolvedTime(startTime + 1L);
 
         // Alerts on stime 1 and 4 are RESOLVED
         List<Alert> stimeGTE2Alerts = alerts.getAlerts(tenantIds, criteria, null);
@@ -398,13 +398,13 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
         int numTenants = 1;
         int numTriggers = 5;
         int numAlerts = 5;
-        createTestAlerts(numTenants, numTriggers, numAlerts);
+        long startTime = createTestAlerts(numTenants, numTriggers, numAlerts);
 
         Set<String> tenantIds = new HashSet<>();
         tenantIds.add("tenant0");
 
         AlertsCriteria criteria = new AlertsCriteria();
-        criteria.setStartAckTime(1L);
+        criteria.setStartAckTime(startTime + 1L);
 
         // Alerts on stime 2 and 5 are ACKNOWLEDGED
         List<Alert> stimeGTE2Alerts = alerts.getAlerts(tenantIds, criteria, null);
@@ -418,14 +418,14 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
         int numTenants = 1;
         int numTriggers = 5;
         int numAlerts = 5;
-        createTestAlerts(numTenants, numTriggers, numAlerts);
+        long startTime = createTestAlerts(numTenants, numTriggers, numAlerts);
 
         Set<String> tenantIds = new HashSet<>();
         tenantIds.add("tenant0");
 
         AlertsCriteria criteria = new AlertsCriteria();
-        criteria.setStartStatusTime(5L);
-        criteria.setEndStatusTime(5L);
+        criteria.setStartStatusTime(startTime + 5L);
+        criteria.setEndStatusTime(startTime + 5L);
 
         List<Alert> stimeGTE5Alerts = alerts.getAlerts(tenantIds, criteria, null);
         assertEquals(5, stimeGTE5Alerts.size());
@@ -503,7 +503,7 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
         int numTenants = 1;
         int numTriggers = 5;
         int numAlerts = 5;
-        createTestAlerts(numTenants, numTriggers, numAlerts);
+        long startTime = createTestAlerts(numTenants, numTriggers, numAlerts);
 
         Set<String> tenantIds = new HashSet<>();
         tenantIds.add("tenant0");
@@ -511,7 +511,7 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
         AlertsCriteria criteria = new AlertsCriteria();
         criteria.setStatus(Alert.Status.RESOLVED);
         criteria.setTriggerId("trigger0");
-        criteria.setStartTime(3L);
+        criteria.setStartTime(startTime + 3L);
 
         List<Alert> resolvedAlerts = alerts.getAlerts(tenantIds, criteria, null);
         assertEquals(1, resolvedAlerts.size());
@@ -790,14 +790,14 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
         int numTenants = 1;
         int numTriggers = 5;
         int numEvents = 5;
-        createTestEvents(numTenants, numTriggers, numEvents);
+        long startTime = createTestEvents(numTenants, numTriggers, numEvents);
 
         Set<String> tenantIds = new HashSet<>();
         tenantIds.add("tenant0");
 
         EventsCriteria criteria = new EventsCriteria();
-        criteria.setStartTime(2L);
-        criteria.setEndTime(2L);
+        criteria.setStartTime(startTime + 2L);
+        criteria.setEndTime(startTime + 2L);
 
         List<Event> ctime2Events = alerts.getEvents(tenantIds, criteria, null);
         assertEquals(5, ctime2Events.size());
@@ -948,7 +948,7 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
         int numTenants = 1;
         int numTriggers = 10;
         int numAlerts = 100;
-        createTestAlerts(numTenants, numTriggers, numAlerts);
+        long startTime = createTestAlerts(numTenants, numTriggers, numAlerts);
 
         Set<String> tenantIds = new HashSet<>();
         tenantIds.add("tenant0");
@@ -975,7 +975,7 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
         assertEquals(1000, alertPage.getTotalSize());
 
         Alert alert = alertPage.get(49);
-        assertEquals(1, alert.getCtime());
+        assertEquals(startTime + 1, alert.getCtime());
 
         pager = Pager.builder()
                 .orderBy(Order.by(AlertComparator.Field.CTIME.getText(), Order.Direction.DESCENDING))
@@ -991,7 +991,7 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
 
         // Test with 101 and 99 alerts (near the page boundary)
 
-        createTestAlerts(1, 1, 99);
+        startTime = createTestAlerts(1, 1, 99);
         pager = Pager.builder()
                 .orderBy(Order.by(AlertComparator.Field.CTIME.getText(), Order.Direction.DESCENDING))
                 .withPageSize(50)
@@ -1000,7 +1000,7 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
 
         alertPage = alerts.getAlerts(tenantIds, criteria, pager);
         assertEquals(50, alertPage.size());
-        assertEquals(99, alertPage.get(0).getCtime());
+        assertEquals(startTime + 99, alertPage.get(0).getCtime());
         assertEquals(99, alertPage.getTotalSize());
 
         pager = Pager.builder()
@@ -1011,14 +1011,14 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
         alertPage = alerts.getAlerts(tenantIds, criteria, pager);
 
         assertEquals(49, alertPage.size());
-        assertEquals(1, alertPage.get(48).getCtime());
+        assertEquals(startTime + 1, alertPage.get(48).getCtime());
         assertEquals(99, alertPage.getTotalSize());
 
         deleteTestAlerts(1);
 
         // 101
 
-        createTestAlerts(1, 1, 101);
+        startTime = createTestAlerts(1, 1, 101);
         pager = Pager.builder()
                 .orderBy(Order.by(AlertComparator.Field.CTIME.getText(), Order.Direction.DESCENDING))
                 .withPageSize(50)
@@ -1027,7 +1027,7 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
 
         alertPage = alerts.getAlerts(tenantIds, criteria, pager);
         assertEquals(50, alertPage.size());
-        assertEquals(101, alertPage.get(0).getCtime());
+        assertEquals(startTime + 101, alertPage.get(0).getCtime());
         assertEquals(101, alertPage.getTotalSize());
 
         pager = Pager.builder()
@@ -1038,7 +1038,7 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
 
         alertPage = alerts.getAlerts(tenantIds, criteria, pager);
         assertEquals(50, alertPage.size());
-        assertEquals(2, alertPage.get(49).getCtime());
+        assertEquals(startTime + 2, alertPage.get(49).getCtime());
         assertEquals(101, alertPage.getTotalSize());
 
         pager = Pager.builder()
@@ -1049,13 +1049,13 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
 
         alertPage = alerts.getAlerts(tenantIds, criteria, pager);
         assertEquals(1, alertPage.size());
-        assertEquals(1, alertPage.get(0).getCtime());
+        assertEquals(startTime + 1, alertPage.get(0).getCtime());
         assertEquals(101, alertPage.getTotalSize());
 
         deleteTestAlerts(1);
 
         // Test context and tags sorting
-        createTestAlerts(1, 1, 51);
+        startTime = createTestAlerts(1, 1, 51);
 
         pager = Pager.builder()
                 .orderBy(Order.by("context.division", Order.Direction.DESCENDING))
@@ -1136,7 +1136,7 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
         int numTenants = 1;
         int numTriggers = 10;
         int numAlerts = 100;
-        createTestEvents(numTenants, numTriggers, numAlerts);
+        long startTime = createTestEvents(numTenants, numTriggers, numAlerts);
 
         Set<String> tenantIds = new HashSet<>();
         tenantIds.add("tenant0");
@@ -1163,7 +1163,7 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
         assertEquals(1000, alertPage.getTotalSize());
 
         Event alert = alertPage.get(49);
-        assertEquals(1, alert.getCtime());
+        assertEquals(startTime + 1, alert.getCtime());
 
         pager = Pager.builder()
                 .orderBy(Order.by(AlertComparator.Field.CTIME.getText(), Order.Direction.DESCENDING))
@@ -1179,7 +1179,7 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
 
         // Test with 101 and 99 alerts (near the page boundary)
 
-        createTestEvents(1, 1, 99);
+        startTime = createTestEvents(1, 1, 99);
         pager = Pager.builder()
                 .orderBy(Order.by(AlertComparator.Field.CTIME.getText(), Order.Direction.DESCENDING))
                 .withPageSize(50)
@@ -1188,7 +1188,7 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
 
         alertPage = alerts.getEvents(tenantIds, criteria, pager);
         assertEquals(50, alertPage.size());
-        assertEquals(99, alertPage.get(0).getCtime());
+        assertEquals(startTime + 99, alertPage.get(0).getCtime());
         assertEquals(99, alertPage.getTotalSize());
 
         pager = Pager.builder()
@@ -1199,14 +1199,14 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
         alertPage = alerts.getEvents(tenantIds, criteria, pager);
 
         assertEquals(49, alertPage.size());
-        assertEquals(1, alertPage.get(48).getCtime());
+        assertEquals(startTime + 1, alertPage.get(48).getCtime());
         assertEquals(99, alertPage.getTotalSize());
 
         deleteTestEvents(1);
 
         // 101
 
-        createTestEvents(1, 1, 101);
+        startTime = createTestEvents(1, 1, 101);
         pager = Pager.builder()
                 .orderBy(Order.by(AlertComparator.Field.CTIME.getText(), Order.Direction.DESCENDING))
                 .withPageSize(50)
@@ -1215,7 +1215,7 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
 
         alertPage = alerts.getEvents(tenantIds, criteria, pager);
         assertEquals(50, alertPage.size());
-        assertEquals(101, alertPage.get(0).getCtime());
+        assertEquals(startTime + 101, alertPage.get(0).getCtime());
         assertEquals(101, alertPage.getTotalSize());
 
         pager = Pager.builder()
@@ -1226,7 +1226,7 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
 
         alertPage = alerts.getEvents(tenantIds, criteria, pager);
         assertEquals(50, alertPage.size());
-        assertEquals(2, alertPage.get(49).getCtime());
+        assertEquals(startTime + 2, alertPage.get(49).getCtime());
         assertEquals(101, alertPage.getTotalSize());
 
         pager = Pager.builder()
@@ -1237,7 +1237,7 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
 
         alertPage = alerts.getEvents(tenantIds, criteria, pager);
         assertEquals(1, alertPage.size());
-        assertEquals(1, alertPage.get(0).getCtime());
+        assertEquals(startTime + 1, alertPage.get(0).getCtime());
         assertEquals(101, alertPage.getTotalSize());
 
         deleteTestEvents(1);

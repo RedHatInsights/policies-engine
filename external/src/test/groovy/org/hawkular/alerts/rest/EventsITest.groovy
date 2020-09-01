@@ -157,9 +157,10 @@ class EventsITest extends AbstractQuarkusITestBase {
 
     @Test
     void testQueryEventsWithSpacesInValues() {
+        def cTime = System.currentTimeMillis();
         Event e1 = new Event();
         e1.setId("test_1");
-        e1.setCtime(1499452337498L);
+        e1.setCtime(cTime - 4000);
         e1.setCategory("test");
         e1.setText("Avail-changed:[UP] WildFly Server");
         e1.getContext().put("resource_path", "/t;hawkular/f;my-agent/r;Local%20DMR~~");
@@ -173,7 +174,7 @@ class EventsITest extends AbstractQuarkusITestBase {
 
         Event e2 = new Event();
         e2.setId("test_2");
-        e2.setCtime(1499445265683L);
+        e2.setCtime(cTime);
         e2.setCategory("test");
         e2.setText("Avail-changed:[DOWN] Deployment");
         e2.getContext().put("resource_path", "/t;hawkular/f;my-agent/r;Local%20DMR~%2Fdeployment%3Dcfme_test_ear_middleware.ear");
