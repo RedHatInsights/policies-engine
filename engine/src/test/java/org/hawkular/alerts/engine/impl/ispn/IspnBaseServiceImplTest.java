@@ -1,16 +1,5 @@
 package org.hawkular.alerts.engine.impl.ispn;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-
 import org.hawkular.alerts.api.exception.NotFoundException;
 import org.hawkular.alerts.api.model.Note;
 import org.hawkular.alerts.api.model.Severity;
@@ -27,6 +16,17 @@ import org.hawkular.alerts.api.services.AlertsCriteria;
 import org.hawkular.alerts.api.services.EventsCriteria;
 import org.hawkular.alerts.log.MsgLogger;
 import org.hawkular.alerts.log.MsgLogging;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * @author Jay Shaughnessy
@@ -124,7 +124,9 @@ public abstract class IspnBaseServiceImplTest {
         }
     }
 
-    protected void createTestAlerts(int numTenants, int numTriggers, int numAlerts) throws Exception {
+    protected long createTestAlerts(int numTenants, int numTriggers, int numAlerts) throws Exception {
+        long alertsStartTime = System.currentTimeMillis();
+        alertsStartTime += (alertsStartTime & 1);
         List<Alert> newAlerts = new ArrayList<>();
         for (int tenant = 0; tenant < numTenants; tenant++) {
             String tenantId = "tenant" + tenant;
@@ -142,8 +144,8 @@ public abstract class IspnBaseServiceImplTest {
                     evals.add(evalSet);
                     Alert alertX = new Alert(tenantId, triggerX, evals);
                     // Hack to set up the right ctime for tests
-                    alertX.setCtime(alert + 1);
-                    alertX.getCurrentLifecycle().setStime(alert + 1);
+                    alertX.setCtime(alertsStartTime + alert + 1);
+                    alertX.getCurrentLifecycle().setStime(alertsStartTime + alert + 1);
 
                     Map<String, String> contextMap = new HashMap<>();
                     contextMap.put("division", String.valueOf(alert % 3));
@@ -159,17 +161,18 @@ public abstract class IspnBaseServiceImplTest {
                             break;
                         case 1:
                             alertX.setSeverity(Severity.LOW);
-                            alertX.addLifecycle(Alert.Status.ACKNOWLEDGED, alert + 1, List.of(new Note("user1", "")));
+                            alertX.addLifecycle(Alert.Status.ACKNOWLEDGED, alertsStartTime + alert + 1, List.of(new Note("user1", "")));
                             break;
                         case 0:
                             alertX.setSeverity(Severity.MEDIUM);
-                            alertX.addLifecycle(Alert.Status.RESOLVED, alert + 1, List.of(new Note("user2", "")));
+                            alertX.addLifecycle(Alert.Status.RESOLVED, alertsStartTime + alert + 1, List.of(new Note("user2", "")));
                     }
                     newAlerts.add(alertX);
                 }
             }
         }
         alerts.addAlerts(newAlerts);
+        return alertsStartTime;
     }
 
     protected void deleteTestAlerts(int numTenants) throws Exception {
@@ -179,7 +182,8 @@ public abstract class IspnBaseServiceImplTest {
         }
     }
 
-    protected void createTestEvents(int numTenants, int numTriggers, int numEvents) throws Exception {
+    protected long createTestEvents(int numTenants, int numTriggers, int numEvents) throws Exception {
+        long eventStartTime = System.currentTimeMillis();
         List<Event> newEvents = new ArrayList<>();
         int count = 0;
         for (int tenant = 0; tenant < numTenants; tenant++) {
@@ -189,7 +193,7 @@ public abstract class IspnBaseServiceImplTest {
                 Trigger triggerX = new Trigger(tenantId, triggerId, "Trigger " + triggerId);
                 for (int event = 0; event < numEvents; event++) {
                     String eventId = "event" + count;
-                    long eventTime = event + 1;
+                    long eventTime = eventStartTime + event + 1;
                     String category = "category" + (event % 2);
                     String text = "this is text key" + (event % 2) + " for event";
                     Map<String, String> context = new HashMap<>();
@@ -203,6 +207,7 @@ public abstract class IspnBaseServiceImplTest {
             }
         }
         alerts.addEvents(newEvents);
+        return eventStartTime;
     }
 
     protected void deleteTestEvents(int numTenants) throws Exception {
