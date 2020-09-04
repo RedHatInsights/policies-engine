@@ -60,14 +60,15 @@ public class EmailActionPluginListener implements ActionPluginListener {
                     }
                     Map<String, String> tags = eventEval.getValue().getTags();
                     String name = actionMessage.getAction().getEvent().getTrigger().getName();
+                    String triggerId = actionMessage.getAction().getEvent().getTrigger().getId();
 
                     Notification notification = new Notification(tenantId, insightId);
-                    notification.getTriggerNames().add(name);
                     notification.getTags().putAll(tags);
+                    notification.getTriggers().put(triggerId, name);
 
                     notifyBuffer.merge(insightId, notification, (existing, addition) -> {
                         existing.getTags().putAll(addition.getTags());
-                        existing.getTriggerNames().addAll(addition.getTriggerNames());
+                        existing.getTriggers().putAll(addition.getTriggers());
 
                         return existing;
                     });
@@ -113,13 +114,13 @@ public class EmailActionPluginListener implements ActionPluginListener {
         private String tenantId;
         private String insightId;
         private Map<String, String> tags;
-        private Set<String> triggerNames;
+        private Map<String, String> triggers;
 
         public Notification(String tenantId, String insightId) {
             this.tenantId = tenantId;
             this.insightId = insightId;
             this.tags = new HashMap<>();
-            this.triggerNames = new HashSet<>();
+            this.triggers = new HashMap<>();
         }
 
         public String getTenantId() {
@@ -130,12 +131,12 @@ public class EmailActionPluginListener implements ActionPluginListener {
             return tags;
         }
 
-        public Set<String> getTriggerNames() {
-            return triggerNames;
-        }
-
         public String getInsightId() {
             return insightId;
+        }
+
+        public Map<String, String> getTriggers() {
+            return triggers;
         }
     }
 }
