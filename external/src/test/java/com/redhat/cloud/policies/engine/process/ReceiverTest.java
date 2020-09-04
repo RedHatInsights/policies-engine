@@ -131,9 +131,9 @@ public class ReceiverTest {
         assertEquals(TENANT_ID, emailOutput.getString("tenantId"));
         assertTrue(emailOutput.containsKey("tags"));
         assertTrue(emailOutput.containsKey("insightId"));
-        assertTrue(emailOutput.containsKey("triggerNames"));
-        JsonArray triggerNames = emailOutput.getJsonArray("triggerNames");
-        assertEquals(2, triggerNames.size());
+        assertTrue(emailOutput.containsKey("triggers"));
+        JsonObject triggers = emailOutput.getJsonObject("triggers");
+        assertEquals(2, triggers.size());
 
         // Now send broken data and then working and expect things to still work
         String brokenJson = "{ \"json\": ";
