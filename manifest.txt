@@ -162,7 +162,7 @@ service-policies/engine:org.kie.soup:kie-soup-xstream:jar:7.38.0.Final
 service-policies/engine:org.lz4:lz4-java:jar:1.7.1
 service-policies/engine:org.mvel:mvel2:jar:2.4.7.Final
 service-policies/engine:org.reactivestreams:reactive-streams:jar:1.0.3
-service-policies/engine:org.rocksdb:rocksdbjni:jar:6.2.2
+service-policies/engine:org.rocksdb:rocksdbjni:jar:6.11.4
 service-policies/engine:org.slf4j:slf4j-api:jar:1.7.30
 service-policies/engine:org.wildfly.common:wildfly-common:jar:1.5.4.Final-format-001
 service-policies/engine:org.xerial.snappy:snappy-java:jar:1.1.7.3
