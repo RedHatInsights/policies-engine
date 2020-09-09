@@ -8,6 +8,7 @@ import org.hibernate.search.annotations.Analyze;
 import org.hibernate.search.annotations.Field;
 import org.hibernate.search.annotations.FieldBridge;
 import org.hibernate.search.annotations.Indexed;
+import org.hibernate.search.annotations.NumericField;
 import org.hibernate.search.annotations.SortableField;
 import org.hibernate.search.annotations.Store;
 
@@ -38,11 +39,13 @@ public class IspnEvent implements Serializable {
 
     @Field(store = Store.YES, analyze = Analyze.NO)
     @SortableField
+    @NumericField
     private long ctime;
 
     @Field(store = Store.YES, analyze = Analyze.NO)
     private String status;
 
+    @NumericField
     @Field(store = Store.YES, analyze = Analyze.NO)
     private long stime;
 

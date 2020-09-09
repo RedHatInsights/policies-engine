@@ -59,15 +59,6 @@ import org.infinispan.query.dsl.FilterConditionContext;
 import org.infinispan.query.dsl.QueryBuilder;
 import org.infinispan.query.dsl.QueryFactory;
 
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.stream.Collectors;
-
-import static org.hawkular.alerts.api.services.DefinitionsEvent.Type.*;
-import static org.hawkular.alerts.api.util.Util.isEmpty;
-import static org.hawkular.alerts.engine.impl.ispn.IspnPk.*;
-import static org.hawkular.alerts.engine.util.Utils.checkTenantId;
-
 /**
  * @author Jay Shaughnessy
  * @author Lucas Ponce

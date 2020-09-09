@@ -1,14 +1,17 @@
 package org.hawkular.alerts.api.services;
 
-import static org.hawkular.alerts.api.util.Util.isEmpty;
+import org.hawkular.alerts.api.model.Severity;
+import org.hawkular.alerts.api.model.event.Alert;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
-import org.hawkular.alerts.api.model.Severity;
-import org.hawkular.alerts.api.model.event.Alert;
+import static org.hawkular.alerts.api.util.Util.isEmpty;
+
 
 /**
  * Query criteria for fetching Alerts.
@@ -75,6 +78,177 @@ public class AlertsCriteria {
         if (null != thin) {
             setThin(thin.booleanValue());
         }
+    }
+
+    public String getQuery() {
+        StringBuilder query = new StringBuilder();
+        if (this.hasAlertIdCriteria()) {
+            query.append("and (");
+            Iterator<String> iter = extractAlertIds(this).iterator();
+            while (iter.hasNext()) {
+                String alertId = iter.next();
+                query.append("id = '").append(alertId).append("' ");
+                if (iter.hasNext()) {
+                    query.append("or ");
+                }
+            }
+            query.append(") ");
+        }
+//        if (this.hasTagQueryCriteria()) {
+//            query.append("and (tags : ");
+////               parseTagQuery(this.getTagQuery(), query);
+//            query.append(") ");
+//        }
+        if (this.hasTriggerIdCriteria()) {
+            query.append("and (");
+            Iterator<String> iter = extractTriggerIds(this).iterator();
+            while (iter.hasNext()) {
+                String triggerId = iter.next();
+                query.append("triggerId = '").append(triggerId).append("' ");
+                if (iter.hasNext()) {
+                    query.append("or ");
+                }
+            }
+            query.append(") ");
+        }
+        if (this.hasCTimeCriteria()) {
+            query.append("and (");
+            if (this.getStartTime() != null) {
+                query.append("ctime >= ").append(this.getStartTime()).append(" ");
+            }
+            if (this.getEndTime() != null) {
+                if (this.getStartTime() != null) {
+                    query.append("and ");
+                }
+                query.append("ctime <= ").append(this.getEndTime()).append(" ");
+            }
+            query.append(") ");
+        }
+        if (this.hasResolvedTimeCriteria()) {
+            query.append("and (status = '").append(Alert.Status.RESOLVED.name()).append("' and ");
+            if (this.getStartResolvedTime() != null) {
+                query.append("stime >= ").append(this.getStartResolvedTime()).append(" ");
+            }
+            if (this.getEndResolvedTime() != null) {
+                if (this.getStartResolvedTime() != null) {
+                    query.append("and ");
+                }
+                query.append("stime <= ").append(this.getEndResolvedTime()).append(" ");
+            }
+            query.append(") ");
+        }
+        if (this.hasAckTimeCriteria()) {
+            query.append("and (status = '").append(Alert.Status.ACKNOWLEDGED.name()).append("' and ");
+            if (this.getStartAckTime() != null) {
+                query.append("stime >= ").append(this.getStartAckTime()).append(" ");
+            }
+            if (this.getEndAckTime() != null) {
+                if (this.getStartAckTime() != null) {
+                    query.append("and ");
+                }
+                query.append("stime <= ").append(this.getEndAckTime()).append(" ");
+            }
+            query.append(") ");
+        }
+        if (this.hasStatusTimeCriteria()) {
+            query.append("and (");
+            if (this.getStartStatusTime() != null) {
+                query.append("stime >= ").append(this.getStartStatusTime()).append(" ");
+            }
+            if (this.getEndTime() != null) {
+                if (this.getStartTime() != null) {
+                    query.append("and ");
+                }
+                query.append("stime <= ").append(this.getEndStatusTime()).append(" ");
+            }
+            query.append(") ");
+        }
+        if (this.hasSeverityCriteria()) {
+            query.append("and (");
+            Iterator<Severity> iterSev = extractSeverity(this).iterator();
+            while (iterSev.hasNext()) {
+                Severity severity = iterSev.next();
+                query.append("severity = '").append(severity.name()).append("' ");
+                if (iterSev.hasNext()) {
+                    query.append(" or ");
+                }
+            }
+            query.append(") ");
+        }
+        if (this.hasStatusCriteria()) {
+            query.append("and (");
+            Iterator<Alert.Status> iterStatus = extractStatus(this).iterator();
+            while (iterStatus.hasNext()) {
+                Alert.Status status = iterStatus.next();
+                query.append("status = '").append(status.name()).append("' ");
+                if (iterStatus.hasNext()) {
+                    query.append(" or ");
+                }
+            }
+            query.append(") ");
+        }
+
+        String resultQuery = query.toString();
+        if(resultQuery.startsWith("and")) {
+            resultQuery = resultQuery.substring(4);
+        }
+        return resultQuery;
+    }
+
+    public static Set<String> extractAlertIds(AlertsCriteria criteria) {
+        Set<String> alertIds = new HashSet<>();
+        if (!isEmpty(criteria.getAlertId())) {
+            alertIds.add(criteria.getAlertId());
+        }
+        if (!isEmpty(criteria.getAlertIds())) {
+            alertIds.addAll(criteria.getAlertIds());
+        }
+        return alertIds;
+    }
+
+    public static Set<Severity> extractSeverity(AlertsCriteria criteria) {
+        Set<Severity> severities = new HashSet<>();
+        if (criteria.getSeverity() != null) {
+            severities.add(criteria.getSeverity());
+        }
+        if (!isEmpty(criteria.getSeverities())) {
+            severities.addAll(criteria.getSeverities());
+        }
+        return severities;
+    }
+
+    public static Set<Alert.Status> extractStatus(AlertsCriteria criteria) {
+        Set<Alert.Status> statuses = new HashSet<>();
+        if (criteria.getStatus() != null) {
+            statuses.add(criteria.getStatus());
+        }
+        if (!isEmpty(criteria.getStatusSet())) {
+            statuses.addAll(criteria.getStatusSet());
+        }
+        return statuses;
+    }
+
+    public static Set<String> extractTriggerIds(AlertsCriteria criteria) {
+
+        boolean hasTriggerId = !isEmpty(criteria.getTriggerId());
+        boolean hasTriggerIds = !isEmpty(criteria.getTriggerIds());
+
+        Set<String> triggerIds = hasTriggerId || hasTriggerIds ? new HashSet<>() : Collections.emptySet();
+
+        if (!hasTriggerIds) {
+            if (hasTriggerId) {
+                triggerIds.add(criteria.getTriggerId());
+            }
+        } else {
+            for (String triggerId : criteria.getTriggerIds()) {
+                if (isEmpty(triggerId)) {
+                    continue;
+                }
+                triggerIds.add(triggerId);
+            }
+        }
+
+        return triggerIds;
     }
 
     public Long getStartTime() {

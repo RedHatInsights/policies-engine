@@ -2,7 +2,6 @@ package org.hawkular.alerts.engine.impl.ispn;
 
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.hawkular.alerts.api.model.Note;
-import org.hawkular.alerts.api.model.Severity;
 import org.hawkular.alerts.api.model.condition.ConditionEval;
 import org.hawkular.alerts.api.model.data.Data;
 import org.hawkular.alerts.api.model.event.Alert;
@@ -24,13 +23,16 @@ import org.hawkular.alerts.api.services.DefinitionsService;
 import org.hawkular.alerts.api.services.EventsCriteria;
 import org.hawkular.alerts.engine.cache.IspnCacheManager;
 import org.hawkular.alerts.engine.impl.IncomingDataManagerImpl;
+import org.hawkular.alerts.engine.impl.hibernate.HibernateSearchQueryCreator;
 import org.hawkular.alerts.engine.impl.ispn.model.IspnEvent;
 import org.hawkular.alerts.engine.service.AlertsEngine;
 import org.hawkular.alerts.engine.service.IncomingDataManager;
 import org.hawkular.alerts.log.AlertingLogger;
 import org.hawkular.alerts.log.MsgLogging;
 import org.infinispan.Cache;
+import org.infinispan.query.CacheQuery;
 import org.infinispan.query.Search;
+import org.infinispan.query.SearchManager;
 import org.infinispan.query.dsl.Query;
 import org.infinispan.query.dsl.QueryFactory;
 
@@ -49,11 +51,8 @@ import java.util.stream.Collectors;
 import static org.hawkular.alerts.api.util.Util.isEmpty;
 import static org.hawkular.alerts.engine.impl.ispn.IspnPk.pk;
 import static org.hawkular.alerts.engine.impl.ispn.IspnPk.pkFromEventId;
-import static org.hawkular.alerts.engine.util.Utils.extractAlertIds;
 import static org.hawkular.alerts.engine.util.Utils.extractCategories;
 import static org.hawkular.alerts.engine.util.Utils.extractEventIds;
-import static org.hawkular.alerts.engine.util.Utils.extractSeverity;
-import static org.hawkular.alerts.engine.util.Utils.extractStatus;
 import static org.hawkular.alerts.engine.util.Utils.extractTriggerIds;
 
 /**
@@ -75,6 +74,8 @@ public class IspnAlertsServiceImpl implements AlertsService {
 
     QueryFactory queryFactory;
 
+    SearchManager searchManager;
+
     long eventLifespanInHours;
     long alertsLifespanInHours;
 
@@ -90,6 +91,7 @@ public class IspnAlertsServiceImpl implements AlertsService {
             throw new RuntimeException("backend cache not found");
         }
         queryFactory = Search.getQueryFactory(backend);
+        searchManager = Search.getSearchManager(backend);
     }
 
     public void setAlertsEngine(AlertsEngine alertsEngine) {
@@ -334,153 +336,74 @@ public class IspnAlertsServiceImpl implements AlertsService {
         if (isEmpty(tenantIds)) {
             throw new IllegalArgumentException("TenantIds must be not null");
         }
-        boolean filter = (null != criteria && criteria.hasCriteria());
-        if (filter && log.isDebugEnabled()) {
-            log.debugf("getAlerts criteria: %s", criteria.toString());
+
+        //////
+//        List<IspnTrigger> triggers;
+//        if (criteria != null && criteria.hasCriteria()) {
+//            org.hibernate.search.query.dsl.QueryBuilder queryBuilder = searchManager.buildQueryBuilderForClass(IspnTrigger.class).get();
+//            org.apache.lucene.search.Query tenantQuery = queryBuilder.keyword().onField("tenantId").matching(tenantId).createQuery();
+//
+//            org.apache.lucene.search.Query values = HibernateSearchQueryCreator.evaluate(queryBuilder, criteria.getQuery());
+//
+//            org.apache.lucene.search.Query finalQuery = queryBuilder.bool().must(tenantQuery).must(values).createQuery();
+//
+//            CacheQuery<IspnTrigger> query = searchManager.getQuery(finalQuery, IspnTrigger.class);
+//            triggers = query.list();
+//        } else {
+//            triggers = queryFactory.from(IspnTrigger.class)
+//                    .having("tenantId")
+//                    .eq(tenantId)
+//                    .build()
+//                    .list();
+//        }
+        //////
+
+        if(criteria == null) {
+            criteria = new AlertsCriteria();
         }
 
-        StringBuilder query = new StringBuilder("from org.hawkular.alerts.engine.impl.ispn.model.IspnEvent where ");
-        query.append("eventType = 'ALERT' and ");
-        query.append("(");
-        Iterator<String> iter = tenantIds.iterator();
-        while (iter.hasNext()) {
-            String tenantId = iter.next();
-            query.append("tenantId = '").append(tenantId).append("' ");
-            if (iter.hasNext()) {
-                query.append("or ");
-            }
+        // Set the query starting point to the earliest retention time to prevent incorrect
+        // return of the Query maxResults
+        long earliestRetentionTime = Instant.now().minus(alertsLifespanInHours, ChronoUnit.HOURS).toEpochMilli();
+
+        if(criteria.getStartTime() == null || criteria.getStartTime() < earliestRetentionTime) {
+            criteria.setStartTime(earliestRetentionTime);
         }
-        query.append(") ");
 
-        if (filter) {
-           if (criteria.hasAlertIdCriteria()) {
-               query.append("and (");
-               iter = extractAlertIds(criteria).iterator();
-               while (iter.hasNext()) {
-                   String alertId = iter.next();
-                   query.append("id = '").append(alertId).append("' ");
-                   if (iter.hasNext()) {
-                       query.append("or ");
-                   }
-               }
-               query.append(") ");
-           }
-           if (criteria.hasTagQueryCriteria()) {
-               query.append("and (tags : ");
-//               parseTagQuery(criteria.getTagQuery(), query);
-               query.append(") ");
-           }
-           if (criteria.hasTriggerIdCriteria()) {
-                query.append("and (");
-                iter = extractTriggerIds(criteria).iterator();
-                while (iter.hasNext()) {
-                    String triggerId = iter.next();
-                    query.append("triggerId = '").append(triggerId).append("' ");
-                    if (iter.hasNext()) {
-                        query.append("or ");
-                    }
-                }
-                query.append(") ");
-           }
-           // Set the query starting point to the earliest retention time to prevent incorrect
-           // return of the Query maxResults
-           long earliestRetentionTime = Instant.now().minus(alertsLifespanInHours, ChronoUnit.HOURS).toEpochMilli();
-
-           if(criteria.getStartTime() == null || criteria.getStartTime() < earliestRetentionTime) {
-               criteria.setStartTime(earliestRetentionTime);
-           }
-
-           if (criteria.hasCTimeCriteria()) {
-                query.append("and (");
-                if (criteria.getStartTime() != null) {
-                    query.append("ctime >= ").append(criteria.getStartTime()).append(" ");
-                }
-                if (criteria.getEndTime() != null) {
-                    if (criteria.getStartTime() != null) {
-                        query.append("and ");
-                    }
-                    query.append("ctime <= ").append(criteria.getEndTime()).append(" ");
-                }
-                query.append(") ");
-           }
-           if (criteria.hasResolvedTimeCriteria()) {
-               query.append("and (status = '").append(Status.RESOLVED.name()).append("' and ");
-               if (criteria.getStartResolvedTime() != null) {
-                   query.append("stime >= ").append(criteria.getStartResolvedTime()).append(" ");
-               }
-               if (criteria.getEndResolvedTime() != null) {
-                   if (criteria.getStartResolvedTime() != null) {
-                       query.append("and ");
-                   }
-                   query.append("stime <= ").append(criteria.getEndResolvedTime()).append(" ");
-               }
-               query.append(") ");
-           }
-           if (criteria.hasAckTimeCriteria()) {
-               query.append("and (status = '").append(Status.ACKNOWLEDGED.name()).append("' and ");
-               if (criteria.getStartAckTime() != null) {
-                   query.append("stime >= ").append(criteria.getStartAckTime()).append(" ");
-               }
-               if (criteria.getEndAckTime() != null) {
-                   if (criteria.getStartAckTime() != null) {
-                       query.append("and ");
-                   }
-                   query.append("stime <= ").append(criteria.getEndAckTime()).append(" ");
-               }
-               query.append(") ");
-           }
-           if (criteria.hasStatusTimeCriteria()) {
-               query.append("and (");
-               if (criteria.getStartStatusTime() != null) {
-                   query.append("stime >= ").append(criteria.getStartStatusTime()).append(" ");
-               }
-               if (criteria.getEndTime() != null) {
-                   if (criteria.getStartTime() != null) {
-                       query.append("and ");
-                   }
-                   query.append("stime <= ").append(criteria.getEndStatusTime()).append(" ");
-               }
-               query.append(") ");
-           }
-           if (criteria.hasSeverityCriteria()) {
-               query.append("and (");
-                Iterator<Severity> iterSev = extractSeverity(criteria).iterator();
-               while (iterSev.hasNext()) {
-                   Severity severity = iterSev.next();
-                   query.append("severity = '").append(severity.name()).append("' ");
-                   if (iterSev.hasNext()) {
-                       query.append(" or ");
-                   }
-               }
-               query.append(") ");
-           }
-           if (criteria.hasStatusCriteria()) {
-               query.append("and (");
-               Iterator<Status> iterStatus = extractStatus(criteria).iterator();
-               while (iterStatus.hasNext()) {
-                   Status status = iterStatus.next();
-                   query.append("status = '").append(status.name()).append("' ");
-                   if (iterStatus.hasNext()) {
-                       query.append(" or ");
-                   }
-               }
-               query.append(") ");
-           }
+        org.hibernate.search.query.dsl.QueryBuilder queryBuilder = searchManager.buildQueryBuilderForClass(IspnEvent.class).get();
+        // TODO Remove multi-tenant fetching from function
+        org.apache.lucene.search.Query tenantQuery = queryBuilder.keyword().onField("tenantId").matching(tenantIds.iterator().next()).createQuery();
+        // TODO Add alerts only searching
+        org.apache.lucene.search.Query typeQuery = queryBuilder.keyword().onField("eventType").matching("ALERT").createQuery();
+        org.apache.lucene.search.Query criteriaQuery = HibernateSearchQueryCreator.evaluate(queryBuilder, criteria.getQuery());
+        if(criteria.hasTagQueryCriteria()) {
+            org.apache.lucene.search.Query tagsQuery = HibernateSearchQueryCreator.evaluate(queryBuilder, criteria.getTagQuery());
+            System.out.printf("Parsed tags query\n");
         }
+        org.apache.lucene.search.Query finalQuery = queryBuilder.bool().must(tenantQuery).must(typeQuery).must(criteriaQuery).createQuery();
+
+       CacheQuery<IspnEvent> query = searchManager.getQuery(finalQuery, IspnEvent.class);
+       // Add paging support here
+
+        List<IspnEvent> ispnEvents = query.list();
+//        return new Page(query.list(), pager, 1000);
+/*
+        Page<IspnEvent> list = query.list();
 
         Page<IspnEvent> ispnEvents = getEventItems(query, pager);
+*/
         List<Alert> alerts = ispnEvents.stream().map(ispnEvent -> {
-            if (criteria != null && criteria.isThin()) {
-                Alert alert = new Alert((Alert) ispnEvent.getEvent());
-                alert.setDampening(null);
-                alert.setEvalSets(null);
-                alert.setResolvedEvalSets(null);
-                return alert;
-            }
+//            if (criteria != null && criteria.isThin()) {
+//                Alert alert = new Alert((Alert) ispnEvent.getEvent());
+//                alert.setDampening(null);
+//                alert.setEvalSets(null);
+//                alert.setResolvedEvalSets(null);
+//                return alert;
+//            }
             return (Alert) ispnEvent.getEvent();
         }).collect(Collectors.toList());
 
-        return preparePage(alerts, pager, ispnEvents.getTotalSize());
+        return preparePage(alerts, pager, ispnEvents.size());
     }
 
     private Page<IspnEvent> getEventItems(StringBuilder builder, Pager pager) {
@@ -595,11 +518,11 @@ public class IspnAlertsServiceImpl implements AlertsService {
                 }
                 query.append(") ");
             }
-            if (criteria.hasTagQueryCriteria()) {
-                query.append("and (tags : ");
-//                parseTagQuery(criteria.getTagQuery(), query);
-                query.append(") ");
-            }
+//            if (criteria.hasTagQueryCriteria()) {
+//                query.append("and (tags : ");
+////                parseTagQuery(criteria.getTagQuery(), query);
+//                query.append(") ");
+//            }
             if (criteria.hasTriggerIdCriteria()) {
                 query.append("and (");
                 iter = extractTriggerIds(criteria).iterator();

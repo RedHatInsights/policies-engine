@@ -140,7 +140,7 @@ public class AlertComparator implements Comparator<Alert> {
                 if (!o1.getTags().containsKey(contextKey) && !o2.getTags().containsKey(contextKey)) {
                     return -1;
                 }
-                return o1.getTags().get(contextKey).compareTo(o2.getTags().get(contextKey)) * iOrder;
+                return (o1.getTags().get(contextKey).contains(o2.getTags().get(contextKey)) ? 0 : -1) * iOrder;
             case CONTEXT:
                 if (o1.getContext() == null && o2.getContext() == null) {
                     return 0;

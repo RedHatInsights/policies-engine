@@ -285,29 +285,6 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
             return true;
         }
 
-        static BigDecimal convertToBigDecimal(Object targetValue) {
-            BigDecimal targetValueDecimal = null;
-
-            if(targetValue instanceof Long) {
-                targetValueDecimal = new BigDecimal((Long) targetValue);
-            } else if(targetValue instanceof Double) {
-                targetValueDecimal = BigDecimal.valueOf((Double) targetValue);
-            } else if(targetValue instanceof Float) {
-                targetValueDecimal = BigDecimal.valueOf((Float) targetValue);
-            } else if(targetValue instanceof Integer) {
-                targetValueDecimal = new BigDecimal((Integer) targetValue);
-            } else if(targetValue instanceof String) {
-                // Do String comparison
-                try {
-                    targetValueDecimal = new BigDecimal(cleanString(targetValue.toString()));
-                } catch (NumberFormatException e) {
-                    // Only allow String comparison operators
-                    targetValueDecimal = null;
-                }
-            }
-            return targetValueDecimal;
-        }
-
         static boolean numericCompare(BigDecimal decimalValue, BigDecimal targetValueDecimal, ExpressionParser.Numeric_compare_operatorContext op) {
             if(op.GT() != null) {
                 return decimalValue.compareTo(targetValueDecimal) < 0;
@@ -385,6 +362,29 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
             return anyMatch;
         }
 
+    }
+
+    public static BigDecimal convertToBigDecimal(Object targetValue) {
+        BigDecimal targetValueDecimal = null;
+
+        if(targetValue instanceof Long) {
+            targetValueDecimal = new BigDecimal((Long) targetValue);
+        } else if(targetValue instanceof Double) {
+            targetValueDecimal = BigDecimal.valueOf((Double) targetValue);
+        } else if(targetValue instanceof Float) {
+            targetValueDecimal = BigDecimal.valueOf((Float) targetValue);
+        } else if(targetValue instanceof Integer) {
+            targetValueDecimal = new BigDecimal((Integer) targetValue);
+        } else if(targetValue instanceof String) {
+            // Do String comparison
+            try {
+                targetValueDecimal = new BigDecimal(cleanString(targetValue.toString()));
+            } catch (NumberFormatException e) {
+                // Only allow String comparison operators
+                targetValueDecimal = null;
+            }
+        }
+        return targetValueDecimal;
     }
 
     public static String valueToString(ExpressionParser.ValueContext value) {

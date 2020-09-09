@@ -91,28 +91,6 @@ public class Utils {
         return triggerIds;
     }
 
-    public static Set<Severity> extractSeverity(AlertsCriteria criteria) {
-        Set<Severity> severities = new HashSet<>();
-        if (criteria.getSeverity() != null) {
-            severities.add(criteria.getSeverity());
-        }
-        if (!isEmpty(criteria.getSeverities())) {
-            severities.addAll(criteria.getSeverities());
-        }
-        return severities;
-    }
-
-    public static Set<Status> extractStatus(AlertsCriteria criteria) {
-        Set<Status> statuses = new HashSet<>();
-        if (criteria.getStatus() != null) {
-            statuses.add(criteria.getStatus());
-        }
-        if (!isEmpty(criteria.getStatusSet())) {
-            statuses.addAll(criteria.getStatusSet());
-        }
-        return statuses;
-    }
-
     public static Set<String> extractCategories(EventsCriteria criteria) {
         Set<String> categories = new HashSet<>();
         if (!isEmpty(criteria.getCategory())) {
@@ -134,16 +112,4 @@ public class Utils {
         }
         return eventIds;
     }
-
-    public static Set<String> extractAlertIds(AlertsCriteria criteria) {
-        Set<String> alertIds = new HashSet<>();
-        if (!isEmpty(criteria.getAlertId())) {
-            alertIds.add(criteria.getAlertId());
-        }
-        if (!isEmpty(criteria.getAlertIds())) {
-            alertIds.addAll(criteria.getAlertIds());
-        }
-        return alertIds;
-    }
-
 }

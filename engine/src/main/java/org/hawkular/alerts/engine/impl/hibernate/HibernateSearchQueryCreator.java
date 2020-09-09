@@ -1,22 +1,31 @@
 package org.hawkular.alerts.engine.impl.hibernate;
 
-import com.redhat.cloud.policies.api.model.condition.expression.ExprParser;
 import com.redhat.cloud.policies.api.model.condition.expression.parser.ExpressionBaseVisitor;
 import com.redhat.cloud.policies.api.model.condition.expression.parser.ExpressionLexer;
 import com.redhat.cloud.policies.api.model.condition.expression.parser.ExpressionParser;
-import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.ANTLRErrorListener;
+import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.Parser;
+import org.antlr.v4.runtime.RecognitionException;
+import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.atn.ATNConfigSet;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.lucene.search.Query;
-import org.hibernate.search.query.dsl.*;
+import org.hibernate.search.query.dsl.BooleanJunction;
+import org.hibernate.search.query.dsl.QueryBuilder;
+import org.hibernate.search.query.dsl.RangeMatchingContext;
 
 import java.util.BitSet;
-
-import static com.redhat.cloud.policies.api.model.condition.expression.ExprParser.valueToString;
+import java.util.regex.Pattern;
 
 public class HibernateSearchQueryCreator extends ExpressionBaseVisitor<Query> {
+
+    private static final Pattern ESCAPE_CLEANER_REGEXP = Pattern.compile("^(['\"])(.*)\\1$");
+
     static ParseTree createParserTree(String expression, ANTLRErrorListener errorListener) {
         CharStream cs = CharStreams.fromString(expression);
         ExpressionLexer lexer = new ExpressionLexer(cs);
@@ -145,6 +154,7 @@ public class HibernateSearchQueryCreator extends ExpressionBaseVisitor<Query> {
             if (ctx.boolean_operator() != null) {
                 final ExpressionParser.Boolean_operatorContext op = ctx.boolean_operator();
                 if (op.EQUAL() != null) {
+                    System.out.printf("Comparing: %s = %s\n", field, strValue);
                     return builder.keyword().onField(field).ignoreFieldBridge().matching(strValue).createQuery();
                 } else if (op.NOTEQUAL() != null) {
                     return builder.bool().must(builder.keyword().onField(field).ignoreFieldBridge().matching(strValue).createQuery()).not().createQuery();
@@ -164,6 +174,22 @@ public class HibernateSearchQueryCreator extends ExpressionBaseVisitor<Query> {
                 }
             }
 
+            if(ctx.numeric_compare_operator() != null) {
+                ExpressionParser.Numeric_compare_operatorContext op = ctx.numeric_compare_operator();
+                Long targetValue = Long.valueOf(strValue);
+                RangeMatchingContext range = builder.range().onField(field);
+                // double / long / integer?
+                if(op.GT() != null) {
+                    return range.from(targetValue).excludeLimit().to(Long.MAX_VALUE).createQuery();
+                } else if(op.GTE() != null) {
+                    return range.from(targetValue).to(Long.MAX_VALUE).createQuery();
+                } else if(op.LT() != null) {
+                    return range.from(0L).to(targetValue).excludeLimit().createQuery();
+                } else if(op.LTE() != null) {
+                    return range.from(0L).to(targetValue).createQuery();
+                }
+            }
+
             if(ctx.string_compare_operator() != null) {
                 ExpressionParser.String_compare_operatorContext op = ctx.string_compare_operator();
                 if (op.MATCHES() != null) {
@@ -176,4 +202,22 @@ public class HibernateSearchQueryCreator extends ExpressionBaseVisitor<Query> {
             return builder.keyword().onField(field).matching("true").createQuery();
         }
     }
+
+    // These are repeated from ExprParser - with one change, these are not case-insensitive.
+    // TODO Should we create different analyzer to get lowerCase indexed?
+
+    public static String valueToString(ExpressionParser.ValueContext value) {
+        String strValue = null;
+        if (value.STRING() != null) {
+            strValue = value.STRING().getSymbol().getText();
+            strValue = cleanString(strValue);
+        }
+
+        return strValue;
+    }
+
+    static String cleanString(String strValue) {
+        return ESCAPE_CLEANER_REGEXP.matcher(strValue).replaceAll("$2");
+    }
+
 }
