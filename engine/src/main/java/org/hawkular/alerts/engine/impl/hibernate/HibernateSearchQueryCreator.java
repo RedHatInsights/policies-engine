@@ -74,6 +74,7 @@ public class HibernateSearchQueryCreator extends ExpressionBaseVisitor<Query> {
     static class QueryVisitor extends ExpressionBaseVisitor<Query> {
         QueryBuilder builder;
 
+        // TODO We could add the type here to check the field's name - or if it's a correct field at all
         public QueryVisitor(QueryBuilder builder) {
             this.builder = builder;
         }
@@ -154,7 +155,6 @@ public class HibernateSearchQueryCreator extends ExpressionBaseVisitor<Query> {
             if (ctx.boolean_operator() != null) {
                 final ExpressionParser.Boolean_operatorContext op = ctx.boolean_operator();
                 if (op.EQUAL() != null) {
-                    System.out.printf("Comparing: %s = %s\n", field, strValue);
                     return builder.keyword().onField(field).ignoreFieldBridge().matching(strValue).createQuery();
                 } else if (op.NOTEQUAL() != null) {
                     return builder.bool().must(builder.keyword().onField(field).ignoreFieldBridge().matching(strValue).createQuery()).not().createQuery();
@@ -199,6 +199,13 @@ public class HibernateSearchQueryCreator extends ExpressionBaseVisitor<Query> {
 
             // In must be transformed to multiple or
 
+            // Check depends on the type
+            // For example:
+            if(field.startsWith("tags.")) {
+                // Check existence only:
+                return builder.keyword().wildcard().onField(field).ignoreFieldBridge().matching("*").createQuery();
+            }
+            // Enabled, should check for boolean etc. Sadly we don't have the type here..
             return builder.keyword().onField(field).matching("true").createQuery();
         }
     }

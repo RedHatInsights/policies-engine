@@ -30,7 +30,10 @@ public class IspnEvent implements Serializable {
     @SortableField
     private String id;
 
-    @Field(store = Store.YES, analyze = Analyze.YES)
+//    @Field(store = Store.YES, analyze = Analyze.YES, name = "")
+//    @FieldBridge(impl = TagsBridge.class)
+    @Field(name = "")
+//    @Field(name = "", store = Store.YES, analyze = Analyze.NO)
     @FieldBridge(impl = TagsBridge.class)
     private Multimap<String, String> tags;
 

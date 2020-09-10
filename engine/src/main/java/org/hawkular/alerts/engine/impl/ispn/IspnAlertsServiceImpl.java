@@ -29,6 +29,7 @@ import org.hawkular.alerts.engine.service.AlertsEngine;
 import org.hawkular.alerts.engine.service.IncomingDataManager;
 import org.hawkular.alerts.log.AlertingLogger;
 import org.hawkular.alerts.log.MsgLogging;
+import org.hibernate.search.query.dsl.MustJunction;
 import org.infinispan.Cache;
 import org.infinispan.query.CacheQuery;
 import org.infinispan.query.Search;
@@ -376,11 +377,12 @@ public class IspnAlertsServiceImpl implements AlertsService {
         // TODO Add alerts only searching
         org.apache.lucene.search.Query typeQuery = queryBuilder.keyword().onField("eventType").matching("ALERT").createQuery();
         org.apache.lucene.search.Query criteriaQuery = HibernateSearchQueryCreator.evaluate(queryBuilder, criteria.getQuery());
+        MustJunction rulesPart = queryBuilder.bool().must(tenantQuery).must(typeQuery).must(criteriaQuery);
         if(criteria.hasTagQueryCriteria()) {
             org.apache.lucene.search.Query tagsQuery = HibernateSearchQueryCreator.evaluate(queryBuilder, criteria.getTagQuery());
-            System.out.printf("Parsed tags query\n");
+            rulesPart = rulesPart.must(tagsQuery);
         }
-        org.apache.lucene.search.Query finalQuery = queryBuilder.bool().must(tenantQuery).must(typeQuery).must(criteriaQuery).createQuery();
+        org.apache.lucene.search.Query finalQuery = rulesPart.createQuery();
 
        CacheQuery<IspnEvent> query = searchManager.getQuery(finalQuery, IspnEvent.class);
        // Add paging support here
