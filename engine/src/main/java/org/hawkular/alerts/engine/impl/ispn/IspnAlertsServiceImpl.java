@@ -1,5 +1,6 @@
 package org.hawkular.alerts.engine.impl.ispn;
 
+import org.apache.lucene.search.Sort;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.hawkular.alerts.api.model.Note;
 import org.hawkular.alerts.api.model.condition.ConditionEval;
@@ -30,6 +31,7 @@ import org.hawkular.alerts.engine.service.IncomingDataManager;
 import org.hawkular.alerts.log.AlertingLogger;
 import org.hawkular.alerts.log.MsgLogging;
 import org.hibernate.search.query.dsl.MustJunction;
+import org.hibernate.search.query.dsl.sort.SortFieldContext;
 import org.infinispan.Cache;
 import org.infinispan.query.CacheQuery;
 import org.infinispan.query.Search;
@@ -338,27 +340,6 @@ public class IspnAlertsServiceImpl implements AlertsService {
             throw new IllegalArgumentException("TenantIds must be not null");
         }
 
-        //////
-//        List<IspnTrigger> triggers;
-//        if (criteria != null && criteria.hasCriteria()) {
-//            org.hibernate.search.query.dsl.QueryBuilder queryBuilder = searchManager.buildQueryBuilderForClass(IspnTrigger.class).get();
-//            org.apache.lucene.search.Query tenantQuery = queryBuilder.keyword().onField("tenantId").matching(tenantId).createQuery();
-//
-//            org.apache.lucene.search.Query values = HibernateSearchQueryCreator.evaluate(queryBuilder, criteria.getQuery());
-//
-//            org.apache.lucene.search.Query finalQuery = queryBuilder.bool().must(tenantQuery).must(values).createQuery();
-//
-//            CacheQuery<IspnTrigger> query = searchManager.getQuery(finalQuery, IspnTrigger.class);
-//            triggers = query.list();
-//        } else {
-//            triggers = queryFactory.from(IspnTrigger.class)
-//                    .having("tenantId")
-//                    .eq(tenantId)
-//                    .build()
-//                    .list();
-//        }
-        //////
-
         if(criteria == null) {
             criteria = new AlertsCriteria();
         }
@@ -384,28 +365,53 @@ public class IspnAlertsServiceImpl implements AlertsService {
         }
         org.apache.lucene.search.Query finalQuery = rulesPart.createQuery();
 
-       CacheQuery<IspnEvent> query = searchManager.getQuery(finalQuery, IspnEvent.class);
-       // Add paging support here
+        CacheQuery<IspnEvent> query = searchManager.getQuery(finalQuery, IspnEvent.class);
+
+        if (pager != null) {
+            if (pager.getOrder() != null && !pager.getOrder().isEmpty() && pager.getOrder().get(0).isSpecific()) {
+                String field = "id";
+                if (AlertComparator.Field.CTIME.getText().equals(pager.getOrder().get(0).getField())) {
+                    // The generated alert ids include ctime, so this should sort them correctly
+                    field = "ctime";
+                }
+                SortFieldContext sortField = queryBuilder.sort()
+                        .byField(field);
+
+                if (pager.getOrder().get(0).getDirection() == Order.Direction.DESCENDING) {
+                    sortField = sortField.desc();
+                } else {
+                    sortField = sortField.asc();
+                }
+                query = query.sort(sortField.createSort());
+            }
+
+            // Do limitations at Infinispan level if possible
+            if(isServerSideSorted(pager)) {
+                if (pager.getStart() > 0) {
+                    query = query.firstResult(pager.getStart());
+                }
+                if (pager.getPageSize() != PageContext.UNLIMITED_PAGE_SIZE) {
+                    query = query.maxResults(pager.getPageSize());
+                }
+            }
+        }
 
         List<IspnEvent> ispnEvents = query.list();
-//        return new Page(query.list(), pager, 1000);
-/*
-        Page<IspnEvent> list = query.list();
 
-        Page<IspnEvent> ispnEvents = getEventItems(query, pager);
-*/
+        // TODO Replace with projection?
+        final boolean thinAlerts = criteria.isThin();
         List<Alert> alerts = ispnEvents.stream().map(ispnEvent -> {
-//            if (criteria != null && criteria.isThin()) {
-//                Alert alert = new Alert((Alert) ispnEvent.getEvent());
-//                alert.setDampening(null);
-//                alert.setEvalSets(null);
-//                alert.setResolvedEvalSets(null);
-//                return alert;
-//            }
+            if (thinAlerts) {
+                Alert alert = new Alert((Alert) ispnEvent.getEvent());
+                alert.setDampening(null);
+                alert.setEvalSets(null);
+                alert.setResolvedEvalSets(null);
+                return alert;
+            }
             return (Alert) ispnEvent.getEvent();
         }).collect(Collectors.toList());
 
-        return preparePage(alerts, pager, ispnEvents.size());
+        return preparePage(alerts, pager, query.getResultSize());
     }
 
     private Page<IspnEvent> getEventItems(StringBuilder builder, Pager pager) {
