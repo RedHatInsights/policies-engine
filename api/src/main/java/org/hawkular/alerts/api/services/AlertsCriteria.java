@@ -94,11 +94,6 @@ public class AlertsCriteria {
             }
             query.append(") ");
         }
-//        if (this.hasTagQueryCriteria()) {
-//            query.append("and (tags : ");
-////               parseTagQuery(this.getTagQuery(), query);
-//            query.append(") ");
-//        }
         if (this.hasTriggerIdCriteria()) {
             query.append("and (");
             Iterator<String> iter = extractTriggerIds(this).iterator();

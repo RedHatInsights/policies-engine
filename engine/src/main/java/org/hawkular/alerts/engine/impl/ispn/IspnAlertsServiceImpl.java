@@ -54,9 +54,6 @@ import java.util.stream.Collectors;
 import static org.hawkular.alerts.api.util.Util.isEmpty;
 import static org.hawkular.alerts.engine.impl.ispn.IspnPk.pk;
 import static org.hawkular.alerts.engine.impl.ispn.IspnPk.pkFromEventId;
-import static org.hawkular.alerts.engine.util.Utils.extractCategories;
-import static org.hawkular.alerts.engine.util.Utils.extractEventIds;
-import static org.hawkular.alerts.engine.util.Utils.extractTriggerIds;
 
 /**
  * @author Jay Shaughnessy
@@ -356,9 +353,11 @@ public class IspnAlertsServiceImpl implements AlertsService {
         // TODO Remove multi-tenant fetching from function
         org.apache.lucene.search.Query tenantQuery = queryBuilder.keyword().onField("tenantId").matching(tenantIds.iterator().next()).createQuery();
         // TODO Add alerts only searching
+
         org.apache.lucene.search.Query typeQuery = queryBuilder.keyword().onField("eventType").matching("ALERT").createQuery();
         org.apache.lucene.search.Query criteriaQuery = HibernateSearchQueryCreator.evaluate(queryBuilder, criteria.getQuery());
         MustJunction rulesPart = queryBuilder.bool().must(tenantQuery).must(typeQuery).must(criteriaQuery);
+
         if(criteria.hasTagQueryCriteria()) {
             org.apache.lucene.search.Query tagsQuery = HibernateSearchQueryCreator.evaluate(queryBuilder, criteria.getTagQuery());
             rulesPart = rulesPart.must(tagsQuery);
@@ -414,55 +413,55 @@ public class IspnAlertsServiceImpl implements AlertsService {
         return preparePage(alerts, pager, query.getResultSize());
     }
 
-    private Page<IspnEvent> getEventItems(StringBuilder builder, Pager pager) {
-        // Parse and do the first ordering at the Infinispan level (for @SortableFields)
-        if (pager != null && pager.getOrder() != null && !pager.getOrder().isEmpty() && pager.getOrder().get(0).isSpecific()) {
-            log.debugf("Pager: %s", pager.toString());
-            builder.append("ORDER BY ");
-
-            if (AlertComparator.Field.ALERT_ID.getText().equals(pager.getOrder().get(0).getField())) {
-                builder.append("id ");
-            } else if (AlertComparator.Field.CTIME.getText().equals(pager.getOrder().get(0).getField())) {
-                // The generated alert ids include ctime, so this should sort them correctly
-                builder.append("ctime ");
-            } else {
-                builder.append("id ");
-            }
-
-            if (pager.getOrder().get(0).getDirection() == Order.Direction.DESCENDING) {
-                builder.append("DESC");
-            } else {
-                builder.append("ASC");
-            }
-        } else {
-            // Force id sorting by DESCENDING (newest events / alerts first) to be the natural order
-            builder.append("ORDER BY ctime DESC");
-        }
-
-        Query parsedQuery = queryFactory.create(builder.toString());
-        long totalSize = parsedQuery.getResultSize();
-
-        // Do limitations at Infinispan level if possible
-        if(pager != null) {
-//            // If we sort outside the ISPN, we need to also filter result set outside
-            if(isServerSideSorted(pager)) {
-                // We need to create a new one, as ISPN would otherwise just reuse the previous results,
-                // not applying the paging
-                parsedQuery = queryFactory.create(builder.toString());
-                if (pager.getStart() > 0) {
-                    parsedQuery.startOffset(pager.getStart());
-                }
-                if (pager.getPageSize() != PageContext.UNLIMITED_PAGE_SIZE) {
-                    parsedQuery.maxResults(pager.getPageSize());
-                }
-            }
-        }
-        if(log.isDebugEnabled()) {
-            log.debugf("ParsedQuery: %s, maxResults: %d, startOffset: %d", parsedQuery.getQueryString(), parsedQuery.getMaxResults(), parsedQuery.getStartOffset());
-        }
-
-        return new Page(parsedQuery.list(), pager, totalSize);
-    }
+//    private Page<IspnEvent> getEventItems(StringBuilder builder, Pager pager) {
+//        // Parse and do the first ordering at the Infinispan level (for @SortableFields)
+//        if (pager != null && pager.getOrder() != null && !pager.getOrder().isEmpty() && pager.getOrder().get(0).isSpecific()) {
+//            log.debugf("Pager: %s", pager.toString());
+//            builder.append("ORDER BY ");
+//
+//            if (AlertComparator.Field.ALERT_ID.getText().equals(pager.getOrder().get(0).getField())) {
+//                builder.append("id ");
+//            } else if (AlertComparator.Field.CTIME.getText().equals(pager.getOrder().get(0).getField())) {
+//                // The generated alert ids include ctime, so this should sort them correctly
+//                builder.append("ctime ");
+//            } else {
+//                builder.append("id ");
+//            }
+//
+//            if (pager.getOrder().get(0).getDirection() == Order.Direction.DESCENDING) {
+//                builder.append("DESC");
+//            } else {
+//                builder.append("ASC");
+//            }
+//        } else {
+//            // Force id sorting by DESCENDING (newest events / alerts first) to be the natural order
+//            builder.append("ORDER BY ctime DESC");
+//        }
+//
+//        Query parsedQuery = queryFactory.create(builder.toString());
+//        long totalSize = parsedQuery.getResultSize();
+//
+//        // Do limitations at Infinispan level if possible
+//        if(pager != null) {
+////            // If we sort outside the ISPN, we need to also filter result set outside
+//            if(isServerSideSorted(pager)) {
+//                // We need to create a new one, as ISPN would otherwise just reuse the previous results,
+//                // not applying the paging
+//                parsedQuery = queryFactory.create(builder.toString());
+//                if (pager.getStart() > 0) {
+//                    parsedQuery.startOffset(pager.getStart());
+//                }
+//                if (pager.getPageSize() != PageContext.UNLIMITED_PAGE_SIZE) {
+//                    parsedQuery.maxResults(pager.getPageSize());
+//                }
+//            }
+//        }
+//        if(log.isDebugEnabled()) {
+//            log.debugf("ParsedQuery: %s, maxResults: %d, startOffset: %d", parsedQuery.getQueryString(), parsedQuery.getMaxResults(), parsedQuery.getStartOffset());
+//        }
+//
+//        return new Page(parsedQuery.list(), pager, totalSize);
+//    }
 
     @Override
     public Event getEvent(String tenantId, String eventId, boolean thin) throws Exception {
@@ -488,100 +487,75 @@ public class IspnAlertsServiceImpl implements AlertsService {
         if (isEmpty(tenantIds)) {
             throw new IllegalArgumentException("TenantIds must be not null");
         }
-        boolean filter = (null != criteria && criteria.hasCriteria());
-        if (filter && log.isDebugEnabled()) {
-            log.debugf("getEvents criteria: %s", criteria.toString());
+
+        // TODO Catch SearchException, return 404.
+
+        if(criteria == null) {
+            criteria = new EventsCriteria();
         }
 
-        StringBuilder query = new StringBuilder("from org.hawkular.alerts.engine.impl.ispn.model.IspnEvent where ");
-        query.append("(");
-        Iterator<String> iter = tenantIds.iterator();
-        while (iter.hasNext()) {
-            String tenantId = iter.next();
-            query.append("tenantId = '").append(tenantId).append("' ");
-            if (iter.hasNext()) {
-                query.append("or ");
-            }
+        // Set the query starting point to the earliest retention time to prevent incorrect
+        // return of the Query maxResults
+        long earliestRetentionTime = Instant.now().minus(alertsLifespanInHours, ChronoUnit.HOURS).toEpochMilli();
+
+        if(criteria.getStartTime() == null || criteria.getStartTime() < earliestRetentionTime) {
+            criteria.setStartTime(earliestRetentionTime);
         }
-        query.append(") ");
 
-        if (filter) {
-            if (criteria.hasEventTypeCriteria()) {
-                try {
-                    EventType eventType = EventType.valueOf(criteria.getEventType());
-                    query.append("and eventType = '").append(eventType.name()).append("' ");
-                } catch (Exception e) {
-                    log.debugf("EventType [%s] is not valid, ignoring this criteria", criteria.getEventType());
-                }
-            }
-            if (criteria.hasEventIdCriteria()) {
-                query.append("and (");
-                iter = extractEventIds(criteria).iterator();
-                while (iter.hasNext()) {
-                    String eventId = iter.next();
-                    query.append("id = '").append(eventId).append("' ");
-                    if (iter.hasNext()) {
-                        query.append("or ");
-                    }
-                }
-                query.append(") ");
-            }
-//            if (criteria.hasTagQueryCriteria()) {
-//                query.append("and (tags : ");
-////                parseTagQuery(criteria.getTagQuery(), query);
-//                query.append(") ");
-//            }
-            if (criteria.hasTriggerIdCriteria()) {
-                query.append("and (");
-                iter = extractTriggerIds(criteria).iterator();
-                while (iter.hasNext()) {
-                    String triggerId = iter.next();
-                    query.append("triggerId = '").append(triggerId).append("' ");
-                    if (iter.hasNext()) {
-                        query.append("or ");
-                    }
-                }
-                query.append(") ");
-            }
+        org.hibernate.search.query.dsl.QueryBuilder queryBuilder = searchManager.buildQueryBuilderForClass(IspnEvent.class).get();
+        // TODO Remove multi-tenant fetching from function
+        org.apache.lucene.search.Query tenantQuery = queryBuilder.keyword().onField("tenantId").matching(tenantIds.iterator().next()).createQuery();
+        org.apache.lucene.search.Query criteriaQuery = HibernateSearchQueryCreator.evaluate(queryBuilder, criteria.getQuery());
+        MustJunction rulesPart = queryBuilder.bool().must(tenantQuery).must(criteriaQuery);
 
-            // Alerts are also events, so we need to pick the largest one. This does not prevent the error with maxResults sadly
-            long largestRetention = Math.max(alertsLifespanInHours, eventLifespanInHours);
-            long earliestRetentionTime = Instant.now().minus(largestRetention, ChronoUnit.HOURS).toEpochMilli();
+        if (criteria.hasEventTypeCriteria()) {
+            EventType eventType = EventType.valueOf(criteria.getEventType());
+            org.apache.lucene.search.Query typeQuery = queryBuilder.keyword().onField("eventType").matching(eventType.name()).createQuery();
+            rulesPart = rulesPart.must(typeQuery);
+        }
 
-            if(criteria.getStartTime() == null || criteria.getStartTime() < earliestRetentionTime) {
-                criteria.setStartTime(earliestRetentionTime);
+        if(criteria.hasTagQueryCriteria()) {
+            org.apache.lucene.search.Query tagsQuery = HibernateSearchQueryCreator.evaluate(queryBuilder, criteria.getTagQuery());
+            rulesPart = rulesPart.must(tagsQuery);
+        }
+        org.apache.lucene.search.Query finalQuery = rulesPart.createQuery();
+        System.out.println(finalQuery.toString());
+
+        CacheQuery<IspnEvent> query = searchManager.getQuery(finalQuery, IspnEvent.class);
+
+        if (pager != null) {
+            if (pager.getOrder() != null && !pager.getOrder().isEmpty() && pager.getOrder().get(0).isSpecific()) {
+                String field = "id";
+                if (AlertComparator.Field.CTIME.getText().equals(pager.getOrder().get(0).getField())) {
+                    // The generated alert ids include ctime, so this should sort them correctly
+                    field = "ctime";
+                }
+                SortFieldContext sortField = queryBuilder.sort()
+                        .byField(field);
+
+                if (pager.getOrder().get(0).getDirection() == Order.Direction.DESCENDING) {
+                    sortField = sortField.desc();
+                } else {
+                    sortField = sortField.asc();
+                }
+                query = query.sort(sortField.createSort());
             }
 
-            if (criteria.hasCTimeCriteria()) {
-                query.append("and (");
-                if (criteria.getStartTime() != null) {
-                    query.append("ctime >= ").append(criteria.getStartTime()).append(" ");
+            // Do limitations at Infinispan level if possible
+            if(isServerSideSorted(pager)) {
+                if (pager.getStart() > 0) {
+                    query = query.firstResult(pager.getStart());
                 }
-                if (criteria.getEndTime() != null) {
-                    if (criteria.getStartTime() != null) {
-                        query.append("and ");
-                    }
-                    query.append("ctime <= ").append(criteria.getEndTime()).append(" ");
+                if (pager.getPageSize() != PageContext.UNLIMITED_PAGE_SIZE) {
+                    query = query.maxResults(pager.getPageSize());
                 }
-                query.append(") ");
-            }
-            if (criteria.hasCategoryCriteria()) {
-                query.append("and (");
-                iter = extractCategories(criteria).iterator();
-                while (iter.hasNext()) {
-                    String category = iter.next();
-                    query.append("category = '").append(category).append("' ");
-                    if (iter.hasNext()) {
-                        query.append(" or ");
-                    }
-                }
-                query.append(") ");
             }
         }
 
-        Page<IspnEvent> ispnEvents = getEventItems(query, pager);
+        List<IspnEvent> ispnEvents = query.list();
         List<Event> events = ispnEvents.stream().map(e -> e.getEvent()).collect(Collectors.toList());
-        return prepareEventsPage(events, pager, ispnEvents.getTotalSize());
+
+        return prepareEventsPage(events, pager, query.getResultSize());
     }
 
     @Override

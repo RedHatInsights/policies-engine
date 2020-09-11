@@ -1,9 +1,17 @@
 package org.hawkular.alerts.api.services;
 
+import org.hawkular.alerts.api.model.event.EventType;
+
 import static org.hawkular.alerts.api.util.Util.isEmpty;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 /**
  * Query criteria for fetching Alerts.
@@ -46,6 +54,110 @@ public class EventsCriteria {
             setThin(thin.booleanValue());
         }
         setEventType(eventType);
+    }
+
+    public String getQuery() {
+        StringBuilder query = new StringBuilder();
+        if (this.hasEventIdCriteria()) {
+            query.append("and (");
+            Iterator<String> iter = extractEventIds(this).iterator();
+            while (iter.hasNext()) {
+                String eventId = iter.next();
+                query.append("id = '").append(eventId).append("' ");
+                if (iter.hasNext()) {
+                    query.append("or ");
+                }
+            }
+            query.append(") ");
+        }
+        if (this.hasTriggerIdCriteria()) {
+            query.append("and (");
+            Iterator<String> iter = extractTriggerIds(this).iterator();
+            while (iter.hasNext()) {
+                String triggerId = iter.next();
+                query.append("triggerId = '").append(triggerId).append("' ");
+                if (iter.hasNext()) {
+                    query.append("or ");
+                }
+            }
+            query.append(") ");
+        }
+
+        if (this.hasCTimeCriteria()) {
+            query.append("and (");
+            if (this.getStartTime() != null) {
+                query.append("ctime >= ").append(this.getStartTime()).append(" ");
+            }
+            if (this.getEndTime() != null) {
+                if (this.getStartTime() != null) {
+                    query.append("and ");
+                }
+                query.append("ctime <= ").append(this.getEndTime()).append(" ");
+            }
+            query.append(") ");
+        }
+        if (this.hasCategoryCriteria()) {
+            query.append("and (");
+            Iterator<String> iter = extractCategories(this).iterator();
+            while (iter.hasNext()) {
+                String category = iter.next();
+                query.append("category = '").append(category).append("' ");
+                if (iter.hasNext()) {
+                    query.append(" or ");
+                }
+            }
+            query.append(") ");
+        }
+
+        String resultQuery = query.toString();
+        if(resultQuery.startsWith("and")) {
+            resultQuery = resultQuery.substring(4);
+        }
+        return resultQuery;
+    }
+
+    public static Set<String> extractTriggerIds(EventsCriteria criteria) {
+        boolean hasTriggerId = !isEmpty(criteria.getTriggerId());
+        boolean hasTriggerIds = !isEmpty(criteria.getTriggerIds());
+
+        Set<String> triggerIds = hasTriggerId || hasTriggerIds ? new HashSet<>() : Collections.emptySet();
+
+        if (!hasTriggerIds) {
+            if (hasTriggerId) {
+                triggerIds.add(criteria.getTriggerId());
+            }
+        } else {
+            for (String triggerId : criteria.getTriggerIds()) {
+                if (isEmpty(triggerId)) {
+                    continue;
+                }
+                triggerIds.add(triggerId);
+            }
+        }
+
+        return triggerIds;
+    }
+
+    public static Set<String> extractCategories(EventsCriteria criteria) {
+        Set<String> categories = new HashSet<>();
+        if (!isEmpty(criteria.getCategory())) {
+            categories.add(criteria.getCategory());
+        }
+        if (!isEmpty(criteria.getCategories())) {
+            categories.addAll(criteria.getCategories());
+        }
+        return categories;
+    }
+
+    public static Set<String> extractEventIds(EventsCriteria criteria) {
+        Set<String> eventIds = new HashSet<>();
+        if (!isEmpty(criteria.getEventId())) {
+            eventIds.add(criteria.getEventId());
+        }
+        if (!isEmpty(criteria.getEventIds())) {
+            eventIds.addAll(criteria.getEventIds());
+        }
+        return eventIds;
     }
 
     public Long getStartTime() {
