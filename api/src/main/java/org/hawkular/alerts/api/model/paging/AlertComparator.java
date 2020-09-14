@@ -128,7 +128,7 @@ public class AlertComparator implements Comparator<Alert> {
                 if (o1.getTags() == null && o2.getTags() == null) {
                     return 0;
                 }
-                if (o1.getTags().isEmpty() && o2.getTags().isEmpty()) {
+                if (o1.getTags().isEmpty() && o2.getTags().isEmpty() || (o1.getTags().isEmpty() != o2.getTags().isEmpty())) {
                     return 0;
                 }
                 if (!o1.getTags().containsKey(contextKey) && !o2.getTags().containsKey(contextKey)) {
@@ -141,8 +141,7 @@ public class AlertComparator implements Comparator<Alert> {
                     return -1;
                 }
                 // TODO How do we sort when there's two values for a single tag?
-
-                return (o1.getTags().get(contextKey).contains(o2.getTags().get(contextKey)) ? 0 : -1) * iOrder;
+                return o1.getTags().get(contextKey).iterator().next().compareTo(o2.getTags().get(contextKey).iterator().next()) * iOrder;
             case CONTEXT:
                 if (o1.getContext() == null && o2.getContext() == null) {
                     return 0;

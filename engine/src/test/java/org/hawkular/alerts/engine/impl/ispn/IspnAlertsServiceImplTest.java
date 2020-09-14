@@ -305,7 +305,7 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
         List<Alert> tag1Value10Alerts = alerts.getAlerts(tenantIds, criteria, null);
         assertEquals(0, tag1Value10Alerts.size());
 
-        criteria.setTagQuery("tags.xyztag1 or xyztag2");
+        criteria.setTagQuery("tags.xyztag1 or tags.xyztag2");
         List<Alert> tag1OrTag2Alerts = alerts.getAlerts(tenantIds, criteria, null);
         assertEquals(10, tag1OrTag2Alerts.size());
 
@@ -340,17 +340,16 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
 
         Set<String> tenantIds = new HashSet<>();
         tenantIds.add("tenant0");
-        tenantIds.add("tenant1");
 
         AlertsCriteria criteria = new AlertsCriteria();
         criteria.setTriggerId("trigger0");
 
         List<Alert> trigger0Alerts = alerts.getAlerts(tenantIds, criteria, null);
-        assertEquals(10, trigger0Alerts.size());
+        assertEquals(5, trigger0Alerts.size());
 
         criteria.setTriggerIds(Arrays.asList("trigger0", "trigger1", "trigger2"));
         List<Alert> trigger012Alerts = alerts.getAlerts(tenantIds, criteria, null);
-        assertEquals(30, trigger012Alerts.size());
+        assertEquals(15, trigger012Alerts.size());
 
         deleteTestAlerts(numTenants);
     }
