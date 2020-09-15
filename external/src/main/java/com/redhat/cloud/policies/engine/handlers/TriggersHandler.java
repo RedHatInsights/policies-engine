@@ -687,19 +687,13 @@ public class TriggersHandler {
                     String tenantId = ResponseUtil.checkTenant(routing);
                     try {
                         ResponseUtil.checkForUnknownQueryParams(routing.request().params(), queryParamValidationMap.get(FIND_TRIGGERS));
-                      Pager pager;
-                      try (Scope ignored = tracer.buildSpan("extractPaging").asChildOf(serverSpan).startActive(true)) {
-                          pager = ResponseUtil.extractPaging(routing.request().params());
+                        Pager pager = ResponseUtil.extractPaging(routing.request().params());
+                        TriggersCriteria criteria = buildCriteria(routing.request().params());
+                        Page<Trigger> triggerPage;
+                        try (Scope ignored = tracer.buildSpan("getTriggers").asChildOf(serverSpan).startActive(true)) {
+                            triggerPage = definitionsService.getTriggers(tenantId, criteria, pager);
                         }
-                        TriggersCriteria criteria;
-                      try (Scope ignored = tracer.buildSpan("buildCriteria").asChildOf(serverSpan).startActive(true)) {
-                        criteria = buildCriteria(routing.request().params());
-                      }
-                      Page<Trigger> triggerPage;
-                      try (Scope ignored = tracer.buildSpan("getTriggers").asChildOf(serverSpan).startActive(true)) {
-                        triggerPage = definitionsService.getTriggers(tenantId, criteria, pager);
-                      }
-                      log.debugf("Triggers: %s", triggerPage);
+                        log.debugf("Triggers: %s", triggerPage);
                         future.complete(triggerPage);
                     } catch (IllegalArgumentException e) {
                         throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
@@ -710,9 +704,9 @@ public class TriggersHandler {
                 }, res -> ResponseUtil.result(routing, res));
     }
 
-  private Span getServerSpan(RoutingContext routing) {
-    return routing.get("io.opentracing.contrib.vertx.ext.web.TracingHandler.severSpan");
-  }
+    private Span getServerSpan(RoutingContext routing) {
+        return routing.get("io.opentracing.contrib.vertx.ext.web.TracingHandler.severSpan");
+    }
 
   @DocPath(method = GET,
             path = "/{triggerId}/dampenings/{dampeningId}",
