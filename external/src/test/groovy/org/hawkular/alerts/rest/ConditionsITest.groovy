@@ -480,9 +480,9 @@ class ConditionsITest extends AbstractQuarkusITestBase {
           "expression": "NOT (valid"
 }
 ]
-        """)
+        """, query: [dry:"true"])
         assertEquals(400, resp.status)
-        assertEquals("Invalid expression: missing ')' at '<EOF>' at line 1 position 10", failureEntity.errorMsg)
+        assertEquals("Bad arguments: Invalid expression: missing ')' at '<EOF>' at line 1 position 10", failureEntity.errorMsg)
 
         resp = client.put(path: "triggers/" + triggerId + "/conditions/firing", body: """
 [
@@ -493,7 +493,7 @@ class ConditionsITest extends AbstractQuarkusITestBase {
           "expression": "data = 'valid'"
 }
 ]
-        """)
+        """, query: [dry:"true"])
         assertEquals(200, resp.status)
 
         resp = client.delete(path: "triggers/" + triggerId)
