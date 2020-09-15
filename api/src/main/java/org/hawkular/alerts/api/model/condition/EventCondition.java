@@ -89,7 +89,6 @@ public class EventCondition extends Condition {
         this.dataId = dataId;
         this.expression = expression;
         updateDisplayString();
-        validate();
     }
 
     public EventCondition(EventCondition condition) {
@@ -97,7 +96,6 @@ public class EventCondition extends Condition {
 
         this.dataId = condition.getDataId();
         this.expression = condition.getExpression();
-        validate();
     }
 
     public void setDataId(String dataId) {
@@ -114,9 +112,6 @@ public class EventCondition extends Condition {
     }
 
     public void setExpression(String expression) {
-        if(expression != null && !expression.isEmpty()) {
-            ExprParser.validate(expression);
-        }
         this.expression = expression;
     }
 

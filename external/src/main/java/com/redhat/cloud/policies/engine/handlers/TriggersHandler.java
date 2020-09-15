@@ -222,6 +222,9 @@ public class TriggersHandler {
                     if (fullTrigger.getTrigger() == null) {
                         throw new ResponseUtil.BadRequestException("Trigger is empty");
                     }
+                    for (Condition condition : fullTrigger.getConditions()) {
+                        condition.validate();
+                    }
 
                     Trigger trigger = fullTrigger.getTrigger();
                     trigger.setTenantId(tenantId);
@@ -297,6 +300,9 @@ public class TriggersHandler {
                     }
                     if (null == fullTrigger) {
                         throw new ResponseUtil.BadRequestException("FullTrigger can not be null.");
+                    }
+                    for (Condition condition : fullTrigger.getConditions()) {
+                        condition.validate();
                     }
                     trigger = fullTrigger.getTrigger();
                     if (null == trigger) {
@@ -1199,6 +1205,11 @@ public class TriggersHandler {
                         if (condition.getTriggerMode() == null || !condition.getTriggerMode().equals(mode)) {
                             throw new ResponseUtil.BadRequestException(
                                     "Condition: " + condition + " has a different triggerMode [" + triggerMode + "]");
+                        }
+                        try {
+                            condition.validate();
+                        } catch(IllegalArgumentException e) {
+                            throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
                         }
                     }
                     try {
