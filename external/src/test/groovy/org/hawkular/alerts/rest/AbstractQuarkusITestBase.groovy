@@ -21,6 +21,7 @@ abstract class AbstractQuarkusITestBase {
     static final AtomicInteger TENANT_ID_COUNTER = new AtomicInteger(0)
     static String testTenant
     static Object failureEntity
+    static String payload
 
     AbstractQuarkusITestBase() {
     }

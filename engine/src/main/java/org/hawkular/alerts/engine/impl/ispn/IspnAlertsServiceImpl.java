@@ -30,6 +30,7 @@ import org.hawkular.alerts.engine.service.AlertsEngine;
 import org.hawkular.alerts.engine.service.IncomingDataManager;
 import org.hawkular.alerts.log.AlertingLogger;
 import org.hawkular.alerts.log.MsgLogging;
+import org.hibernate.search.exception.SearchException;
 import org.hibernate.search.query.dsl.MustJunction;
 import org.hibernate.search.query.dsl.sort.SortFieldContext;
 import org.infinispan.Cache;
@@ -349,119 +350,73 @@ public class IspnAlertsServiceImpl implements AlertsService {
             criteria.setStartTime(earliestRetentionTime);
         }
 
-        org.hibernate.search.query.dsl.QueryBuilder queryBuilder = searchManager.buildQueryBuilderForClass(IspnEvent.class).get();
-        // TODO Remove multi-tenant fetching from function
-        org.apache.lucene.search.Query tenantQuery = queryBuilder.keyword().onField("tenantId").matching(tenantIds.iterator().next()).createQuery();
-        // TODO Add alerts only searching
+        try {
+            org.hibernate.search.query.dsl.QueryBuilder queryBuilder = searchManager.buildQueryBuilderForClass(IspnEvent.class).get();
+            // TODO Remove multi-tenant fetching from function
+            org.apache.lucene.search.Query tenantQuery = queryBuilder.keyword().onField("tenantId").matching(tenantIds.iterator().next()).createQuery();
+            // TODO Add alerts only searching
 
-        org.apache.lucene.search.Query typeQuery = queryBuilder.keyword().onField("eventType").matching("ALERT").createQuery();
-        org.apache.lucene.search.Query criteriaQuery = HibernateSearchQueryCreator.evaluate(queryBuilder, criteria.getQuery());
-        MustJunction rulesPart = queryBuilder.bool().must(tenantQuery).must(typeQuery).must(criteriaQuery);
+            org.apache.lucene.search.Query typeQuery = queryBuilder.keyword().onField("eventType").matching("ALERT").createQuery();
+            org.apache.lucene.search.Query criteriaQuery = HibernateSearchQueryCreator.evaluate(queryBuilder, criteria.getQuery());
+            MustJunction rulesPart = queryBuilder.bool().must(tenantQuery).must(typeQuery).must(criteriaQuery);
 
-        if(criteria.hasTagQueryCriteria()) {
-            org.apache.lucene.search.Query tagsQuery = HibernateSearchQueryCreator.evaluate(queryBuilder, criteria.getTagQuery());
-            rulesPart = rulesPart.must(tagsQuery);
+            if (criteria.hasTagQueryCriteria()) {
+                org.apache.lucene.search.Query tagsQuery = HibernateSearchQueryCreator.evaluate(queryBuilder, criteria.getTagQuery());
+                rulesPart = rulesPart.must(tagsQuery);
+            }
+            org.apache.lucene.search.Query finalQuery = rulesPart.createQuery();
+
+            CacheQuery<IspnEvent> query = searchManager.getQuery(finalQuery, IspnEvent.class);
+
+            if (pager != null) {
+                if (pager.getOrder() != null && !pager.getOrder().isEmpty() && pager.getOrder().get(0).isSpecific()) {
+                    String field = "id";
+                    if (AlertComparator.Field.CTIME.getText().equals(pager.getOrder().get(0).getField())) {
+                        // The generated alert ids include ctime, so this should sort them correctly
+                        field = "ctime";
+                    }
+                    SortFieldContext sortField = queryBuilder.sort()
+                            .byField(field);
+
+                    if (pager.getOrder().get(0).getDirection() == Order.Direction.DESCENDING) {
+                        sortField = sortField.desc();
+                    } else {
+                        sortField = sortField.asc();
+                    }
+                    query = query.sort(sortField.createSort());
+                }
+
+                // Do limitations at Infinispan level if possible
+                if (isServerSideSorted(pager)) {
+                    if (pager.getStart() > 0) {
+                        query = query.firstResult(pager.getStart());
+                    }
+                    if (pager.getPageSize() != PageContext.UNLIMITED_PAGE_SIZE) {
+                        query = query.maxResults(pager.getPageSize());
+                    }
+                }
+            }
+
+            List<IspnEvent> ispnEvents = query.list();
+
+            // TODO Replace with projection?
+            final boolean thinAlerts = criteria.isThin();
+            List<Alert> alerts = ispnEvents.stream().map(ispnEvent -> {
+                if (thinAlerts) {
+                    Alert alert = new Alert((Alert) ispnEvent.getEvent());
+                    alert.setDampening(null);
+                    alert.setEvalSets(null);
+                    alert.setResolvedEvalSets(null);
+                    return alert;
+                }
+                return (Alert) ispnEvent.getEvent();
+            }).collect(Collectors.toList());
+
+            return preparePage(alerts, pager, query.getResultSize());
+        } catch (SearchException se) {
+            throw new IllegalArgumentException(se.getMessage());
         }
-        org.apache.lucene.search.Query finalQuery = rulesPart.createQuery();
-
-        CacheQuery<IspnEvent> query = searchManager.getQuery(finalQuery, IspnEvent.class);
-
-        if (pager != null) {
-            if (pager.getOrder() != null && !pager.getOrder().isEmpty() && pager.getOrder().get(0).isSpecific()) {
-                String field = "id";
-                if (AlertComparator.Field.CTIME.getText().equals(pager.getOrder().get(0).getField())) {
-                    // The generated alert ids include ctime, so this should sort them correctly
-                    field = "ctime";
-                }
-                SortFieldContext sortField = queryBuilder.sort()
-                        .byField(field);
-
-                if (pager.getOrder().get(0).getDirection() == Order.Direction.DESCENDING) {
-                    sortField = sortField.desc();
-                } else {
-                    sortField = sortField.asc();
-                }
-                query = query.sort(sortField.createSort());
-            }
-
-            // Do limitations at Infinispan level if possible
-            if(isServerSideSorted(pager)) {
-                if (pager.getStart() > 0) {
-                    query = query.firstResult(pager.getStart());
-                }
-                if (pager.getPageSize() != PageContext.UNLIMITED_PAGE_SIZE) {
-                    query = query.maxResults(pager.getPageSize());
-                }
-            }
-        }
-
-        List<IspnEvent> ispnEvents = query.list();
-
-        // TODO Replace with projection?
-        final boolean thinAlerts = criteria.isThin();
-        List<Alert> alerts = ispnEvents.stream().map(ispnEvent -> {
-            if (thinAlerts) {
-                Alert alert = new Alert((Alert) ispnEvent.getEvent());
-                alert.setDampening(null);
-                alert.setEvalSets(null);
-                alert.setResolvedEvalSets(null);
-                return alert;
-            }
-            return (Alert) ispnEvent.getEvent();
-        }).collect(Collectors.toList());
-
-        return preparePage(alerts, pager, query.getResultSize());
     }
-
-//    private Page<IspnEvent> getEventItems(StringBuilder builder, Pager pager) {
-//        // Parse and do the first ordering at the Infinispan level (for @SortableFields)
-//        if (pager != null && pager.getOrder() != null && !pager.getOrder().isEmpty() && pager.getOrder().get(0).isSpecific()) {
-//            log.debugf("Pager: %s", pager.toString());
-//            builder.append("ORDER BY ");
-//
-//            if (AlertComparator.Field.ALERT_ID.getText().equals(pager.getOrder().get(0).getField())) {
-//                builder.append("id ");
-//            } else if (AlertComparator.Field.CTIME.getText().equals(pager.getOrder().get(0).getField())) {
-//                // The generated alert ids include ctime, so this should sort them correctly
-//                builder.append("ctime ");
-//            } else {
-//                builder.append("id ");
-//            }
-//
-//            if (pager.getOrder().get(0).getDirection() == Order.Direction.DESCENDING) {
-//                builder.append("DESC");
-//            } else {
-//                builder.append("ASC");
-//            }
-//        } else {
-//            // Force id sorting by DESCENDING (newest events / alerts first) to be the natural order
-//            builder.append("ORDER BY ctime DESC");
-//        }
-//
-//        Query parsedQuery = queryFactory.create(builder.toString());
-//        long totalSize = parsedQuery.getResultSize();
-//
-//        // Do limitations at Infinispan level if possible
-//        if(pager != null) {
-////            // If we sort outside the ISPN, we need to also filter result set outside
-//            if(isServerSideSorted(pager)) {
-//                // We need to create a new one, as ISPN would otherwise just reuse the previous results,
-//                // not applying the paging
-//                parsedQuery = queryFactory.create(builder.toString());
-//                if (pager.getStart() > 0) {
-//                    parsedQuery.startOffset(pager.getStart());
-//                }
-//                if (pager.getPageSize() != PageContext.UNLIMITED_PAGE_SIZE) {
-//                    parsedQuery.maxResults(pager.getPageSize());
-//                }
-//            }
-//        }
-//        if(log.isDebugEnabled()) {
-//            log.debugf("ParsedQuery: %s, maxResults: %d, startOffset: %d", parsedQuery.getQueryString(), parsedQuery.getMaxResults(), parsedQuery.getStartOffset());
-//        }
-//
-//        return new Page(parsedQuery.list(), pager, totalSize);
-//    }
 
     @Override
     public Event getEvent(String tenantId, String eventId, boolean thin) throws Exception {
@@ -519,7 +474,6 @@ public class IspnAlertsServiceImpl implements AlertsService {
             rulesPart = rulesPart.must(tagsQuery);
         }
         org.apache.lucene.search.Query finalQuery = rulesPart.createQuery();
-        System.out.println(finalQuery.toString());
 
         CacheQuery<IspnEvent> query = searchManager.getQuery(finalQuery, IspnEvent.class);
 

@@ -1,5 +1,6 @@
 package org.hawkular.alerts.rest
 
+import groovy.json.JsonOutput
 import io.quarkus.test.junit.QuarkusTest
 import org.apache.groovy.json.internal.LazyMap
 import org.hawkular.alerts.api.model.Severity
@@ -7,21 +8,18 @@ import org.hawkular.alerts.api.model.condition.*
 import org.hawkular.alerts.api.model.data.AvailabilityType
 import org.hawkular.alerts.api.model.data.Data
 import org.hawkular.alerts.api.model.event.Alert
-import org.hawkular.alerts.api.model.trigger.FullTrigger
 import org.hawkular.alerts.api.model.trigger.Mode
 import org.hawkular.alerts.api.model.trigger.Trigger
 import org.hawkular.alerts.log.MsgLogger
 import org.hawkular.alerts.log.MsgLogging
 import org.junit.jupiter.api.MethodOrderer
-import org.junit.jupiter.api.TestMethodOrder
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestMethodOrder
 
+import static org.hawkular.alerts.api.json.JsonUtil.fromJson
+import static org.hawkular.alerts.api.json.JsonUtil.toJson
 import static org.hawkular.alerts.api.model.condition.AvailabilityCondition.Operator
-import static org.junit.jupiter.api.Assertions.assertEquals
-import static org.junit.jupiter.api.Assertions.assertTrue
-import static org.junit.jupiter.api.Assertions.assertFalse
-import static org.junit.jupiter.api.Assertions.assertNotNull
-import static org.junit.jupiter.api.Assertions.assertNull
+import static org.junit.jupiter.api.Assertions.*
 
 /**
  * Alerts REST tests.
@@ -65,7 +63,8 @@ class LifecycleITest extends AbstractQuarkusITestBase {
         testTrigger.setAutoResolve(false);
         testTrigger.setSeverity(Severity.LOW);
 
-        resp = client.post(path: "triggers", body: testTrigger)
+        def jsonBody = toJson(testTrigger)
+        resp = client.post(path: "triggers", body: jsonBody)
         assertEquals(200, resp.status)
 
         // ADD Firing condition
@@ -129,7 +128,6 @@ class LifecycleITest extends AbstractQuarkusITestBase {
         // FETCH trigger and make sure it's disabled
         resp = client.get(path: "triggers/test-autodisable-trigger");
         assertEquals(200, resp.status)
-        Trigger t = (Trigger)resp.data;
         assertEquals("test-autodisable-trigger", resp.data.name)
         assertFalse(resp.data.enabled)
 
@@ -205,7 +203,8 @@ class LifecycleITest extends AbstractQuarkusITestBase {
         testTrigger.setAutoResolveAlerts(true);
         testTrigger.setSeverity(Severity.HIGH);
 
-        resp = client.post(path: "triggers", body: testTrigger)
+        def jsonBody = toJson(testTrigger)
+        resp = client.post(path: "triggers", body: jsonBody)
         assertEquals(200, resp.status)
 
         // ADD Firing conditions
@@ -358,7 +357,8 @@ class LifecycleITest extends AbstractQuarkusITestBase {
         testTrigger.setAutoResolve(false);
         testTrigger.setAutoResolveAlerts(false);
 
-        resp = client.post(path: "triggers", body: testTrigger)
+        def jsonBody = toJson(testTrigger)
+        resp = client.post(path: "triggers", body: jsonBody)
         assertEquals(200, resp.status)
 
         // ADD Firing condition
@@ -451,17 +451,17 @@ class LifecycleITest extends AbstractQuarkusITestBase {
         assertTrue(resp.data.isEmpty())
 
         // FETCH alerts for bogus name tag, should not be any
-        resp = client.get(path: "", query: [startTime:start,tags:"XXX|*"] )
+        resp = client.get(path: "", query: [startTime:start,tagQuery:"tags.XXX matches '*'"] )
         assertEquals(200, resp.status)
         assertTrue(resp.data.isEmpty())
 
         // FETCH alerts for bogus name|value tag, should not be any
-        resp = client.get(path: "", query: [startTime:start,tags:"XXX|YYY"] )
+        resp = client.get(path: "", query: [startTime:start,tagQuery:"tags.XXX = 'YYY'"] )
         assertEquals(200, resp.status)
         assertTrue(resp.data.isEmpty())
 
         // FETCH alerts for bogus value name/value tag syntax, should fail
-        resp = client.get(path: "", query: [startTime:start,tags:"test-autodisable-tname/test-autodisable-tvalue"] )
+        resp = client.get(path: "", query: [startTime:start,tagQuery:"test-autodisable-tname/test-autodisable-tvalue"] )
         assertEquals(400, resp.status)
 
         // FETCH alerts for just triggers generated in test t01, by time, should be 1
@@ -478,13 +478,13 @@ class LifecycleITest extends AbstractQuarkusITestBase {
         assertEquals(alertId, resp.data[0].id)
 
         // FETCH the alert above again, this time by tag
-        resp = client.get(path: "", query: [startTime:start,tags:"test-autodisable-tname|test-autodisable-tvalue"] )
+        resp = client.get(path: "", query: [startTime:start,tagQuery:"tags.test-autodisable-tname = 'test-autodisable-tvalue'"] )
         assertEquals(200, resp.status)
         assertEquals(1, resp.data.size())
         assertEquals(alertId, resp.data[0].id)
 
         // FETCH the alert above again (fail), with a good triggerId but a bad tag
-        resp = client.get(path: "", query: [startTime:start,triggerIds:"test-autodisable-trigger",tags:"XXX|*"] )
+        resp = client.get(path: "", query: [startTime:start,triggerIds:"test-autodisable-trigger",tagQuery:"tags.XXX matches '*'"] )
         assertEquals(200, resp.status)
         assertEquals(0, resp.data.size())
 
@@ -614,23 +614,28 @@ class LifecycleITest extends AbstractQuarkusITestBase {
         assertEquals(200, resp.status)
         assertEquals(1, resp.data.size())
 
-        Alert alert = resp.data[0]
+        def jsonOut = JsonOutput.toJson(resp.data)
+        Alert[] alerts = fromJson(jsonOut, Alert[].class)
+        Alert alert = alerts[0]
 
         resp = client.put(path: "tags", query: [alertIds:alert.id,tags:"tag1name|tag1value"] )
         assertEquals(200, resp.status)
 
-        resp = client.get(path: "", query: [startTime:start,tags:"tag1name|tag1value"] )
+        resp = client.get(path: "", query: [startTime:start,tagQuery:"tags.tag1name = 'tag1value'"] )
         assertEquals(200, resp.status)
         assertEquals(1, resp.data.size())
 
-        alert = resp.data[0]
+
+        jsonOut = JsonOutput.toJson(resp.data)
+        alerts = fromJson(jsonOut, Alert[].class)
+        alert = alerts[0]
         assertEquals(1, alert.tags.size())
-        assertEquals("tag1value", alert.tags.get("tag1name"))
+        assertEquals("tag1value", alert.tags.get("tag1name").iterator().next())
 
         resp = client.delete(path: "tags", query: [alertIds:alert.id,tagNames:"tag1name"] )
         assertEquals(200, resp.status)
 
-        resp = client.get(path: "", query: [startTime:start,tags:"tag1name|tag1value"] )
+        resp = client.get(path: "", query: [startTime:start,tagQuery:"tags.tag1name = 'tag1value'"] )
         assertEquals(200, resp.status)
         assertEquals(0, resp.data.size())
     }

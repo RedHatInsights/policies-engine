@@ -40,7 +40,6 @@ public class IspnQueryCreator extends ExpressionBaseVisitor<Query> {
     }
 
     public static Query evaluate(QueryFactory queryFactory, FilterConditionContextQueryBuilder queryBuilder, String expression) {
-        System.out.printf("Transforming %s to Query\n", expression);
         ThrowingErrorHandler errorListener = new ThrowingErrorHandler();
         ParseTree parseTree = createParserTree(expression, errorListener);
         QueryVisitor visitor = new QueryVisitor(queryFactory, queryBuilder);

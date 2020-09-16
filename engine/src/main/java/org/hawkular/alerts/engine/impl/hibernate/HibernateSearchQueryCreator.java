@@ -193,7 +193,6 @@ public class HibernateSearchQueryCreator extends ExpressionBaseVisitor<Query> {
             if(ctx.string_compare_operator() != null) {
                 ExpressionParser.String_compare_operatorContext op = ctx.string_compare_operator();
                 if (op.MATCHES() != null) {
-                    System.out.printf("MATCHES: %s : %s\n", field, strValue);
                     return builder.keyword().wildcard().onField(field).ignoreFieldBridge().matching(strValue).createQuery();
                 }
             }

@@ -240,25 +240,6 @@ public class ResponseUtil {
     }
 
     @SuppressWarnings("unchecked")
-    public static String parseTagQuery(Map<String, String> tags) {
-        if (isEmpty(tags)) {
-            return null;
-        }
-        StringBuilder tagQuery = new StringBuilder();
-        Iterator it = tags.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry<String, String> tag = (Map.Entry<String, String>) it.next();
-            tagQuery.append(tag.getKey());
-            if (!"*".equals(tag.getValue())) {
-                tagQuery.append(" = ").append("").append(tag.getValue());
-            }
-            if (it.hasNext()) {
-                tagQuery.append(" or ");
-            }
-        }
-        return tagQuery.toString();
-    }
-
     public static void checkForUnknownQueryParams(MultiMap params, final Set<String> expected) {
         if (params.contains(PARAM_IGNORE_UNKNOWN_QUERY_PARAMS)) {
             return;

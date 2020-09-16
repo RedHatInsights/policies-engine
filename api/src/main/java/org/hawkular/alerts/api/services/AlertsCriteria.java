@@ -36,6 +36,7 @@ public class AlertsCriteria {
     String triggerId = null;
     Collection<String> triggerIds = null;
     String tagQuery = null;
+    String query = null;
     boolean thin = false;
 
     public AlertsCriteria() {
@@ -45,7 +46,7 @@ public class AlertsCriteria {
     public AlertsCriteria(Long startTime, Long endTime, String alertIds, String triggerIds,
                           String statuses, String severities, String tagQuery, Long startResolvedTime,
                           Long endResolvedTime, Long startAckTime, Long endAckTime, Long startStatusTime,
-                          Long endStatusTime, Boolean thin) {
+                          Long endStatusTime, Boolean thin, String query) {
         setStartTime(startTime);
         setEndTime(endTime);
         if (!isEmpty(alertIds)) {
@@ -78,10 +79,15 @@ public class AlertsCriteria {
         if (null != thin) {
             setThin(thin.booleanValue());
         }
+        setQuery(query);
     }
 
     public String getQuery() {
         StringBuilder query = new StringBuilder();
+        if(!isEmpty(this.query)) {
+            // This allows to do every possible query
+            query.append(this.query);
+        }
         if (this.hasAlertIdCriteria()) {
             query.append("and (");
             Iterator<String> iter = extractAlertIds(this).iterator();
@@ -437,6 +443,10 @@ public class AlertsCriteria {
 
     public void setSeverities(Collection<Severity> severities) {
         this.severities = severities;
+    }
+
+    public void setQuery(String query) {
+        this.query = query;
     }
 
     public boolean isThin() {

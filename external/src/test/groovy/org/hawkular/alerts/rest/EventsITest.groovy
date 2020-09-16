@@ -1,10 +1,15 @@
 package org.hawkular.alerts.rest
 
-
+import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder
+import groovy.json.JsonOutput
 import io.quarkus.test.junit.QuarkusTest
+import org.hawkular.alerts.api.json.JsonUtil
 import org.hawkular.alerts.api.model.event.Event
 import org.junit.jupiter.api.Test
 
+import static org.hawkular.alerts.api.json.JsonUtil.fromJson
+import static org.hawkular.alerts.api.json.JsonUtil.toJson
 import static org.junit.jupiter.api.Assertions.assertEquals
 
 /**
@@ -34,13 +39,13 @@ class EventsITest extends AbstractQuarkusITestBase {
         resp = client.get(path: "events", query: [endTime:now, startTime:"0",categories:"ALERT,LOG"] )
         assertEquals(200, resp.status)
 
-        resp = client.get(path: "events", query: [tags:"tag-01|*,tag-02|*"] )
+        resp = client.get(path: "events", query: [tagQuery: "tags.tag-01 matches '*' and tags.tag-02 matches '*'"] )
         assertEquals(200, resp.status)
 
-        resp = client.get(path: "events", query: [tags:"tag-01|value-01,tag-02|value-02",thin:true] )
+        resp = client.get(path: "events", query: [tagQuery:"tags.tag-01 = 'value-01' and tags.tag-02 = 'value-02'",thin:true] )
         assertEquals(200, resp.status)
 
-        resp = client.get(path: "events", query: [tagQuery:"tagA or (tagB and tagC in ['e.*', 'f.*'])"] )
+        resp = client.get(path: "events", query: [tagQuery:"tags.tagA or (tags.tagB and tags.tagC in ['e.*', 'f.*'])"] )
         assertEquals(200, resp.status)
     }
 
@@ -63,13 +68,13 @@ class EventsITest extends AbstractQuarkusITestBase {
                           query: [endTime:now, startTime:"0",categories:"A,B,C"] )
         assertEquals(200, resp.status)
 
-        resp = client.put(path: "events/delete", query: [tags:"tag-01|*,tag-02|*"] )
+        resp = client.put(path: "events/delete", query: [tagQuery:"tags.tag-01 matches '*' and tags.tag-02 matches '*'"] )
         assertEquals(200, resp.status)
 
-        resp = client.put(path: "events/delete", query: [tags:"tag-01|value-01,tag-02|value-02"] )
+        resp = client.put(path: "events/delete", query: [tagQuery:"tags.tag-01 = 'value-01' and tags.tag-02 = 'value-02'"] )
         assertEquals(200, resp.status)
 
-        resp = client.put(path: "events/delete", query: [tagQuery:"tagA or (tagB and tagC in ['e.*', 'f.*'])"] )
+        resp = client.put(path: "events/delete", query: [tagQuery:"tags.tagA or (tags.tagB and tags.tagC in ['e.*', 'f.*'])"] )
         assertEquals(200, resp.status)
     }
 
@@ -79,16 +84,19 @@ class EventsITest extends AbstractQuarkusITestBase {
 
         Map context = new java.util.HashMap();
         context.put("event-context-name", "event-context-value");
-        Map tags = new java.util.HashMap();
+
+        Multimap<String, String> tags = MultimapBuilder.hashKeys().hashSetValues().build();
         tags.put("event-tag-name", "event-tag-value");
         Event event = new Event("test-tenant", "test-event-id", System.currentTimeMillis(), "test-event-data-id",
                 "test-category", "test event text", context, tags);
 
         client.delete(path: "events/test-event-id" )
 
-        def resp = client.post(path: "events", body: event )
+        def jsonBody = toJson(event)
+        def resp = client.post(path: "events", body: jsonBody )
         assertEquals(200, resp.status)
-        event = resp.data
+        def jsonOut = JsonOutput.toJson(resp.data)
+        event = fromJson(jsonOut, Event.class)
         assertEquals("test-event-id", event.getId())
 
         resp = client.post(path: "events", body: event )
@@ -97,35 +105,42 @@ class EventsITest extends AbstractQuarkusITestBase {
         resp = client.get(path: "events/event/test-event-id" )
         assertEquals(200, resp.status)
 
-        Event e = resp.data
+        jsonOut = JsonOutput.toJson(resp.data)
+        Event e = fromJson(jsonOut, Event.class)
         assertEquals(event, e)
         assertEquals("test-category", e.getCategory())
         assertEquals("test event text", e.getText())
         assertEquals(context, e.getContext())
         assertEquals(tags, e.getTags())
 
-        resp = client.get(path: "events", query: [startTime:now,tags:"event-tag-name|event-tag-value"] )
+        resp = client.get(path: "events", query: [startTime:now,tagQuery:"tags.event-tag-name = 'event-tag-value'"] )
         assertEquals(200, resp.status)
         assertEquals(1, resp.data.size)
 
-        e = resp.data[0]
+        jsonOut = JsonOutput.toJson(resp.data)
+        Event[] events = fromJson(jsonOut, Event[].class)
+
+        e = events[0]
 
         resp = client.put(path: "events/tags", query: [eventIds:e.id,tags:"tag1name|tag1value"] )
         assertEquals(200, resp.status)
 
-        resp = client.get(path: "events", query: [startTime:now,tags:"tag1name|tag1value"] )
+        resp = client.get(path: "events", query: [startTime:now,tagQuery:"tags.tag1name = 'tag1value'"] )
         assertEquals(200, resp.status)
         assertEquals(1, resp.data.size())
 
-        e = resp.data[0]
+        jsonOut = JsonOutput.toJson(resp.data)
+        events = fromJson(jsonOut, Event[].class)
+        e = events[0]
+
         assertEquals(2, e.tags.size())
-        assertEquals("event-tag-value", e.tags.get("event-tag-name"))
-        assertEquals("tag1value", e.tags.get("tag1name"))
+        assertEquals("event-tag-value", e.tags.get("event-tag-name").iterator().next())
+        assertEquals("tag1value", e.tags.get("tag1name").iterator().next())
 
         resp = client.delete(path: "events/tags", query: [eventIds:e.id,tagNames:"tag1name"] )
         assertEquals(200, resp.status)
 
-        resp = client.get(path: "events", query: [startTime:now,tags:"tag1name|tag1value"] )
+        resp = client.get(path: "events", query: [startTime:now,tagQuery:"tags.tag1name = 'tag1value'"] )
         assertEquals(200, resp.status)
         assertEquals(0, resp.data.size())
 
@@ -181,12 +196,13 @@ class EventsITest extends AbstractQuarkusITestBase {
         e2.getContext().put("message", "Avail-changed:[DOWN] Deployment");
         e2.getTags().put("test_tag", "/t;hawkular/f;my-agent/r;Local%20DMR~%2Fdeployment%3Dcfme_test_ear_middleware.ear_Deployment Status");
 
-        resp = client.post(path: "events", body: e2)
+        def jsonBody = toJson(e2)
+        resp = client.post(path: "events", body: jsonBody)
         assertEquals(200, resp.status)
         event = resp.data
         assertEquals("test_2", event.id)
 
-        def tagQuery = "test_tag = '\\/t;hawkular\\/f;my-agent\\/r;Local%20DMR\\~\\~_Server Availability'"
+        def tagQuery = "tags.test_tag = '/t;hawkular/f;my-agent/r;Local%20DMR~~_Server Availability'"
 
         resp = client.get(path: "events", query: [tagQuery: tagQuery] )
         assertEquals(200, resp.status)
@@ -204,21 +220,23 @@ class EventsITest extends AbstractQuarkusITestBase {
             eventX.setCategory("test")
             eventX.setText("Event message " + i)
             eventX.getTags().put("tag" + (i % 3), "value" + (i % 3))
-            resp = client.post(path: "events", body: eventX)
+
+            def jsonBody = toJson(eventX)
+            resp = client.post(path: "events", body: jsonBody)
             assertEquals(200, resp.status)
         }
 
-        def tagQuery = "tag0"
+        def tagQuery = "tags.tag0"
         resp = client.get(path: "events", query: [tagQuery: tagQuery])
         assertEquals(200, resp.status)
         assertEquals(334, resp.data.size())
 
-        tagQuery = "tag1"
+        tagQuery = "tags.tag1"
         resp = client.get(path: "events", query: [tagQuery: tagQuery])
         assertEquals(200, resp.status)
         assertEquals(333, resp.data.size())
 
-        tagQuery = "tag2"
+        tagQuery = "tags.tag2"
         resp = client.get(path: "events", query: [tagQuery: tagQuery])
         assertEquals(200, resp.status)
         assertEquals(333, resp.data.size())

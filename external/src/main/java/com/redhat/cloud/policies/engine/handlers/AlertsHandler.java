@@ -43,6 +43,7 @@ public class AlertsHandler {
     private static final String PARAM_TRIGGER_IDS = "triggerIds";
     private static final String PARAM_STATUSES = "statuses";
     private static final String PARAM_SEVERITIES = "severities";
+    private static final String PARAM_QUERY = "query";
     private static final String PARAM_TAGS = "tags";
     private static final String PARAM_TAG_QUERY = "tagQuery";
     private static final String PARAM_START_RESOLVED_TIME = "startResolvedTime";
@@ -72,7 +73,7 @@ public class AlertsHandler {
                 PARAM_TRIGGER_IDS,
                 PARAM_STATUSES,
                 PARAM_SEVERITIES,
-                PARAM_TAGS,
+                PARAM_QUERY,
                 PARAM_TAG_QUERY,
                 PARAM_START_RESOLVED_TIME,
                 PARAM_END_RESOLVED_TIME,
@@ -114,26 +115,7 @@ public class AlertsHandler {
     @DocPath(method = GET,
             path = "/",
             name = "Get alerts with optional filtering",
-            notes = "If not criteria defined, it fetches all alerts available in the system. + \n" +
-                    "Tags Query language (BNF): + \n" +
-                    "[source] \n" +
-                    "---- \n" +
-                    "<tag_query> ::= ( <expression> | \"(\" <object> \")\" " +
-                    "| <object> <logical_operator> <object> ) \n" +
-                    "<expression> ::= ( <tag_name> | <not> <tag_name> " +
-                    "| <tag_name> <boolean_operator> <tag_value> | " +
-                    "<tag_name> <array_operator> <array> ) \n" +
-                    "<not> ::= [ \"NOT\" | \"not\" ] \n" +
-                    "<logical_operator> ::= [ \"AND\" | \"OR\" | \"and\" | \"or\" ] \n" +
-                    "<boolean_operator> ::= [ \"=\" | \"!=\" ] \n" +
-                    "<array_operator> ::= [ \"IN\" | \"NOT IN\" | \"in\" | \"not in\" ] \n" +
-                    "<array> ::= ( \"[\" \"]\" | \"[\" ( \",\" <tag_value> )* ) \n" +
-                    "<tag_name> ::= <identifier> \n" +
-                    "<tag_value> ::= ( \"'\" <regexp> \"'\" | <simple_value> ) \n" +
-                    "; \n" +
-                    "; <identifier> and <simple_value> follow pattern [a-zA-Z_0-9][\\-a-zA-Z_0-9]* \n" +
-                    "; <regexp> follows any valid Java Regular Expression format \n" +
-                    "---- \n")
+            notes = "If not criteria defined, it fetches all alerts available in the system. \n")
     @DocParameters(value = {
             @DocParameter(name = "startTime", type = Long.class,
                     description = "Filter out alerts created before this time.",
@@ -153,12 +135,8 @@ public class AlertsHandler {
             @DocParameter(name = "severities",
                     description = "Filter out alerts for unspecified severity. ",
                     allowableValues = "Comma separated list of [LOW, MEDIUM, HIGH, CRITICAL]"),
-            @DocParameter(name = "tags",
-                    description = "[DEPRECATED] Filter out alerts for unspecified tags.",
-                    allowableValues = "Comma separated list of tags, each tag of format 'name\\|description'. + \n" +
-                            "Specify '*' for description to match all values."),
             @DocParameter(name = "tagQuery",
-                    description = "Filter out alerts for unspecified tags.",
+                    description = "Filter alerts with a tag query.",
                     allowableValues = "A tag query expression."),
             @DocParameter(name = "startResolvedTime", type = Long.class,
                     description = "Filter out alerts resolved before this time.",
@@ -220,26 +198,7 @@ public class AlertsHandler {
                     "After initial query, time criterias are discarded, watching alerts by current lifecycle stime. + \n" +
                     "Non time criterias are active. + \n" +
                     " + \n" +
-                    "If not criteria defined, it fetches all alerts available in the system. + \n" +
-                    "Tags Query language (BNF): + \n" +
-                    "[source] \n" +
-                    "---- \n" +
-                    "<tag_query> ::= ( <expression> | \"(\" <object> \")\" " +
-                    "| <object> <logical_operator> <object> ) \n" +
-                    "<expression> ::= ( <tag_name> | <not> <tag_name> " +
-                    "| <tag_name> <boolean_operator> <tag_value> | " +
-                    "<tag_name> <array_operator> <array> ) \n" +
-                    "<not> ::= [ \"NOT\" | \"not\" ] \n" +
-                    "<logical_operator> ::= [ \"AND\" | \"OR\" | \"and\" | \"or\" ] \n" +
-                    "<boolean_operator> ::= [ \"=\" | \"!=\" ] \n" +
-                    "<array_operator> ::= [ \"IN\" | \"NOT IN\" | \"in\" | \"not in\" ] \n" +
-                    "<array> ::= ( \"[\" \"]\" | \"[\" ( \",\" <tag_value> )* ) \n" +
-                    "<tag_name> ::= <identifier> \n" +
-                    "<tag_value> ::= ( \"'\" <regexp> \"'\" | <simple_value> ) \n" +
-                    "; \n" +
-                    "; <identifier> and <simple_value> follow pattern [a-zA-Z_0-9][\\-a-zA-Z_0-9]* \n" +
-                    "; <regexp> follows any valid Java Regular Expression format \n" +
-                    "---- \n")
+                    "If not criteria defined, it fetches all alerts available in the system. + \n")
     @DocParameters(value = {
             @DocParameter(name = "startTime", type = Long.class,
                     description = "Filter out alerts created before this time.",
@@ -259,10 +218,6 @@ public class AlertsHandler {
             @DocParameter(name = "severities",
                     description = "Filter out alerts for unspecified severity. ",
                     allowableValues = "Comma separated list of [LOW, MEDIUM, HIGH, CRITICAL]"),
-            @DocParameter(name = "tags",
-                    description = "[DEPRECATED] Filter out alerts for unspecified tags.",
-                    allowableValues = "Comma separated list of tags, each tag of format 'name\\|description'. + \n" +
-                            "Specify '*' for description to match all values."),
             @DocParameter(name = "tagQuery",
                     description = "Filter out alerts for unspecified tags.",
                     allowableValues = "A tag query expression."),
@@ -468,26 +423,7 @@ public class AlertsHandler {
     @DocPath(method = DELETE,
             path = "/delete",
             name = "Delete alerts with optional filtering.",
-            notes = "If not criteria defined, it fetches all alerts available in the system. + \n" +
-                    "Tags Query language (BNF): + \n" +
-                    "[source] \n" +
-                    "---- \n" +
-                    "<tag_query> ::= ( <expression> | \"(\" <object> \")\" " +
-                    "| <object> <logical_operator> <object> ) \n" +
-                    "<expression> ::= ( <tag_name> | <not> <tag_name> " +
-                    "| <tag_name> <boolean_operator> <tag_value> | " +
-                    "<tag_name> <array_operator> <array> ) \n" +
-                    "<not> ::= [ \"NOT\" | \"not\" ] \n" +
-                    "<logical_operator> ::= [ \"AND\" | \"OR\" | \"and\" | \"or\" ] \n" +
-                    "<boolean_operator> ::= [ \"=\" | \"!=\" ] \n" +
-                    "<array_operator> ::= [ \"IN\" | \"NOT IN\" | \"in\" | \"not in\" ] \n" +
-                    "<array> ::= ( \"[\" \"]\" | \"[\" ( \",\" <tag_value> )* ) \n" +
-                    "<tag_name> ::= <identifier> \n" +
-                    "<tag_value> ::= ( \"'\" <regexp> \"'\" | <simple_value> ) \n" +
-                    "; \n" +
-                    "; <identifier> and <simple_value> follow pattern [a-zA-Z_0-9][\\-a-zA-Z_0-9]* \n" +
-                    "; <regexp> follows any valid Java Regular Expression format \n" +
-                    "---- \n")
+            notes = "If not criteria defined, it fetches all alerts available in the system. + \n")
     @DocParameters(value = {
             @DocParameter(name = "startTime", type = Long.class,
                     description = "Filter out alerts created before this time.",
@@ -507,10 +443,6 @@ public class AlertsHandler {
             @DocParameter(name = "severities",
                     description = "Filter out alerts for unspecified severity. ",
                     allowableValues = "Comma separated list of [LOW, MEDIUM, HIGH, CRITICAL]"),
-            @DocParameter(name = "tags",
-                    description = "[DEPRECATED] Filter out alerts for unspecified tags.",
-                    allowableValues = "Comma separated list of tags, each tag of format 'name\\|description'. + \n" +
-                            "Specify '*' for description to match all values."),
             @DocParameter(name = "tagQuery",
                     description = "Filter out alerts for unspecified tags.",
                     allowableValues = "A tag query expression."),
@@ -834,7 +766,7 @@ public class AlertsHandler {
         String triggerIds = null;
         String statuses = null;
         String severities = null;
-        String tags = null;
+        String query = null;
         String tagQuery = null;
         Long startResolvedTime = null;
         Long endResolvedTime = null;
@@ -862,17 +794,11 @@ public class AlertsHandler {
         if (params.get(PARAM_SEVERITIES) != null) {
             severities = params.get(PARAM_SEVERITIES);
         }
-        if (params.get(PARAM_TAGS) != null) {
-            tags = params.get(PARAM_TAGS);
-        }
         if (params.get(PARAM_TAG_QUERY) != null) {
             tagQuery = params.get(PARAM_TAG_QUERY);
         }
-        String unifiedTagQuery;
-        if (!isEmpty(tags)) {
-            unifiedTagQuery = ResponseUtil.parseTagQuery(ResponseUtil.parseTags(tags));
-        } else {
-            unifiedTagQuery = tagQuery;
+        if (params.get(PARAM_QUERY) != null) {
+            query = params.get(PARAM_QUERY);
         }
         if (params.get(PARAM_START_RESOLVED_TIME) != null) {
             startResolvedTime = Long.valueOf(params.get(PARAM_START_RESOLVED_TIME));
@@ -896,7 +822,7 @@ public class AlertsHandler {
             thin = Boolean.valueOf(params.get(PARAM_THIN));
         }
         return new AlertsCriteria(startTime, endTime, alertIds, triggerIds, statuses, severities,
-                unifiedTagQuery, startResolvedTime, endResolvedTime, startAckTime, endAckTime, startStatusTime,
-                endStatusTime, thin);
+                tagQuery, startResolvedTime, endResolvedTime, startAckTime, endAckTime, startStatusTime,
+                endStatusTime, thin, query);
     }
 }
