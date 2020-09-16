@@ -37,6 +37,11 @@
       <artifactId>quarkus-smallrye-opentracing</artifactId>
     </dependency>
     <dependency>
+      <groupId>io.opentracing.contrib</groupId>
+      <artifactId>opentracing-vertx-web</artifactId>
+      <version>${version.opentracing-vertx-web}</version>
+    </dependency>
+    <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-vertx</artifactId>
     </dependency>
@@ -46,27 +51,7 @@
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-junit5</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
       <artifactId>quarkus-smallrye-context-propagation</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.opentracing.contrib</groupId>
-      <artifactId>opentracing-vertx-web</artifactId>
-      <version>${version.opentracing-vertx-web}</version>
-    </dependency>
-
-    <!-- bare API -->
-    <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-web-client</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.smallrye.reactive</groupId>
-      <artifactId>smallrye-axle-web-client</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>

@@ -1,4 +1,4 @@
-package com.redhat.cloud.policies.engine;
+package com.redhat.cloud.policies.engine.handlers;
 
 import io.opentracing.Tracer;
 import io.opentracing.contrib.vertx.ext.web.TracingHandler;

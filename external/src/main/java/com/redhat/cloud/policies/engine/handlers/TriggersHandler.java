@@ -34,6 +34,7 @@ import javax.inject.Inject;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.redhat.cloud.policies.engine.handlers.util.SpanUtil.getServerSpan;
 import static org.hawkular.alerts.api.doc.DocConstants.*;
 import static org.hawkular.alerts.api.json.JsonUtil.collectionFromJson;
 import static org.hawkular.alerts.api.json.JsonUtil.fromJson;
@@ -704,11 +705,7 @@ public class TriggersHandler {
                 }, res -> ResponseUtil.result(routing, res));
     }
 
-    private Span getServerSpan(RoutingContext routing) {
-        return routing.get("io.opentracing.contrib.vertx.ext.web.TracingHandler.severSpan");
-    }
-
-  @DocPath(method = GET,
+    @DocPath(method = GET,
             path = "/{triggerId}/dampenings/{dampeningId}",
             name = "Get an existing dampening.")
     @DocParameters(value = {

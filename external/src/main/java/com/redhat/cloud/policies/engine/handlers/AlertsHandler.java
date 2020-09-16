@@ -2,6 +2,9 @@ package com.redhat.cloud.policies.engine.handlers;
 
 
 import com.redhat.cloud.policies.engine.handlers.util.ResponseUtil;
+import io.opentracing.Scope;
+import io.opentracing.Span;
+import io.opentracing.Tracer;
 import io.vertx.core.MultiMap;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
@@ -22,6 +25,7 @@ import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import java.util.*;
 
+import static com.redhat.cloud.policies.engine.handlers.util.SpanUtil.getServerSpan;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static org.hawkular.alerts.api.doc.DocConstants.*;
 import static org.hawkular.alerts.api.json.JsonUtil.collectionFromJson;
@@ -91,6 +95,9 @@ public class AlertsHandler {
 
     @Inject
     AlertsService alertsService;
+
+    @Inject
+    Tracer tracer;
 
     @PostConstruct
     public void init(@Observes Router router) {
@@ -189,12 +196,16 @@ public class AlertsHandler {
     public void findAlerts(RoutingContext routing) {
         routing.vertx()
                 .executeBlocking(future -> {
+                    Span serverSpan = getServerSpan(routing);
                     String tenantId = ResponseUtil.checkTenant(routing);
                     try {
                         ResponseUtil.checkForUnknownQueryParams(routing.request().params(), queryParamValidationMap.get(FIND_ALERTS));
                         Pager pager = ResponseUtil.extractPaging(routing.request().params());
                         AlertsCriteria criteria = buildCriteria(routing.request().params());
-                        Page<Alert> alertPage = alertsService.getAlerts(tenantId, criteria, pager);
+                        Page<Alert> alertPage;
+                        try (Scope ignored = tracer.buildSpan("getAlerts").asChildOf(serverSpan).startActive(true)) {
+                            alertPage = alertsService.getAlerts(tenantId, criteria, pager);
+                        }
                         if(log.isTraceEnabled()) {
                             log.tracef("Alerts: %s", alertPage);
                         }
