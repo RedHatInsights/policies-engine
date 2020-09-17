@@ -54,6 +54,9 @@
 
     <!-- Quarkus -->
     <quarkus.version>1.7.1.Final</quarkus.version>
+
+    <!--Distributed tracing support for Vert.x which is not covered by SmallRye-OT -->
+    <version.opentracing-vertx-web>1.0.0</version.opentracing-vertx-web>
   </properties>
 
   <dependencyManagement>
