@@ -173,4 +173,11 @@
       </plugin>
     </plugins>
   </build>
+
+  <distributionManagement>
+    <repository>
+      <id>filerepo</id>
+      <url>file:///${project.basedir}/src/main/resources/repo</url>
+    </repository>
+  </distributionManagement>
 </project>
