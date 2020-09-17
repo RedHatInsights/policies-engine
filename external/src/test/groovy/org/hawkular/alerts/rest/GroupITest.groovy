@@ -1,7 +1,9 @@
 package org.hawkular.alerts.rest
 
+import groovy.json.JsonOutput
 import io.quarkus.test.junit.QuarkusTest
 import org.hawkular.alerts.api.json.GroupConditionsInfo
+import org.hawkular.alerts.api.json.JsonUtil
 import org.hawkular.alerts.api.model.Severity
 import org.hawkular.alerts.api.model.condition.AvailabilityCondition
 import org.hawkular.alerts.api.model.condition.Condition
@@ -14,6 +16,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestMethodOrder
 import org.junit.jupiter.api.MethodOrderer
 
+import static org.hawkular.alerts.api.json.JsonUtil.fromJson
 import static org.hawkular.alerts.api.model.condition.AvailabilityCondition.Operator
 import static org.junit.jupiter.api.Assertions.*
 
@@ -125,11 +128,14 @@ class GroupITest extends AbstractQuarkusITestBase {
         assertEquals(2, resp.data.size())
 
         // VALIDATE member triggers
-        Trigger mt1 = resp.data[0]
-        Trigger mt2 = resp.data[1]
+        def jsonOut = JsonOutput.toJson(resp.data)
+        Trigger[] mts = fromJson(jsonOut, Trigger[].class)
+
+        Trigger mt1 = mts[0]
+        Trigger mt2 = mts[1]
         if ( mt1.id != "test-ddgroup-trigger_Source-1" ) {
-          mt1 = resp.data[1];
-          mt2 = resp.data[0];
+            mt1 = mts[1]
+            mt2 = mts[0]
         }
         assertEquals("test-ddgroup-trigger_Source-1", mt1.id)
         assertEquals("test-ddgroup-trigger_Source-2", mt2.id)

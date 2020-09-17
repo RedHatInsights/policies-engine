@@ -3,8 +3,14 @@ package org.hawkular.alerts.api.model.trigger;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
 import org.hawkular.alerts.api.doc.DocModel;
 import org.hawkular.alerts.api.doc.DocModelProperty;
+import org.hawkular.alerts.api.json.MultimapDeserializer;
+import org.hawkular.alerts.api.json.MultimapSerializer;
 import org.hawkular.alerts.api.model.Lifecycle;
 import org.hawkular.alerts.api.model.Note;
 import org.hawkular.alerts.api.model.Severity;
@@ -97,11 +103,13 @@ public class Trigger implements Serializable {
     @JsonInclude(Include.NON_EMPTY)
     protected Map<String, String> context;
 
-    @DocModelProperty(description = "Tags defined by the user for this trigger. A tag is a [name, value] pair." +
+    @DocModelProperty(description = "Tags defined by the user for this trigger. A tag is a [name, [value, value]] tuple." +
             "Tags can be used as criteria on finder methods. + \n" +
             "Tag value cannot be null.", position = 10)
     @JsonInclude(Include.NON_EMPTY)
-    protected Map<String, String> tags;
+    @JsonDeserialize(using = MultimapDeserializer.class)
+    @JsonSerialize(using = MultimapSerializer.class)
+    protected Multimap<String, String> tags;
 
     /** A list of links to actions represented by TriggerAction*/
     @DocModelProperty(description = "A list of links to actions.", position = 11)
@@ -217,7 +225,8 @@ public class Trigger implements Serializable {
         this.id = trigger.getId();
         this.name = trigger.getName();
         this.context = new HashMap<>(trigger.getContext());
-        this.tags = new HashMap<>(trigger.getTags());
+        this.tags = tagsBuilder();
+        this.tags.putAll(trigger.getTags());
         this.actions = new HashSet<>();
         for (TriggerAction action : trigger.getActions()) {
             this.actions.add(new TriggerAction(action));
@@ -248,7 +257,7 @@ public class Trigger implements Serializable {
         this.match = trigger.getMode() == Mode.FIRING ? trigger.getFiringMatch() : trigger.getAutoResolveMatch();
     }
 
-    public Trigger(String tenantId, String id, String name, Map<String, String> context, Map<String, String> tags) {
+    public Trigger(String tenantId, String id, String name, Map<String, String> context, Multimap<String, String> tags) {
         if (isEmpty(id)) {
             throw new IllegalArgumentException("Trigger id must be non-empty");
         }
@@ -256,7 +265,7 @@ public class Trigger implements Serializable {
         this.id = id;
         this.name = name;
         this.context = context;
-        this.tags = tags != null ? tags : new HashMap<>();
+        this.tags = tags != null ? tags : tagsBuilder();
 
         this.actions = new HashSet<>();
         this.autoDisable = false;
@@ -282,6 +291,10 @@ public class Trigger implements Serializable {
 
     public static String generateId() {
         return UUID.randomUUID().toString();
+    }
+
+    private Multimap<String, String> tagsBuilder() {
+        return MultimapBuilder.hashKeys().hashSetValues().build();
     }
 
     public String getTenantId() {
@@ -367,16 +380,16 @@ public class Trigger implements Serializable {
         getContext().put(name, value);
     }
 
-    public Map<String, String> getTags() {
+    public Multimap<String, String> getTags() {
         if (null == tags) {
-            tags = new HashMap<>();
+            tags = tagsBuilder();
         }
         return tags;
     }
 
-    public void setTags(Map<String, String> tags) {
+    public void setTags(Multimap<String, String> tags) {
         if (null == tags) {
-            tags = new HashMap<>();
+            tags = tagsBuilder();
         }
         this.tags = tags;
     }

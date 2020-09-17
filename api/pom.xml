@@ -24,6 +24,12 @@
       <artifactId>antlr4-runtime</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>${version.com.google.guava}</version>
+    </dependency>
+
     <!-- Logging -->
     <dependency>
       <groupId>org.jboss.logging</groupId>

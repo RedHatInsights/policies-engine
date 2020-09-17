@@ -112,6 +112,9 @@ public class EventsHandler {
                     Event event;
                     try {
                         event = fromJson(json, Event.class);
+                        for (Map.Entry<String, String> entry : event.getTags().entries()) {
+                            System.out.printf("TAGS: %s -> %s\n", entry.getKey(), entry.getValue());
+                        }
                     } catch (Exception e) {
                         throw new ResponseUtil.BadRequestException(e.toString());
                     }
@@ -618,18 +621,12 @@ public class EventsHandler {
         if (params.get(PARAM_TAG_QUERY) != null) {
             tagQuery = params.get(PARAM_TAG_QUERY);
         }
-        String unifiedTagQuery;
-        if (!isEmpty(tags)) {
-            unifiedTagQuery = ResponseUtil.parseTagQuery(ResponseUtil.parseTags(tags));
-        } else {
-            unifiedTagQuery = tagQuery;
-        }
         if (params.get(PARAM_THIN) != null) {
             thin = Boolean.valueOf(params.get(PARAM_THIN));
         }
         if (params.get(PARAM_EVENT_TYPE) != null) {
             eventType = params.get(PARAM_EVENT_TYPE);
         }
-        return new EventsCriteria(startTime, endTime, eventIds, triggerIds, categories, unifiedTagQuery, eventType, thin);
+        return new EventsCriteria(startTime, endTime, eventIds, triggerIds, categories, tagQuery, eventType, thin);
     }
 }

@@ -1,6 +1,23 @@
 package org.hawkular.alerts.api.model.event;
 
-import static org.hawkular.alerts.api.util.Util.isEmpty;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
+import org.hawkular.alerts.api.doc.DocModel;
+import org.hawkular.alerts.api.doc.DocModelProperty;
+import org.hawkular.alerts.api.json.MultimapDeserializer;
+import org.hawkular.alerts.api.json.MultimapSerializer;
+import org.hawkular.alerts.api.model.condition.ConditionEval;
+import org.hawkular.alerts.api.model.condition.EventConditionEval;
+import org.hawkular.alerts.api.model.dampening.Dampening;
+import org.hawkular.alerts.api.model.data.Data;
+import org.hawkular.alerts.api.model.trigger.Trigger;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -9,19 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import org.hawkular.alerts.api.doc.DocModel;
-import org.hawkular.alerts.api.doc.DocModelProperty;
-import org.hawkular.alerts.api.model.condition.ConditionEval;
-import org.hawkular.alerts.api.model.condition.EventConditionEval;
-import org.hawkular.alerts.api.model.dampening.Dampening;
-import org.hawkular.alerts.api.model.data.Data;
-import org.hawkular.alerts.api.model.trigger.Trigger;
-
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import static org.hawkular.alerts.api.util.Util.isEmpty;
 
 /**
  * An Alert is an Event.  For the most part an Event can be thought of as an Alert without life-cycle. Alerts are
@@ -132,7 +137,9 @@ public class Event implements Comparable<Event>, Serializable {
             "Tag value cannot be null.",
             position = 9)
     @JsonInclude(Include.NON_EMPTY)
-    protected Map<String, String> tags;
+    @JsonDeserialize(using = MultimapDeserializer.class)
+    @JsonSerialize(using = MultimapSerializer.class)
+    protected Multimap<String, String> tags;
 
     // Null for API-generated Events. Otherwise the Trigger that created the event (@ctime)
     @DocModelProperty(description = "Trigger that created the event. + \n " +
@@ -212,12 +219,12 @@ public class Event implements Comparable<Event>, Serializable {
     }
 
     public Event(String tenantId, String id, long ctime, String dataId, String category,
-            String text, Map<String, String> context, Map<String, String> tags) {
+            String text, Map<String, String> context, Multimap<String, String> tags) {
         this(tenantId, id, ctime, null, dataId, category, text, context, tags);
     }
 
     public Event(String tenantId, String id, long ctime, String dataSource, String dataId, String category,
-            String text, Map<String, String> context, Map<String, String> tags) {
+            String text, Map<String, String> context, Multimap<String, String> tags) {
         this.tenantId = tenantId;
         this.id = id;
         setCtime(ctime);
@@ -257,7 +264,8 @@ public class Event implements Comparable<Event>, Serializable {
         this.context = new HashMap<>(event.getContext());
         this.category = event.getCategory();
         this.text = event.getText();
-        this.tags = new HashMap<>(event.getTags());
+        this.tags = tagsBuilder();
+        this.tags.putAll(event.getTags());
         this.facts = new HashMap<>();
         if (event.getFacts() != null) {
             this.facts.putAll(event.getFacts());
@@ -288,7 +296,7 @@ public class Event implements Comparable<Event>, Serializable {
         } else {
             this.text = isEmpty(trigger.getDescription()) ? trigger.getName() : trigger.getDescription();
         }
-        this.tags = new HashMap<>();
+        this.tags = tagsBuilder();
         this.tags.putAll(trigger.getTags());
         this.facts = new HashMap<>();
 
@@ -369,9 +377,13 @@ public class Event implements Comparable<Event>, Serializable {
         this.text = text;
     }
 
-    public Map<String, String> getTags() {
+    private Multimap<String, String> tagsBuilder() {
+        return MultimapBuilder.hashKeys().hashSetValues().build();
+    }
+
+    public Multimap<String, String> getTags() {
         if (null == tags) {
-            tags = new HashMap<>();
+            tags = tagsBuilder();
         }
         return tags;
     }
@@ -384,7 +396,7 @@ public class Event implements Comparable<Event>, Serializable {
         this.facts = facts;
     }
 
-    public void setTags(Map<String, String> tags) {
+    public void setTags(Multimap<String, String> tags) {
         this.tags = tags;
     }
 
@@ -399,7 +411,7 @@ public class Event implements Comparable<Event>, Serializable {
         if (null == name) {
             throw new IllegalArgumentException("Tag must have non-null name");
         }
-        getTags().remove(name);
+        getTags().removeAll(name);
     }
 
     public Map<String, String> getContext() {

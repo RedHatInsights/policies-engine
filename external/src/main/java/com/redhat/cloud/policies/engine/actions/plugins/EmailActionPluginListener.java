@@ -1,5 +1,7 @@
 package com.redhat.cloud.policies.engine.actions.plugins;
 
+import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
 import com.redhat.cloud.policies.engine.process.Receiver;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.metrics.Counter;
@@ -58,7 +60,7 @@ public class EmailActionPluginListener implements ActionPluginListener {
                         // Fallback, this won't merge anything
                         insightId = eventEval.getValue().getId();
                     }
-                    Map<String, String> tags = eventEval.getValue().getTags();
+                    Multimap<String, String> tags = eventEval.getValue().getTags();
                     String name = actionMessage.getAction().getEvent().getTrigger().getName();
                     String triggerId = actionMessage.getAction().getEvent().getTrigger().getId();
 
@@ -113,21 +115,21 @@ public class EmailActionPluginListener implements ActionPluginListener {
     private static class Notification {
         private String tenantId;
         private String insightId;
-        private Map<String, String> tags;
         private Map<String, String> triggers;
+        private Multimap<String, String> tags;
 
         public Notification(String tenantId, String insightId) {
             this.tenantId = tenantId;
             this.insightId = insightId;
-            this.tags = new HashMap<>();
             this.triggers = new HashMap<>();
+            this.tags = MultimapBuilder.hashKeys().hashSetValues().build();
         }
 
         public String getTenantId() {
             return tenantId;
         }
 
-        public Map<String, String> getTags() {
+        public Multimap<String, String> getTags() {
             return tags;
         }
 

@@ -150,7 +150,7 @@ public class ReceiverTest {
 
         // Verify the alert includes the tags from the event
         AlertsCriteria criteria = new AlertsCriteria();
-        criteria.setTagQuery("display_name = 'VM'");
+        criteria.setTagQuery("tags.display_name = 'VM'");
         Page<Alert> alerts = alertsService.getAlerts(TENANT_ID, criteria, null);
 
         // 4, because we have two triggers and we send the correct input twice

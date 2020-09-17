@@ -1,55 +1,56 @@
 package org.hawkular.alerts.api.services;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import static org.hawkular.alerts.api.util.Util.isEmpty;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-
-/**
- * Query criteria for fetching Triggers.
- * @author jay shaughnessy
- * @author lucas ponce
- */
 public class TriggersCriteria {
-    String triggerId = null;
-    Collection<String> triggerIds = null;
-    Map<String, String> tags = null;
+    List<String> triggerIds = new ArrayList<>();
+    String query = null;
     boolean thin = false;
 
     public TriggersCriteria() {
         super();
     }
 
-    public String getTriggerId() {
-        return triggerId;
+    @Deprecated
+    public void addTriggerIdFilter(String triggerId) {
+        this.triggerIds.add(triggerId);
     }
 
-    public void setTriggerId(String triggerId) {
-        this.triggerId = triggerId;
-    }
-
-    public Collection<String> getTriggerIds() {
-        return triggerIds;
-    }
-
+    @Deprecated
     public void setTriggerIds(Collection<String> triggerIds) {
-        this.triggerIds = triggerIds;
-    }
-
-    public Map<String, String> getTags() {
-        return tags;
-    }
-
-    public void setTags(Map<String, String> tags) {
-        this.tags = tags;
-    }
-
-    public void addTag(String name, String value) {
-        if (null == tags) {
-            tags = new HashMap<>();
+        this.triggerIds.clear();
+        if(triggerIds != null) {
+            this.triggerIds.addAll(triggerIds);
         }
-        tags.put(name, value);
+    }
+
+    public String getQuery() {
+        if(hasTriggerIdCriteria()) {
+            String triggerQuery = getTriggerIdQuery();
+            if(hasQueryCriteria()) {
+                return query + " and (" + triggerQuery + ")";
+            } else {
+                return triggerQuery;
+            }
+        }
+        return query;
+    }
+
+    private String getTriggerIdQuery() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("triggerId in ['");
+        builder.append(String.join("', '", triggerIds));
+        builder.append("']");
+
+        return builder.toString();
+    }
+
+    public void setQuery(String query) {
+        this.query = query;
     }
 
     public boolean isThin() {
@@ -60,22 +61,21 @@ public class TriggersCriteria {
         this.thin = thin;
     }
 
-    public boolean hasTagCriteria() {
-        return (null != tags && !tags.isEmpty());
+    private boolean hasQueryCriteria() {
+        return !isEmpty(query);
     }
 
-    public boolean hasTriggerIdCriteria() {
-        return !isEmpty(triggerId) || !isEmpty(triggerIds);
+    private boolean hasTriggerIdCriteria() {
+        return !isEmpty(triggerIds);
     }
 
     public boolean hasCriteria() {
-        return hasTriggerIdCriteria()
-                || hasTagCriteria();
+        return hasTriggerIdCriteria() || hasQueryCriteria();
     }
 
     @Override
     public String toString() {
-        return "TriggersCriteria [triggerId=" + triggerId + ", triggerIds=" + triggerIds + ", tags=" + tags
+        return "TriggersCriteria [triggerIds=" + triggerIds + ", query=" + query
                 + ", thin=" + thin + "]";
     }
 

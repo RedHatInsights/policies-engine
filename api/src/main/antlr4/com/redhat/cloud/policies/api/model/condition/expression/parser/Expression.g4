@@ -40,6 +40,7 @@ numeric_compare_operator
 
 string_compare_operator
   : CONTAINS
+  | MATCHES
   ;
 
 array_operator
@@ -77,6 +78,7 @@ NOT: N O T;
 EQUAL: '=';
 NOTEQUAL: '!=';
 CONTAINS: C O N T A I N S;
+MATCHES: M A T C H E S;
 NEG: NEG_OP;
 
 // Allow only for numbers

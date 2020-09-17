@@ -1,5 +1,7 @@
 package org.hawkular.alerts.rest
 
+import com.google.common.collect.Multimap
+import groovy.json.JsonOutput
 import io.quarkus.test.junit.QuarkusTest
 import org.hawkular.alerts.api.json.GroupConditionsInfo
 import org.hawkular.alerts.api.json.GroupMemberInfo
@@ -15,10 +17,9 @@ import org.hawkular.alerts.log.MsgLogger
 import org.hawkular.alerts.log.MsgLogging
 import org.junit.jupiter.api.Test
 
-import static org.junit.jupiter.api.Assertions.assertEquals
-import static org.junit.jupiter.api.Assertions.assertNotEquals
-import static org.junit.jupiter.api.Assertions.assertTrue
-import static org.junit.jupiter.api.Assertions.assertNotNull
+import static org.hawkular.alerts.api.json.JsonUtil.fromJson
+import static org.hawkular.alerts.api.json.JsonUtil.toJson
+import static org.junit.jupiter.api.Assertions.*
 
 /**
  * Triggers REST tests.
@@ -83,12 +84,14 @@ class TriggersITest extends AbstractQuarkusITestBase {
         assert(200 == resp.status || 404 == resp.status)
 
         // create the group
-        resp = client.post(path: "triggers/groups", body: groupTrigger)
+        def groupTriggerBody = toJson(groupTrigger)
+        resp = client.post(path: "triggers/groups", body: groupTriggerBody)
         assertEquals(200, resp.status)
 
         resp = client.get(path: "triggers/group-trigger")
         assertEquals(200, resp.status)
-        groupTrigger = (Trigger)resp.data;
+        def jsonOut = JsonOutput.toJson(resp.data)
+        groupTrigger = fromJson(jsonOut, Trigger.class)
         assertEquals( true, groupTrigger.isGroup() );
 
         ThresholdCondition cond1 = new ThresholdCondition("group-trigger", Mode.FIRING, "DataId1-Token",
@@ -126,7 +129,8 @@ class TriggersITest extends AbstractQuarkusITestBase {
 
         // add tag to the group (via update)
         groupTrigger.addTag( "group-tname", "group-tvalue" );
-        resp = client.put(path: "triggers/groups/group-trigger", body: groupTrigger)
+        def groupTriggerJson = toJson(groupTrigger)
+        resp = client.put(path: "triggers/groups/group-trigger", body: groupTriggerJson)
         assertEquals(200, resp.status)
 
         // add another condition to the group (only member1 is relevant, member2 is now an orphan)
@@ -147,7 +151,8 @@ class TriggersITest extends AbstractQuarkusITestBase {
 
         // update the group trigger
         groupTrigger.setAutoDisable( true );
-        resp = client.put(path: "triggers/groups/group-trigger", body: groupTrigger)
+        def body = toJson(groupTrigger)
+        resp = client.put(path: "triggers/groups/group-trigger", body: body)
         assertEquals(200, resp.status)
 
         // update the group dampening to the group
@@ -160,7 +165,11 @@ class TriggersITest extends AbstractQuarkusITestBase {
         resp = client.get(path: "triggers/groups/group-trigger/members", query: [includeOrphans:"false"])
         assertEquals(200, resp.status)
         assertEquals(1, resp.data.size());
-        Trigger member = (Trigger)resp.data[0];
+
+        jsonOut = JsonOutput.toJson(resp.data)
+        Trigger[] memberTriggers = fromJson(jsonOut, Trigger[].class)
+
+        Trigger member = memberTriggers[0]
         assertEquals( false, member.isOrphan() );
         assertEquals( "member1", member.getName() );
 
@@ -168,11 +177,14 @@ class TriggersITest extends AbstractQuarkusITestBase {
         resp = client.get(path: "triggers/groups/group-trigger/members", query: [includeOrphans:"true"])
         assertEquals(200, resp.status)
         assertEquals(2, resp.data.size());
-        member = (Trigger)resp.data[0];
-        Trigger orphanMember = (Trigger)resp.data[1];
+
+        jsonOut = JsonOutput.toJson(resp.data)
+        memberTriggers = fromJson(jsonOut, Trigger[].class)
+        member = memberTriggers[0]
+        Trigger orphanMember = memberTriggers[1]
         if ( member.isOrphan() ) {
-            member = (Trigger)resp.data[1];
-            orphanMember = (Trigger)resp.data[0];
+            member = memberTriggers[1]
+            orphanMember = memberTriggers[0]
         }
         assertEquals( "member1", member.getName() );
         assertEquals( false, member.isOrphan() );
@@ -184,7 +196,8 @@ class TriggersITest extends AbstractQuarkusITestBase {
         // get the group trigger
         resp = client.get(path: "triggers/group-trigger")
         assertEquals(200, resp.status)
-        groupTrigger = (Trigger)resp.data;
+        jsonOut = JsonOutput.toJson(resp.data)
+        groupTrigger = fromJson(jsonOut, Trigger.class)
         assertEquals( "group-trigger", groupTrigger.getName() );
         assertEquals( true, groupTrigger.isGroup() );
         assertEquals( true, groupTrigger.isAutoDisable());
@@ -195,9 +208,9 @@ class TriggersITest extends AbstractQuarkusITestBase {
         assertEquals(1, resp.data.size());
 
         // check the group tags
-        Map<String, String> groupTags = groupTrigger.getTags();
+        Multimap<String, String> groupTags = groupTrigger.getTags();
         assertEquals(1, groupTags.size());
-        assertEquals("group-tvalue", groupTags.get("group-tname"));
+        assertEquals("group-tvalue", groupTags.get("group-tname").iterator().next());
 
         // get the group conditions
         resp = client.get(path: "triggers/group-trigger/conditions")
@@ -213,15 +226,17 @@ class TriggersITest extends AbstractQuarkusITestBase {
         // get the member1 trigger
         resp = client.get(path: "triggers/member1")
         assertEquals(200, resp.status)
-        def member1 = (Trigger)resp.data;
+
+        jsonOut = JsonOutput.toJson(resp.data)
+        def member1 = fromJson(jsonOut, Trigger.class)
         assertEquals( "member1", member1.getName() );
         assertEquals( true, member1.isMember() );
         assertEquals( true, member1.isAutoDisable());
 
         // check the member1 tag
-        Map<String, String> memberTags = member1.getTags();
+        Multimap<String, String> memberTags = member1.getTags();
         assertEquals(1, memberTags.size());
-        assertEquals("group-tvalue", memberTags.get("group-tname"));
+        assertEquals("group-tvalue", memberTags.get("group-tname").iterator().next());
 
         // get the member1 dampening
         resp = client.get(path: "triggers/member1/dampenings")
@@ -236,7 +251,9 @@ class TriggersITest extends AbstractQuarkusITestBase {
         // get the member2 trigger
         resp = client.get(path: "triggers/member2")
         assertEquals(200, resp.status)
-        def member2 = (Trigger)resp.data;
+
+        jsonOut = JsonOutput.toJson(resp.data)
+        def member2 = fromJson(jsonOut, Trigger.class)
         assertEquals( "member2", member2.getName() );
         assertEquals( true, member2.isMember() );
         assertEquals( false, member2.isAutoDisable());
@@ -266,7 +283,8 @@ class TriggersITest extends AbstractQuarkusITestBase {
         // get the member2 trigger
         resp = client.get(path: "triggers/member2")
         assertEquals(200, resp.status)
-        member2 = (Trigger)resp.data;
+        jsonOut = JsonOutput.toJson(resp.data)
+        member2 = fromJson(jsonOut, Trigger.class)
         assertEquals( "member2", member2.getName() );
         assertEquals( false, member2.isOrphan() );
         assertEquals( true, member2.isAutoDisable());
@@ -274,7 +292,7 @@ class TriggersITest extends AbstractQuarkusITestBase {
         // check the member2 tag
         memberTags = member2.getTags();
         assertEquals(1, memberTags.size());
-        assertEquals("group-tvalue", memberTags.get("group-tname"));
+        assertEquals("group-tvalue", memberTags.get("group-tname").iterator().next());
 
         // check the member2 dampening
         resp = client.get(path: "triggers/member2/dampenings")
@@ -288,7 +306,8 @@ class TriggersITest extends AbstractQuarkusITestBase {
 
         // delete group tag
         groupTrigger.getTags().clear();
-        resp = client.put(path: "triggers/groups/group-trigger", body: groupTrigger)
+        groupTriggerJson = toJson(groupTrigger)
+        resp = client.put(path: "triggers/groups/group-trigger", body: groupTriggerJson)
         assertEquals(200, resp.status)
 
         // delete group dampening
@@ -312,7 +331,8 @@ class TriggersITest extends AbstractQuarkusITestBase {
         // get the group trigger
         resp = client.get(path: "triggers/group-trigger")
         assertEquals(200, resp.status)
-        groupTrigger = (Trigger)resp.data;
+        jsonOut = toJson(resp.data)
+        groupTrigger = fromJson(jsonOut, Trigger.class)
         assertEquals( "group-trigger", groupTrigger.getName() );
         assertEquals( true, groupTrigger.isGroup() );
         assertEquals( true, groupTrigger.isAutoDisable());
@@ -330,8 +350,9 @@ class TriggersITest extends AbstractQuarkusITestBase {
         resp = client.get(path: "triggers/groups/group-trigger/members", query: [includeOrphans:"false"])
         assertEquals(200, resp.status)
         assertEquals(2, resp.data.size());
+        def members = fromJson(toJson(resp.data), Trigger[].class)
         for(int i=0; i < resp.data.size(); ++i) {
-            member = (Trigger)resp.data[i];
+            member = members[i]
             String name = member.getName();
             assertEquals( false, member.isOrphan() );
             assertEquals( true, member.isAutoDisable());
@@ -375,7 +396,8 @@ class TriggersITest extends AbstractQuarkusITestBase {
         assert(200 == resp.status || 404 == resp.status)
 
         // create the test trigger
-        resp = client.post(path: "triggers", body: testTrigger)
+        def body = toJson(testTrigger)
+        resp = client.post(path: "triggers", body: body)
         assertEquals(200, resp.status)
 
         // make sure the test trigger exists
@@ -383,18 +405,22 @@ class TriggersITest extends AbstractQuarkusITestBase {
         assertEquals(200, resp.status)
         assertEquals("No-Metric", resp.data.name)
 
-        Map<String, String> tags = resp.data.tags;
-        assertEquals("tvalue", tags.get("tname"));
+        def jsonOut = JsonOutput.toJson(resp.data)
+        def tagTrigger = fromJson(jsonOut, Trigger.class)
+        Multimap<String, String> tags = tagTrigger.getTags()
+        assertEquals("tvalue", tags.get("tname").iterator().next());
 
-        resp = client.get(path: "triggers", query: [tags:"tname|tvalue"] );
+        resp = client.get(path: "triggers", query: [query:"tags.tname = 'tvalue'"] );
+        jsonOut = JsonOutput.toJson(resp.data)
+        Trigger[] tagTriggers2 = fromJson(jsonOut, Trigger[].class)
+        assertEquals(200, resp.status)
+        assertEquals("test-trigger-1", tagTriggers2[0].id)
+
+        resp = client.get(path: "triggers", query: [query:"tags.tname matches '*'"] );
         assertEquals(200, resp.status)
         assertEquals("test-trigger-1", resp.data.iterator().next().id)
 
-        resp = client.get(path: "triggers", query: [tags:"tname|*"] );
-        assertEquals(200, resp.status)
-        assertEquals("test-trigger-1", resp.data.iterator().next().id)
-
-        resp = client.get(path: "triggers", query: [tags:"funky|funky"] );
+        resp = client.get(path: "triggers", query: [query:"tags.funky = 'funky'"] );
         assertEquals(200, resp.status)
         assertEquals(false, resp.data.iterator().hasNext())
 
@@ -403,7 +429,7 @@ class TriggersITest extends AbstractQuarkusITestBase {
         resp = client.put(path: "triggers/test-trigger-1", body: testTrigger )
         assertEquals(200, resp.status)
 
-        resp = client.get(path: "triggers", query: [tags:"tname|tvalue"] );
+        resp = client.get(path: "triggers", query: [query:"tags.tname = 'tvalue'"] );
         assertEquals(200, resp.status)
         assertEquals(0, resp.data.size())
 
@@ -1038,7 +1064,8 @@ class TriggersITest extends AbstractQuarkusITestBase {
 
         resp = client.get(path: "triggers/group-trigger")
         assertEquals(200, resp.status)
-        groupTrigger = (Trigger)resp.data;
+        def jsonOut = JsonOutput.toJson(resp.data)
+        groupTrigger = fromJson(jsonOut, Trigger.class)
         assertEquals( true, groupTrigger.isGroup() );
 
         ThresholdCondition cond1 = new ThresholdCondition("group-trigger", Mode.FIRING, "DataId1-Token",

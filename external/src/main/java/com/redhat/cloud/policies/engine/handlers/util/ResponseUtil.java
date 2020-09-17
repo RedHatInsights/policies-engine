@@ -1,24 +1,10 @@
 package com.redhat.cloud.policies.engine.handlers.util;
 
-import static org.hawkular.alerts.api.json.JsonUtil.toJson;
-import static org.hawkular.alerts.api.util.Util.isEmpty;
-
-import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
-import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
-import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
-import static io.netty.handler.codec.http.HttpResponseStatus.OK;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.stream.Collectors;
-
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.google.common.collect.Multimap;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.MultiMap;
+import io.vertx.ext.web.RoutingContext;
 import org.hawkular.alerts.api.doc.DocModel;
 import org.hawkular.alerts.api.doc.DocModelProperty;
 import org.hawkular.alerts.api.json.GroupMemberInfo;
@@ -31,11 +17,23 @@ import org.hawkular.alerts.api.model.paging.PageContext;
 import org.hawkular.alerts.api.model.paging.Pager;
 import org.hawkular.alerts.api.model.trigger.Trigger;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.MultiMap;
-import io.vertx.ext.web.RoutingContext;
+import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
+import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
+import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
+import static io.netty.handler.codec.http.HttpResponseStatus.OK;
+import static org.hawkular.alerts.api.json.JsonUtil.toJson;
+import static org.hawkular.alerts.api.util.Util.isEmpty;
 
 /**
  * @author Jay Shaughnessy
@@ -242,25 +240,6 @@ public class ResponseUtil {
     }
 
     @SuppressWarnings("unchecked")
-    public static String parseTagQuery(Map<String, String> tags) {
-        if (isEmpty(tags)) {
-            return null;
-        }
-        StringBuilder tagQuery = new StringBuilder();
-        Iterator it = tags.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry<String, String> tag = (Map.Entry<String, String>) it.next();
-            tagQuery.append(tag.getKey());
-            if (!"*".equals(tag.getValue())) {
-                tagQuery.append(" = ").append("").append(tag.getValue());
-            }
-            if (it.hasNext()) {
-                tagQuery.append(" or ");
-            }
-        }
-        return tagQuery.toString();
-    }
-
     public static void checkForUnknownQueryParams(MultiMap params, final Set<String> expected) {
         if (params.contains(PARAM_IGNORE_UNKNOWN_QUERY_PARAMS)) {
             return;
@@ -290,11 +269,11 @@ public class ResponseUtil {
         return checkTags(groupMemberInfo.getMemberTags());
     }
 
-    private static boolean checkTags(Map<String, String> tagsMap) {
+    private static boolean checkTags(Multimap<String, String> tagsMap) {
         if (isEmpty(tagsMap)) {
             return true;
         }
-        for (Map.Entry<String, String> entry : tagsMap.entrySet()) {
+        for (Map.Entry<String, String> entry : tagsMap.entries()) {
             if (isEmpty(entry.getKey()) || isEmpty(entry.getValue())) {
                 return false;
             }

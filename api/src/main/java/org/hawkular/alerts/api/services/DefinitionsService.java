@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Multimap;
 import org.hawkular.alerts.api.exception.NotFoundException;
 import org.hawkular.alerts.api.model.Note;
 import org.hawkular.alerts.api.model.action.ActionDefinition;
@@ -27,6 +28,8 @@ import org.hawkular.alerts.api.services.DefinitionsEvent.Type;
  * @author Lucas Ponce
  */
 public interface DefinitionsService {
+
+    // TODO Fix references to tags
 
     /*
         CRUD interface for Triggers
@@ -136,7 +139,7 @@ public interface DefinitionsService {
      * <code>dataIdMap</code> parameter.
      */
     Trigger addMemberTrigger(String tenantId, String groupId, String memberId, String memberName,
-            String memberDescription, Map<String, String> memberContext, Map<String, String> memberTags,
+            String memberDescription, Map<String, String> memberContext, Multimap<String, String> memberTags,
             Map<String, String> dataIdMap)
             throws Exception;
 
@@ -270,14 +273,6 @@ public interface DefinitionsService {
     Collection<Trigger> getAllTriggers() throws Exception;
 
     /**
-     * Get all stored Triggers for all Tenants with a specific Tag. This can be inefficient.
-     * @param name The tag name, not null.
-     * @param value The tag value, not null. Set to '*' to match all values for the name.
-     * @throws Exception on any problem
-     */
-    Collection<Trigger> getAllTriggersByTag(String name, String value) throws Exception;
-
-    /**
      * Orphan a member trigger.  The member trigger will no longer inherit group updates.  It will be allowed
      * to be independently updated.  It does maintain its group reference and can again be tied to the
      * group via a call to {@link #unorphanMemberTrigger(String, String, Map, Map)}.
@@ -315,7 +310,7 @@ public interface DefinitionsService {
      * of setting the <code>dataIdMap</code>.
      */
     Trigger unorphanMemberTrigger(String tenantId, String memberId, Map<String, String> memberContext,
-            Map<String, String> memberTags, Map<String, String> dataIdMap) throws Exception;
+            Multimap<String, String> memberTags, Map<String, String> dataIdMap) throws Exception;
 
     /*
         CRUD interface for Dampening

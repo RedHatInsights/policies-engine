@@ -11,7 +11,6 @@ import static org.hawkular.alerts.api.model.condition.AvailabilityCondition.Oper
 import static org.hawkular.alerts.api.model.condition.NelsonCondition.NelsonRule
 import static org.hawkular.alerts.api.model.condition.RateCondition.Direction
 import static org.hawkular.alerts.api.model.condition.RateCondition.Period
-
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertTrue
 
@@ -414,8 +413,8 @@ class ConditionsITest extends AbstractQuarkusITestBase {
 
         resp = client.get(path: "triggers/group-trigger")
         assertEquals(200, resp.status)
-        groupTrigger = (Trigger)resp.data;
-        assertEquals( true, groupTrigger.isGroup() );
+
+        assertEquals("GROUP", resp.data.type)
 
         ThresholdCondition cond1 = new ThresholdCondition("group-trigger", Mode.FIRING, "DataId1-Token",
                 ThresholdCondition.Operator.GT, 10.0);

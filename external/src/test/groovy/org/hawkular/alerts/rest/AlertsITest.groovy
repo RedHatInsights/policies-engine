@@ -29,13 +29,13 @@ class AlertsITest extends AbstractQuarkusITestBase {
         resp = client.get(path: "", query: [endTime:now, startTime:"0",statuses:"OPEN,ACKNOWLEDGED,RESOLVED"] )
         assert resp.status == 200 : resp.status
 
-        resp = client.get(path: "", query: [tags:"data-01|*,data-02|*"] )
+        resp = client.get(path: "", query: [tagQuery:"tags.data-01 matches '*' and tags.data-02 matches '*'"] )
         assert resp.status == 200 : resp.status
 
-        resp = client.get(path: "", query: [tags:"dataId|data-01,dataId|data-02",thin:true] )
+        resp = client.get(path: "", query: [tagQuery:"tags.dataId = 'data-01' and tags.dataId = 'data-02'",thin:true] )
         assert resp.status == 200 : resp.status
 
-        resp = client.get(path: "", query: [tagQuery:"tagA or (tagB and tagC in ['e.*', 'f.*'])"] )
+        resp = client.get(path: "", query: [tagQuery:"tags.tagA or (tags.tagB and tags.tagC in ['e.*', 'f.*'])"] )
         assert resp.status == 200 : resp.status
 
         resp = client.get(path: "", query: [endResolvedTime:now, startResolvedTime:"0"] )
@@ -56,7 +56,7 @@ class AlertsITest extends AbstractQuarkusITestBase {
             startAckTime:"0", endAckTime:now,
             startResolvedTime:"0", endResolvedTime:now,
             alertIds:"Alert-01", triggerIds:"Trigger-01,Trigger-02", statuses: "OPEN", severities: "LOW",
-            tags: "a|b", tagQuery: "foo", thin: true] )
+            tagQuery: "tags.foo", thin: true] )
         assert resp.status == 200 : resp.status
 
         resp = client.get(path: "", query: [
@@ -86,13 +86,13 @@ class AlertsITest extends AbstractQuarkusITestBase {
         resp = client.put(path: "delete", query: [endTime:now, startTime:"0",statuses:"OPEN,ACKNOWLEDGED,RESOLVED"] )
         assert resp.status == 200 : resp.status
 
-        resp = client.put(path: "delete", query: [tags:"data-01|*,data-02|*"] )
+        resp = client.put(path: "delete", query: [tagQuery:"tags.data-01 matches '*' and tags.data-02 matches '*'"] )
         assert resp.status == 200 : resp.status
 
-        resp = client.put(path: "delete", query: [tags:"dataId|data-01,dataId|data-02"] )
+        resp = client.put(path: "delete", query: [tagQuery:"tags.dataId = 'data-01' and tags.dataId = 'data-02'"] )
         assert resp.status == 200 : resp.status
 
-        resp = client.put(path: "delete", query: [tagQuery:"tagA or (tagB and tagC in ['e.*', 'f.*'])"] )
+        resp = client.put(path: "delete", query: [tagQuery:"tags.tagA or (tags.tagB and tags.tagC in ['e.*', 'f.*'])"] )
         assert resp.status == 200 : resp.status
 
         resp = client.put(path: "delete", query: [endResolvedTime:now, startResolvedTime:"0"] )

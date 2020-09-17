@@ -61,11 +61,6 @@
       <artifactId>guava</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>org.antlr</groupId>
-      <artifactId>antlr4-runtime</artifactId>
-    </dependency>
-
     <!-- Infinispan -->
     <dependency>
       <groupId>org.infinispan</groupId>
@@ -130,23 +125,8 @@
         </executions>
       </plugin>
       <plugin>
-        <groupId>org.antlr</groupId>
-        <artifactId>antlr4-maven-plugin</artifactId>
-        <version>${version.org.antlr}</version>
-        <executions>
-          <execution>
-            <id>antlr4</id>
-            <goals>
-              <goal>antlr4</goal>
-            </goals>
-            <phase>generate-sources</phase>
-            <configuration>
-              <listener>true</listener>
-              <visitor>true</visitor>
-              <outputDirectory>src/main/java</outputDirectory>
-            </configuration>
-          </execution>
-        </executions>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>${version.org.apache.maven.plugins.maven-compiler-plugin}</version>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

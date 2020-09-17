@@ -40,7 +40,8 @@ public class AlertsImportManagerTest {
 
         // Check trigger-1
         assertEquals("value1", fullTriggers.get(0).getTrigger().getContext().get("name1"));
-        assertEquals("tvalue2", fullTriggers.get(0).getTrigger().getTags().get("tname2"));
+        assertTrue(fullTriggers.get(0).getTrigger().getTags().get("tname2").contains("tvalue2"));
+
         assertEquals(Dampening.Type.STRICT, fullTriggers.get(0).getDampenings().get(0).getType());
         assertTrue(fullTriggers.get(0).getConditions().get(0) instanceof ThresholdCondition);
 

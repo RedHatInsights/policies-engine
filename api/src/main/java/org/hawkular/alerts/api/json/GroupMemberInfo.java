@@ -2,6 +2,7 @@ package org.hawkular.alerts.api.json;
 
 import java.util.Map;
 
+import com.google.common.collect.Multimap;
 import org.hawkular.alerts.api.doc.DocModel;
 import org.hawkular.alerts.api.doc.DocModelProperty;
 
@@ -71,7 +72,7 @@ public class GroupMemberInfo {
     @DocModelProperty(description = "Trigger tags for member Trigger.",
             position = 5,
             required = true)
-    private Map<String, String> memberTags;
+    private Multimap<String, String> memberTags;
 
     @DocModelProperty(description = "A map of the dataId tokens in the group conditions to the actual dataIds to " +
             "be used for the member being added. + \n" +
@@ -85,7 +86,7 @@ public class GroupMemberInfo {
     }
 
     public GroupMemberInfo(String groupId, String memberId, String memberName, String memberDescription,
-            Map<String, String> memberContext, Map<String, String> memberTags, Map<String, String> dataIdMap) {
+            Map<String, String> memberContext, Multimap<String, String> memberTags, Map<String, String> dataIdMap) {
         super();
         this.groupId = groupId;
         this.memberId = memberId;
@@ -146,7 +147,7 @@ public class GroupMemberInfo {
         this.memberContext = memberContext;
     }
 
-    public Map<String, String> getMemberTags() {
+    public Multimap<String, String> getMemberTags() {
         return memberTags;
     }
 
@@ -154,7 +155,7 @@ public class GroupMemberInfo {
      * @param memberTags Members inherit the group trigger tags. If not null this adds additional, or
      *                      overrides existing, tags.
      */
-    public void setMemberTags(Map<String, String> memberTags) {
+    public void setMemberTags(Multimap<String, String> memberTags) {
         this.memberTags = memberTags;
     }
 

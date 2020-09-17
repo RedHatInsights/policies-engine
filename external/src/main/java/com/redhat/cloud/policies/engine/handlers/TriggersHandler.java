@@ -52,16 +52,16 @@ public class TriggersHandler {
     private static final String PARAM_KEEP_ORPHANS = "keepOrphans";
     private static final String PARAM_INCLUDE_ORPHANS = "includeOrphans";
     private static final String PARAM_TRIGGER_IDS = "triggerIds";
-    private static final String PARAM_TAGS = "tags";
     private static final String PARAM_THIN = "thin";
+    private static final String PARAM_QUERY = "query";
     private static final String PARAM_ENABLED = "enabled";
 
     private static final String FIND_TRIGGERS = "findTriggers";
     private static final Map<String, Set<String>> queryParamValidationMap = new HashMap<>();
     static {
-        Collection<String> TRIGGERS_CRITERIA = Arrays.asList(PARAM_TRIGGER_IDS,
-                PARAM_TAGS,
+        Collection<String> TRIGGERS_CRITERIA = Arrays.asList(
                 PARAM_TRIGGER_IDS,
+                PARAM_QUERY,
                 PARAM_THIN);
         queryParamValidationMap.put(FIND_TRIGGERS, new HashSet<>(TRIGGERS_CRITERIA));
         queryParamValidationMap.get(FIND_TRIGGERS).addAll(ResponseUtil.PARAMS_PAGING);
@@ -665,13 +665,9 @@ public class TriggersHandler {
             name = "Get triggers with optional filtering.",
             notes = "If not criteria defined, it fetches all triggers stored in the system.")
     @DocParameters(value = {
-            @DocParameter(name = "triggerIds",
-                    description = "Filter out triggers for unspecified triggerIds.",
-                    allowableValues = "Comma separated list of trigger IDs."),
-            @DocParameter(name = "tags",
-                    description = "Filter out triggers for unspecified tags.",
-                    allowableValues = "Comma separated list of tags, each tag of format 'name\\|description'. + \n" +
-                            "Specify '*' for description to match all values."),
+            @DocParameter(name = "query",
+                    description = "Filter out triggers.",
+                    allowableValues = "Valid query language statement"),
             @DocParameter(name = "thin", type = Boolean.class,
                     description = "Return only thin triggers. Currently Ignored.")
     })
@@ -1506,38 +1502,23 @@ public class TriggersHandler {
 
     TriggersCriteria buildCriteria(MultiMap params) {
         String triggerIds = null;
-        String tags = null;
+        String query;
         boolean thin = false;
 
         if (params.get(PARAM_TRIGGER_IDS) != null) {
             triggerIds = params.get(PARAM_TRIGGER_IDS);
         }
-        if (params.get(PARAM_TAGS) != null) {
-            tags = params.get(PARAM_TAGS);
-        }
         if (params.get(PARAM_THIN) != null) {
             thin = Boolean.valueOf(params.get(PARAM_THIN));
         }
+        query = params.get(PARAM_QUERY);
 
         TriggersCriteria criteria = new TriggersCriteria();
         if (!isEmpty(triggerIds)) {
             criteria.setTriggerIds(Arrays.asList(triggerIds.split(",")));
         }
-        if (!isEmpty(tags)) {
-            String[] tagTokens = tags.split(",");
-            Map<String, String> tagsMap = new HashMap<>(tagTokens.length);
-            for (String tagToken : tagTokens) {
-                String[] fields = tagToken.split("\\|");
-                if (fields.length == 2) {
-                    tagsMap.put(fields[0], fields[1]);
-                } else {
-                    if (log.isDebugEnabled()) {
-                        log.debugf("Invalid Tag Criteria %s", Arrays.toString(fields));
-                    }
-                    throw new IllegalArgumentException( "Invalid Tag Criteria " + Arrays.toString(fields) );
-                }
-            }
-            criteria.setTags(tagsMap);
+        if(!isEmpty(query)) {
+            criteria.setQuery(query);
         }
         criteria.setThin(thin);
 

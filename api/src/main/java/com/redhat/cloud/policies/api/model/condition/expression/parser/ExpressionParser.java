@@ -18,8 +18,8 @@ public class ExpressionParser extends Parser {
 		new PredictionContextCache();
 	public static final int
 		T__0=1, T__1=2, T__2=3, T__3=4, T__4=5, OR=6, AND=7, NOT=8, EQUAL=9, NOTEQUAL=10, 
-		CONTAINS=11, NEG=12, GT=13, GTE=14, LT=15, LTE=16, IN=17, NUMBER=18, FLOAT=19, 
-		INTEGER=20, SIMPLETEXT=21, STRING=22, WS=23;
+		CONTAINS=11, MATCHES=12, NEG=13, GT=14, GTE=15, LT=16, LTE=17, IN=18, 
+		NUMBER=19, FLOAT=20, INTEGER=21, SIMPLETEXT=22, STRING=23, WS=24;
 	public static final int
 		RULE_expression = 0, RULE_object = 1, RULE_expr = 2, RULE_logical_operator = 3, 
 		RULE_boolean_operator = 4, RULE_numeric_compare_operator = 5, RULE_string_compare_operator = 6, 
@@ -37,15 +37,15 @@ public class ExpressionParser extends Parser {
 	private static String[] makeLiteralNames() {
 		return new String[] {
 			null, "'('", "')'", "'['", "','", "']'", null, null, null, "'='", "'!='", 
-			null, null, "'>'", "'>='", "'<'", "'<='"
+			null, null, null, "'>'", "'>='", "'<'", "'<='"
 		};
 	}
 	private static final String[] _LITERAL_NAMES = makeLiteralNames();
 	private static String[] makeSymbolicNames() {
 		return new String[] {
 			null, null, null, null, null, null, "OR", "AND", "NOT", "EQUAL", "NOTEQUAL", 
-			"CONTAINS", "NEG", "GT", "GTE", "LT", "LTE", "IN", "NUMBER", "FLOAT", 
-			"INTEGER", "SIMPLETEXT", "STRING", "WS"
+			"CONTAINS", "MATCHES", "NEG", "GT", "GTE", "LT", "LTE", "IN", "NUMBER", 
+			"FLOAT", "INTEGER", "SIMPLETEXT", "STRING", "WS"
 		};
 	}
 	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
@@ -551,6 +551,7 @@ public class ExpressionParser extends Parser {
 
 	public static class String_compare_operatorContext extends ParserRuleContext {
 		public TerminalNode CONTAINS() { return getToken(ExpressionParser.CONTAINS, 0); }
+		public TerminalNode MATCHES() { return getToken(ExpressionParser.MATCHES, 0); }
 		public String_compare_operatorContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -573,11 +574,20 @@ public class ExpressionParser extends Parser {
 	public final String_compare_operatorContext string_compare_operator() throws RecognitionException {
 		String_compare_operatorContext _localctx = new String_compare_operatorContext(_ctx, getState());
 		enterRule(_localctx, 12, RULE_string_compare_operator);
+		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(78);
-			match(CONTAINS);
+			_la = _input.LA(1);
+			if ( !(_la==CONTAINS || _la==MATCHES) ) {
+			_errHandler.recoverInline(this);
+			}
+			else {
+				if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+				_errHandler.reportMatch(this);
+				consume();
+			}
 			}
 		}
 		catch (RecognitionException re) {
@@ -930,32 +940,32 @@ public class ExpressionParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\31l\4\2\t\2\4\3\t"+
+		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\32l\4\2\t\2\4\3\t"+
 		"\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13\t\13\4"+
 		"\f\t\f\4\r\t\r\4\16\t\16\3\2\3\2\3\2\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3"+
 		"\3\5\3)\n\3\3\3\3\3\3\3\3\3\7\3/\n\3\f\3\16\3\62\13\3\3\4\3\4\3\4\3\4"+
 		"\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\5"+
 		"\4I\n\4\3\5\3\5\3\6\3\6\3\7\3\7\3\b\3\b\3\t\3\t\3\n\3\n\3\n\3\n\7\nY\n"+
 		"\n\f\n\16\n\\\13\n\3\n\3\n\3\n\3\n\5\nb\n\n\3\13\3\13\3\f\3\f\3\r\3\r"+
-		"\3\16\3\16\3\16\2\3\4\17\2\4\6\b\n\f\16\20\22\24\26\30\32\2\b\3\2\b\t"+
-		"\3\2\13\f\3\2\17\22\4\2\r\r\23\23\4\2\24\24\30\30\4\2\n\n\16\16\2h\2\34"+
-		"\3\2\2\2\4(\3\2\2\2\6H\3\2\2\2\bJ\3\2\2\2\nL\3\2\2\2\fN\3\2\2\2\16P\3"+
-		"\2\2\2\20R\3\2\2\2\22a\3\2\2\2\24c\3\2\2\2\26e\3\2\2\2\30g\3\2\2\2\32"+
-		"i\3\2\2\2\34\35\5\4\3\2\35\36\7\2\2\3\36\3\3\2\2\2\37 \b\3\1\2 !\5\30"+
-		"\r\2!\"\5\4\3\6\")\3\2\2\2#)\5\6\4\2$%\7\3\2\2%&\5\4\3\2&\'\7\4\2\2\'"+
-		")\3\2\2\2(\37\3\2\2\2(#\3\2\2\2($\3\2\2\2)\60\3\2\2\2*+\f\3\2\2+,\5\b"+
-		"\5\2,-\5\4\3\4-/\3\2\2\2.*\3\2\2\2/\62\3\2\2\2\60.\3\2\2\2\60\61\3\2\2"+
-		"\2\61\5\3\2\2\2\62\60\3\2\2\2\63I\5\32\16\2\64\65\5\32\16\2\65\66\5\n"+
-		"\6\2\66\67\5\26\f\2\67I\3\2\2\289\5\32\16\29:\5\f\7\2:;\5\24\13\2;I\3"+
-		"\2\2\2<=\5\32\16\2=>\5\16\b\2>?\5\22\n\2?I\3\2\2\2@A\5\32\16\2AB\5\16"+
-		"\b\2BC\5\26\f\2CI\3\2\2\2DE\5\32\16\2EF\5\20\t\2FG\5\22\n\2GI\3\2\2\2"+
-		"H\63\3\2\2\2H\64\3\2\2\2H8\3\2\2\2H<\3\2\2\2H@\3\2\2\2HD\3\2\2\2I\7\3"+
-		"\2\2\2JK\t\2\2\2K\t\3\2\2\2LM\t\3\2\2M\13\3\2\2\2NO\t\4\2\2O\r\3\2\2\2"+
-		"PQ\7\r\2\2Q\17\3\2\2\2RS\t\5\2\2S\21\3\2\2\2TU\7\5\2\2UZ\5\26\f\2VW\7"+
-		"\6\2\2WY\5\26\f\2XV\3\2\2\2Y\\\3\2\2\2ZX\3\2\2\2Z[\3\2\2\2[]\3\2\2\2\\"+
-		"Z\3\2\2\2]^\7\7\2\2^b\3\2\2\2_`\7\5\2\2`b\7\7\2\2aT\3\2\2\2a_\3\2\2\2"+
-		"b\23\3\2\2\2cd\7\24\2\2d\25\3\2\2\2ef\t\6\2\2f\27\3\2\2\2gh\t\7\2\2h\31"+
-		"\3\2\2\2ij\7\27\2\2j\33\3\2\2\2\7(\60HZa";
+		"\3\16\3\16\3\16\2\3\4\17\2\4\6\b\n\f\16\20\22\24\26\30\32\2\t\3\2\b\t"+
+		"\3\2\13\f\3\2\20\23\3\2\r\16\4\2\r\r\24\24\4\2\25\25\31\31\4\2\n\n\17"+
+		"\17\2h\2\34\3\2\2\2\4(\3\2\2\2\6H\3\2\2\2\bJ\3\2\2\2\nL\3\2\2\2\fN\3\2"+
+		"\2\2\16P\3\2\2\2\20R\3\2\2\2\22a\3\2\2\2\24c\3\2\2\2\26e\3\2\2\2\30g\3"+
+		"\2\2\2\32i\3\2\2\2\34\35\5\4\3\2\35\36\7\2\2\3\36\3\3\2\2\2\37 \b\3\1"+
+		"\2 !\5\30\r\2!\"\5\4\3\6\")\3\2\2\2#)\5\6\4\2$%\7\3\2\2%&\5\4\3\2&\'\7"+
+		"\4\2\2\')\3\2\2\2(\37\3\2\2\2(#\3\2\2\2($\3\2\2\2)\60\3\2\2\2*+\f\3\2"+
+		"\2+,\5\b\5\2,-\5\4\3\4-/\3\2\2\2.*\3\2\2\2/\62\3\2\2\2\60.\3\2\2\2\60"+
+		"\61\3\2\2\2\61\5\3\2\2\2\62\60\3\2\2\2\63I\5\32\16\2\64\65\5\32\16\2\65"+
+		"\66\5\n\6\2\66\67\5\26\f\2\67I\3\2\2\289\5\32\16\29:\5\f\7\2:;\5\24\13"+
+		"\2;I\3\2\2\2<=\5\32\16\2=>\5\16\b\2>?\5\22\n\2?I\3\2\2\2@A\5\32\16\2A"+
+		"B\5\16\b\2BC\5\26\f\2CI\3\2\2\2DE\5\32\16\2EF\5\20\t\2FG\5\22\n\2GI\3"+
+		"\2\2\2H\63\3\2\2\2H\64\3\2\2\2H8\3\2\2\2H<\3\2\2\2H@\3\2\2\2HD\3\2\2\2"+
+		"I\7\3\2\2\2JK\t\2\2\2K\t\3\2\2\2LM\t\3\2\2M\13\3\2\2\2NO\t\4\2\2O\r\3"+
+		"\2\2\2PQ\t\5\2\2Q\17\3\2\2\2RS\t\6\2\2S\21\3\2\2\2TU\7\5\2\2UZ\5\26\f"+
+		"\2VW\7\6\2\2WY\5\26\f\2XV\3\2\2\2Y\\\3\2\2\2ZX\3\2\2\2Z[\3\2\2\2[]\3\2"+
+		"\2\2\\Z\3\2\2\2]^\7\7\2\2^b\3\2\2\2_`\7\5\2\2`b\7\7\2\2aT\3\2\2\2a_\3"+
+		"\2\2\2b\23\3\2\2\2cd\7\25\2\2d\25\3\2\2\2ef\t\7\2\2f\27\3\2\2\2gh\t\b"+
+		"\2\2h\31\3\2\2\2ij\7\30\2\2j\33\3\2\2\2\7(\60HZa";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {
