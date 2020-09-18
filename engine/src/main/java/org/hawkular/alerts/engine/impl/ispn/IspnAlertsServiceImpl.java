@@ -1,9 +1,12 @@
 package org.hawkular.alerts.engine.impl.ispn;
 
-import org.apache.lucene.search.Sort;
+import com.google.common.collect.Multimap;
+import com.redhat.cloud.policies.api.HistoryItem;
+import org.antlr.v4.runtime.misc.MultiMap;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.hawkular.alerts.api.model.Note;
 import org.hawkular.alerts.api.model.condition.ConditionEval;
+import org.hawkular.alerts.api.model.condition.EventConditionEval;
 import org.hawkular.alerts.api.model.data.Data;
 import org.hawkular.alerts.api.model.event.Alert;
 import org.hawkular.alerts.api.model.event.Alert.Status;
@@ -37,7 +40,6 @@ import org.infinispan.Cache;
 import org.infinispan.query.CacheQuery;
 import org.infinispan.query.Search;
 import org.infinispan.query.SearchManager;
-import org.infinispan.query.dsl.Query;
 import org.infinispan.query.dsl.QueryFactory;
 
 import java.time.Instant;
@@ -45,7 +47,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -333,7 +334,50 @@ public class IspnAlertsServiceImpl implements AlertsService {
     }
 
     @Override
+    public Page<HistoryItem> getAlertsHistory(String tenantId, AlertsCriteria criteria, Pager pager) throws Exception {
+        Set<String> singleton = Collections.singleton(tenantId);
+
+        ResultTuple tuple = getAlertsInternal(singleton, criteria, pager);
+        List<HistoryItem> items = tuple.events.stream().map(ispnEvent -> {
+            Set evalSet = ispnEvent.getEvent().getEvalSets().get(0);
+            EventConditionEval ece = (EventConditionEval) evalSet.iterator().next();
+            Event event = ece.getValue();
+            long ctime = event.getCtime();
+            Multimap<String,String> tags = event.getTags();
+
+            String inventory_id = tags.get("inventory_id").iterator().next();
+            String hostName = tags.get("display_name").iterator().next();
+
+            HistoryItem item = new HistoryItem(ctime, inventory_id, hostName);
+
+            return item;
+        }).collect(Collectors.toList());
+
+        return new Page<>(items, pager, tuple.size);
+    }
+
+    @Override
     public Page<Alert> getAlerts(Set<String> tenantIds, AlertsCriteria criteria, Pager pager) throws Exception {
+
+        ResultTuple tuple = getAlertsInternal(tenantIds, criteria, pager);
+        // TODO Replace with projection?
+        final boolean thinAlerts = criteria.isThin();
+        List<Alert> alerts = tuple.events.stream().map(ispnEvent -> {
+            if (thinAlerts) {
+                Alert alert = new Alert((Alert) ispnEvent.getEvent());
+                alert.setDampening(null);
+                alert.setEvalSets(null);
+                alert.setResolvedEvalSets(null);
+                return alert;
+            }
+            return (Alert) ispnEvent.getEvent();
+        }).collect(Collectors.toList());
+
+        return preparePage(alerts, pager, tuple.size);
+
+    }
+
+    private ResultTuple getAlertsInternal(Set<String> tenantIds, AlertsCriteria criteria, Pager pager) throws Exception {
         if (isEmpty(tenantIds)) {
             throw new IllegalArgumentException("TenantIds must be not null");
         }
@@ -399,22 +443,28 @@ public class IspnAlertsServiceImpl implements AlertsService {
 
             List<IspnEvent> ispnEvents = query.list();
 
-            // TODO Replace with projection?
-            final boolean thinAlerts = criteria.isThin();
-            List<Alert> alerts = ispnEvents.stream().map(ispnEvent -> {
-                if (thinAlerts) {
-                    Alert alert = new Alert((Alert) ispnEvent.getEvent());
-                    alert.setDampening(null);
-                    alert.setEvalSets(null);
-                    alert.setResolvedEvalSets(null);
-                    return alert;
-                }
-                return (Alert) ispnEvent.getEvent();
-            }).collect(Collectors.toList());
+            return new ResultTuple(ispnEvents,query.getResultSize());
 
-            return preparePage(alerts, pager, query.getResultSize());
         } catch (SearchException se) {
             throw new IllegalArgumentException(se.getMessage());
+        }
+    }
+
+    private class ResultTuple {
+        private List<IspnEvent> events;
+        private int size;
+
+        public ResultTuple(List<IspnEvent> events, int size) {
+            this.events = events;
+            this.size = size;
+        }
+
+        public List<IspnEvent> getEvents() {
+            return events;
+        }
+
+        public int getSize() {
+            return size;
         }
     }
 

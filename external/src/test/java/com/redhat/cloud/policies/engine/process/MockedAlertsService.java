@@ -1,5 +1,6 @@
 package com.redhat.cloud.policies.engine.process;
 
+import com.redhat.cloud.policies.api.HistoryItem;
 import org.hawkular.alerts.api.model.condition.ConditionEval;
 import org.hawkular.alerts.api.model.data.Data;
 import org.hawkular.alerts.api.model.event.Alert;
@@ -72,6 +73,11 @@ public class MockedAlertsService implements AlertsService {
 
     @Override
     public Page<Alert> getAlerts(String tenantId, AlertsCriteria criteria, Pager pager) throws Exception {
+        return null;
+    }
+
+    @Override
+    public Page<HistoryItem> getAlertsHistory(String tenantId, AlertsCriteria criteria, Pager pager) throws Exception {
         return null;
     }
 

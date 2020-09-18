@@ -242,7 +242,8 @@ public class TriggersHandler {
                         trigger.setId(Trigger.generateId());
                     } else {
                         Trigger found = null;
-                        try (Scope ignored = tracer.buildSpan("getTrigger").asChildOf(serverSpan).startActive(true)) {
+                        try (Scope scope = tracer.buildSpan("getTrigger").asChildOf(serverSpan).startActive(true)) {
+                            scope.span().setTag("tenant",tenantId);
                             found = definitionsService.getTrigger(tenantId, trigger.getId());
                         } catch (NotFoundException e) {
                             // Expected
@@ -257,8 +258,9 @@ public class TriggersHandler {
                     if (!ResponseUtil.checkTags(trigger)) {
                         throw new ResponseUtil.BadRequestException("Tags " + trigger.getTags() + " must be non empty.");
                     }
-                    try (Scope ignored = tracer.buildSpan("createFullTrigger").asChildOf(serverSpan).startActive(true)) {
-                        ignored.span().setTag("dryRun",dryRun);
+                    try (Scope scope = tracer.buildSpan("createFullTrigger").asChildOf(serverSpan).startActive(true)) {
+                        scope.span().setTag("dryRun",dryRun);
+                        scope.span().setTag("tenant",tenantId);
                         if(!dryRun) {
                             definitionsService.createFullTrigger(tenantId, fullTrigger);
                         }
@@ -295,6 +297,7 @@ public class TriggersHandler {
     public void updateFullTrigger(RoutingContext routing) {
         routing.vertx()
                 .executeBlocking(future -> {
+                    Span serverSpan = getServerSpan(routing);
                     String tenantId = ResponseUtil.checkTenant(routing);
                     String json = routing.getBodyAsString();
                     String triggerId = routing.request().getParam("triggerId");
@@ -324,7 +327,9 @@ public class TriggersHandler {
                         throw new ResponseUtil.BadRequestException(
                                 "Tags " + trigger.getTags() + " must be non empty.");
                     }
-                    try {
+                    try (Scope scope = tracer.buildSpan("deleteTrigger").asChildOf(serverSpan).startActive(true)) {
+                        scope.span().setTag("dryRun",dryRun);
+                        scope.span().setTag("tenant",tenantId);
                         if(!dryRun) {
                             definitionsService.updateFullTrigger(tenantId, fullTrigger);
                         }
@@ -445,7 +450,8 @@ public class TriggersHandler {
                         trigger.setId(Trigger.generateId());
                     } else {
                         Trigger found = null;
-                        try (Scope ignored = tracer.buildSpan("getTrigger").asChildOf(serverSpan).startActive(true)) {
+                        try (Scope scope = tracer.buildSpan("getTrigger").asChildOf(serverSpan).startActive(true)) {
+                            scope.span().setTag("tenant",tenantId);
                             found = definitionsService.getTrigger(tenantId, trigger.getId());
                         } catch (NotFoundException e) {
                             // expected
@@ -461,7 +467,9 @@ public class TriggersHandler {
                     if (!ResponseUtil.checkTags(trigger)) {
                         throw new ResponseUtil.BadRequestException("Tags " + trigger.getTags() + " must be non empty.");
                     }
-                    try (Scope ignored = tracer.buildSpan("addNewTrigger").asChildOf(serverSpan).startActive(true)) {
+                    try (Scope scope = tracer.buildSpan("addNewTrigger").asChildOf(serverSpan).startActive(true)) {
+                        scope.span().setTag("tenant",tenantId);
+                        scope.span().setTag("isGroup",isGroup);
                         if (isGroup) {
                             definitionsService.addGroupTrigger(tenantId, trigger);
                         } else {
@@ -606,9 +614,11 @@ public class TriggersHandler {
     public void deleteTrigger(RoutingContext routing) {
         routing.vertx()
                 .executeBlocking(future -> {
+                    Span serverSpan = getServerSpan(routing);
                     String tenantId = ResponseUtil.checkTenant(routing);
                     String triggerId = routing.request().getParam("triggerId");
-                    try {
+                    try (Scope scope = tracer.buildSpan("deleteTrigger").asChildOf(serverSpan).startActive(true)) {
+                        scope.span().setTag("tenant",tenantId);
                         definitionsService.removeTrigger(tenantId, triggerId);
                         log.debugf("TriggerId: %s", triggerId);
                         future.complete();
@@ -687,7 +697,8 @@ public class TriggersHandler {
                         Pager pager = ResponseUtil.extractPaging(routing.request().params());
                         TriggersCriteria criteria = buildCriteria(routing.request().params());
                         Page<Trigger> triggerPage;
-                        try (Scope ignored = tracer.buildSpan("getTriggers").asChildOf(serverSpan).startActive(true)) {
+                        try (Scope scope = tracer.buildSpan("getTriggers").asChildOf(serverSpan).startActive(true)) {
+                            scope.span().setTag("tenant",tenantId);
                             triggerPage = definitionsService.getTriggers(tenantId, criteria, pager);
                         }
                         log.debugf("Triggers: %s", triggerPage);

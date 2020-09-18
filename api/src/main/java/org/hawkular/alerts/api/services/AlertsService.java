@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.redhat.cloud.policies.api.HistoryItem;
 import org.hawkular.alerts.api.model.condition.ConditionEval;
 import org.hawkular.alerts.api.model.data.Data;
 import org.hawkular.alerts.api.model.event.Alert;
@@ -118,6 +119,7 @@ public interface AlertsService {
      * @throws Exception any problem
      */
     Page<Alert> getAlerts(String tenantId, AlertsCriteria criteria, Pager pager) throws Exception;
+    Page<HistoryItem> getAlertsHistory(String tenantId, AlertsCriteria criteria, Pager pager) throws Exception;
 
     /**
      * @param tenantIds Collection of tenants where alerts are stored

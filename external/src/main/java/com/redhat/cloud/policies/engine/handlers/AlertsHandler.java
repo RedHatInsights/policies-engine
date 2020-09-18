@@ -1,6 +1,7 @@
 package com.redhat.cloud.policies.engine.handlers;
 
 
+import com.redhat.cloud.policies.api.HistoryItem;
 import com.redhat.cloud.policies.engine.handlers.util.ResponseUtil;
 import io.opentracing.Scope;
 import io.opentracing.Span;
@@ -105,6 +106,7 @@ public class AlertsHandler {
         String baseUrl = "/hawkular/alerts";
         router.route().handler(BodyHandler.create());
         router.get(baseUrl).handler(this::findAlerts);
+        router.get(baseUrl + "/triggerHistory").handler(this::findAlertsHistory);
         router.get(baseUrl + "/watch").blockingHandler(this::watchAlerts);
         router.put(baseUrl + "/tags").handler(this::addTags);
         router.delete(baseUrl + "/tags").handler(this::removeTags);
@@ -181,13 +183,41 @@ public class AlertsHandler {
                         Pager pager = ResponseUtil.extractPaging(routing.request().params());
                         AlertsCriteria criteria = buildCriteria(routing.request().params());
                         Page<Alert> alertPage;
-                        try (Scope ignored = tracer.buildSpan("getAlerts").asChildOf(serverSpan).startActive(true)) {
+                        try (Scope scope = tracer.buildSpan("getAlerts").asChildOf(serverSpan).startActive(true)) {
+                            scope.span().setTag("tenant",tenantId);
                             alertPage = alertsService.getAlerts(tenantId, criteria, pager);
                         }
                         if(log.isTraceEnabled()) {
                             log.tracef("Alerts: %s", alertPage);
                         }
                         future.complete(alertPage);
+                    } catch (IllegalArgumentException e) {
+                        throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
+                    } catch (Exception e) {
+                        log.debug(e.getMessage(), e);
+                        throw new ResponseUtil.InternalServerException(e.toString());
+                    }
+                }, res -> ResponseUtil.result(routing, res));
+    }
+
+    public void findAlertsHistory(RoutingContext routing) {
+        routing.vertx()
+                .executeBlocking(future -> {
+                    Span serverSpan = getServerSpan(routing);
+                    String tenantId = ResponseUtil.checkTenant(routing);
+                    try {
+                        ResponseUtil.checkForUnknownQueryParams(routing.request().params(), queryParamValidationMap.get(FIND_ALERTS));
+                        Pager pager = ResponseUtil.extractPaging(routing.request().params());
+                        AlertsCriteria criteria = buildCriteria(routing.request().params());
+                        Page<HistoryItem> historyPage;
+                        try (Scope scope = tracer.buildSpan("getAlertsHistory").asChildOf(serverSpan).startActive(true)) {
+                            scope.span().setTag("tenant",tenantId);
+                            historyPage = alertsService.getAlertsHistory(tenantId, criteria, pager);
+                        }
+                        if(log.isTraceEnabled()) {
+                            log.tracef("AlertsHistory: %s", historyPage);
+                        }
+                        future.complete(historyPage);
                     } catch (IllegalArgumentException e) {
                         throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
                     } catch (Exception e) {
