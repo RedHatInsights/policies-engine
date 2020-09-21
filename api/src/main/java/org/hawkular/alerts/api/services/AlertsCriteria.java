@@ -38,6 +38,7 @@ public class AlertsCriteria {
     String tagQuery = null;
     String query = null;
     boolean thin = false;
+    boolean historyOnly = false;
 
     public AlertsCriteria() {
         super();
@@ -46,7 +47,7 @@ public class AlertsCriteria {
     public AlertsCriteria(Long startTime, Long endTime, String alertIds, String triggerIds,
                           String statuses, String severities, String tagQuery, Long startResolvedTime,
                           Long endResolvedTime, Long startAckTime, Long endAckTime, Long startStatusTime,
-                          Long endStatusTime, Boolean thin, String query) {
+                          Long endStatusTime, Boolean thin, Boolean historyOnly, String query) {
         setStartTime(startTime);
         setEndTime(endTime);
         if (!isEmpty(alertIds)) {
@@ -78,6 +79,9 @@ public class AlertsCriteria {
         setEndStatusTime(endStatusTime);
         if (null != thin) {
             setThin(thin.booleanValue());
+        }
+        if (null != historyOnly) {
+            setHistoryOnly(historyOnly.booleanValue());
         }
         setQuery(query);
     }
@@ -453,8 +457,17 @@ public class AlertsCriteria {
         return thin;
     }
 
+    public boolean isHistoryOnly() {
+        return historyOnly;
+    }
+
+
     public void setThin(boolean thin) {
         this.thin = thin;
+    }
+
+    public void setHistoryOnly(boolean historyOnly) {
+        this.historyOnly = historyOnly;
     }
 
     public boolean hasAlertIdCriteria() {
@@ -525,7 +538,8 @@ public class AlertsCriteria {
                 ", triggerId='" + triggerId + '\'' +
                 ", triggerIds=" + triggerIds +
                 ", tagQuery='" + tagQuery + '\'' +
-                ", thin=" + thin +
+                ", thin=" + thin + '\'' +
+                ", historyOnly=" + historyOnly +
                 '}';
     }
 

@@ -4,6 +4,7 @@ import org.apache.lucene.search.Sort;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.hawkular.alerts.api.model.Note;
 import org.hawkular.alerts.api.model.condition.ConditionEval;
+import org.hawkular.alerts.api.model.condition.EventConditionEval;
 import org.hawkular.alerts.api.model.data.Data;
 import org.hawkular.alerts.api.model.event.Alert;
 import org.hawkular.alerts.api.model.event.Alert.Status;
@@ -401,12 +402,28 @@ public class IspnAlertsServiceImpl implements AlertsService {
 
             // TODO Replace with projection?
             final boolean thinAlerts = criteria.isThin();
+            final boolean historyOnly = criteria.isHistoryOnly();
             List<Alert> alerts = ispnEvents.stream().map(ispnEvent -> {
                 if (thinAlerts) {
                     Alert alert = new Alert((Alert) ispnEvent.getEvent());
                     alert.setDampening(null);
                     alert.setEvalSets(null);
                     alert.setResolvedEvalSets(null);
+                    return alert;
+                }
+                if (historyOnly) {
+                    Alert alert = new Alert((Alert) ispnEvent.getEvent());
+                    alert.setLifecycle(null);
+                    alert.setDampening(null);
+                    alert.setResolvedEvalSets(null);
+                    alert.setTrigger(null);
+                    List<Set<ConditionEval>> setList = alert.getEvalSets();
+                    for (Set<ConditionEval> set : setList) {
+                        EventConditionEval ece = (EventConditionEval) set.iterator().next();
+                        ece.setDisplayString(null);
+                        Event event = ece.getValue();
+                        event.setFacts(null);
+                    }
                     return alert;
                 }
                 return (Alert) ispnEvent.getEvent();

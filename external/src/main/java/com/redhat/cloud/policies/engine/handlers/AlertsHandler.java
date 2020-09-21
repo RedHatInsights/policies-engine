@@ -63,6 +63,7 @@ public class AlertsHandler {
     private static final String PARAM_TEXT = "text";
     private static final String PARAM_TAG_NAMES = "tagNames";
     private static final String PARAM_THIN = "thin";
+    private static final String PARAM_HISTORY_ONLY = "historyOnly";
     private static final String PARAM_RESOLVED_BY = "resolvedBy";
     private static final String PARAM_RESOLVED_NOTES = "resolvedNotes";
 
@@ -85,7 +86,8 @@ public class AlertsHandler {
                 PARAM_END_ACK_TIME,
                 PARAM_START_STATUS_TIME,
                 PARAM_END_STATUS_TIME,
-                PARAM_THIN);
+                PARAM_THIN,
+                PARAM_HISTORY_ONLY);
         queryParamValidationMap.put(FIND_ALERTS, new HashSet<>(ALERTS_CRITERIA));
         queryParamValidationMap.get(FIND_ALERTS).addAll(ResponseUtil.PARAMS_PAGING);
         queryParamValidationMap.put(WATCH_ALERTS, new HashSet<>(ALERTS_CRITERIA));
@@ -786,6 +788,7 @@ public class AlertsHandler {
         Long startStatusTime = null;
         Long endStatusTime = null;
         boolean thin = false;
+        boolean historyOnly = false;
 
         if (params.get(PARAM_START_TIME) != null) {
             startTime = Long.valueOf(params.get(PARAM_START_TIME));
@@ -832,8 +835,11 @@ public class AlertsHandler {
         if (params.get(PARAM_THIN) != null) {
             thin = Boolean.valueOf(params.get(PARAM_THIN));
         }
+        if (params.get(PARAM_HISTORY_ONLY) != null) {
+            historyOnly = Boolean.valueOf(params.get(PARAM_HISTORY_ONLY));
+        }
         return new AlertsCriteria(startTime, endTime, alertIds, triggerIds, statuses, severities,
                 tagQuery, startResolvedTime, endResolvedTime, startAckTime, endAckTime, startStatusTime,
-                endStatusTime, thin, query);
+                endStatusTime, thin, historyOnly, query);
     }
 }
