@@ -6,7 +6,7 @@
 
   <cache-container name="hawkular-alerts">
     <!-- Migrate to Protostream -->
-    <serialization marshaller="org.infinispan.jboss.marshalling.core.JBossUserMarshaller"/>
+    <serialization marshaller="org.infinispan.jboss.marshalling.core.JBossUserMarshaller" />
 
     <global-state>
       <persistent-location path="alerting" relative-to="hawkular.data"/>

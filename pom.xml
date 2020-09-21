@@ -68,6 +68,12 @@
         <version>10.1.9-20200703.101427-1</version>
       </dependency>
 
+      <dependency>
+        <groupId>org.infinispan</groupId>
+        <artifactId>infinispan-jboss-marshalling</artifactId>
+        <version>10.1.9-20200921.120848-1</version>
+      </dependency>
+
       <!-- Infinispan BOM, needs to be before Quarkus -->
       <dependency>
         <groupId>org.infinispan</groupId>

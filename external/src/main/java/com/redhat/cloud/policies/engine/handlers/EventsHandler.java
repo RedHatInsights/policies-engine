@@ -113,7 +113,6 @@ public class EventsHandler {
                     try {
                         event = fromJson(json, Event.class);
                         for (Map.Entry<String, String> entry : event.getTags().entries()) {
-                            System.out.printf("TAGS: %s -> %s\n", entry.getKey(), entry.getValue());
                         }
                     } catch (Exception e) {
                         throw new ResponseUtil.BadRequestException(e.toString());
