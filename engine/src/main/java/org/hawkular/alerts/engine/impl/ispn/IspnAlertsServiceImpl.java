@@ -407,6 +407,7 @@ public class IspnAlertsServiceImpl implements AlertsService {
                     alert.setDampening(null);
                     alert.setEvalSets(null);
                     alert.setResolvedEvalSets(null);
+                    alert.setTrigger(null);
                     return alert;
                 }
                 return (Alert) ispnEvent.getEvent();
