@@ -1655,8 +1655,6 @@ public class JsonTest {
 
         String serJson = toJson(trigger);
 
-        System.out.println(serJson);
-
         Trigger triggerReadBack = objectMapper.readValue(serJson, Trigger.class);
 
         assertEquals(1, triggerReadBack.getTags().keySet().size());
