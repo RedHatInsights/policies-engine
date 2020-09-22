@@ -1,6 +1,5 @@
 package org.hawkular.alerts.engine.impl.ispn;
 
-import org.apache.lucene.search.Sort;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.hawkular.alerts.api.model.Note;
 import org.hawkular.alerts.api.model.condition.ConditionEval;
@@ -37,7 +36,6 @@ import org.infinispan.Cache;
 import org.infinispan.query.CacheQuery;
 import org.infinispan.query.Search;
 import org.infinispan.query.SearchManager;
-import org.infinispan.query.dsl.Query;
 import org.infinispan.query.dsl.QueryFactory;
 
 import java.time.Instant;
@@ -45,7 +43,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -407,6 +404,8 @@ public class IspnAlertsServiceImpl implements AlertsService {
                     alert.setDampening(null);
                     alert.setEvalSets(null);
                     alert.setResolvedEvalSets(null);
+                    alert.getTrigger().setActions(null);
+                    alert.getTrigger().setLifecycle(null);
                     return alert;
                 }
                 return (Alert) ispnEvent.getEvent();
