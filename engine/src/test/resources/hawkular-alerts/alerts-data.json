@@ -18,10 +18,7 @@
         "context": {
           "name1":"value1"
         },
-        "tags": {
-          "tname1":"tvalue1",
-          "tname2":"tvalue2"
-        }
+        "tags": [{"tname1":"tvalue1"},{"tname2":"tvalue2"}]
       },
       "dampenings":[
         {
@@ -263,10 +260,10 @@
         "context": {
           "trigger-8-name":"value"
         },
-        "tags": {
-          "trigger8-name1":"value1",
-          "trigger8-name2":"value2"
-        }
+        "tags": [
+          {"trigger8-name1":"value1"},
+          {"trigger8-name2":"value2"}
+        ]
       },
       "dampenings":[],
       "conditions":[
