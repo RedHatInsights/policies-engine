@@ -1,7 +1,7 @@
 {
    "timestamp":"2020-04-16T16:10:42.212238+00:00",
    "platform_metadata":{
-      "account":"901578",
+      "account":"integration-test",
       "category":"collection",
       "metadata":{
          "ip_addresses":[
@@ -3085,7 +3085,7 @@
          "52:54:00:ee:23:6d",
          "52:54:00:ee:23:6d"
       ],
-      "account":"901578",
+      "account":"integration-test",
       "ansible_host":null,
       "satellite_id":null,
       "ip_addresses":[
