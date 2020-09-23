@@ -1,19 +1,9 @@
 package org.hawkular.alerts.api;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
-import java.util.UUID;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.hawkular.alerts.api.json.JacksonDeserializer;
 import org.hawkular.alerts.api.model.Severity;
 import org.hawkular.alerts.api.model.action.Action;
@@ -52,10 +42,21 @@ import org.hawkular.alerts.api.model.trigger.TriggerAction;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.exc.InvalidFormatException;
-import com.fasterxml.jackson.databind.module.SimpleModule;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.UUID;
+
+import static org.hawkular.alerts.api.json.JsonUtil.toJson;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Validation of JSON serialization/deserialization
@@ -1646,4 +1647,20 @@ public class JsonTest {
         assertEquals(2, trigger2.getActions().size());
     }
 
+    @Test
+    public void serializeTags() throws JsonProcessingException {
+        Trigger trigger = new Trigger();
+        trigger.addTag("k", "v");
+        trigger.addTag("k", "v2");
+
+        String serJson = toJson(trigger);
+
+        Trigger triggerReadBack = objectMapper.readValue(serJson, Trigger.class);
+
+        assertEquals(1, triggerReadBack.getTags().keySet().size());
+        Collection<String> k = triggerReadBack.getTags().get("k");
+        assertEquals(2, k.size());
+        assertTrue(k.contains("v"));
+        assertTrue(k.contains("v2"));
+    }
 }

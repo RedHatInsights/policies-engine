@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 
 import org.hawkular.alerts.api.model.action.ActionDefinition;
 import org.hawkular.alerts.api.model.condition.CompareCondition;
@@ -39,7 +40,6 @@ public class AlertsImportManagerTest {
         assertTrue(actionDefinitions.size() > 0);
 
         // Check trigger-1
-        assertEquals("value1", fullTriggers.get(0).getTrigger().getContext().get("name1"));
         assertTrue(fullTriggers.get(0).getTrigger().getTags().get("tname2").contains("tvalue2"));
 
         assertEquals(Dampening.Type.STRICT, fullTriggers.get(0).getDampenings().get(0).getType());

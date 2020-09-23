@@ -49,6 +49,9 @@ public class Receiver {
     private static final String NETWORK_INTERFACES_FIELD = "network_interfaces";
     private static final String YUM_REPOS_FIELD = "yum_repos";
     private static final String NAME_FIELD = "name";
+    private static final String TAGS_FIELD = "tags";
+    private static final String TAGS_KEY_FIELD = "key";
+    private static final String TAGS_VALUE_FIELD = "value";
 
     @ConfigProperty(name = "engine.receiver.store-events")
     boolean storeEvents;
@@ -110,7 +113,7 @@ public class Receiver {
 
                     Event event = new Event(tenantId, UUID.randomUUID().toString(), INSIGHTS_REPORT_DATA_ID, CATEGORY_NAME, text);
                     // Indexed searchable events
-                    Multimap<String, String> tagsMap = MultimapBuilder.hashKeys().hashSetValues().build();
+                    Multimap<String, String> tagsMap = parseTags(json.getJsonArray(TAGS_FIELD));
                     tagsMap.put(DISPLAY_NAME_FIELD, displayName);
                     tagsMap.put(INVENTORY_ID_FIELD, json.getString(HOST_ID));
                     event.setTags(tagsMap);
@@ -185,5 +188,17 @@ public class Receiver {
             arrayObjectKey.put(name, json.getMap());
         }
         return arrayObjectKey;
+    }
+
+    static Multimap<String, String> parseTags(JsonArray tagsInput) {
+        Multimap<String, String> tagsMap = MultimapBuilder.hashKeys().hashSetValues().build();
+        for (Object o : tagsInput) {
+            JsonObject json = (JsonObject) o;
+            String key = json.getString(TAGS_KEY_FIELD);
+            String value = json.getString(TAGS_VALUE_FIELD);
+            tagsMap.put(key, value);
+        }
+
+        return tagsMap;
     }
 }

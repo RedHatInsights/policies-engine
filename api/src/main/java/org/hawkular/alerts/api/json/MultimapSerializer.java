@@ -17,12 +17,14 @@ import java.util.Map;
 public class MultimapSerializer extends JsonSerializer<Multimap<String, String>> {
     @Override
     public void serialize(Multimap<String, String> map, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
-        jsonGenerator.writeStartObject();
+        jsonGenerator.writeStartArray();
         for (Map.Entry<String, String> entry : map.entries()) {
+            jsonGenerator.writeStartObject();
             if(entry.getValue() != null && entry.getValue().length() > 0) {
                 jsonGenerator.writeStringField(entry.getKey(), entry.getValue());
             }
+            jsonGenerator.writeEndObject();
         }
-        jsonGenerator.writeEndObject();
+        jsonGenerator.writeEndArray();
     }
 }

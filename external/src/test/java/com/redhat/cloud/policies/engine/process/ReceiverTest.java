@@ -92,7 +92,8 @@ public class ReceiverTest {
         definitionsService.addActionDefinition(TENANT_ID, actionDefinition);
 
         EventCondition evCond = new EventCondition();
-        evCond.setExpression("facts.arch = 'string'");
+//        evCond.setExpression("facts.arch = 'string'");
+        evCond.setExpression("");
         evCond.setTenantId(TENANT_ID);
         evCond.setDataId(Receiver.INSIGHTS_REPORT_DATA_ID);
         List<Condition> conditions = Collections.singletonList(evCond);
@@ -146,7 +147,7 @@ public class ReceiverTest {
 
         Counter hostEgressProcessingErrors = metricRegistry.getCounters().get(errorCount);
         assertEquals(1, hostEgressProcessingErrors.getCount());
-        testSubscriber.dispose(); // In current smallrye-messaging, can't resubscribe even after dispose.
+        testSubscriber.dispose();
 
         // Verify the alert includes the tags from the event
         AlertsCriteria criteria = new AlertsCriteria();
@@ -155,6 +156,38 @@ public class ReceiverTest {
 
         // 4, because we have two triggers and we send the correct input twice
         assertEquals(4, alerts.size());
+
+        definitionsService.removeTrigger(TENANT_ID, TRIGGER_ID + "2");
+    }
+
+    @Test
+    void testMoreComplexInput() throws Exception {
+        // Read the input file and send it
+        InputStream is = getClass().getClassLoader().getResourceAsStream("input/thomas-host.json");
+        String inputJson = IOUtils.toString(is, StandardCharsets.UTF_8);
+        hostEmitter.send(inputJson);
+
+        TestSubscriber<JsonObject> testSubscriber = new TestSubscriber<>();
+        emailReceiver.subscribe(testSubscriber);
+
+        // Wait for the async messaging to arrive (there's two identical triggers..)
+        testSubscriber.awaitCount(1);
+        testSubscriber.assertValueCount(1);
+
+        // Verify the alert includes the tags from the event
+        AlertsCriteria criteria = new AlertsCriteria();
+        criteria.setTagQuery("tags.Location = 'Neuchatel'");
+        Page<Alert> alerts = alertsService.getAlerts(TENANT_ID, criteria, null);
+
+        // 4, because we have two triggers and we send the correct input twice
+        assertEquals(1, alerts.size());
+
+        // Both values should be accepted by "="
+        criteria.setTagQuery("tags.Location = 'Charmey'");
+        alerts = alertsService.getAlerts(TENANT_ID, criteria, null);
+
+        // 4, because we have two triggers and we send the correct input twice
+        assertEquals(1, alerts.size());
     }
 
     @AfterAll
