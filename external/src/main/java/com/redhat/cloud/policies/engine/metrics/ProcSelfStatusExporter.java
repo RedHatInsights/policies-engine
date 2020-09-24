@@ -1,13 +1,13 @@
-package com.redhat.cloud.policies.engine.handlers;
+package com.redhat.cloud.policies.engine.metrics;
 
 import io.quarkus.scheduler.Scheduled;
 import org.eclipse.microprofile.metrics.MetricUnits;
 import org.eclipse.microprofile.metrics.annotation.Gauge;
 
+import javax.enterprise.context.ApplicationScoped;
 import java.io.File;
 import java.util.Scanner;
 import java.util.logging.Logger;
-import javax.enterprise.context.ApplicationScoped;
 
 
 /**
@@ -33,20 +33,18 @@ public class ProcSelfStatusExporter {
 
     private boolean hasWarned = false;
 
-    long vmHwm;
-    long vmRss;
-    long rssAnon;
-    long rssFile;
-    long vmStk;
-    long vmLib;
-    long vmData;
-    long vmSize;
-    int threads;
-
+    private long vmHwm;
+    private long vmRss;
+    private long rssAnon;
+    private long rssFile;
+    private long vmStk;
+    private long vmLib;
+    private long vmData;
+    private long vmSize;
+    private int threads;
 
     @Scheduled(every = "10s")
     void gather() {
-
         File status = new File(PATHNAME);
         if (!status.exists() || !status.canRead()) {
             if (!hasWarned) {
