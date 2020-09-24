@@ -194,7 +194,7 @@ public class Receiver {
         Multimap<String, String> tagsMap = MultimapBuilder.hashKeys().hashSetValues().build();
         for (Object o : tagsInput) {
             JsonObject json = (JsonObject) o;
-            String key = json.getString(TAGS_KEY_FIELD);
+            String key = json.getString(TAGS_KEY_FIELD).toLowerCase();
             String value = json.getString(TAGS_VALUE_FIELD);
             tagsMap.put(key, value);
         }
