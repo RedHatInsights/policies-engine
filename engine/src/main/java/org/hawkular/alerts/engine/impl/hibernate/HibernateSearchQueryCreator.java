@@ -130,7 +130,15 @@ public class HibernateSearchQueryCreator extends ExpressionBaseVisitor<Query> {
 
             // This is the tagKey
             if (ctx.key() != null) {
-                field = ctx.key().SIMPLETEXT().getSymbol().getText();
+                if(ctx.key().SIMPLETEXT() != null) {
+                    field = cleanString(ctx.key().SIMPLETEXT().getSymbol().getText());
+                } else if (ctx.key().STRING() != null) {
+                    field = cleanString(ctx.key().STRING().getSymbol().getText());
+                }
+                if(field.startsWith("tags.")) {
+                    // tags are always parsed to lowercase in the input
+                    field = field.toLowerCase();
+                }
             } else {
                 return null;
             }
@@ -226,5 +234,4 @@ public class HibernateSearchQueryCreator extends ExpressionBaseVisitor<Query> {
     static String cleanString(String strValue) {
         return ESCAPE_CLEANER_REGEXP.matcher(strValue).replaceAll("$2");
     }
-
 }

@@ -65,4 +65,15 @@ public class ExprKeyTest {
         expr = "facts.log\\.category = 'b'";
         assertTrue(ExprParser.evaluate(event, expr));
     }
+
+    @Test
+    public void testWhitespaceInKeyname() {
+        Event event = new Event();
+        // tag names are parsed to lower case format
+        event.addTag("cost center", "12345");
+
+        // In the query we don't care about the case
+        String expr = "'tags.Cost Center' = '12345'";
+        assertTrue(ExprParser.evaluate(event, expr));
+    }
 }
