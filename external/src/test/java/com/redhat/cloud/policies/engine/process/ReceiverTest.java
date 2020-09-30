@@ -176,17 +176,13 @@ public class ReceiverTest {
 
         // Verify the alert includes the tags from the event
         AlertsCriteria criteria = new AlertsCriteria();
-        criteria.setTagQuery("tags.Location = 'Neuchatel'");
+        criteria.setTagQuery("tags.location = 'Neuchatel'");
         Page<Alert> alerts = alertsService.getAlerts(TENANT_ID, criteria, null);
-
-        // 4, because we have two triggers and we send the correct input twice
         assertEquals(1, alerts.size());
 
         // Both values should be accepted by "="
         criteria.setTagQuery("tags.Location = 'Charmey'");
         alerts = alertsService.getAlerts(TENANT_ID, criteria, null);
-
-        // 4, because we have two triggers and we send the correct input twice
         assertEquals(1, alerts.size());
     }
 

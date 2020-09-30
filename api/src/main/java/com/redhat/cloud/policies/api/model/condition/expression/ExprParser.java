@@ -140,7 +140,11 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
 
             // This is the factKey
             if(ctx.key() != null) {
-                key = ctx.key().SIMPLETEXT().getSymbol().getText();
+                if(ctx.key().SIMPLETEXT() != null) {
+                    key = ctx.key().SIMPLETEXT().getSymbol().getText();
+                } else if (ctx.key().STRING() != null) {
+                    key = cleanString(ctx.key().STRING().getSymbol().getText());
+                }
             } else {
                 return false;
             }
@@ -401,5 +405,3 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
         return ESCAPE_CLEANER_REGEXP.matcher(strValue).replaceAll("$2").toLowerCase();
     }
 }
-
-

@@ -69,6 +69,7 @@ negative_expr
 
 key
  : SIMPLETEXT
+ | STRING
  ;
 
 //parser
@@ -99,6 +100,7 @@ INTEGER : [0-9]+ ;
 SIMPLETEXT  : [a-zA-Z_0-9.]([\-a-zA-Z_0-9.] | ESC_DOT)* ;
 STRING :  '\'' ( ESC | ~('\\'|'\'') )* '\''
           |'"' ( ESC | ~('\\'|'"') )* '"';
+//COMPLEXTEXT : '\'' SIMPLETEXT '\'' ;
 //COMPLEXTEXT :  '\'' (ESC | ~['\\])* '\'' ;
 
 WS  :   [ \t\n\r]+ -> skip ;
