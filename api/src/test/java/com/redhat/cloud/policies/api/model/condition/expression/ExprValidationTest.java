@@ -2,6 +2,7 @@ package com.redhat.cloud.policies.api.model.condition.expression;
 
 import org.junit.Test;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
 public class ExprValidationTest {
@@ -89,6 +90,13 @@ public class ExprValidationTest {
 
         expr = "machine_name = ''";
         ExprParser.validate(expr);
+
+        // Invalid syntax - the Center part doesn't match anything
+        try {
+            expr = "tags.Cost Center = PnT";
+            ExprParser.validate(expr);
+            fail();
+        } catch(IllegalArgumentException e) { }
     }
 
     @Test

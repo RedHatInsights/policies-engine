@@ -3,7 +3,13 @@ package com.redhat.cloud.policies.api.model.condition.expression;
 import com.redhat.cloud.policies.api.model.condition.expression.parser.ExpressionBaseVisitor;
 import com.redhat.cloud.policies.api.model.condition.expression.parser.ExpressionLexer;
 import com.redhat.cloud.policies.api.model.condition.expression.parser.ExpressionParser;
-import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.ANTLRErrorListener;
+import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.Parser;
+import org.antlr.v4.runtime.RecognitionException;
+import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.atn.ATNConfigSet;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -12,6 +18,7 @@ import org.hawkular.alerts.api.model.event.Event;
 
 import java.math.BigDecimal;
 import java.util.BitSet;
+import java.util.Collection;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -175,7 +182,7 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
                     strValue = cleanString(decimalValue.toString());
 
                     // Convert to BigDecimal supported types
-                    if(!(targetValue instanceof Iterable)) {
+                    if(!(isArray(targetValue))) {
                         targetValueDecimal = convertToBigDecimal(targetValue);
                         if(targetValueDecimal != null) {
                             targetValueStr = cleanString(targetValueDecimal.toString());
@@ -194,7 +201,7 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
             if(ctx.boolean_operator() != null) {
                 final ExpressionParser.Boolean_operatorContext op = ctx.boolean_operator();
                 boolean compareResult = false;
-                if(targetValue instanceof Iterable) {
+                if(isArray(targetValue)) {
                     // If the targetValue is a container (such as with tags) - replace = operator with
                     // contains operation
                     compareResult = arrayContains((Iterable<?>) targetValue, strValue);
@@ -217,7 +224,7 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
             if(ctx.numeric_compare_operator() != null) {
                 ExpressionParser.Numeric_compare_operatorContext op = ctx.numeric_compare_operator();
 
-                if(targetValue instanceof Iterable) {
+                if(isArray(targetValue)) {
                     // Do arrayContains basically.. with numericCompare
                     return arrayNumericMatches(decimalValue, (Iterable<?>) targetValue, op);
                 } else if(decimalValue == null) {
@@ -236,7 +243,7 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
                     // String contains
                     if(ctx.string_compare_operator().CONTAINS() != null) {
                         // Repetitive code, refactor at some point when more array operators are known
-                        if(targetValue instanceof Iterable) {
+                        if(isArray(targetValue)) {
                             return arrayContains((Iterable) targetValue, strValue);
                         } else {
                             return targetValueStr.contains(strValue);
@@ -262,7 +269,7 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
                             boolean validForAll = true;
                             for (ExpressionParser.ValueContext valueContext : ctx.array().value()) {
                                 String val = valueToString(valueContext);
-                                if (targetValue instanceof Iterable) {
+                                if (isArray(targetValue)) {
                                     validForAll &= arrayContains((Iterable) targetValue, val);
                                 } else {
                                     validForAll &= targetValueStr.contains(val);
@@ -277,7 +284,11 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
                             boolean validForAny = false;
                             for (ExpressionParser.ValueContext valueContext : ctx.array().value()) {
                                 String val = valueToString(valueContext);
-                                validForAny |= targetValueStr.equals(val);
+                                if(isArray(targetValue)) {
+                                    validForAny |= arrayContains((Iterable) targetValue, val);
+                                } else {
+                                    validForAny |= targetValueStr.equals(val);
+                                }
                             }
                             return validForAny;
                         }
@@ -287,6 +298,14 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
 
             // The define only check (negative is thrown out earlier)
             return true;
+        }
+
+        private static boolean isArray(Object targetValue) {
+            // Tags values are not considered an array in our operators
+            if(targetValue instanceof Iterable) {
+                return true;
+            }
+            return false;
         }
 
         static boolean numericCompare(BigDecimal decimalValue, BigDecimal targetValueDecimal, ExpressionParser.Numeric_compare_operatorContext op) {
@@ -316,7 +335,17 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
             } else if (eventField.startsWith(TAGS)) {
                 // We get the key from tags.<key> string
                 String key = eventField.substring(5);
-                sEventValue = value.getTags().get(key);
+                Collection<String> tagValues = value.getTags().get(key);
+                if(tagValues.size() == 1) {
+                    sEventValue = tagValues.iterator().next();
+                } else {
+                    // No values for the tag
+                    if(!value.getTags().containsKey(key)) {
+                        return null;
+                    }
+                    // Multiple values
+                    sEventValue = value.getTags().get(key);
+                }
             } else if (eventField.startsWith(FACTS)) {
                 if(value.getFacts() == null) {
                     return null;
@@ -348,7 +377,7 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
         static boolean arrayContains(Iterable<?> targetValue, String matcher) {
             boolean anyMatch = false;
             for (Object o : targetValue) {
-                anyMatch |= cleanString(o.toString()).equals(matcher);
+                anyMatch |= cleanString(o.toString()).contains(matcher);
             }
             return anyMatch;
         }
@@ -365,7 +394,6 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
 
             return anyMatch;
         }
-
     }
 
     public static BigDecimal convertToBigDecimal(Object targetValue) {
