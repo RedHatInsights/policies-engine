@@ -64,7 +64,12 @@ public class EmailActionPluginListener implements ActionPluginListener {
                     String triggerId = actionMessage.getAction().getEvent().getTrigger().getId();
 
                     Notification notification = new Notification(tenantId, insightId);
-                    tags.entries().forEach(entry -> notification.getTags().put(entry.getKey(), entry.getValue()));
+                    Map<String, String> notificationTags = notification.getTags();
+                    tags.entries().forEach(entry -> {
+                        if(entry.getValue() != null && entry.getValue().length() > 0) {
+                            notificationTags.put(entry.getKey(), entry.getValue());
+                        }
+                    });
                     notification.getTriggers().put(triggerId, name);
 
                     notifyBuffer.merge(insightId, notification, (existing, addition) -> {
