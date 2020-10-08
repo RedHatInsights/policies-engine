@@ -4,7 +4,7 @@
     xsi:schemaLocation="urn:infinispan:config:10.1 http://www.infinispan.org/schemas/infinispan-config-10.1.xsd"
     xmlns="urn:infinispan:config:10.1">
 
-  <cache-container name="hawkular-alerts">
+  <cache-container name="hawkular-alerts" statistics="true">
     <!-- Migrate to Protostream -->
     <serialization marshaller="org.infinispan.jboss.marshalling.core.JBossUserMarshaller" />
 
@@ -26,7 +26,7 @@
     </local-cache>
 
     <!-- Backend for definitions, actions history, events and alerts -->
-    <local-cache name="backend">
+    <local-cache name="backend" statistics="true">
       <transaction mode="BATCH"/>
       <persistence passivation="false">
         <!-- xmlns="urn:infinispan:config:store:rocksdb:10.1" schemaLocation="https://infinispan.org/schemas/infinispan-config-10.1.xsd"  -->
