@@ -7,6 +7,7 @@ import org.eclipse.microprofile.metrics.Counter;
 import org.eclipse.microprofile.metrics.annotation.Metric;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
+import org.eclipse.microprofile.reactive.messaging.OnOverflow;
 import org.hawkular.alerts.actions.api.ActionMessage;
 import org.hawkular.alerts.actions.api.ActionPluginListener;
 import org.hawkular.alerts.actions.api.Plugin;
@@ -31,6 +32,7 @@ public class EmailActionPluginListener implements ActionPluginListener {
 
     @Inject
     @Channel("email")
+    @OnOverflow(OnOverflow.Strategy.UNBOUNDED_BUFFER)
     Emitter<JsonObject> channel;
 
     @Inject

@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.*
  * @author Jay Shaughnessy
  */
 @TestMethodOrder(MethodOrderer.Alphanumeric.class)
-@QuarkusTest
+//@QuarkusTest
 class GroupITest extends AbstractQuarkusITestBase {
 
     static MsgLogger logger = MsgLogging.getMsgLogger(GroupITest.class)
@@ -36,7 +36,7 @@ class GroupITest extends AbstractQuarkusITestBase {
     static t01Start = String.valueOf(System.currentTimeMillis())
     static t02Start;
 
-    @Test
+//    @Test
     void t01_dataDrivenGroupTest() {
         logger.info( "Running t01_dataDrivenGroupTest")
         String start = t01Start;
