@@ -149,5 +149,24 @@ public class ExprValueTest {
 
         expr = "tags.b = 'd' and tags.a contains 'c'";
         assertTrue(ExprParser.evaluate(event, expr));
+
+        // Tag parsing makes them lowerCase, but this test does not use that lowerCase parsing part - so we
+        // need to add them in lower case
+        event.addTag("cost center", "PnT");
+
+        event.addTag("owner", "Jerome Marc");
+        expr = "tags.owner contains 'Jerome'";
+        assertTrue(ExprParser.evaluate(event, expr));
+
+        event.addTag("owner", "Michael Burman");
+        expr = "tags.owner contains 'Jerome'";
+        assertTrue(ExprParser.evaluate(event, expr));
+
+        // There's no Cost, only 'Cost Center'
+        expr = "tags.cost";
+        assertFalse(ExprParser.evaluate(event, expr));
+
+        expr = "tags.owner IN ['Jerome Marc', 'Thomas Heute']";
+        assertTrue(ExprParser.evaluate(event, expr));
     }
 }
