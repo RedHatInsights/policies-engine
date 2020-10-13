@@ -463,7 +463,12 @@ public class IspnDefinitionsServiceImplTest extends IspnBaseServiceImplTest {
         trigger.addLifecycle(Trigger.TriggerLifecycle.CREATED, 0, null);
 
         fullTrigger.setTrigger(trigger);
-        definitions.createFullTrigger(TENANT, fullTrigger);
+        try {
+            definitions.createFullTrigger(TENANT, fullTrigger);
+        } catch(Exception e) {
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
 
         // Try to update first with null trigger (should get NotFoundException)
         fullTrigger.setTrigger(null);

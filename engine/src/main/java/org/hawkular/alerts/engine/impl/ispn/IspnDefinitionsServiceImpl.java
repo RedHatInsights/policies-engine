@@ -1095,6 +1095,12 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
     @Override
     public Collection<Condition> setAllConditions(String tenantId, String triggerId,
             Collection<Condition> conditions) throws Exception {
+        return setAllConditions(tenantId, triggerId, conditions, true);
+    }
+
+    public Collection<Condition> setAllConditions(String tenantId, String triggerId,
+                                                  Collection<Condition> conditions, boolean update) throws Exception {
+
         if (isEmpty(tenantId)) {
             throw new IllegalArgumentException("TenantId must be not null");
         }
@@ -1119,14 +1125,14 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
         Collection<Condition> firingConditions = conditions.stream()
                 .filter(c -> c.getTriggerMode() == null || c.getTriggerMode().equals(Mode.FIRING))
                 .collect(Collectors.toList());
-        updatedConditions.addAll(setConditions(tenantId, triggerId, Mode.FIRING, firingConditions, dataIds));
+        updatedConditions.addAll(setConditions(tenantId, triggerId, Mode.FIRING, firingConditions, dataIds, update));
 
         Collection<Condition> autoResolveConditions = conditions.stream()
                 .filter(c -> c.getTriggerMode().equals(Mode.AUTORESOLVE))
                 .collect(Collectors.toList());
-        updatedConditions.addAll(setConditions(tenantId, triggerId, Mode.AUTORESOLVE, autoResolveConditions, dataIds));
+        updatedConditions.addAll(setConditions(tenantId, triggerId, Mode.AUTORESOLVE, autoResolveConditions, dataIds, update));
 
-        if (alertsEngine != null) {
+        if (alertsEngine != null && update) {
             alertsEngine.reloadTrigger(tenantId, triggerId);
         }
 
@@ -2068,7 +2074,11 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
                 }
             }
             if (!isEmpty(fullTrigger.getConditions())) {
-                setAllConditions(tenantId, trigger.getId(), fullTrigger.getConditions());
+                Collection<Condition> conditions = setAllConditions(tenantId, trigger.getId(), fullTrigger.getConditions(), false);
+                fullTrigger.setConditions(List.copyOf(conditions));
+            }
+            if(alertsEngine != null) {
+                alertsEngine.loadTrigger(fullTrigger);
             }
         }
     }
@@ -2279,10 +2289,12 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
     }
 
     private Collection<Condition> setConditions(String tenantId, String triggerId, Mode triggerMode,
-            Collection<Condition> conditions, Set<String> dataIds) throws Exception {
+            Collection<Condition> conditions, Set<String> dataIds, boolean update) throws Exception {
 
         // Get rid of the prior condition set
-        removeConditions(tenantId, triggerId, triggerMode);
+        if(update) {
+            removeConditions(tenantId, triggerId, triggerMode);
+        }
 
         // Now add the new condition set
         try {
