@@ -2,7 +2,6 @@ package com.redhat.cloud.policies.engine.process;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.reactivex.subscribers.TestSubscriber;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.microprofile.metrics.Counter;
@@ -25,13 +24,23 @@ import org.hawkular.alerts.api.services.AlertsCriteria;
 import org.hawkular.alerts.api.services.AlertsService;
 import org.hawkular.alerts.api.services.DefinitionsService;
 import org.hawkular.alerts.api.services.StatusService;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.reactivestreams.Publisher;
 
 import javax.inject.Inject;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -81,16 +90,7 @@ public class ReceiverTest {
 
     private final MetricID errorCount = new MetricID("engine.input.processed.errors", new org.eclipse.microprofile.metrics.Tag("queue", "host-egress"));
 
-    @Test
-    public void testReceiver() throws Exception {
-        /*
-        Create trigger definitions, send to hostEmitter and wait for the trigger to send an alert to email
-         */
-        ActionDefinition actionDefinition = new ActionDefinition(TENANT_ID, ACTION_PLUGIN, ACTION_ID);
-        Map<String, String> props = new HashMap<>();
-        actionDefinition.setProperties(props);
-        definitionsService.addActionDefinition(TENANT_ID, actionDefinition);
-
+    private FullTrigger createTriggeringTrigger(String triggerId) {
         EventCondition evCond = new EventCondition();
 //        evCond.setExpression("facts.arch = 'string'");
         evCond.setExpression("");
@@ -101,20 +101,33 @@ public class ReceiverTest {
         TriggerAction action = new TriggerAction(ACTION_PLUGIN, ACTION_ID);
         Set<TriggerAction> actions = Collections.singleton(action);
 
-        Trigger trigger = new Trigger(TENANT_ID, TRIGGER_ID, "Trigger from arch", null);
+        Trigger trigger = new Trigger(TENANT_ID, triggerId, "Trigger from arch", null);
         trigger.setEventType(EventType.ALERT);
         trigger.setActions(actions);
         trigger.setMode(Mode.FIRING);
         trigger.setEnabled(true);
 
         FullTrigger fullTrigger = new FullTrigger(trigger, null, conditions);
+
+        return fullTrigger;
+    }
+
+    @Test
+    public void testReceiver() throws Exception {
+        /*
+        Create trigger definitions, send to hostEmitter and wait for the trigger to send an alert to email
+         */
+        ActionDefinition actionDefinition = new ActionDefinition(TENANT_ID, ACTION_PLUGIN, ACTION_ID);
+        Map<String, String> props = new HashMap<>();
+        actionDefinition.setProperties(props);
+        definitionsService.addActionDefinition(TENANT_ID, actionDefinition);
+
+        FullTrigger fullTrigger = createTriggeringTrigger(TRIGGER_ID);
         definitionsService.createFullTrigger(TENANT_ID, fullTrigger);
 
         // Create second trigger
-        fullTrigger.getTrigger().setName("Trigger from past");
-        fullTrigger.getTrigger().setId(TRIGGER_ID + "2");
-
-        definitionsService.createFullTrigger(TENANT_ID, fullTrigger);
+        FullTrigger fullTrigger2 = createTriggeringTrigger(TRIGGER_ID + "2");
+        definitionsService.createFullTrigger(TENANT_ID, fullTrigger2);
 
         TestSubscriber<JsonObject> testSubscriber = new TestSubscriber<>();
         emailReceiver.subscribe(testSubscriber);
