@@ -56,7 +56,9 @@ public class IspnActionsServiceImpl implements ActionsService {
 
     ActionsCacheManager actionsCacheManager;
 
-    Cache<String, Object> backend;
+    private boolean fastActionsStore = false;
+
+    Cache<String, Object> actionsStore;
 
     QueryFactory queryFactory;
 
@@ -66,12 +68,18 @@ public class IspnActionsServiceImpl implements ActionsService {
     long alertsLifespanInHours;
 
     public void init() {
-        backend = IspnCacheManager.getCacheManager().getCache("backend");
-        if (backend == null) {
-            log.error("Ispn backend cache not found. Check configuration.");
+        fastActionsStore = ConfigProvider.getConfig().getValue("engine.backend.ispn.actions-ephemeral", Boolean.class);
+        if(fastActionsStore) {
+            actionsStore = IspnCacheManager.getCacheManager().getCache("actions");
+        } else {
+            // Persistent caching option
+            actionsStore = IspnCacheManager.getCacheManager().getCache("backend");
+        }
+        if (actionsStore == null) {
+            log.error("Ispn backend / actions cache not found. Check configuration.");
             throw new RuntimeException("backend cache not found");
         }
-        queryFactory = Search.getQueryFactory(backend);
+        queryFactory = Search.getQueryFactory(actionsStore);
         alertsLifespanInHours = ConfigProvider.getConfig().getValue("engine.backend.ispn.alerts-lifespan", Long.class);
     }
 
@@ -122,7 +130,7 @@ public class IspnActionsServiceImpl implements ActionsService {
 
         try {
             String pk = IspnPk.pk(action);
-            IspnAction IspnAction = (IspnAction) backend.get(pk);
+            IspnAction IspnAction = (IspnAction) actionsStore.get(pk);
             if (IspnAction == null) {
                 insertAction(action);
                 log.debugf("No existing action found for %s, inserting %s", pk, action);
@@ -130,7 +138,7 @@ public class IspnActionsServiceImpl implements ActionsService {
             }
             Action existingAction = IspnAction.getAction();
             existingAction.setResult(action.getResult());
-            backend.put(pk, new IspnAction(existingAction));
+            actionsStore.put(pk, new IspnAction(existingAction));
         } catch (Exception e) {
             log.errorDatabaseException(e.getMessage());
             throw e;
@@ -247,15 +255,21 @@ public class IspnActionsServiceImpl implements ActionsService {
         }
 
         try {
-            backend.startBatch();
-            actionsToDelete.stream()
-                    .forEach(a -> backend.remove(IspnPk.pk(a)));
-            backend.endBatch(true);
+            if(!fastActionsStore) {
+                actionsStore.startBatch();
+            }
+            actionsToDelete
+                    .forEach(a -> actionsStore.remove(IspnPk.pk(a)));
+            if(!fastActionsStore) {
+               actionsStore.endBatch(true);
+            }
             return actionsToDelete.size();
 
         } catch (Exception e) {
             try {
-                backend.endBatch(false);
+                if(!fastActionsStore) {
+                    actionsStore.endBatch(false);
+                }
             } catch (Exception e2) {
                 log.errorDatabaseException(e2.getMessage());
             }
@@ -404,9 +418,9 @@ public class IspnActionsServiceImpl implements ActionsService {
         }
         try {
             if(alertsLifespanInHours < 0) {
-                backend.put(IspnPk.pk(action), new IspnAction(action));
+                actionsStore.put(IspnPk.pk(action), new IspnAction(action));
             } else {
-                backend.put(IspnPk.pk(action), new IspnAction(action), alertsLifespanInHours, TimeUnit.HOURS);
+                actionsStore.put(IspnPk.pk(action), new IspnAction(action), alertsLifespanInHours, TimeUnit.HOURS);
             }
         } catch (Exception e) {
             log.errorDatabaseException(e.getMessage());

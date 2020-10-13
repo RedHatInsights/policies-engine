@@ -66,6 +66,7 @@
         <property name="default.metadata_cachename">LuceneIndexesMetadata_custom</property>
       </indexing>
     </local-cache>
+    <local-cache name="actions" statistics-available="false" simple-cache="true" />
     <local-cache name="LuceneIndexesMetadata_custom">
       <transaction mode="NON_XA" />
       <persistence>
