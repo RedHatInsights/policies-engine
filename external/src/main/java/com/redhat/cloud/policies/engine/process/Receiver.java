@@ -116,6 +116,7 @@ public class Receiver {
         if (json.containsKey(HOST_FIELD)) {
             json = json.getJsonObject(HOST_FIELD);
         } else {
+            rejectedCount.inc();
             return input.ack();
         }
 
