@@ -7,7 +7,6 @@ import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.metrics.Counter;
 import org.eclipse.microprofile.metrics.annotation.Metric;
-import org.eclipse.microprofile.reactive.messaging.Acknowledgment;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Message;
 import org.hawkular.alerts.api.model.event.Event;
@@ -17,8 +16,13 @@ import org.hawkular.alerts.log.MsgLogging;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletionStage;
 
 import static org.hawkular.alerts.api.util.Util.isEmpty;
@@ -30,6 +34,18 @@ import static org.hawkular.alerts.api.util.Util.isEmpty;
 @ApplicationScoped
 public class Receiver {
     private final MsgLogger log = MsgLogging.getMsgLogger(Receiver.class);
+
+    private static final Set<String> ACCEPTED_REPORTERS;
+    private static final Set<String> ACCEPTED_TYPES;
+
+    static {
+        ACCEPTED_REPORTERS = new HashSet<>();
+        ACCEPTED_REPORTERS.add("puptoo");
+
+        ACCEPTED_TYPES = new HashSet<>();
+        ACCEPTED_TYPES.add("created");
+        ACCEPTED_TYPES.add("updated");
+    }
 
     // This needs to be the same value as set in the ui-backend Condition class.
     // This must not be modified unless the data in ISPN is migrated to a new value
@@ -44,6 +60,7 @@ public class Receiver {
 
     private static final String HOST_FIELD = "host";
     private static final String TYPE_FIELD = "type";
+    private static final String REPORTER_FIELD = "reporter";
     private static final String TENANT_ID_FIELD = "account";
     private static final String SYSTEM_PROFILE_FIELD = "system_profile";
     private static final String NETWORK_INTERFACES_FIELD = "network_interfaces";
@@ -87,7 +104,7 @@ public class Receiver {
         }
         if (json.containsKey(TYPE_FIELD)) {
             String eventType = json.getString(TYPE_FIELD);
-            if (!eventType.equals("created") && !eventType.equals("updated")) {
+            if(!ACCEPTED_TYPES.contains(eventType)) {
                 if (log.isDebugEnabled()) {
                     log.debugf("Got a request with type='%s', ignoring ", eventType);
                 }
@@ -102,9 +119,17 @@ public class Receiver {
             return input.ack();
         }
 
+        // Verify host.reporter (not platform_metadata.metadata.reporter!) is one of the accepted values
+        String reporter = json.getString(REPORTER_FIELD);
+        if(!ACCEPTED_REPORTERS.contains(reporter)) {
+            rejectedCount.inc();
+            return input.ack();
+        }
+
         String insightsId = json.getString(INSIGHT_ID_FIELD);
 
         if (isEmpty(insightsId)) {
+            rejectedCount.inc();
             return input.ack();
         }
 
