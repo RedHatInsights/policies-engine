@@ -38,7 +38,7 @@
     <version.org.codehaus.mojo.exec-maven-plugin>3.0.0</version.org.codehaus.mojo.exec-maven-plugin>
 
     <!-- Rest of them -->
-    <version.junit>4.13</version.junit> <!-- External module uses Quarkus' JUnit 5 -->
+    <version.junit>4.13.1</version.junit> <!-- External module uses Quarkus' JUnit 5 -->
     <version.org.antlr>4.7.2</version.org.antlr>
     <version.org.apache.commons.commons-math3>3.4.1</version.org.apache.commons.commons-math3>
     <version.org.drools>7.38.0.Final</version.org.drools>
