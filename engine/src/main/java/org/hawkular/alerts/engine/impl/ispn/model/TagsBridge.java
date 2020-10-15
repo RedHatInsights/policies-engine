@@ -42,6 +42,9 @@ public class TagsBridge implements ContainerBridge, FieldBridge {
         @Override
         public void set(String name, Object value, Document document, LuceneOptions luceneOptions) {
             luceneOptions.addFieldToDocument(name, objectToString(value), document);
+            if("tags.display_name".equals(name)) {
+                luceneOptions.addSortedDocValuesFieldToDocument(name, objectToString(value), document);
+            }
         }
 
         @Override

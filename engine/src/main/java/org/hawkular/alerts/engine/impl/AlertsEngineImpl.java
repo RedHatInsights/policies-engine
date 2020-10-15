@@ -1,6 +1,33 @@
 package org.hawkular.alerts.engine.impl;
 
-import static org.hawkular.alerts.api.util.Util.isEmpty;
+import org.eclipse.microprofile.config.ConfigProvider;
+import org.hawkular.alerts.api.model.condition.CompareCondition;
+import org.hawkular.alerts.api.model.condition.Condition;
+import org.hawkular.alerts.api.model.condition.ConditionEval;
+import org.hawkular.alerts.api.model.condition.MissingCondition;
+import org.hawkular.alerts.api.model.condition.MissingConditionEval;
+import org.hawkular.alerts.api.model.dampening.Dampening;
+import org.hawkular.alerts.api.model.data.Data;
+import org.hawkular.alerts.api.model.event.Alert;
+import org.hawkular.alerts.api.model.event.Event;
+import org.hawkular.alerts.api.model.trigger.FullTrigger;
+import org.hawkular.alerts.api.model.trigger.Trigger;
+import org.hawkular.alerts.api.services.ActionsService;
+import org.hawkular.alerts.api.services.AlertsService;
+import org.hawkular.alerts.api.services.DataExtension;
+import org.hawkular.alerts.api.services.DefinitionsService;
+import org.hawkular.alerts.api.services.EventExtension;
+import org.hawkular.alerts.api.services.ExtensionsService;
+import org.hawkular.alerts.engine.impl.AlertsEngineCache.DataEntry;
+import org.hawkular.alerts.engine.service.AlertsEngine;
+import org.hawkular.alerts.engine.service.PartitionDataListener;
+import org.hawkular.alerts.engine.service.PartitionManager;
+import org.hawkular.alerts.engine.service.PartitionManager.Operation;
+import org.hawkular.alerts.engine.service.PartitionTriggerListener;
+import org.hawkular.alerts.engine.service.RulesEngine;
+import org.hawkular.alerts.engine.util.MissingState;
+import org.hawkular.alerts.log.AlertingLogger;
+import org.hawkular.alerts.log.MsgLogging;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -16,34 +43,7 @@ import java.util.TimerTask;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 
-import org.eclipse.microprofile.config.ConfigProvider;
-import org.hawkular.alerts.api.model.condition.CompareCondition;
-import org.hawkular.alerts.api.model.condition.Condition;
-import org.hawkular.alerts.api.model.condition.ConditionEval;
-import org.hawkular.alerts.api.model.condition.MissingCondition;
-import org.hawkular.alerts.api.model.condition.MissingConditionEval;
-import org.hawkular.alerts.api.model.dampening.Dampening;
-import org.hawkular.alerts.api.model.data.Data;
-import org.hawkular.alerts.api.model.event.Alert;
-import org.hawkular.alerts.api.model.event.Event;
-import org.hawkular.alerts.api.model.trigger.Trigger;
-import org.hawkular.alerts.api.services.ActionsService;
-import org.hawkular.alerts.api.services.AlertsService;
-import org.hawkular.alerts.api.services.DataExtension;
-import org.hawkular.alerts.api.services.DefinitionsService;
-import org.hawkular.alerts.api.services.EventExtension;
-import org.hawkular.alerts.api.services.ExtensionsService;
-import org.hawkular.alerts.engine.impl.AlertsEngineCache.DataEntry;
-import org.hawkular.alerts.engine.impl.ispn.IspnDefinitionsServiceImpl;
-import org.hawkular.alerts.engine.service.AlertsEngine;
-import org.hawkular.alerts.engine.service.PartitionDataListener;
-import org.hawkular.alerts.engine.service.PartitionManager;
-import org.hawkular.alerts.engine.service.PartitionManager.Operation;
-import org.hawkular.alerts.engine.service.PartitionTriggerListener;
-import org.hawkular.alerts.engine.service.RulesEngine;
-import org.hawkular.alerts.engine.util.MissingState;
-import org.hawkular.alerts.log.AlertingLogger;
-import org.hawkular.alerts.log.MsgLogging;
+import static org.hawkular.alerts.api.util.Util.isEmpty;
 
 /**
  * Implementation for {@link org.hawkular.alerts.api.services.AlertsService}.
@@ -333,7 +333,7 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
         }
 
         // Look for the Trigger in the rules engine, if it is there then remove everything about it
-        // Note that removeTrigger relies only on tenatId+triggerId.
+        // Note that removeTrigger relies only on tenantId+triggerId.
         removeTrigger(trigger);
 
         try {
@@ -380,6 +380,26 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
         } catch (Exception e) {
             log.debug(e.getMessage(), e);
             log.errorDefinitionsService("Conditions/Dampening", e.getMessage());
+        }
+    }
+
+    @Override
+    public void loadTrigger(FullTrigger fullTrigger) {
+        if(fullTrigger == null) {
+            throw new IllegalArgumentException("FullTrigger must be not null");
+        }
+        if(distributed) {
+            throw new IllegalArgumentException("This hotpath of loading fullTrigger to AlertsEngine can't be used in distributed mode");
+        }
+        Trigger trigger = fullTrigger.getTrigger();
+        if (trigger != null && trigger.isLoadable()) {
+            List<Condition> conditions = fullTrigger.getConditions();
+            List<Dampening> dampenings = fullTrigger.getDampenings();
+            rules.addFact(trigger);
+            rules.addFacts(conditions);
+            if (!dampenings.isEmpty()) {
+                rules.addFacts(dampenings);
+            }
         }
     }
 

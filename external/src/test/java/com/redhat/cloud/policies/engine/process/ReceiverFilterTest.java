@@ -24,6 +24,7 @@ public class ReceiverFilterTest {
 
     Counter incomingMessagesCount;
     Counter processingErrors;
+    Counter rejectedCount;
 
     @Test
     public void testAlertsServiceIsCalled() throws Exception {
@@ -42,11 +43,13 @@ public class ReceiverFilterTest {
         mockedAlertsService = new MockedAlertsService();
         incomingMessagesCount = new CounterImpl();
         processingErrors = new CounterImpl();
+        rejectedCount = new CounterImpl();
 
         receiver = new Receiver();
         receiver.alertsService = mockedAlertsService;
         receiver.processingErrors = processingErrors;
         receiver.incomingMessagesCount = incomingMessagesCount;
+        receiver.rejectedCount = rejectedCount;
     }
 
     @AfterEach
@@ -54,6 +57,7 @@ public class ReceiverFilterTest {
         mockedAlertsService.clearEvents();
         receiver.processingErrors.inc(receiver.processingErrors.getCount() * -1);
         receiver.incomingMessagesCount.inc(receiver.incomingMessagesCount.getCount() * -1);
+        receiver.rejectedCount.inc(receiver.rejectedCount.getCount() * -1);
     }
 
     @Test
@@ -82,6 +86,36 @@ public class ReceiverFilterTest {
         voidCompletionStage.toCompletableFuture().get();
 
         assertEquals("ba11a21a-8b22-431b-9b4b-b06006472d54", mockedAlertsService.getPushedEvents().get(0).getTags().get(Receiver.INVENTORY_ID_FIELD).iterator().next());
+    }
+
+    @Test
+    public void testRejectionTypes() throws Exception {
+        InputStream is = getClass().getClassLoader().getResourceAsStream("input/thomas-host.json");
+        String inputJson = IOUtils.toString(is, StandardCharsets.UTF_8);
+
+        JsonObject jsonObject = new JsonObject(inputJson);
+        jsonObject.put("type", "deleted");
+        inputJson = jsonObject.toString();
+
+        CompletionStage<Void> voidCompletionStage = receiver.processAsync(Message.of(inputJson));
+        voidCompletionStage.toCompletableFuture().get();
+
+        assertEquals(0, mockedAlertsService.getPushedEvents().size());
+        assertEquals(1, incomingMessagesCount.getCount());
+        assertEquals(0, processingErrors.getCount());
+        assertEquals(1, rejectedCount.getCount());
+
+        jsonObject = new JsonObject(inputJson);
+        jsonObject.getJsonObject("host").put("reporter", "rhsm-conduit");
+        inputJson = jsonObject.toString();
+
+        voidCompletionStage = receiver.processAsync(Message.of(inputJson));
+        voidCompletionStage.toCompletableFuture().get();
+
+        assertEquals(0, mockedAlertsService.getPushedEvents().size());
+        assertEquals(2, incomingMessagesCount.getCount());
+        assertEquals(0, processingErrors.getCount());
+        assertEquals(2, rejectedCount.getCount());
     }
 
 }

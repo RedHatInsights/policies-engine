@@ -4,6 +4,7 @@ import java.util.TreeSet;
 
 import org.hawkular.alerts.api.model.data.Data;
 import org.hawkular.alerts.api.model.event.Event;
+import org.hawkular.alerts.api.model.trigger.FullTrigger;
 import org.hawkular.alerts.api.model.trigger.Trigger;
 
 /**
@@ -66,6 +67,13 @@ public interface AlertsEngine {
      * @param triggerId Trigger id to be reloaded
      */
     void reloadTrigger(String tenantId, String triggerId);
+
+    /**
+     * Reload the specific Trigger. This method is intended only for adding a new trigger locally.
+     *
+     * @param trigger With all the necessary data included (conditions, dampenings, etc)
+     */
+    void loadTrigger(FullTrigger trigger);
 
     /**
      * Remove the specified Trigger from the engine.

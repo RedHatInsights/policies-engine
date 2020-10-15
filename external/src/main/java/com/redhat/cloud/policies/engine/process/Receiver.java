@@ -7,7 +7,6 @@ import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.metrics.Counter;
 import org.eclipse.microprofile.metrics.annotation.Metric;
-import org.eclipse.microprofile.reactive.messaging.Acknowledgment;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Message;
 import org.hawkular.alerts.api.model.event.Event;
@@ -17,8 +16,13 @@ import org.hawkular.alerts.log.MsgLogging;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletionStage;
 
 import static org.hawkular.alerts.api.util.Util.isEmpty;
@@ -30,6 +34,18 @@ import static org.hawkular.alerts.api.util.Util.isEmpty;
 @ApplicationScoped
 public class Receiver {
     private final MsgLogger log = MsgLogging.getMsgLogger(Receiver.class);
+
+    private static final Set<String> ACCEPTED_REPORTERS;
+    private static final Set<String> ACCEPTED_TYPES;
+
+    static {
+        ACCEPTED_REPORTERS = new HashSet<>();
+        ACCEPTED_REPORTERS.add("puptoo");
+
+        ACCEPTED_TYPES = new HashSet<>();
+        ACCEPTED_TYPES.add("created");
+        ACCEPTED_TYPES.add("updated");
+    }
 
     // This needs to be the same value as set in the ui-backend Condition class.
     // This must not be modified unless the data in ISPN is migrated to a new value
@@ -44,6 +60,7 @@ public class Receiver {
 
     private static final String HOST_FIELD = "host";
     private static final String TYPE_FIELD = "type";
+    private static final String REPORTER_FIELD = "reporter";
     private static final String TENANT_ID_FIELD = "account";
     private static final String SYSTEM_PROFILE_FIELD = "system_profile";
     private static final String NETWORK_INTERFACES_FIELD = "network_interfaces";
@@ -72,105 +89,105 @@ public class Receiver {
     Counter processingErrors;
 
     @Incoming("events")
-    @Acknowledgment(Acknowledgment.Strategy.MANUAL)
+//    @Acknowledgment(Acknowledgment.Strategy.MANUAL)
     public CompletionStage<Void> processAsync(Message<String> input) {
-        return
-                CompletableFuture.supplyAsync(() -> {
-                    // smallrye-messaging 1.1.0 and up has its own metric for received messages
-                    incomingMessagesCount.inc();
-                    if (log.isTraceEnabled()) {
-                        log.tracef("Received message, input payload: %s", input.getPayload());
-                    }
-                    JsonObject json = new JsonObject(input.getPayload());
-                    return json;
-                }).thenApplyAsync(json -> {
-                    if (json.containsKey(TYPE_FIELD)) {
-                        String eventType = json.getString(TYPE_FIELD);
-                        if (!eventType.equals("created") && !eventType.equals("updated")) {
-                            if (log.isDebugEnabled()) {
-                                log.debugf("Got a request with type='%s', ignoring ", eventType);
-                            }
-                            rejectedCount.inc();
-                            return null;
-                        }
-                    }
+        incomingMessagesCount.inc();
+        if (log.isTraceEnabled()) {
+            log.tracef("Received message, input payload: %s", input.getPayload());
+        }
+        JsonObject json;
+        try {
+            json = new JsonObject(input.getPayload());
+        } catch(Exception e) {
+            processingErrors.inc();
+            return input.ack();
+        }
+        if (json.containsKey(TYPE_FIELD)) {
+            String eventType = json.getString(TYPE_FIELD);
+            if(!ACCEPTED_TYPES.contains(eventType)) {
+                if (log.isDebugEnabled()) {
+                    log.debugf("Got a request with type='%s', ignoring ", eventType);
+                }
+                rejectedCount.inc();
+                return input.ack();
+            }
+        }
 
-                    if(json.containsKey(HOST_FIELD)) {
-                        json = json.getJsonObject(HOST_FIELD);
-                    } else {
-                        return null;
-                    }
+        if (json.containsKey(HOST_FIELD)) {
+            json = json.getJsonObject(HOST_FIELD);
+        } else {
+            rejectedCount.inc();
+            return input.ack();
+        }
 
-                    String insightsId = json.getString(INSIGHT_ID_FIELD);
+        // Verify host.reporter (not platform_metadata.metadata.reporter!) is one of the accepted values
+        String reporter = json.getString(REPORTER_FIELD);
+        if(!ACCEPTED_REPORTERS.contains(reporter)) {
+            rejectedCount.inc();
+            return input.ack();
+        }
 
-                    if (isEmpty(insightsId)) {
-                        return null;
-                    }
+        String insightsId = json.getString(INSIGHT_ID_FIELD);
 
-                    String tenantId = json.getString(TENANT_ID_FIELD);
-                    String displayName = json.getString(DISPLAY_NAME_FIELD);
-                    String text = String.format("host-egress report %s for %s", insightsId, displayName);
+        if (isEmpty(insightsId)) {
+            rejectedCount.inc();
+            return input.ack();
+        }
 
-                    Event event = new Event(tenantId, UUID.randomUUID().toString(), INSIGHTS_REPORT_DATA_ID, CATEGORY_NAME, text);
-                    // Indexed searchable events
-                    Multimap<String, String> tagsMap = parseTags(json.getJsonArray(TAGS_FIELD));
-                    tagsMap.put(DISPLAY_NAME_FIELD, displayName);
-                    tagsMap.put(INVENTORY_ID_FIELD, json.getString(HOST_ID));
-                    event.setTags(tagsMap);
+        String tenantId = json.getString(TENANT_ID_FIELD);
+        String displayName = json.getString(DISPLAY_NAME_FIELD);
+        String text = String.format("host-egress report %s for %s", insightsId, displayName);
 
-                    // Additional context for processing
-                    Map<String, String> contextMap = new HashMap<>();
-                    contextMap.put(INSIGHT_ID_FIELD, insightsId);
-                    event.setContext(contextMap);
+        Event event = new Event(tenantId, UUID.randomUUID().toString(), INSIGHTS_REPORT_DATA_ID, CATEGORY_NAME, text);
+        // Indexed searchable events
+        Multimap<String, String> tagsMap = parseTags(json.getJsonArray(TAGS_FIELD));
+        tagsMap.put(DISPLAY_NAME_FIELD, displayName);
+        tagsMap.put(INVENTORY_ID_FIELD, json.getString(HOST_ID));
+        event.setTags(tagsMap);
 
-                    JsonObject sp = json.getJsonObject(SYSTEM_PROFILE_FIELD);
-                    Map<String, Object> systemProfile = parseSystemProfile(sp);
+        // Additional context for processing
+        Map<String, String> contextMap = new HashMap<>();
+        contextMap.put(INSIGHT_ID_FIELD, insightsId);
+        event.setContext(contextMap);
 
-                    systemProfile.put(FQDN_NAME_FIELD, json.getString(FQDN_NAME_FIELD));
+        JsonObject sp = json.getJsonObject(SYSTEM_PROFILE_FIELD);
+        Map<String, Object> systemProfile = parseSystemProfile(sp);
 
-                    event.setFacts(systemProfile);
-                    return event;
-                }).thenAcceptAsync(event -> {
-                    if(event == null) {
-                        return;
-                    }
-                    try {
-                        List<Event> eventList = new ArrayList<>(1);
-                        eventList.add(event);
-                        if (storeEvents) {
-                            alertsService.addEvents(eventList);
-                        } else {
-                            alertsService.sendEvents(eventList);
-                        }
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                }).handle((aVoid, throwable) -> {
-                    if (throwable != null) {
-                        processingErrors.inc();
-                        log.errorf("Failed to process input message: %s", throwable.getMessage());
-                    }
-                    input.ack();
-                    return null;
-                });
+        systemProfile.put(FQDN_NAME_FIELD, json.getString(FQDN_NAME_FIELD));
+
+        event.setFacts(systemProfile);
+
+        try {
+            List<Event> eventList = new ArrayList<>(1);
+            eventList.add(event);
+            if (storeEvents) {
+                alertsService.addEvents(eventList);
+            } else {
+                alertsService.sendEvents(eventList);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        return input.ack();
     }
 
     /**
      * parseSystemProfile extracts certain parts of the input JSON and modifies them for easier use
      */
     static Map<String, Object> parseSystemProfile(JsonObject json) {
-        if(json == null) {
+        if (json == null) {
             return new HashMap<>();
         }
         Map<String, Object> facts = json.getMap();
 
         JsonArray networkInterfaces = json.getJsonArray(NETWORK_INTERFACES_FIELD);
-        if(networkInterfaces != null) {
+        if (networkInterfaces != null) {
             facts.put(NETWORK_INTERFACES_FIELD, namedObjectsToMap(networkInterfaces));
         }
 
         JsonArray yumRepos = json.getJsonArray(YUM_REPOS_FIELD);
-        if(yumRepos != null) {
+        if (yumRepos != null) {
             facts.put(YUM_REPOS_FIELD, namedObjectsToMap(yumRepos));
         }
 

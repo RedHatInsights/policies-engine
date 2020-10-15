@@ -82,9 +82,7 @@ public class IncomingDataManagerImpl implements IncomingDataManager {
 
     @Override
     public void bufferEvents(IncomingEvents incomingEvents) {
-        executor.submit(() -> {
-            processEvents(incomingEvents);
-        });
+        processEvents(incomingEvents);
     }
 
     private void processData(IncomingData incomingData) {
