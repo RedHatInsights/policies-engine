@@ -1,6 +1,5 @@
 package com.redhat.cloud.policies.engine.process;
 
-import io.smallrye.metrics.app.CounterImpl;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.microprofile.metrics.Counter;
@@ -13,6 +12,7 @@ import org.junit.jupiter.api.TestInstance;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -41,9 +41,9 @@ public class ReceiverFilterTest {
     @BeforeAll
     public void init() {
         mockedAlertsService = new MockedAlertsService();
-        incomingMessagesCount = new CounterImpl();
-        processingErrors = new CounterImpl();
-        rejectedCount = new CounterImpl();
+        incomingMessagesCount = new InternalCounter();
+        processingErrors = new InternalCounter();
+        rejectedCount = new InternalCounter();
 
         receiver = new Receiver();
         receiver.alertsService = mockedAlertsService;
@@ -118,4 +118,24 @@ public class ReceiverFilterTest {
         assertEquals(2, rejectedCount.getCount());
     }
 
+
+    public static class InternalCounter implements Counter {
+
+        private AtomicLong value = new AtomicLong(0);
+
+        @Override
+        public void inc() {
+            value.incrementAndGet();
+        }
+
+        @Override
+        public void inc(long l) {
+            value.addAndGet(l);
+        }
+
+        @Override
+        public long getCount() {
+            return value.get();
+        }
+    }
 }
