@@ -58,6 +58,8 @@
 
     <!--Distributed tracing support for Vert.x which is not covered by SmallRye-OT -->
     <version.opentracing-vertx-web>1.0.0</version.opentracing-vertx-web>
+
+    <version.org.apache.avro>1.10.0</version.org.apache.avro>
   </properties>
 
   <dependencyManagement>
