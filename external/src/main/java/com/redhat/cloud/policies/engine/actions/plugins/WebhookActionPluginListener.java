@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -59,7 +60,7 @@ public class WebhookActionPluginListener implements ActionPluginListener {
         Action webhookAction = new Action();
         webhookAction.setEventType(EVENT_TYPE_NAME);
         webhookAction.setApplication(APP_NAME);
-        webhookAction.setTimestamp(LocalDateTime.from(Instant.ofEpochMilli(actionMessage.getAction().getCtime())));
+        webhookAction.setTimestamp(LocalDateTime.ofInstant(Instant.ofEpochMilli(actionMessage.getAction().getCtime()), ZoneId.systemDefault()));
         webhookAction.setEventId(actionMessage.getAction().getEventId());
         List<Tag> tags = new ArrayList<>();
         for (Map.Entry<String, String> tagEntry : actionMessage.getAction().getEvent().getTags().entries()) {
@@ -70,29 +71,37 @@ public class WebhookActionPluginListener implements ActionPluginListener {
         webhookAction.setTags(tags);
         Context context = new Context();
         context.setAccountId(actionMessage.getAction().getTenantId());
+        context.setMessage(new HashMap<>());
+        webhookAction.setEvent(context);
 
         // Add the wanted properties here..
         Trigger trigger = actionMessage.getAction().getEvent().getTrigger();
-        context.put("policy_id", trigger.getId());
-        context.put("policy_name", trigger.getName());
-        context.put("policy_description", trigger.getDescription());
+        addToMessage(webhookAction, "policy_id", trigger.getId());
+        addToMessage(webhookAction, "policy_name", trigger.getName());
+        addToMessage(webhookAction, "policy_description", trigger.getDescription());
 
         Outer:
         for (Set<ConditionEval> evalSet : actionMessage.getAction().getEvent().getEvalSets()) {
             for (ConditionEval conditionEval : evalSet) {
                 if (conditionEval instanceof EventConditionEval) {
                     EventConditionEval eventEval = (EventConditionEval) conditionEval;
-                    context.put("policy_condition", eventEval.getCondition().getExpression());
+                    addToMessage(webhookAction, "policy_condition", eventEval.getCondition().getExpression());
 
-                    context.put("insights_id", eventEval.getContext().get("insights_id"));
-                    context.put("display_name", eventEval.getValue().getTags().get("display_name").iterator().next());
+                    addToMessage(webhookAction, "insights_id", eventEval.getContext().get("insights_id"));
+                    addToMessage(webhookAction, "display_name", eventEval.getValue().getTags().get("display_name").iterator().next());
                     break Outer; // We only want to process the first one
                 }
             }
         }
 
-        webhookAction.setEvent(context);
         channel.send(serializeAction(webhookAction));
+    }
+
+    private void addToMessage(Action action, String key, String value) {
+        // Adding a null value is not allowed by the Avro schema
+        if (key != null && value != null) {
+            action.getEvent().getMessage().put(key, value);
+        }
     }
 
     @Override
