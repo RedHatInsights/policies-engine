@@ -7,6 +7,7 @@ import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.metrics.Counter;
 import org.eclipse.microprofile.metrics.annotation.Metric;
+import org.eclipse.microprofile.reactive.messaging.Acknowledgment;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Message;
 import org.hawkular.alerts.api.model.event.Event;
@@ -89,7 +90,7 @@ public class Receiver {
     Counter processingErrors;
 
     @Incoming("events")
-//    @Acknowledgment(Acknowledgment.Strategy.MANUAL)
+    @Acknowledgment(Acknowledgment.Strategy.MANUAL)
     public CompletionStage<Void> processAsync(Message<String> input) {
         incomingMessagesCount.inc();
         if (log.isTraceEnabled()) {

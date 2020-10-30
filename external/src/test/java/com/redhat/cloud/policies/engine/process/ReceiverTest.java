@@ -1,13 +1,12 @@
 package com.redhat.cloud.policies.engine.process;
 
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.test.junit.QuarkusTest;
 import io.reactivex.subscribers.TestSubscriber;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.io.IOUtils;
-import org.eclipse.microprofile.metrics.Counter;
 import org.eclipse.microprofile.metrics.MetricID;
-import org.eclipse.microprofile.metrics.MetricRegistry;
-import org.eclipse.microprofile.metrics.annotation.RegistryType;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.hawkular.alerts.api.model.action.ActionDefinition;
@@ -84,8 +83,7 @@ public class ReceiverTest {
     AlertsService alertsService;
 
     @Inject
-    @RegistryType(type = MetricRegistry.Type.APPLICATION)
-    MetricRegistry metricRegistry;
+    MeterRegistry meterRegistry;
 
     private static final String TENANT_ID = "integration-test";
     private static final String ACTION_PLUGIN = "email";
@@ -162,8 +160,8 @@ public class ReceiverTest {
         testSubscriber.awaitCount(2);
         testSubscriber.assertValueCount(2);
 
-        Counter hostEgressProcessingErrors = metricRegistry.getCounters().get(errorCount);
-        assertEquals(1, hostEgressProcessingErrors.getCount());
+        Counter hostEgressProcessingErrors = meterRegistry.find(errorCount.getName()).counter();
+        assertEquals(1.0, hostEgressProcessingErrors.count());
         testSubscriber.dispose();
 
         // Verify the alert includes the tags from the event
