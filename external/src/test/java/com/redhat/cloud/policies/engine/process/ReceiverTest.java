@@ -74,6 +74,10 @@ public class ReceiverTest {
     Publisher<JsonObject> emailReceiver;
 
     @Inject
+    @Channel("webhook")
+    Publisher<String> webhookReceiver;
+
+    @Inject
     DefinitionsService definitionsService;
 
     @Inject
@@ -197,6 +201,38 @@ public class ReceiverTest {
         criteria.setTagQuery("tags.Location = 'Charmey'");
         alerts = alertsService.getAlerts(TENANT_ID, criteria, null);
         assertEquals(1, alerts.size());
+    }
+
+    @Test
+    void testWebhookAvroOutput() throws Exception {
+        FullTrigger fullTrigger = createTriggeringTrigger(TRIGGER_ID + "3");
+
+        TriggerAction action = new TriggerAction();
+        action.setActionPlugin("webhook");
+        Set<TriggerAction> actions = Collections.singleton(action);
+
+        fullTrigger.getTrigger().setActions(actions);
+        definitionsService.createFullTrigger(TENANT_ID + "2", fullTrigger);
+
+        TestSubscriber<String> testSubscriber = new TestSubscriber<>();
+        webhookReceiver.subscribe(testSubscriber);
+
+        InputStream is = getClass().getClassLoader().getResourceAsStream("input/thomas-host.json");
+        JsonObject pushJson = new JsonObject(IOUtils.toString(is, StandardCharsets.UTF_8));
+
+        pushJson.getJsonObject("host").put("account", TENANT_ID + "2");
+        hostEmitter.send(pushJson.encode());
+
+        // Wait for the async messaging to arrive (there's two identical triggers..)
+        testSubscriber.awaitCount(1);
+        testSubscriber.assertValueCount(1);
+
+        JsonObject webhookOutput = new JsonObject(testSubscriber.values().get(0));
+        assertEquals("Policies", webhookOutput.getString("application"));
+        assertEquals("All", webhookOutput.getString("event_type"));
+
+        JsonObject avroEvent = webhookOutput.getJsonObject("event");
+        assertEquals(TENANT_ID + "2", avroEvent.getString("account_id"));
     }
 
     @AfterAll
