@@ -64,7 +64,12 @@ public class WebhookActionPluginListener implements ActionPluginListener {
         webhookAction.setEventId(actionMessage.getAction().getEventId());
         List<Tag> tags = new ArrayList<>();
         for (Map.Entry<String, String> tagEntry : actionMessage.getAction().getEvent().getTags().entries()) {
-            Tag tag = new Tag(tagEntry.getKey(), tagEntry.getValue());
+            String value = tagEntry.getValue();
+            if (value == null) {
+                // Same behavior as previously with JsonObjectNoNullSerializer with old hooks
+                value = "";
+            }
+            Tag tag = new Tag(tagEntry.getKey(), value);
             tags.add(tag);
         }
 
