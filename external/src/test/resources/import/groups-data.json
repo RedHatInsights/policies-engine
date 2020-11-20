@@ -9,7 +9,7 @@
         "description": "Trigger definition used as parent",
         "severity": "HIGH",
         "actions": [
-          {"actionPlugin":"webhook", "actionId":"webhook-to-admin"}
+          {"actionPlugin":"notification", "actionId":"notification-to-admin"}
         ]
       },
       "conditions":[
@@ -62,8 +62,8 @@
   ],
   "actions":[
     {
-      "actionPlugin": "webhook",
-      "actionId": "webhook-to-admin",
+      "actionPlugin": "notification",
+      "actionId": "notification-to-admin",
       "properties": {
         "endpoint_id": "35e48b6487d9568e"
       }

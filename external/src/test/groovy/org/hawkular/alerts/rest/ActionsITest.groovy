@@ -34,17 +34,17 @@ class ActionsITest extends AbstractQuarkusITestBase {
 
     @Test
     void findSupportedPlugins() {
-        // Email plugin and webhook plugin should be installed by default
+        // Email plugin and notification plugin should be installed by default
         def resp = client.get(path: "plugins")
         def data = resp.data
         assertEquals(200, resp.status)
         assertTrue(data.size() == 2)
-        assertThat(resp.data, containsInAnyOrder("email", "webhook"))
+        assertThat(resp.data, containsInAnyOrder("email", "notification"))
     }
 
     @Test
     void createAction() {
-        String actionPlugin = "webhook"
+        String actionPlugin = "notification"
         String actionId = "test-action";
 
         Map<String, String> properties = new HashMap<>();
@@ -91,8 +91,8 @@ class ActionsITest extends AbstractQuarkusITestBase {
         String start = String.valueOf(System.currentTimeMillis());
 
         // CREATE the action definition
-        String actionPlugin = "webhook"
-        String actionId = "webhook-to-admin";
+        String actionPlugin = "notification"
+        String actionId = "notification-to-admin";
 
         Map<String, String> actionProperties = new HashMap<>();
         actionProperties.put("endpoint_id", "1");
@@ -118,7 +118,7 @@ class ActionsITest extends AbstractQuarkusITestBase {
         /*
             email-to-admin action is pre-created from demo data
          */
-        testTrigger.addAction(new TriggerAction("webhook", "webhook-to-admin"));
+        testTrigger.addAction(new TriggerAction("notification", "notification-to-admin"));
 
         resp = client.post(path: "triggers", body: testTrigger)
         assertEquals(200, resp.status)
@@ -190,8 +190,8 @@ class ActionsITest extends AbstractQuarkusITestBase {
         String start = String.valueOf(System.currentTimeMillis());
 
         // CREATE the action definition
-        String actionPlugin = "webhook"
-        String actionId = "webhook-to-admin";
+        String actionPlugin = "notification"
+        String actionId = "notification-to-admin";
 
         Map<String, String> actionProperties = new HashMap<>();
         actionProperties.put("endpoint_id", "1");
@@ -291,11 +291,11 @@ class ActionsITest extends AbstractQuarkusITestBase {
         assert resp.status == 200 : resp.status
 
         // Create an action definition for admins
-        String actionPlugin = "webhook"
+        String actionPlugin = "notification"
         String actionId = "notify-to-admins";
 
         // Remove previous history
-        client.put(path: "actions/history/delete", query: [actionPlugins:"webhook"])
+        client.put(path: "actions/history/delete", query: [actionPlugins:"notification"])
 
         // Remove a previous action
         client.delete(path: "actions/" + actionPlugin + "/" + actionId)
@@ -309,7 +309,7 @@ class ActionsITest extends AbstractQuarkusITestBase {
         assertEquals(200, resp.status)
 
         // Create an action definition for developers
-        actionPlugin = "webhook"
+        actionPlugin = "notification"
         actionId = "notify-to-developers";
 
         // Remove a previous action
@@ -400,7 +400,7 @@ class ActionsITest extends AbstractQuarkusITestBase {
         // Check actions generated
         // This used to fail randomly, therefore try several times before failing
         for ( int i=0; i < 20; ++i ) {
-            resp = client.get(path: "actions/history", query: [startTime:start,actionPlugins:"webhook"])
+            resp = client.get(path: "actions/history", query: [startTime:start,actionPlugins:"notification"])
             if ( resp.status == 200 && resp.data.size() == 5 ) {
                 break;
             }
@@ -426,7 +426,7 @@ class ActionsITest extends AbstractQuarkusITestBase {
             Thread.sleep(500);
 
             // FETCH recent alerts for trigger, there should be 5
-            resp = client.get(path: "actions/history", query: [startTime:start,actionPlugins:"webhook"])
+            resp = client.get(path: "actions/history", query: [startTime:start,actionPlugins:"notification"])
             if ( resp.status == 200 && resp.data.size() == 10 ) {
                 break;
             }
@@ -438,10 +438,10 @@ class ActionsITest extends AbstractQuarkusITestBase {
         resp = client.delete(path: "triggers/test-status-threshold");
         assertEquals(200, resp.status)
 
-        resp = client.delete(path: "actions/webhook/notify-to-admins")
+        resp = client.delete(path: "actions/notification/notify-to-admins")
         assertEquals(200, resp.status)
 
-        resp = client.delete(path: "actions/webhook/notify-to-developers")
+        resp = client.delete(path: "actions/notification/notify-to-developers")
         assertEquals(200, resp.status)
     }
 
@@ -454,11 +454,11 @@ class ActionsITest extends AbstractQuarkusITestBase {
         assert resp.status == 200 : resp.status
 
         // Create an action definition for admins
-        String actionPlugin = "webhook"
+        String actionPlugin = "notification"
         String actionId = "global-action-notify-to-admins";
 
         // Remove previous history
-        client.put(path: "actions/history/delete", query: [actionPlugins:"webhook"])
+        client.put(path: "actions/history/delete", query: [actionPlugins:"notification"])
 
         // Remove a previous action
         client.delete(path: "actions/" + actionPlugin + "/" + actionId)
@@ -473,7 +473,7 @@ class ActionsITest extends AbstractQuarkusITestBase {
         assertEquals(200, resp.status)
 
         // Create an action definition for developers
-        actionPlugin = "webhook"
+        actionPlugin = "notification"
         actionId = "global-action-notify-to-developers";
 
         // Remove a previous action
@@ -557,7 +557,7 @@ class ActionsITest extends AbstractQuarkusITestBase {
         // This used to fail randomly, therefore try several times before failing
         for ( int i=0; i < 30; ++i ) {
             resp = client.get(path: "actions/history",
-                    query: [startTime:start,actionPlugins:"webhook",
+                    query: [startTime:start,actionPlugins:"notification",
                             actionIds:"global-action-notify-to-admins,global-action-notify-to-developers"])
             if ( resp.status == 200 && resp.data.size() == 10 ) {
                 break;
@@ -571,10 +571,10 @@ class ActionsITest extends AbstractQuarkusITestBase {
         resp = client.delete(path: "triggers/test-global-status-threshold");
         assertEquals(200, resp.status)
 
-        resp = client.delete(path: "actions/webhook/global-action-notify-to-admins")
+        resp = client.delete(path: "actions/notification/global-action-notify-to-admins")
         assertEquals(200, resp.status)
 
-        resp = client.delete(path: "actions/webhook/global-action-notify-to-developers")
+        resp = client.delete(path: "actions/notification/global-action-notify-to-developers")
         assertEquals(200, resp.status)
     }
 }

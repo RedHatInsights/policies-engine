@@ -28,7 +28,7 @@ public class EventConditionMsgTest {
                 "    },\n" +
                 "    \"actions\": [\n" +
                 "      {\n" +
-                "        \"actionPlugin\": \"webhook\",\n" +
+                "        \"actionPlugin\": \"notification\",\n" +
                 "        \"actionId\": \"notify-slack\"\n" +
                 "      }\n" +
                 "    ]\n" +

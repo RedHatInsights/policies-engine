@@ -441,8 +441,8 @@ class TriggersITest extends AbstractQuarkusITestBase {
     @Test
     void createFullTrigger() {
         // CREATE the action definition
-        String actionPlugin = "webhook"
-        String actionId = "webhook-to-admin";
+        String actionPlugin = "notification"
+        String actionId = "notification-to-admin";
 
         Map<String, String> actionProperties = new HashMap<>();
         actionProperties.put("endpoint_id", "1");
@@ -460,7 +460,7 @@ class TriggersITest extends AbstractQuarkusITestBase {
                 "        \"description\": \"description 1\",\n" +
                 "        \"severity\": \"HIGH\",\n" +
                 "        \"actions\": [\n" +
-                "          {\"actionPlugin\":\"webhook\", \"actionId\":\"webhook-to-admin\"}\n" +
+                "          {\"actionPlugin\":\"notification\", \"actionId\":\"notification-to-admin\"}\n" +
                 "        ],\n" +
                 "        \"context\": {\n" +
                 "          \"name1\":\"value1\"\n" +
@@ -733,8 +733,8 @@ class TriggersITest extends AbstractQuarkusITestBase {
     @Test
     void updateFullTrigger() {
         // CREATE the action definition
-        String actionPlugin = "webhook"
-        String actionId = "webhook-to-admin";
+        String actionPlugin = "notification"
+        String actionId = "notification-to-admin";
 
         Map<String, String> actionProperties = new HashMap<>();
         actionProperties.put("endpoint_id", "1");
@@ -752,7 +752,7 @@ class TriggersITest extends AbstractQuarkusITestBase {
                 "        \"description\": \"description 1\",\n" +
                 "        \"severity\": \"HIGH\",\n" +
                 "        \"actions\": [\n" +
-                "          {\"actionPlugin\":\"webhook\", \"actionId\":\"webhook-to-admin\"}\n" +
+                "          {\"actionPlugin\":\"notification\", \"actionId\":\"notification-to-admin\"}\n" +
                 "        ],\n" +
                 "        \"context\": {\n" +
                 "          \"name1\":\"value1\"\n" +
@@ -936,7 +936,7 @@ class TriggersITest extends AbstractQuarkusITestBase {
                 "        \"severity\": \"HIGH\",\n" +
                 "        \"actions\": [\n" +
                 // Unknown email-to-nothing action
-                "          {\"actionPlugin\":\"webhook\", \"actionId\":\"webhook-to-nothing\"}\n" +
+                "          {\"actionPlugin\":\"notification\", \"actionId\":\"webhook-to-nothing\"}\n" +
                 "        ],\n" +
                 "        \"context\": {\n" +
                 "          \"name1\":\"value1\"\n" +
