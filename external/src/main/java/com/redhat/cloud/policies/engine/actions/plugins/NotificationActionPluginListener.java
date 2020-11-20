@@ -1,5 +1,7 @@
 package com.redhat.cloud.policies.engine.actions.plugins;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.redhat.cloud.notifications.ingress.Action;
 import com.redhat.cloud.notifications.ingress.Context;
 import com.redhat.cloud.notifications.ingress.Tag;
@@ -35,13 +37,13 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * WebhookActionPluginListener sends a JSON encoded message in the format understood by the
+ * NotificationActionPluginListener sends a JSON encoded message in the format understood by the
  * notifications-backend in cloud.redhat.com. The encoding schema is defined in Avro and generated during
  * the compile.
  */
-@Plugin(name = "webhook")
+@Plugin(name = "notification")
 @Dependent
-public class WebhookActionPluginListener implements ActionPluginListener {
+public class NotificationActionPluginListener implements ActionPluginListener {
     public static final String APP_NAME = "Policies";
     public static final String EVENT_TYPE_NAME = "All";
 
@@ -54,14 +56,35 @@ public class WebhookActionPluginListener implements ActionPluginListener {
     @Metric(absolute = true, name = "engine.actions.webhook.processed")
     Counter messagesCount;
 
+    class PoliciesParamsBuilder {
+        private Map<String, String> triggers;
+
+        public PoliciesParamsBuilder() {
+            this.triggers = new HashMap<>();
+        }
+
+        public PoliciesParamsBuilder addTrigger(String key, String value) {
+            this.triggers.put(key, value);
+            return this;
+        }
+
+        public String build() throws JsonProcessingException {
+            Map<String, Object> params = new HashMap<>();
+            params.put("triggers", this.triggers);
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.writeValueAsString(params);
+        }
+
+    }
+
     @Override
     public void process(ActionMessage actionMessage) throws Exception {
         messagesCount.inc();
-        Action webhookAction = new Action();
-        webhookAction.setEventType(EVENT_TYPE_NAME);
-        webhookAction.setApplication(APP_NAME);
-        webhookAction.setTimestamp(LocalDateTime.ofInstant(Instant.ofEpochMilli(actionMessage.getAction().getCtime()), ZoneId.systemDefault()));
-        webhookAction.setEventId(actionMessage.getAction().getEventId());
+        Action notificationAction = new Action();
+        notificationAction.setEventType(EVENT_TYPE_NAME);
+        notificationAction.setApplication(APP_NAME);
+        notificationAction.setTimestamp(LocalDateTime.ofInstant(Instant.ofEpochMilli(actionMessage.getAction().getCtime()), ZoneId.systemDefault()));
+        notificationAction.setEventId(actionMessage.getAction().getEventId());
         List<Tag> tags = new ArrayList<>();
         for (Map.Entry<String, String> tagEntry : actionMessage.getAction().getEvent().getTags().entries()) {
             String value = tagEntry.getValue();
@@ -73,33 +96,41 @@ public class WebhookActionPluginListener implements ActionPluginListener {
             tags.add(tag);
         }
 
-        webhookAction.setTags(tags);
+        notificationAction.setTags(tags);
         Context context = new Context();
         context.setAccountId(actionMessage.getAction().getTenantId());
         context.setMessage(new HashMap<>());
-        webhookAction.setEvent(context);
+        notificationAction.setEvent(context);
 
         // Add the wanted properties here..
         Trigger trigger = actionMessage.getAction().getEvent().getTrigger();
-        addToMessage(webhookAction, "policy_id", trigger.getId());
-        addToMessage(webhookAction, "policy_name", trigger.getName());
-        addToMessage(webhookAction, "policy_description", trigger.getDescription());
+        addToMessage(notificationAction, "policy_id", trigger.getId());
+        addToMessage(notificationAction, "policy_name", trigger.getName());
+        addToMessage(notificationAction, "policy_description", trigger.getDescription());
 
-        Outer:
+
+        PoliciesParamsBuilder paramsBuilder = new PoliciesParamsBuilder();
+
         for (Set<ConditionEval> evalSet : actionMessage.getAction().getEvent().getEvalSets()) {
             for (ConditionEval conditionEval : evalSet) {
                 if (conditionEval instanceof EventConditionEval) {
                     EventConditionEval eventEval = (EventConditionEval) conditionEval;
-                    addToMessage(webhookAction, "policy_condition", eventEval.getCondition().getExpression());
+                    addToMessage(notificationAction, "policy_condition", eventEval.getCondition().getExpression());
 
-                    addToMessage(webhookAction, "insights_id", eventEval.getContext().get("insights_id"));
-                    addToMessage(webhookAction, "display_name", eventEval.getValue().getTags().get("display_name").iterator().next());
-                    break Outer; // We only want to process the first one
+                    addToMessage(notificationAction, "insights_id", eventEval.getContext().get("insights_id"));
+                    addToMessage(notificationAction, "display_name", eventEval.getValue().getTags().get("display_name").iterator().next());
+
+                    String name = actionMessage.getAction().getEvent().getTrigger().getName();
+                    String triggerId = actionMessage.getAction().getEvent().getTrigger().getId();
+
+                    paramsBuilder.addTrigger(triggerId, name);
                 }
             }
         }
 
-        channel.send(serializeAction(webhookAction));
+        notificationAction.setParams(paramsBuilder.build());
+
+        channel.send(serializeAction(notificationAction));
     }
 
     private void addToMessage(Action action, String key, String value) {
