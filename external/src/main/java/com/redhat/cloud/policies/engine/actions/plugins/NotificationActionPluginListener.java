@@ -47,6 +47,8 @@ public class NotificationActionPluginListener implements ActionPluginListener {
     public static final String APP_NAME = "Policies";
     public static final String EVENT_TYPE_NAME = "All";
 
+    private ObjectMapper mapper = new ObjectMapper();
+
     @Inject
     @Channel("webhook")
     @OnOverflow(OnOverflow.Strategy.UNBOUNDED_BUFFER)
@@ -71,7 +73,6 @@ public class NotificationActionPluginListener implements ActionPluginListener {
         public String build() throws JsonProcessingException {
             Map<String, Object> params = new HashMap<>();
             params.put("triggers", this.triggers);
-            ObjectMapper mapper = new ObjectMapper();
             return mapper.writeValueAsString(params);
         }
 
