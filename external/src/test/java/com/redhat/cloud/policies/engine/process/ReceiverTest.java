@@ -206,7 +206,7 @@ public class ReceiverTest {
         FullTrigger fullTrigger = createTriggeringTrigger(TRIGGER_ID + "3");
 
         TriggerAction action = new TriggerAction();
-        action.setActionPlugin("webhook");
+        action.setActionPlugin("notification");
         Set<TriggerAction> actions = Collections.singleton(action);
 
         fullTrigger.getTrigger().setActions(actions);

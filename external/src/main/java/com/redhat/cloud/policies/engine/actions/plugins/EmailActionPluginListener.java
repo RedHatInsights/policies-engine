@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListMap;
 
+// Todo: This will be deleted eventually, as the notification service will be providing the emails
 @Plugin(name = "email")
 @Dependent
 public class EmailActionPluginListener implements ActionPluginListener {

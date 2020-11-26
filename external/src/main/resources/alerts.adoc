@@ -189,7 +189,7 @@ The whole purpose of alerting is to be able to immediately respond to a developi
 The following notification types are currently supported out of the box:
 
 * E-mail notifications
-* Webhook notifications
+* Notification notifications
 
 === Trigger Dampening
 
@@ -524,11 +524,11 @@ Default value
 
 Email plugin takes no properties when created from the FullTrigger. It outputs a specific data model which is used by the link:https://github.com/RedHatInsights/policies-notifications[Policies Notifications] project to enrich the data with receivers, generate the email message and send it. More details in the project.
 
-=== WebHook Action Plugin
+=== Notification Action Plugin
 
 [cols="^2,10"]
 |=====
-| Plugin Name | *webhook*
+| Plugin Name | *notification*
 |=====
 
 [cols="^2,8,^2", options="header"]
@@ -542,7 +542,7 @@ Optional endpoint id as defined in the link:https://github.com/RedHatInsights/no
 | -
 |=======================
 
-Webhook Action Plugin outputs a JSON format message which follows a schema as defined with the Avro language. The definition is copied from the notifications-backend project to the ``external``-module's ``src/main/resources/avro``. The classes are generated when the project is compiled.
+Notification Action Plugin outputs a JSON format message which follows a schema as defined with the Avro language. The definition is copied from the notifications-backend project to the ``external``-module's ``src/main/resources/avro``. The classes are generated when the project is compiled.
 
 == Engine Extensions
 

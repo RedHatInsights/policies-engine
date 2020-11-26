@@ -5,7 +5,8 @@
   "fields": [
     {
       "name": "event_id",
-      "type": "string"
+      "type": "string",
+      "default": ""
     },
     {
       "name": "timestamp",
@@ -26,9 +27,12 @@
       "name": "endpoint_id",
       "type": [
         "null",
-        "string"
+        {
+            "type": "string",
+            "logicalType": "uuid"
+        }
       ],
-      "logicalType": "uuid"
+      "default": null
     },
     {
       "name": "tags",
@@ -50,6 +54,14 @@
         }
       },
       "default": []
+    },
+    {
+      "name": "params",
+      "type": {
+          "type": "string",
+          "logicalType": "json-object"
+      },
+      "default": "{}"
     },
     {
       "name": "event",
