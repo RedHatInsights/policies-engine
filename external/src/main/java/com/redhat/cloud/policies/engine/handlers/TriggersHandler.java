@@ -230,8 +230,14 @@ public class TriggersHandler {
                     if (fullTrigger.getTrigger() == null) {
                         throw new ResponseUtil.BadRequestException("Trigger is empty");
                     }
-                    for (Condition condition : fullTrigger.getConditions()) {
-                        condition.validate();
+
+                    try {
+                        for (Condition condition : fullTrigger.getConditions()) {
+                            condition.validate();
+                        }
+                    } catch(Exception e) {
+                        log.debugf("Error validating condition from json request: %s. Reason: %s", json, e.toString());
+                        throw new ResponseUtil.BadRequestException(e.getMessage());
                     }
 
                     Trigger trigger = fullTrigger.getTrigger();
@@ -310,8 +316,13 @@ public class TriggersHandler {
                     if (null == fullTrigger) {
                         throw new ResponseUtil.BadRequestException("FullTrigger can not be null.");
                     }
-                    for (Condition condition : fullTrigger.getConditions()) {
-                        condition.validate();
+                    try {
+                        for (Condition condition : fullTrigger.getConditions()) {
+                            condition.validate();
+                        }
+                    } catch(Exception e) {
+                        log.debugf("Error validating condition from json request: %s. Reason: %s", json, e.toString());
+                        throw new ResponseUtil.BadRequestException(e.getMessage());
                     }
                     trigger = fullTrigger.getTrigger();
                     if (null == trigger) {
