@@ -146,4 +146,29 @@ public class ExprValidationTest {
         } catch(IllegalArgumentException e) { }
 
     }
+
+    @Test
+    public void testQuotedNumbers() {
+        String expr = "a = \"9.0\"";
+        ExprParser.validate(expr);
+
+        String expr2 = "a = '9.0'";
+        ExprParser.validate(expr2);
+    }
+
+    @Test
+    public void testRejectWrongQuotedNumbersWithNumericOperator() {
+        try {
+            // Unquoted strings are reserved for future use, don't allow them
+            String expr = "a > 'foobar'";
+            ExprParser.validate(expr);
+            fail();
+        } catch(IllegalArgumentException e) { }
+    }
+
+    @Test
+    public void testQuotedNumbersWithNumericOperator() {
+        String expr = "a > \"9.0\"";
+        ExprParser.validate(expr);
+    }
 }

@@ -172,13 +172,19 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
                     strValue = valueToString(value);
                     if(value.NUMBER() != null) {
                         number = value.NUMBER();
+                    } else if (value.QUOTED_NUMBER() != null) {
+                        number = value.QUOTED_NUMBER();
                     }
                 } else if(ctx.numerical_value() != null) {
-                    number = ctx.numerical_value().NUMBER();
+                    if (ctx.numerical_value().NUMBER() != null) {
+                        number = ctx.numerical_value().NUMBER();
+                    } else {
+                        number = ctx.numerical_value().QUOTED_NUMBER();
+                    }
                 }
 
                 if(number != null) {
-                    decimalValue = new BigDecimal(number.getSymbol().getText());
+                    decimalValue = new BigDecimal(cleanString(number.getSymbol().getText()));
                     strValue = cleanString(decimalValue.toString());
 
                     // Convert to BigDecimal supported types
