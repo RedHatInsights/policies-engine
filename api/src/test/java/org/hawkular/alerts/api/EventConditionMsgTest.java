@@ -46,7 +46,7 @@ public class EventConditionMsgTest {
         try {
             FullTrigger fullTrigger = fromJson(json, FullTrigger.class);
         } catch (Exception e) {
-            assertEquals("Invalid expression: extraneous input '=' expecting {NUMBER, STRING} at line 1 position 29", e.getMessage());
+            assertEquals("Invalid expression: extraneous input '=' expecting {QUOTED_NUMBER, NUMBER, STRING} at line 1 position 29", e.getMessage());
         }
     }
 
