@@ -233,6 +233,41 @@ public class ReceiverTest {
         assertEquals(TENANT_ID + "2", avroEvent.getString("account_id"));
     }
 
+    @Test
+    void testTakeTimestampFromUpdate() throws Exception {
+        FullTrigger fullTrigger = createTriggeringTrigger(TRIGGER_ID + "4");
+
+        TriggerAction action = new TriggerAction();
+        action.setActionPlugin("notification");
+        Set<TriggerAction> actions = Collections.singleton(action);
+
+        fullTrigger.getTrigger().setActions(actions);
+        definitionsService.createFullTrigger(TENANT_ID + "2", fullTrigger);
+
+        TestSubscriber<String> testSubscriber = new TestSubscriber<>();
+        webhookReceiver.subscribe(testSubscriber);
+
+        InputStream is = getClass().getClassLoader().getResourceAsStream("input/thomas-host.json");
+        JsonObject pushJson = new JsonObject(IOUtils.toString(is, StandardCharsets.UTF_8));
+
+        pushJson.getJsonObject("host").put("account", TENANT_ID + "2");
+        hostEmitter.send(pushJson.encode());
+
+        // Wait for the async messaging to arrive (there's two identical triggers..)
+        testSubscriber.awaitCount(1);
+        testSubscriber.assertValueCount(1);
+
+        JsonObject webhookOutput = new JsonObject(testSubscriber.values().get(0));
+        assertEquals("Policies", webhookOutput.getString("application"));
+        assertEquals("All", webhookOutput.getString("event_type"));
+        // 1587053442199L is: Thursday, April 16, 2020 4:10:42.199 PM
+        // file has: 2020-04-16T16:10:42.199046+00:00
+        assertEquals(1587053442199L, webhookOutput.getLong("timestamp"));
+
+        JsonObject avroEvent = webhookOutput.getJsonObject("event");
+        assertEquals(TENANT_ID + "2", avroEvent.getString("account_id"));
+    }
+
     @AfterAll
     void cleanup() throws Exception {
         // Delete what we created..

@@ -58,6 +58,7 @@ public class Receiver {
     public static final String INVENTORY_ID_FIELD = "inventory_id";
     public static final String HOST_ID = "id";
     public static final String FQDN_NAME_FIELD = "fqdn";
+    public static final String UPDATED = "updated";
 
     private static final String HOST_FIELD = "host";
     private static final String TYPE_FIELD = "type";
@@ -70,6 +71,7 @@ public class Receiver {
     private static final String TAGS_FIELD = "tags";
     private static final String TAGS_KEY_FIELD = "key";
     private static final String TAGS_VALUE_FIELD = "value";
+    private static final String CHECK_IN_FIELD = "check_in";
 
     @ConfigProperty(name = "engine.receiver.store-events")
     boolean storeEvents;
@@ -149,6 +151,7 @@ public class Receiver {
         // Additional context for processing
         Map<String, String> contextMap = new HashMap<>();
         contextMap.put(INSIGHT_ID_FIELD, insightsId);
+        contextMap.put(CHECK_IN_FIELD, json.getString(UPDATED));
         event.setContext(contextMap);
 
         JsonObject sp = json.getJsonObject(SYSTEM_PROFILE_FIELD);

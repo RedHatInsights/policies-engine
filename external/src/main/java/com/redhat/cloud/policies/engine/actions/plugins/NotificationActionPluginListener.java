@@ -29,6 +29,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -84,7 +85,6 @@ public class NotificationActionPluginListener implements ActionPluginListener {
         Action notificationAction = new Action();
         notificationAction.setEventType(EVENT_TYPE_NAME);
         notificationAction.setApplication(APP_NAME);
-        notificationAction.setTimestamp(LocalDateTime.ofInstant(Instant.ofEpochMilli(actionMessage.getAction().getCtime()), ZoneId.systemDefault()));
         notificationAction.setEventId(actionMessage.getAction().getEventId());
         List<Tag> tags = new ArrayList<>();
         for (Map.Entry<String, String> tagEntry : actionMessage.getAction().getEvent().getTags().entries()) {
@@ -117,6 +117,7 @@ public class NotificationActionPluginListener implements ActionPluginListener {
                 if (conditionEval instanceof EventConditionEval) {
                     EventConditionEval eventEval = (EventConditionEval) conditionEval;
                     addToMessage(notificationAction, "policy_condition", eventEval.getCondition().getExpression());
+                    notificationAction.setTimestamp(LocalDateTime.from(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(eventEval.getContext().get("check_in"))));
 
                     addToMessage(notificationAction, "insights_id", eventEval.getContext().get("insights_id"));
                     addToMessage(notificationAction, "display_name", eventEval.getValue().getTags().get("display_name").iterator().next());
@@ -130,7 +131,6 @@ public class NotificationActionPluginListener implements ActionPluginListener {
         }
 
         notificationAction.setParams(paramsBuilder.build());
-
         channel.send(serializeAction(notificationAction));
     }
 
