@@ -234,7 +234,7 @@ public class ReceiverTest {
     }
 
     @Test
-    void testTakeTimestampFromUpdate() throws Exception {
+    void testTakeSystemCheckInFromUpdate() throws Exception {
         FullTrigger fullTrigger = createTriggeringTrigger(TRIGGER_ID + "4");
 
         TriggerAction action = new TriggerAction();
@@ -262,7 +262,7 @@ public class ReceiverTest {
         assertEquals("All", webhookOutput.getString("event_type"));
         // 1587053442199L is: Thursday, April 16, 2020 4:10:42.199 PM
         // file has: 2020-04-16T16:10:42.199046+00:00
-        assertEquals(1587053442199L, webhookOutput.getLong("timestamp"));
+        assertEquals(1587053442199L, webhookOutput.getJsonObject("payload").getLong("system_check_in"));
 
         JsonObject avroEvent = webhookOutput.getJsonObject("event");
         assertEquals(TENANT_ID + "2", avroEvent.getString("account_id"));
