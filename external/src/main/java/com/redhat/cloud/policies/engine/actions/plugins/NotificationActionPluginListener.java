@@ -61,9 +61,8 @@ public class NotificationActionPluginListener implements ActionPluginListener {
         notificationAction.setEventType(EVENT_TYPE_NAME);
         notificationAction.setApplication(APP_NAME);
         notificationAction.setTimestamp(
-                LocalDateTime.ofInstant(
-                        Instant.ofEpochMilli(actionMessage.getAction().getCtime()), ZoneId.systemDefault()).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME
-                )
+                LocalDateTime.ofInstant(Instant.ofEpochMilli(actionMessage.getAction().getCtime()), ZoneId.systemDefault())
+                .format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
         );
 
         PoliciesPayloadBuilder payloadBuilder = new PoliciesPayloadBuilder();

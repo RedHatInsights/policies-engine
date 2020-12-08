@@ -29,8 +29,7 @@ public class PoliciesPayloadBuilder {
         }
     }
 
-    private static DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm 'UTC'");
-    private static ObjectMapper mapper = new ObjectMapper();
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     private Map<String, String> triggers = new HashMap<>();
     private List<Tag> tags = new ArrayList<>();
@@ -53,7 +52,7 @@ public class PoliciesPayloadBuilder {
     }
 
     public PoliciesPayloadBuilder setSystemCheckIn(LocalDateTime datetime) {
-        this.systemCheckIn = datetime.format(dateFormatter);
+        this.systemCheckIn = datetime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
         return this;
     }
 
