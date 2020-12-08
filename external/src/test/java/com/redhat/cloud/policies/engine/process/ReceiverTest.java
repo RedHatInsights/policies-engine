@@ -1,5 +1,6 @@
 package com.redhat.cloud.policies.engine.process;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.test.junit.QuarkusTest;
@@ -229,8 +230,7 @@ public class ReceiverTest {
         assertEquals("Policies", webhookOutput.getString("application"));
         assertEquals("All", webhookOutput.getString("event_type"));
 
-        JsonObject avroEvent = webhookOutput.getJsonObject("event");
-        assertEquals(TENANT_ID + "2", avroEvent.getString("account_id"));
+        assertEquals(TENANT_ID + "2", webhookOutput.getString("account_id"));
     }
 
     @Test
@@ -262,10 +262,13 @@ public class ReceiverTest {
         assertEquals("All", webhookOutput.getString("event_type"));
         // 1587053442199L is: Thursday, April 16, 2020 4:10:42.199 PM
         // file has: 2020-04-16T16:10:42.199046+00:00
-        assertEquals(1587053442199L, webhookOutput.getJsonObject("payload").getLong("system_check_in"));
 
-        JsonObject avroEvent = webhookOutput.getJsonObject("event");
-        assertEquals(TENANT_ID + "2", avroEvent.getString("account_id"));
+        ObjectMapper mapper = new ObjectMapper();
+        Map payload = mapper.readValue(webhookOutput.getString("payload"), Map.class);
+
+        assertEquals("16 Apr 2020 16:10 UTC", payload.get("system_check_in"));
+
+        assertEquals(TENANT_ID + "2", webhookOutput.getString("account_id"));
     }
 
     @AfterAll

@@ -62,7 +62,7 @@ public class NotificationActionPluginListener implements ActionPluginListener {
         notificationAction.setApplication(APP_NAME);
         notificationAction.setTimestamp(
                 LocalDateTime.ofInstant(
-                        Instant.ofEpochMilli(actionMessage.getAction().getCtime()), ZoneId.systemDefault()).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME
+                        Instant.ofEpochMilli(actionMessage.getAction().getCtime()), ZoneId.systemDefault()).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME
                 )
         );
 
@@ -99,7 +99,6 @@ public class NotificationActionPluginListener implements ActionPluginListener {
                     String triggerId = actionMessage.getAction().getEvent().getTrigger().getId();
 
                     payloadBuilder.addTrigger(triggerId, name);
-                    break;
                 }
             }
         }
