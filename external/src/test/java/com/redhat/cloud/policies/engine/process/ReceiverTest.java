@@ -1,5 +1,6 @@
 package com.redhat.cloud.policies.engine.process;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.test.junit.QuarkusTest;
@@ -35,6 +36,8 @@ import org.reactivestreams.Publisher;
 import javax.inject.Inject;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -229,12 +232,11 @@ public class ReceiverTest {
         assertEquals("Policies", webhookOutput.getString("application"));
         assertEquals("All", webhookOutput.getString("event_type"));
 
-        JsonObject avroEvent = webhookOutput.getJsonObject("event");
-        assertEquals(TENANT_ID + "2", avroEvent.getString("account_id"));
+        assertEquals(TENANT_ID + "2", webhookOutput.getString("account_id"));
     }
 
     @Test
-    void testTakeTimestampFromUpdate() throws Exception {
+    void testTakeSystemCheckInFromUpdate() throws Exception {
         FullTrigger fullTrigger = createTriggeringTrigger(TRIGGER_ID + "4");
 
         TriggerAction action = new TriggerAction();
@@ -260,12 +262,16 @@ public class ReceiverTest {
         JsonObject webhookOutput = new JsonObject(testSubscriber.values().get(0));
         assertEquals("Policies", webhookOutput.getString("application"));
         assertEquals("All", webhookOutput.getString("event_type"));
-        // 1587053442199L is: Thursday, April 16, 2020 4:10:42.199 PM
-        // file has: 2020-04-16T16:10:42.199046+00:00
-        assertEquals(1587053442199L, webhookOutput.getLong("timestamp"));
 
-        JsonObject avroEvent = webhookOutput.getJsonObject("event");
-        assertEquals(TENANT_ID + "2", avroEvent.getString("account_id"));
+        ObjectMapper mapper = new ObjectMapper();
+        Map payload = mapper.readValue(webhookOutput.getString("payload"), Map.class);
+
+        // timestamp should be in ISO format
+        assertTrue(LocalDateTime.parse(webhookOutput.getString("timestamp"), DateTimeFormatter.ISO_LOCAL_DATE_TIME) != null);
+        // File has: "updated":"2020-04-16T16:10:42.199046+00:00",
+        assertEquals("2020-04-16T16:10:42.199046", payload.get("system_check_in"));
+
+        assertEquals(TENANT_ID + "2", webhookOutput.getString("account_id"));
     }
 
     @AfterAll

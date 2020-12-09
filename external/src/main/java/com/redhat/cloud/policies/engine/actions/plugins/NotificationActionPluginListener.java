@@ -1,10 +1,7 @@
 package com.redhat.cloud.policies.engine.actions.plugins;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.redhat.cloud.notifications.ingress.Action;
-import com.redhat.cloud.notifications.ingress.Context;
-import com.redhat.cloud.notifications.ingress.Tag;
+import com.redhat.cloud.policies.engine.actions.plugins.notification.PoliciesPayloadBuilder;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.io.JsonEncoder;
@@ -30,10 +27,8 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -48,7 +43,6 @@ public class NotificationActionPluginListener implements ActionPluginListener {
     public static final String APP_NAME = "Policies";
     public static final String EVENT_TYPE_NAME = "All";
 
-    private ObjectMapper mapper = new ObjectMapper();
 
     @Inject
     @Channel("webhook")
@@ -59,25 +53,6 @@ public class NotificationActionPluginListener implements ActionPluginListener {
     @Metric(absolute = true, name = "engine.actions.webhook.processed")
     Counter messagesCount;
 
-    class PoliciesParamsBuilder {
-        private Map<String, String> triggers;
-
-        public PoliciesParamsBuilder() {
-            this.triggers = new HashMap<>();
-        }
-
-        public PoliciesParamsBuilder addTrigger(String key, String value) {
-            this.triggers.put(key, value);
-            return this;
-        }
-
-        public String build() throws JsonProcessingException {
-            Map<String, Object> params = new HashMap<>();
-            params.put("triggers", this.triggers);
-            return mapper.writeValueAsString(params);
-        }
-
-    }
 
     @Override
     public void process(ActionMessage actionMessage) throws Exception {
@@ -85,60 +60,50 @@ public class NotificationActionPluginListener implements ActionPluginListener {
         Action notificationAction = new Action();
         notificationAction.setEventType(EVENT_TYPE_NAME);
         notificationAction.setApplication(APP_NAME);
-        notificationAction.setEventId(actionMessage.getAction().getEventId());
-        List<Tag> tags = new ArrayList<>();
+        notificationAction.setTimestamp(
+                LocalDateTime.ofInstant(Instant.ofEpochMilli(actionMessage.getAction().getCtime()), ZoneId.systemDefault())
+                .format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        );
+
+        PoliciesPayloadBuilder payloadBuilder = new PoliciesPayloadBuilder();
+
         for (Map.Entry<String, String> tagEntry : actionMessage.getAction().getEvent().getTags().entries()) {
             String value = tagEntry.getValue();
             if (value == null) {
                 // Same behavior as previously with JsonObjectNoNullSerializer with old hooks
                 value = "";
             }
-            Tag tag = new Tag(tagEntry.getKey(), value);
-            tags.add(tag);
+            payloadBuilder.addTag(tagEntry.getKey(), value);
         }
 
-        notificationAction.setTags(tags);
-        Context context = new Context();
-        context.setAccountId(actionMessage.getAction().getTenantId());
-        context.setMessage(new HashMap<>());
-        notificationAction.setEvent(context);
+        notificationAction.setAccountId(actionMessage.getAction().getTenantId());
 
         // Add the wanted properties here..
         Trigger trigger = actionMessage.getAction().getEvent().getTrigger();
-        addToMessage(notificationAction, "policy_id", trigger.getId());
-        addToMessage(notificationAction, "policy_name", trigger.getName());
-        addToMessage(notificationAction, "policy_description", trigger.getDescription());
 
-
-        PoliciesParamsBuilder paramsBuilder = new PoliciesParamsBuilder();
+        payloadBuilder.setPolicyId(trigger.getId())
+                .setPolicyName(trigger.getName())
+                .setPolicyDescription(trigger.getDescription());
 
         for (Set<ConditionEval> evalSet : actionMessage.getAction().getEvent().getEvalSets()) {
             for (ConditionEval conditionEval : evalSet) {
                 if (conditionEval instanceof EventConditionEval) {
                     EventConditionEval eventEval = (EventConditionEval) conditionEval;
-                    addToMessage(notificationAction, "policy_condition", eventEval.getCondition().getExpression());
-                    notificationAction.setTimestamp(LocalDateTime.from(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(eventEval.getContext().get("check_in"))));
-
-                    addToMessage(notificationAction, "insights_id", eventEval.getContext().get("insights_id"));
-                    addToMessage(notificationAction, "display_name", eventEval.getValue().getTags().get("display_name").iterator().next());
+                    payloadBuilder.setPolicyCondition(eventEval.getCondition().getExpression())
+                            .setSystemCheckIn(LocalDateTime.from(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(eventEval.getContext().get("check_in"))))
+                            .setInsightsId(eventEval.getContext().get("insights_id"))
+                            .setDisplayName(eventEval.getValue().getTags().get("display_name").iterator().next());
 
                     String name = actionMessage.getAction().getEvent().getTrigger().getName();
                     String triggerId = actionMessage.getAction().getEvent().getTrigger().getId();
 
-                    paramsBuilder.addTrigger(triggerId, name);
+                    payloadBuilder.addTrigger(triggerId, name);
                 }
             }
         }
 
-        notificationAction.setParams(paramsBuilder.build());
+        notificationAction.setPayload(payloadBuilder.build());
         channel.send(serializeAction(notificationAction));
-    }
-
-    private void addToMessage(Action action, String key, String value) {
-        // Adding a null value is not allowed by the Avro schema
-        if (key != null && value != null) {
-            action.getEvent().getMessage().put(key, value);
-        }
     }
 
     @Override
