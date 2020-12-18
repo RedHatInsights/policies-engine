@@ -40,8 +40,8 @@ import java.util.Set;
 @Plugin(name = "notification")
 @Dependent
 public class NotificationActionPluginListener implements ActionPluginListener {
-    public static final String APP_NAME = "Policies";
-    public static final String EVENT_TYPE_NAME = "All";
+    public static final String APP_NAME = "policies";
+    public static final String EVENT_TYPE_NAME = "policy-triggered";
 
 
     @Inject
