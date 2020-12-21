@@ -229,8 +229,8 @@ public class ReceiverTest {
         testSubscriber.assertValueCount(1);
 
         JsonObject webhookOutput = new JsonObject(testSubscriber.values().get(0));
-        assertEquals("Policies", webhookOutput.getString("application"));
-        assertEquals("All", webhookOutput.getString("event_type"));
+        assertEquals("policies", webhookOutput.getString("application"));
+        assertEquals("policy-triggered", webhookOutput.getString("event_type"));
 
         assertEquals(TENANT_ID + "2", webhookOutput.getString("account_id"));
     }
@@ -260,8 +260,8 @@ public class ReceiverTest {
         testSubscriber.assertValueCount(1);
 
         JsonObject webhookOutput = new JsonObject(testSubscriber.values().get(0));
-        assertEquals("Policies", webhookOutput.getString("application"));
-        assertEquals("All", webhookOutput.getString("event_type"));
+        assertEquals("policies", webhookOutput.getString("application"));
+        assertEquals("policy-triggered", webhookOutput.getString("event_type"));
 
         ObjectMapper mapper = new ObjectMapper();
         Map payload = mapper.readValue(webhookOutput.getString("payload"), Map.class);
