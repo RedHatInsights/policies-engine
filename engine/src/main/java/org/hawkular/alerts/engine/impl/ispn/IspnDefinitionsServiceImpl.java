@@ -399,11 +399,14 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
         if (TriggerType.MEMBER == type) {
             throw new IllegalArgumentException("FullTrigger.Trigger is type MEMBER and must be updated via the group");
         }
+
+        // Checks (and assigns if needed) the tenantId early.
+        checkTenantId(tenantId, trigger);
+
         if (!isEmpty(trigger.getActions())) {
             enrichManagedActionPluginId(trigger);
         }
 
-        checkTenantId(tenantId, trigger);
         String triggerId = trigger.getId();
 
         // fetch the trigger (or throw NotFoundException)
