@@ -51,16 +51,15 @@ public class IspnCacheManager {
             try {
                 distributed = false;
                 String configPath = System.getProperty(CONFIG_PATH);
-                InputStream is = null;
+
                 if (configPath != null) {
-                    File configFile = new File(configPath, distributed ? ISPN_CONFIG_DISTRIBUTED : ISPN_CONFIG_LOCAL);
-                    if (configFile.exists() && configFile.isDirectory()) {
-                        is = new FileInputStream(configFile);
+                    File configFile = new File(configPath, ISPN_CONFIG_LOCAL);
+                    try (InputStream is = new FileInputStream(configFile)) {
+                        cacheManager = new DefaultCacheManager(is);
+                        return;
                     }
                 }
-                if (is == null) {
-                    is = IspnCacheManager.class.getResourceAsStream("/" + (distributed ? ISPN_CONFIG_DISTRIBUTED : ISPN_CONFIG_LOCAL));
-                }
+                InputStream is = IspnCacheManager.class.getResourceAsStream("/" + ISPN_CONFIG_LOCAL);
                 cacheManager = new DefaultCacheManager(is);
             } catch (IOException e) {
                 log.error(e);

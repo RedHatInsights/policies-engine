@@ -1336,7 +1336,7 @@ public class JsonTest {
         String str = "{}";
         Trigger trigger = objectMapper.readValue(str, Trigger.class);
 
-        assertNotNull(trigger.getId().equals("test"));
+        assertNotNull(trigger.getId());
         assertTrue(trigger.getName().equals("defaultName"));
         assertNull(trigger.getDescription());
         assertEquals(0, trigger.getActions().size());

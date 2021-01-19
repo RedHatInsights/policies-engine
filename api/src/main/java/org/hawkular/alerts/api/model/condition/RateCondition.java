@@ -71,7 +71,7 @@ public class RateCondition extends Condition {
     public enum Period {
         SECOND(1000L), MINUTE(60000L), HOUR(60000L * 60), DAY(60000L * 60 * 24), WEEK(60000L * 60 * 24 * 7);
 
-        public long milliseconds;
+        private final long milliseconds;
 
         Period(long milliseconds) {
             this.milliseconds = milliseconds;

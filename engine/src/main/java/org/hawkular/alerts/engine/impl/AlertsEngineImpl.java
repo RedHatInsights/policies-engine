@@ -738,7 +738,7 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
         }
     }
 
-    private class ConditionKey {
+    private static class ConditionKey {
         String tenantId;
         String triggerId;
 
@@ -869,7 +869,7 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
             if (!pendingData.isEmpty()) {
                 log.warnf("Pending Data onPartitionChange: %s.", pendingData);
             }
-            if (!!pendingEvents.isEmpty()) {
+            if (pendingEvents.isEmpty()) {
                 log.warnf("Pending Events onPartitionChange: %s.", pendingData);
             }
         }
