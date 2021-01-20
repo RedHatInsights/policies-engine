@@ -68,8 +68,7 @@ public class AlertStarter {
         alerts.init()
                 .whenComplete((empty, error) -> {
                     if(error != null) {
-                        LOGGER.error(error);
-                        error.printStackTrace();
+                        LOGGER.error("Engine start failed", error);
                         alerts.stop();
                     } else {
                         pluginRegister.init();

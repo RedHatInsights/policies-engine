@@ -64,7 +64,7 @@ public class TriggersHandler {
                 PARAM_QUERY,
                 PARAM_THIN);
         queryParamValidationMap.put(FIND_TRIGGERS, new HashSet<>(TRIGGERS_CRITERIA));
-        queryParamValidationMap.get(FIND_TRIGGERS).addAll(ResponseUtil.PARAMS_PAGING);
+        queryParamValidationMap.get(FIND_TRIGGERS).addAll(Arrays.asList(ResponseUtil.PARAMS_PAGING));
     }
 
     @Inject

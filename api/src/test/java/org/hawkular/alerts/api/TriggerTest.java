@@ -1,8 +1,8 @@
 package org.hawkular.alerts.api;
 
 import org.hawkular.alerts.api.model.trigger.Trigger;
-import org.junit.Assert;
 import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
 
 import java.util.UUID;
 
@@ -12,7 +12,7 @@ public class TriggerTest {
     public void notSpecifiedIdIsUUIDTest() {
         Trigger trigger = new Trigger();
 
-        UUID.fromString(trigger.getId());
+        Assertions.assertDoesNotThrow(() -> { UUID.fromString(trigger.getId()); });
     }
 
     @Test
@@ -20,7 +20,7 @@ public class TriggerTest {
         Trigger trigger1 = new Trigger();
         Trigger trigger2 = new Trigger();
 
-        Assert.assertNotEquals(trigger1.getId(), trigger2.getId());
+        Assertions.assertNotEquals(trigger1.getId(), trigger2.getId());
     }
 
 }

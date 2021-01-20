@@ -126,8 +126,7 @@ public class IspnAdminService {
             try {
                 store.compact();
             } catch(Throwable t) {
-                t.printStackTrace();
-                log.errorf("Failed to execute compaction");
+                log.error("Failed to execute compaction", t);
             }
         }
         log.info("Finished RocksDB Compaction");

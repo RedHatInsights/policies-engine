@@ -87,7 +87,7 @@ public class AlertsHandler {
                 PARAM_END_STATUS_TIME,
                 PARAM_THIN);
         queryParamValidationMap.put(FIND_ALERTS, new HashSet<>(ALERTS_CRITERIA));
-        queryParamValidationMap.get(FIND_ALERTS).addAll(ResponseUtil.PARAMS_PAGING);
+        queryParamValidationMap.get(FIND_ALERTS).addAll(Arrays.asList(ResponseUtil.PARAMS_PAGING));
         queryParamValidationMap.put(WATCH_ALERTS, new HashSet<>(ALERTS_CRITERIA));
         queryParamValidationMap.get(WATCH_ALERTS).add(PARAM_WATCH_INTERVAL);
         queryParamValidationMap.put(DELETE_ALERTS, new HashSet<>(ALERTS_CRITERIA));

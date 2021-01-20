@@ -240,9 +240,9 @@ public class RateCondition extends Condition {
     }
 
     public double getRate(long time, double value, long previousTime, double previousValue) {
-        double deltaTime = time - previousTime;
+        long deltaTime = time - previousTime;
         double deltaValue = (Direction.INCREASING == direction) ? (value - previousValue) : (previousValue - value);
-        double periods = deltaTime / period.milliseconds;
+        double periods = deltaTime / (double)period.milliseconds;
         double rate = deltaValue / periods;
 
         return rate;

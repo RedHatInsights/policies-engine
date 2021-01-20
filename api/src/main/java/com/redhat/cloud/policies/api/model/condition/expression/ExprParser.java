@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.util.BitSet;
 import java.util.Collection;
 import java.util.Map;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 public class ExprParser extends ExpressionBaseVisitor<Boolean> {
@@ -33,6 +34,8 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
 
     private static final Pattern KEY_REGEXP = Pattern.compile("(?<!\\\\)\\.");
     private static final Pattern ESCAPE_CLEANER_REGEXP = Pattern.compile("^(['\"])(.*)\\1$");
+
+    private static final Logger log = Logger.getLogger("ExpParser");
 
     static ParseTree createParserTree(String expression, ANTLRErrorListener errorListener) {
         CharStream cs = CharStreams.fromString(expression);
@@ -70,24 +73,24 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
 
         @Override
         public void reportAmbiguity(Parser parser, DFA dfa, int i, int i1, boolean b, BitSet bitSet, ATNConfigSet atnConfigSet) {
-
+            // Nothing to do
         }
 
         @Override
         public void reportAttemptingFullContext(Parser parser, DFA dfa, int i, int i1, BitSet bitSet, ATNConfigSet atnConfigSet) {
-
+            // Nothing to do
         }
 
         @Override
         public void reportContextSensitivity(Parser parser, DFA dfa, int i, int i1, int i2, ATNConfigSet atnConfigSet) {
-
+            // Nothing to do
         }
     }
 
     // ExpressionBaseVisitor
 
     static class ExprVisitor extends ExpressionBaseVisitor<Boolean> {
-        private Event value;
+        private final Event value;
 
         ExprVisitor(Event value) {
             this.value = value;
@@ -143,7 +146,6 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
             String strValue = null;
             BigDecimal decimalValue = null;
 
-            ExpressionParser.ValueContext value = ctx.value();
 
             // This is the factKey
             if(ctx.key() != null) {
@@ -166,14 +168,16 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
             BigDecimal targetValueDecimal = null;
 
             // Fact comparison value
+            ExpressionParser.ValueContext valueCtx = ctx.value();
+
             try {
                 TerminalNode number = null;
-                if(value != null) {
-                    strValue = valueToString(value);
-                    if(value.NUMBER() != null) {
-                        number = value.NUMBER();
-                    } else if (value.QUOTED_NUMBER() != null) {
-                        number = value.QUOTED_NUMBER();
+                if(valueCtx != null) {
+                    strValue = valueToString(valueCtx);
+                    if(valueCtx.NUMBER() != null) {
+                        number = valueCtx.NUMBER();
+                    } else if (valueCtx.QUOTED_NUMBER() != null) {
+                        number = valueCtx.QUOTED_NUMBER();
                     }
                 } else if(ctx.numerical_value() != null) {
                     if (ctx.numerical_value().NUMBER() != null) {
@@ -199,7 +203,7 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
                     }
                 }
             } catch(NumberFormatException e) {
-                e.printStackTrace();
+                log.warning("Failed to parse value into a number " + e.getMessage());
                 return false;
             }
 
@@ -308,10 +312,7 @@ public class ExprParser extends ExpressionBaseVisitor<Boolean> {
 
         private static boolean isArray(Object targetValue) {
             // Tags values are not considered an array in our operators
-            if(targetValue instanceof Iterable) {
-                return true;
-            }
-            return false;
+            return targetValue instanceof Iterable;
         }
 
         static boolean numericCompare(BigDecimal decimalValue, BigDecimal targetValueDecimal, ExpressionParser.Numeric_compare_operatorContext op) {

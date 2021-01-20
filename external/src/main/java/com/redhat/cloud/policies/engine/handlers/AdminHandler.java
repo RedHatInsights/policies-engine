@@ -65,8 +65,7 @@ public class AdminHandler {
                 statusService.setAdditionalStatus("operation", "running rocksdb compaction");
                 adminService.executeRocksDBCompaction();
             } catch (Exception e) {
-                log.error("Failed to compact RocksDB");
-                e.printStackTrace();
+                log.error("Failed to compact RocksDB",e);
             } finally {
                 blockRunning.lazySet(false);
                 statusService.setAdditionalStatus("operation", null);

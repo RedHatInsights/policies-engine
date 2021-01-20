@@ -86,10 +86,13 @@ public class ProcSelfStatusExporter {
                         break;
                     case "Threads:":
                         threads = Integer.parseInt(parts[1]);
+                        break;
+                    default:
+                        // Nothing. File has more entries that we are not interested in.
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.warning("Scanning of file failed: " + e.getMessage());
         }
     }
 
