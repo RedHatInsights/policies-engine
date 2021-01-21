@@ -38,15 +38,16 @@ public class QuarkusActionPluginListener implements ActionListener {
 
     @Override
     public void process(Action action) {
+        if (plugins.isEmpty()) {
+            log.warnNoPluginsFound();
+            return;
+        }
+        if (action == null || action.getActionPlugin() == null) {
+            log.warnMessageReceivedWithoutPluginInfo();
+            return;
+        }
+
         try {
-            if (plugins.isEmpty()) {
-                log.warnNoPluginsFound();
-                return;
-            }
-            if (action == null || action.getActionPlugin() == null) {
-                log.warnMessageReceivedWithoutPluginInfo();
-                return;
-            }
             String actionPlugin = action.getActionPlugin();
             final ActionPluginListener plugin = plugins.get(actionPlugin);
             if (plugin == null) {

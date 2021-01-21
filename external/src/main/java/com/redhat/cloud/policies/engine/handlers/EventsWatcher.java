@@ -23,9 +23,9 @@ import java.util.Set;
 public class EventsWatcher extends Thread {
     private static final MsgLogger log = MsgLogging.getMsgLogger(EventsWatcher.class);
     private static final Pager ctimePager;
-    private static final long WATCHER_INTERVAL_DEFAULT = 5 * 1000;
-    private static final long CLEAN_INTERVAL = 10 * 1000;
-    private static final long LEAP_INTERVAL = 1 * 1000;
+    private static final long WATCHER_INTERVAL_DEFAULT = 5 * 1000L;
+    private static final long CLEAN_INTERVAL = 10 * 1000L;
+    private static final long LEAP_INTERVAL = 1 * 1000L;
 
     static {
         List<Order> ordering = new ArrayList<>();
@@ -125,8 +125,8 @@ public class EventsWatcher extends Thread {
     }
 
     static class WatchedId {
-        String id;
-        long ctime;
+        final String id;
+        final long ctime;
 
         public WatchedId(String id, long ctime) {
             this.id = id;

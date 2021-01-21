@@ -23,9 +23,9 @@ import java.util.Set;
 public class AlertsWatcher extends Thread {
     private static final MsgLogger log = MsgLogging.getMsgLogger(AlertsWatcher.class);
     private static final Pager stimePager;
-    private static final long WATCHER_INTERVAL_DEFAULT = 5 * 1000;
-    private static final long CLEAN_INTERVAL = 10 * 1000;
-    private static final long LEAP_INTERVAL = 1 * 1000;
+    private static final long WATCHER_INTERVAL_DEFAULT = 5 * 1000L;
+    private static final long CLEAN_INTERVAL = 10 * 1000L;
+    private static final long LEAP_INTERVAL = 1 * 1000L;
 
     static {
         List<Order> ordering = new ArrayList<>();
@@ -129,8 +129,8 @@ public class AlertsWatcher extends Thread {
     }
 
     static class WatchedId {
-        String id;
-        long stime;
+        final String id;
+        final long stime;
 
         public WatchedId(String id, long stime) {
             this.id = id;

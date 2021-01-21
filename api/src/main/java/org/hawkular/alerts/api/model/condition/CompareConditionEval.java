@@ -47,7 +47,7 @@ public class CompareConditionEval extends ConditionEval<CompareCondition> {
 
     public CompareConditionEval(CompareCondition condition, Data data1, Data data2) {
         super(Type.COMPARE, condition.match(Double.parseDouble(data1.getValue()), Double.parseDouble(data2.getValue())),
-                ((data1.getTimestamp() > data1.getTimestamp()) ? data1.getTimestamp() : data2.getTimestamp()),
+                (Math.min(data2.getTimestamp(), data1.getTimestamp())), // use the earlier ts
                 data1.getContext());
         setCondition(condition);
         this.value1 = Double.valueOf(data1.getValue());

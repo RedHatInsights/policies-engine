@@ -213,7 +213,7 @@ public class TimeConstraint implements Serializable {
         NOVEMBER("nov"),
         DECEMBER("dec");
 
-        private String month;
+        private final String month;
 
         MONTH(String month) {
             this.month = month;
@@ -246,7 +246,7 @@ public class TimeConstraint implements Serializable {
         FRIDAY("fri"),
         SATURDAY("sat");
 
-        private String day;
+        private final String day;
 
         DAY(String day) {
             this.day = day;
@@ -270,8 +270,8 @@ public class TimeConstraint implements Serializable {
     }
 
     private static final long serialVersionUID = 1L;
-    private static final SimpleDateFormat dateParser = new SimpleDateFormat("yyyy.MM.dd");
-    private static final SimpleDateFormat dateTimeParser = new SimpleDateFormat("yyyy.MM.dd,HH:mm");
+    private final SimpleDateFormat dateParser = new SimpleDateFormat("yyyy.MM.dd");
+    private final SimpleDateFormat dateTimeParser = new SimpleDateFormat("yyyy.MM.dd,HH:mm");
 
     /**
      * Define the start of the time interval.

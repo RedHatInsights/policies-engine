@@ -41,7 +41,7 @@ public class QuarkusActionPluginRegister {
         try {
              existingPlugins = definitions.getActionPlugins();
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Can not find any plugins", e);
         }
         if (!existingPlugins.contains(actionPlugin)) {
             Set<String> properties = actionPluginListener.getProperties();

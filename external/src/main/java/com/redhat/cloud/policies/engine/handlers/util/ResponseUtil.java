@@ -49,10 +49,7 @@ public class ResponseUtil {
     public static final String PARAM_SORT = "sort";
     public static final String PARAM_ORDER = "order";
     public static final String PARAM_IGNORE_UNKNOWN_QUERY_PARAMS = "ignoreUnknownQueryParams";
-    public static final Collection<String> PARAMS_PAGING;
-    static {
-        PARAMS_PAGING = Arrays.asList(PARAM_PAGE, PARAM_PER_PAGE, PARAM_SORT, PARAM_ORDER);
-    }
+    public static final String[] PARAMS_PAGING = {PARAM_PAGE, PARAM_PER_PAGE, PARAM_SORT, PARAM_ORDER };
 
     @DocModel(description = "Payload for a REST error response.")
     public static class ApiError {

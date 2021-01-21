@@ -57,7 +57,7 @@ public class ActionsHandler {
                 PARAM_EVENT_IDS,
                 PARAM_RESULTS);
         queryParamValidationMap.put(FIND_ACTIONS_HISTORY, new HashSet<>(ACTIONS_CRITERIA));
-        queryParamValidationMap.get(FIND_ACTIONS_HISTORY).addAll(PARAMS_PAGING);
+        queryParamValidationMap.get(FIND_ACTIONS_HISTORY).addAll(Arrays.asList(PARAMS_PAGING));
         queryParamValidationMap.put(DELETE_ACTIONS_HISTORY, new HashSet<>(ACTIONS_CRITERIA));
     }
 

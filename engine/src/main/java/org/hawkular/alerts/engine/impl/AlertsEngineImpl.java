@@ -66,7 +66,9 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
     int period;
 
     private TreeSet<Data> pendingData;
+    private final Object pendingDataSync = new Object();
     private TreeSet<Event> pendingEvents;
+    private final Object pendingEventsSync = new Object();
 
     private final List<Alert> alerts;
     private final List<Event> events;
@@ -175,10 +177,7 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
                 reload();
             });
         } catch (Throwable t) {
-            if (log.isDebugEnabled()) {
-                t.printStackTrace();
-            }
-            log.errorCannotInitializeAlertsService(t.getMessage());
+            log.error("Can not initialize Alerts Service", t);
         }
     }
 
@@ -468,14 +467,8 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
         }
         // Remove any MissingState being managed for the trigger
         synchronized (missingStates) {
-            Iterator<MissingState> it = missingStates.iterator();
-            while (it.hasNext()) {
-                MissingState missingState = it.next();
-                if (missingState.getTenantId().equals(trigger.getTenantId()) &&
-                        missingState.getTriggerId().equals(triggerId)) {
-                    it.remove();
-                }
-            }
+            missingStates.removeIf(missingState -> missingState.getTenantId().equals(trigger.getTenantId()) &&
+                    missingState.getTriggerId().equals(triggerId));
         }
     }
 
@@ -506,7 +499,7 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
             data = processDataExtensions(data);
         }
 
-        synchronized (pendingData) {
+        synchronized (pendingDataSync) {
             log.debugf("Adding [%s] to pendingData [%s]", data, pendingData);
             pendingData.addAll(data);
         }
@@ -555,7 +548,7 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
             events = processEventsExtensions(events);
         }
 
-        synchronized (pendingEvents) {
+        synchronized (pendingEventsSync) {
             log.debugf("Adding [%s] to pendingEvents [%s]", events, pendingEvents);
             pendingEvents.addAll(events);
         }
@@ -577,7 +570,7 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
 
     private TreeSet<Data> getAndClearPendingData() {
         TreeSet<Data> result;
-        synchronized (pendingData) {
+        synchronized (pendingDataSync) {
             result = pendingData;
             pendingData = new TreeSet<>();
         }
@@ -586,7 +579,7 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
 
     private TreeSet<Event> getAndClearPendingEvents() {
         TreeSet<Event> result;
-        synchronized (pendingEvents) {
+        synchronized (pendingEventsSync) {
             result = pendingEvents;
             pendingEvents = new TreeSet<>();
         }
@@ -639,8 +632,7 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
                     handleConditionEvaluationTimes();
                     actions.flush();
                 } catch (Exception e) {
-                    e.printStackTrace();
-                    log.debugf("Error on rules processing: %s", e);
+                    log.debug("Error on rules processing: %s",e);
                     log.errorProcessingRules(e.getMessage());
                 } finally {
                     alerts.clear();
@@ -738,7 +730,7 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
         }
     }
 
-    private class ConditionKey {
+    private static class ConditionKey {
         String tenantId;
         String triggerId;
 
@@ -869,7 +861,7 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
             if (!pendingData.isEmpty()) {
                 log.warnf("Pending Data onPartitionChange: %s.", pendingData);
             }
-            if (!!pendingEvents.isEmpty()) {
+            if (pendingEvents.isEmpty()) {
                 log.warnf("Pending Events onPartitionChange: %s.", pendingData);
             }
         }

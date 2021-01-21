@@ -1,7 +1,8 @@
 package org.hawkular.alerts.api;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Calendar;
 import java.util.TimeZone;
@@ -19,7 +20,7 @@ public class TimeConstraintTest {
     long timestamp;
 
     @Test
-    public void absoluteTest() throws Exception {
+    public void absoluteTest() {
         TimeConstraint tc = new TimeConstraint("2016.02.01", "2016.02.03", false);
 
         cal.set(2016, Calendar.FEBRUARY, 1, 0, 0);
@@ -89,7 +90,7 @@ public class TimeConstraintTest {
         tc.setInRange(true);
 
         Calendar gmtCal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
-        gmtCal.set(2016, Calendar.FEBRUARY, 3, 16, 00);
+        gmtCal.set(2016, Calendar.FEBRUARY, 3, 16, 0);
         timestamp = gmtCal.getTimeInMillis();
 
         tc.setTimeZoneName("GMT");
@@ -103,7 +104,7 @@ public class TimeConstraintTest {
     }
 
     @Test
-    public void relativeTest() throws Exception {
+    public void relativeTest() {
         TimeConstraint tc = new TimeConstraint("10:00", "13:00");
 
         cal.set(2016, Calendar.FEBRUARY, 1, 10, 0);
@@ -195,7 +196,7 @@ public class TimeConstraintTest {
         timestamp = cal.getTimeInMillis();
         assertFalse(tc.isSatisfiedBy(timestamp));
 
-        cal.set(2016, Calendar.JULY, 17, 9, 01);
+        cal.set(2016, Calendar.JULY, 17, 9, 1);
         timestamp = cal.getTimeInMillis();
         assertFalse(tc.isSatisfiedBy(timestamp));
 
@@ -298,7 +299,7 @@ public class TimeConstraintTest {
         timestamp = cal.getTimeInMillis();
         assertTrue(tc.isSatisfiedBy(timestamp));
 
-        cal.set(2016, Calendar.JULY, 17, 9, 01);
+        cal.set(2016, Calendar.JULY, 17, 9, 1);
         timestamp = cal.getTimeInMillis();
         assertTrue(tc.isSatisfiedBy(timestamp));
 
@@ -312,7 +313,7 @@ public class TimeConstraintTest {
         tc.setInRange(true);
 
         Calendar gmtCal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
-        gmtCal.set(2016, Calendar.JULY, 18, 16, 00); // Monday 16:00
+        gmtCal.set(2016, Calendar.JULY, 18, 16, 0); // Monday 16:00
         timestamp = gmtCal.getTimeInMillis();
 
         tc.setTimeZoneName("GMT");
@@ -324,7 +325,7 @@ public class TimeConstraintTest {
         tc.setTimeZoneName("GMT+4:00");
         assertFalse(tc.isSatisfiedBy(timestamp)); // Monday 20:00
 
-        gmtCal.set(2016, Calendar.JULY, 17, 16, 00); // Sunday 16:00
+        gmtCal.set(2016, Calendar.JULY, 17, 16, 0); // Sunday 16:00
         timestamp = gmtCal.getTimeInMillis();
 
         tc.setTimeZoneName("GMT");
@@ -341,7 +342,7 @@ public class TimeConstraintTest {
     }
 
     @Test
-    public void inverseIntervals() throws Exception {
+    public void inverseIntervals()  {
 
         TimeConstraint tc = new TimeConstraint("23:00", "01:00");
 
@@ -382,53 +383,31 @@ public class TimeConstraintTest {
     }
 
     @Test
-    public void handleErrors() throws Exception {
+    public void handleErrors() {
 
         // Null / empty arguments
-        try {
-            new TimeConstraint(null, null);
-            throw new Exception("It should fail with null arguments");
-        } catch (IllegalArgumentException expected) { }
-
-        try {
-            new TimeConstraint("", "");
-            throw new Exception("It should fail with empty arguments");
-        } catch (IllegalArgumentException expected) { }
-
-        try {
+        assertThrows(IllegalArgumentException.class, () -> new TimeConstraint(null, null), "It should fail with null arguments");
+        assertThrows(IllegalArgumentException.class, () -> new TimeConstraint("", ""),"It should fail with empty arguments" );
+        assertThrows(IllegalArgumentException.class, () -> {
             TimeConstraint tc = new TimeConstraint();
-            tc.setStartTime(null);
-            throw new Exception("It should fail with starTime null arguments");
-        } catch (IllegalArgumentException expected) { }
-
-        try {
+            tc.setStartTime(null);},
+                "It should fail with startTime null arguments");
+        assertThrows(IllegalArgumentException.class, () -> {
             TimeConstraint tc = new TimeConstraint();
-            tc.setStartTime("");
-            throw new Exception("It should fail with starTime empty arguments");
-        } catch (IllegalArgumentException expected) { }
-
-        try {
+            tc.setStartTime("");},
+                "It should fail with startTime empty arguments");
+        assertThrows(IllegalArgumentException.class,() -> {
             TimeConstraint tc = new TimeConstraint();
-            tc.setEndTime(null);
-            throw new Exception("It should fail with starTime null arguments");
-        } catch (IllegalArgumentException expected) { }
-
-        try {
+            tc.setEndTime(null);},
+                "It should fail with endTime null arguments");
+        assertThrows(IllegalArgumentException.class,() -> {
             TimeConstraint tc = new TimeConstraint();
-            tc.setEndTime("");
-            throw new Exception("It should fail with starTime empty arguments");
-        } catch (IllegalArgumentException expected) { }
-
+            tc.setEndTime("");},
+                "It should fail with endTime empty arguments");
         // Bad formats
-        try {
-            new TimeConstraint("badformat", "badformat");
-            throw new Exception("It should fail with bad formats");
-        } catch (IllegalArgumentException expected) { }
+        assertThrows(IllegalArgumentException.class,() -> new TimeConstraint("badformat", "badformat"), "It should fail with bad formats");
+        assertThrows(IllegalArgumentException.class,() -> new TimeConstraint("badformat", "badformat", false), "It should fail with bad formats");
 
-        try {
-            new TimeConstraint("badformat", "badformat", false);
-            throw new Exception("It should fail with bad formats");
-        } catch (IllegalArgumentException expected) { }
     }
 
 }

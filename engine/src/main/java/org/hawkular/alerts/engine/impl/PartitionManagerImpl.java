@@ -704,7 +704,7 @@ public class PartitionManagerImpl implements PartitionManager {
             /*
                 Finally invoke listener on non-sender nodes
              */
-            if (!dataListeners.isEmpty() && notifyData.getFromNode() != currentNode) {
+            if (!dataListeners.isEmpty() && !notifyData.getFromNode().equals(currentNode)) {
                 if (notifyData.getDataCollection() != null) {
                     dataListeners.stream().forEach(dataListener -> {
                         log.debugf("processNotifyData [%s]", notifyData);

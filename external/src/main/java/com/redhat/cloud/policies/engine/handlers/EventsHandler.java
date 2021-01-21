@@ -65,7 +65,7 @@ public class EventsHandler {
                 PARAM_EVENT_TYPE,
                 PARAM_THIN);
         queryParamValidationMap.put(FIND_EVENTS, new HashSet<>(EVENTS_CRITERIA));
-        queryParamValidationMap.get(FIND_EVENTS).addAll(PARAMS_PAGING);
+        queryParamValidationMap.get(FIND_EVENTS).addAll(Arrays.asList(PARAMS_PAGING));
         queryParamValidationMap.put(WATCH_EVENTS, new HashSet<>(EVENTS_CRITERIA));
         queryParamValidationMap.get(WATCH_EVENTS).add(PARAM_WATCH_INTERVAL);
         queryParamValidationMap.put(DELETE_EVENTS, new HashSet<>(EVENTS_CRITERIA));
@@ -136,7 +136,7 @@ public class EventsHandler {
                     } catch (IllegalArgumentException e) {
                         throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        log.errorf(e,"Error getting event for tenant %s and id %s", tenantId, event.getId());
                         throw new ResponseUtil.InternalServerException(e.toString());
                     }
                     if (found != null) {
@@ -149,7 +149,7 @@ public class EventsHandler {
                     } catch (IllegalArgumentException e) {
                         throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        log.error("Error adding events", e);
                         throw new ResponseUtil.InternalServerException(e.toString());
                     }
                 }, res -> ResponseUtil.result(routing, res));
