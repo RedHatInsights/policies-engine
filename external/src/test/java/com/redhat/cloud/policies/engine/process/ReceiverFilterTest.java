@@ -25,6 +25,8 @@ public class ReceiverFilterTest {
     Counter incomingMessagesCount;
     Counter processingErrors;
     Counter rejectedCount;
+    Counter rejectedCountReporter;
+    Counter rejectedCountType;
 
     @Test
     public void testAlertsServiceIsCalled() throws Exception {
@@ -44,12 +46,18 @@ public class ReceiverFilterTest {
         incomingMessagesCount = new InternalCounter();
         processingErrors = new InternalCounter();
         rejectedCount = new InternalCounter();
+        rejectedCountReporter = new InternalCounter();
+        rejectedCountType = new InternalCounter();
 
         receiver = new Receiver();
         receiver.alertsService = mockedAlertsService;
         receiver.processingErrors = processingErrors;
         receiver.incomingMessagesCount = incomingMessagesCount;
         receiver.rejectedCount = rejectedCount;
+        receiver.rejectedCountReporter = rejectedCountReporter;
+        receiver.rejectedCountHost = new InternalCounter();
+        receiver.rejectedCountId = new InternalCounter();
+        receiver.rejectedCountType = rejectedCountType;
     }
 
     @AfterEach
@@ -58,6 +66,7 @@ public class ReceiverFilterTest {
         receiver.processingErrors.inc(receiver.processingErrors.getCount() * -1);
         receiver.incomingMessagesCount.inc(receiver.incomingMessagesCount.getCount() * -1);
         receiver.rejectedCount.inc(receiver.rejectedCount.getCount() * -1);
+        receiver.rejectedCountReporter.inc(receiver.rejectedCountReporter.getCount() * -1);
     }
 
     @Test
@@ -104,8 +113,10 @@ public class ReceiverFilterTest {
         assertEquals(1, incomingMessagesCount.getCount());
         assertEquals(0, processingErrors.getCount());
         assertEquals(1, rejectedCount.getCount());
+        assertEquals(1, rejectedCountType.getCount());
 
         jsonObject = new JsonObject(inputJson);
+        jsonObject.put("type","created");
         jsonObject.getJsonObject("host").put("reporter", "rhsm-conduit");
         inputJson = jsonObject.toString();
 
@@ -116,6 +127,8 @@ public class ReceiverFilterTest {
         assertEquals(2, incomingMessagesCount.getCount());
         assertEquals(0, processingErrors.getCount());
         assertEquals(2, rejectedCount.getCount());
+        assertEquals(1, rejectedCountReporter.getCount());
+        assertEquals(1, rejectedCountType.getCount());
     }
 
 
