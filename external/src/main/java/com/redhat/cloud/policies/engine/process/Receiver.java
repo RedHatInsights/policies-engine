@@ -88,6 +88,22 @@ public class Receiver {
     Counter rejectedCount;
 
     @Inject
+    @Metric(absolute = true, name = "engine.input.rejected.detail", tags = {"queue=host-egress","reason=type"})
+    Counter rejectedCountType;
+
+    @Inject
+    @Metric(absolute = true, name = "engine.input.rejected.detail", tags = {"queue=host-egress","reason=noHost"})
+    Counter rejectedCountHost;
+
+    @Inject
+    @Metric(absolute = true, name = "engine.input.rejected.detail", tags = {"queue=host-egress","reason=reporter"})
+    Counter rejectedCountReporter;
+
+    @Inject
+    @Metric(absolute = true, name = "engine.input.rejected.detail", tags = {"queue=host-egress","reason=insightsId"})
+    Counter rejectedCountId;
+
+    @Inject
     @Metric(absolute = true, name = "engine.input.processed.errors", tags = {"queue=host-egress"})
     Counter processingErrors;
 
@@ -112,6 +128,7 @@ public class Receiver {
                     log.debugf("Got a request with type='%s', ignoring ", eventType);
                 }
                 rejectedCount.inc();
+                rejectedCountType.inc();
                 return input.ack();
             }
         }
@@ -120,6 +137,7 @@ public class Receiver {
             json = json.getJsonObject(HOST_FIELD);
         } else {
             rejectedCount.inc();
+            rejectedCountHost.inc();
             return input.ack();
         }
 
@@ -127,6 +145,7 @@ public class Receiver {
         String reporter = json.getString(REPORTER_FIELD);
         if(!ACCEPTED_REPORTERS.contains(reporter)) {
             rejectedCount.inc();
+            rejectedCountReporter.inc();
             return input.ack();
         }
 
@@ -134,6 +153,7 @@ public class Receiver {
 
         if (isEmpty(insightsId)) {
             rejectedCount.inc();
+            rejectedCountId.inc();
             return input.ack();
         }
 
