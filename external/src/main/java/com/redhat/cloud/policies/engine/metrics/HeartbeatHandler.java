@@ -27,6 +27,23 @@ public class HeartbeatHandler {
     Counter rejectedCount;
 
     @Inject
+    @Metric(absolute = true, name = "engine.input.rejected.detail", tags = {"queue=host-egress","reason=type"})
+    Counter rejectedCountType;
+
+    @Inject
+    @Metric(absolute = true, name = "engine.input.rejected.detail", tags = {"queue=host-egress","reason=noHost"})
+    Counter rejectedCountHost;
+
+    @Inject
+    @Metric(absolute = true, name = "engine.input.rejected.detail", tags = {"queue=host-egress","reason=reporter"})
+    Counter rejectedCountReporter;
+
+    @Inject
+    @Metric(absolute = true, name = "engine.input.rejected.detail", tags = {"queue=host-egress","reason=insightsId"})
+    Counter rejectedCountId;
+
+
+    @Inject
     @Metric(absolute = true, name = "engine.input.processed.errors", tags = {"queue=host-egress"})
     Counter processingErrors;
 
@@ -34,9 +51,13 @@ public class HeartbeatHandler {
     @Scheduled(every = "1h")
     void printHeartbeat() {
 
-        String msg = String.format("Heartbeat: processed %d, rejected %d, process errors %d",
+        String msg = String.format("Heartbeat: processed %d, rejected %d (t=%d, h=%d, r=%d, i=%d), process errors %d",
                 incomingMessagesCount.getCount(),
                 rejectedCount.getCount(),
+                rejectedCountType.getCount(),
+                rejectedCountHost.getCount(),
+                rejectedCountReporter.getCount(),
+                rejectedCountId.getCount(),
                 processingErrors.getCount());
 
         log.info(msg);
