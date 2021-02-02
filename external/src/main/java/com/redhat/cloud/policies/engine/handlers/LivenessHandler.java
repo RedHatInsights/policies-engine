@@ -10,8 +10,18 @@ import javax.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class LivenessHandler implements HealthCheck {
 
+    private static boolean isUp = true;
+
+    public static void markAsDown() {
+        LivenessHandler.isUp = false;
+    }
+
     @Override
     public HealthCheckResponse call() {
-        return HealthCheckResponse.up("Policies Engine has started");
+        if (isUp) {
+            return HealthCheckResponse.up("Policies Engine has started");
+        } else {
+            return HealthCheckResponse.down("Policies Engine was marked as down");
+        }
     }
 }

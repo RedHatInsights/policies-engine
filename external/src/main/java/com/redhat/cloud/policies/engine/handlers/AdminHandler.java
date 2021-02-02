@@ -45,6 +45,15 @@ public class AdminHandler {
         router.put(path + "/cleanup").handler(this::cleanupExpiredItems);
         router.get(path + "/stats").handler(this::getKeyStatistics);
         router.put(path + "/rocksdb/compact").handler(this::rocksOperations);
+        router.put(path + "/down").handler(this::setAdminDown);
+    }
+
+    private void setAdminDown(RoutingContext routing) {
+        LivenessHandler.markAsDown();
+        routing.response()
+                .setStatusCode(204)
+                .end();
+        log.info("Admin down handler was invoked");
     }
 
     void executeCleanup() {
