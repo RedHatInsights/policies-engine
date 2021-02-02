@@ -675,7 +675,7 @@ public class Trigger implements Serializable {
                 + ", autoEnable=" + autoEnable + ", autoResolve=" + autoResolve + ", autoResolveAlerts="
                 + autoResolveAlerts + ", autoResolveMatch=" + autoResolveMatch + ", memberOf=" + memberOf
                 + ", dataIdMap=" + dataIdMap + ", enabled=" + enabled + ", firingMatch=" + firingMatch
-                + ", mode=" + mode + ", tags=" + tags + "]";
+                + ", mode=" + mode + ", tags=" + tags + ", lifecycle.size=" + lifecycle.size() + "]";
     }
 
     public enum TriggerLifecycle {

@@ -1913,8 +1913,10 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
     }
 
     private Trigger updateTrigger(Trigger trigger, boolean reload) throws Exception {
+        log.info("new IspnTrigger: " + trigger.toString());
         String pk = pk(trigger);
         backend.put(pk, new IspnTrigger(trigger));
+        log.info("IspnTrigger Done: " + trigger.getId());
 
         if (null != alertsEngine && reload) {
             alertsEngine.reloadTrigger(trigger.getTenantId(), trigger.getId());
