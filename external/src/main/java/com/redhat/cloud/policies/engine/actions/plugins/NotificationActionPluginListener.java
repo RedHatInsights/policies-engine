@@ -40,6 +40,7 @@ import java.util.Set;
 @Plugin(name = "notification")
 @Dependent
 public class NotificationActionPluginListener implements ActionPluginListener {
+    public static final String BUNDLE_NAME = "insights";
     public static final String APP_NAME = "policies";
     public static final String EVENT_TYPE_NAME = "policy-triggered";
 
@@ -60,6 +61,7 @@ public class NotificationActionPluginListener implements ActionPluginListener {
         Action notificationAction = new Action();
         notificationAction.setEventType(EVENT_TYPE_NAME);
         notificationAction.setApplication(APP_NAME);
+        notificationAction.setBundle(BUNDLE_NAME);
         notificationAction.setTimestamp(
                 LocalDateTime.ofInstant(Instant.ofEpochMilli(actionMessage.getAction().getCtime()), ZoneId.systemDefault())
                 .format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
