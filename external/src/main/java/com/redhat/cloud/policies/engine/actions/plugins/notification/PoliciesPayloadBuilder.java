@@ -1,8 +1,5 @@
 package com.redhat.cloud.policies.engine.actions.plugins.notification;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -28,8 +25,6 @@ public class PoliciesPayloadBuilder {
             return value;
         }
     }
-
-    private static final ObjectMapper mapper = new ObjectMapper();
 
     private Map<String, String> triggers = new HashMap<>();
     private List<Tag> tags = new ArrayList<>();
@@ -86,7 +81,7 @@ public class PoliciesPayloadBuilder {
         return this;
     }
 
-    public String build() throws JsonProcessingException {
+    public Map<String, Object> build() {
         Map<String, Object> params = new HashMap<>();
         params.put("display_name", this.displayName);
         params.put("system_check_in", this.systemCheckIn);
@@ -97,7 +92,7 @@ public class PoliciesPayloadBuilder {
         params.put("insights_id", this.insightsId);
         params.put("triggers", this.triggers);
         params.put("tags", this.tags);
-        return mapper.writeValueAsString(params);
+        return params;
     }
 
 }
