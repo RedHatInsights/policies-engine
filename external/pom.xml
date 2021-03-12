@@ -30,6 +30,12 @@
       <version>${insights-notification-schemas-java.version}</version>
     </dependency>
 
+    <dependency>
+      <groupId>org.apache.kafka</groupId>
+      <artifactId>kafka-clients</artifactId>
+      <version>${version.org.apache.kafka.kafka-clients}</version>
+    </dependency>
+
     <!-- Quarkus -->
     <dependency>
       <groupId>io.quarkus</groupId>
