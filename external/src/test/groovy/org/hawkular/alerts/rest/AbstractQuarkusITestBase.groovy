@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger
  */
 abstract class AbstractQuarkusITestBase {
 
-    static baseURI = 'http://127.0.0.1:8084/hawkular/alerts/'
+    static baseURI = 'http://127.0.0.1:8095/hawkular/alerts/'
     static RESTClient client
     static String tenantHeaderName = "Hawkular-Tenant"
     static final String TENANT_PREFIX = UUID.randomUUID().toString()
