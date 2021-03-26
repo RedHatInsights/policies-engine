@@ -10,4 +10,4 @@ PROJECT=policies
 SUB_PROJECT=engine
 
 #----------
-mvn dependency:list | grep -v 'policies-engine' | grep -e ':compile$' -e ':runtime$' | sed -e 's/\[INFO\] *//' -e 's/:compile$//' -e 's/:runtime$//' | sed -e "s/^/service-${PROJECT}\/${SUB_PROJECT}:/" | sort | uniq > manifest.txt
+./mvnw dependency:list | grep -v 'policies-engine' | grep -e ':compile$' -e ':runtime$' | sed -e 's/\[INFO\] *//' -e 's/:compile$//' -e 's/:runtime$//' | sed -e "s/^/service-${PROJECT}\/${SUB_PROJECT}:/" | sort | uniq > manifest.txt
