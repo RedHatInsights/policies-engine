@@ -1,11 +1,16 @@
 package com.redhat.cloud.policies.engine.process;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.redhat.cloud.notifications.ingress.Action;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.test.junit.QuarkusTest;
 import io.reactivex.subscribers.TestSubscriber;
 import io.vertx.core.json.JsonObject;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.io.JsonDecoder;
+import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.microprofile.metrics.MetricID;
 import org.eclipse.microprofile.reactive.messaging.Channel;
@@ -34,6 +39,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.reactivestreams.Publisher;
 
 import javax.inject.Inject;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -72,10 +78,6 @@ public class ReceiverTest {
     Emitter<String> hostEmitter;
 
     @Inject
-    @Channel("email")
-    Publisher<JsonObject> emailReceiver;
-
-    @Inject
     @Channel("webhook")
     Publisher<String> webhookReceiver;
 
@@ -94,6 +96,18 @@ public class ReceiverTest {
     private static final String TRIGGER_ID = "arch-trigger";
 
     private final MetricID errorCount = new MetricID("engine.input.processed.errors", new org.eclipse.microprofile.metrics.Tag("queue", "host-egress"));
+
+    private Action deserializeAction(String payload) {
+        Action action = new Action();
+        try {
+            JsonDecoder jsonDecoder = DecoderFactory.get().jsonDecoder(Action.getClassSchema(), payload);
+            DatumReader<Action> reader = new SpecificDatumReader<>(Action.class);
+            reader.read(action, jsonDecoder);
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Payload extraction failed", e);
+        }
+        return action;
+    }
 
     private FullTrigger createTriggeringTrigger(String triggerId) {
         EventCondition evCond = new EventCondition();
@@ -134,8 +148,8 @@ public class ReceiverTest {
         FullTrigger fullTrigger2 = createTriggeringTrigger(TRIGGER_ID + "2");
         definitionsService.createFullTrigger(TENANT_ID, fullTrigger2);
 
-        TestSubscriber<JsonObject> testSubscriber = new TestSubscriber<>();
-        emailReceiver.subscribe(testSubscriber);
+        TestSubscriber<String> testSubscriber = new TestSubscriber<>();
+        webhookReceiver.subscribe(testSubscriber);
 
         // Read the input file and send it
         InputStream is = getClass().getClassLoader().getResourceAsStream("input/host.json");
@@ -143,16 +157,16 @@ public class ReceiverTest {
         hostEmitter.send(inputJson);
 
         // Wait for the async messaging to arrive
-        testSubscriber.awaitCount(1);
-        testSubscriber.assertValueCount(1);
+        testSubscriber.awaitCount(2);
+        testSubscriber.assertValueCount(2);
 
-        JsonObject emailOutput = testSubscriber.values().get(0);
-        assertEquals(TENANT_ID, emailOutput.getString("tenantId"));
-        assertTrue(emailOutput.containsKey("tags"));
-        assertTrue(emailOutput.containsKey("insightId"));
-        assertTrue(emailOutput.containsKey("triggers"));
-        JsonObject triggers = emailOutput.getJsonObject("triggers");
-        assertEquals(2, triggers.size());
+        Action action = deserializeAction(testSubscriber.values().get(0));
+
+        assertEquals(TENANT_ID, action.getAccountId());
+        assertTrue(action.getPayload().containsKey("insights_id"));
+        assertTrue(action.getPayload().containsKey("triggers"));
+        Map triggers = (Map) action.getPayload().get("triggers");
+        assertEquals(1, triggers.size());
 
         // Now send broken data and then working and expect things to still work
         String brokenJson = "{ \"json\": ";
@@ -160,8 +174,8 @@ public class ReceiverTest {
         hostEmitter.send(inputJson);
 
         // Wait for the async messaging to arrive
-        testSubscriber.awaitCount(2);
-        testSubscriber.assertValueCount(2);
+        testSubscriber.awaitCount(4);
+        testSubscriber.assertValueCount(4);
 
         Counter hostEgressProcessingErrors = meterRegistry.find(errorCount.getName()).counter();
         assertEquals(1.0, hostEgressProcessingErrors.count());
@@ -185,23 +199,28 @@ public class ReceiverTest {
         String inputJson = IOUtils.toString(is, StandardCharsets.UTF_8);
         hostEmitter.send(inputJson);
 
-        TestSubscriber<JsonObject> testSubscriber = new TestSubscriber<>();
-        emailReceiver.subscribe(testSubscriber);
+        TestSubscriber<String> testSubscriber = new TestSubscriber<>();
+        webhookReceiver.subscribe(testSubscriber);
 
         // Wait for the async messaging to arrive (there's two identical triggers..)
         testSubscriber.awaitCount(1);
         testSubscriber.assertValueCount(1);
 
-        // Verify the alert includes the tags from the event
-        AlertsCriteria criteria = new AlertsCriteria();
-        criteria.setTagQuery("tags.location = 'Neuchatel'");
-        Page<Alert> alerts = alertsService.getAlerts(TENANT_ID, criteria, null);
-        assertEquals(1, alerts.size());
-
-        // Both values should be accepted by "="
-        criteria.setTagQuery("tags.Location = 'Charmey'");
-        alerts = alertsService.getAlerts(TENANT_ID, criteria, null);
-        assertEquals(1, alerts.size());
+        Action action = deserializeAction(testSubscriber.values().get(0));
+        List<Map<String, String>> tags = (List<Map<String, String>>) action.getPayload().get("tags");
+        boolean foundNeuchatel = false;
+        boolean foundCharmey = false;
+        for(Map<String, String> tag : tags) {
+            if (tag.get("key").equals("location")) {
+                if (tag.get("value").equals("Neuchatel")) {
+                    foundNeuchatel = true;
+                } else if (tag.get("value").equals("Charmey")) {
+                    foundCharmey =  true;
+                }
+            }
+        }
+        assertTrue(foundNeuchatel);
+        assertTrue(foundCharmey);
     }
 
     @Test
