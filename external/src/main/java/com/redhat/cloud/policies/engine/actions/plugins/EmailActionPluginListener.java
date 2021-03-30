@@ -5,6 +5,8 @@ import org.hawkular.alerts.actions.api.ActionPluginListener;
 import org.hawkular.alerts.actions.api.Plugin;
 
 import javax.enterprise.context.Dependent;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -28,11 +30,13 @@ public class EmailActionPluginListener implements ActionPluginListener {
 
     @Override
     public Set<String> getProperties() {
-        throw new UnsupportedOperationException();
+        return new HashSet<>();
     }
 
     @Override
     public Map<String, String> getDefaultProperties() {
-        throw new UnsupportedOperationException();
+        Map<String, String> defaultProperties = new HashMap<>();
+        defaultProperties.put("_managed", "true");
+        return defaultProperties;
     }
 }
