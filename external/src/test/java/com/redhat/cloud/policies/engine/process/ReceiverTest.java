@@ -91,7 +91,7 @@ public class ReceiverTest {
     MeterRegistry meterRegistry;
 
     private static final String TENANT_ID = "integration-test";
-    private static final String ACTION_PLUGIN = "notification";
+    private static final String ACTION_PLUGIN = "email";
     private static final String ACTION_ID = "email-notif";
     private static final String TRIGGER_ID = "arch-trigger";
 
