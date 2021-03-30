@@ -72,10 +72,6 @@ public class ReceiverTest {
     Emitter<String> hostEmitter;
 
     @Inject
-    @Channel("email")
-    Publisher<JsonObject> emailReceiver;
-
-    @Inject
     @Channel("webhook")
     Publisher<String> webhookReceiver;
 
@@ -134,8 +130,8 @@ public class ReceiverTest {
         FullTrigger fullTrigger2 = createTriggeringTrigger(TRIGGER_ID + "2");
         definitionsService.createFullTrigger(TENANT_ID, fullTrigger2);
 
-        TestSubscriber<JsonObject> testSubscriber = new TestSubscriber<>();
-        emailReceiver.subscribe(testSubscriber);
+        TestSubscriber<String> testSubscriber = new TestSubscriber<>();
+        webhookReceiver.subscribe(testSubscriber);
 
         // Read the input file and send it
         InputStream is = getClass().getClassLoader().getResourceAsStream("input/host.json");
@@ -146,7 +142,7 @@ public class ReceiverTest {
         testSubscriber.awaitCount(1);
         testSubscriber.assertValueCount(1);
 
-        JsonObject emailOutput = testSubscriber.values().get(0);
+        JsonObject emailOutput = new JsonObject(testSubscriber.values().get(0));
         assertEquals(TENANT_ID, emailOutput.getString("tenantId"));
         assertTrue(emailOutput.containsKey("tags"));
         assertTrue(emailOutput.containsKey("insightId"));
@@ -185,8 +181,8 @@ public class ReceiverTest {
         String inputJson = IOUtils.toString(is, StandardCharsets.UTF_8);
         hostEmitter.send(inputJson);
 
-        TestSubscriber<JsonObject> testSubscriber = new TestSubscriber<>();
-        emailReceiver.subscribe(testSubscriber);
+        TestSubscriber<String> testSubscriber = new TestSubscriber<>();
+        webhookReceiver.subscribe(testSubscriber);
 
         // Wait for the async messaging to arrive (there's two identical triggers..)
         testSubscriber.awaitCount(1);
