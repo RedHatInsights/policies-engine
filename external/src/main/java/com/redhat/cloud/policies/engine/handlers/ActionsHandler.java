@@ -70,10 +70,9 @@ public class ActionsHandler {
     @PostConstruct
     public void init(@Observes Router router) {
         String path = "/hawkular/alerts/actions";
-        router.route().handler(BodyHandler.create());
         router.get(path).handler(this::findActionIds);
-        router.post(path).handler(this::createActionDefinition);
-        router.put(path).handler(this::updateActionDefinition);
+        router.post(path).handler(BodyHandler.create()).handler(this::createActionDefinition);
+        router.put(path).handler(BodyHandler.create()).handler(this::updateActionDefinition);
         router.get(path + "/history").handler(this::findActionsHistory);
         router.put(path + "/history/delete").handler(this::deleteActionsHistory);
         router.get(path + "/plugin/:actionPlugin").handler(this::findActionIdsByPlugin);

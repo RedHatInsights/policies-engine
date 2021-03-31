@@ -78,9 +78,8 @@ public class EventsHandler {
     @PostConstruct
     public void init(@Observes Router router) {
         String path = "/hawkular/alerts/events";
-        router.route().handler(BodyHandler.create());
-        router.post(path).handler(this::createEvent);
-        router.post(path + "/data").handler(this::sendEvents);
+        router.post(path).handler(BodyHandler.create()).handler(this::createEvent);
+        router.post(path + "/data").handler(BodyHandler.create()).handler(this::sendEvents);
         router.put(path + "/tags").handler(this::addTags);
         router.delete(path + "/tags").handler(this::removeTags);
         router.get(path).handler(this::findEvents);

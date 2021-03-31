@@ -76,39 +76,38 @@ public class TriggersHandler {
     @PostConstruct
     public void init(@Observes Router router) {
         String path = "/hawkular/alerts/triggers";
-        router.route().handler(BodyHandler.create());
         router.get(path).handler(this::findTriggers);
-        router.post(path).handler(this::createTrigger);
+        router.post(path).handler(BodyHandler.create()).handler(this::createTrigger);
         router.get(path + "/:triggerId").handler(this::getTrigger);
-        router.post(path + "/trigger").handler(this::createFullTrigger);
-        router.put(path + "/trigger/:triggerId").handler(this::updateFullTrigger);
-        router.post(path + "/groups").handler(this::createGroupTrigger);
+        router.post(path + "/trigger").handler(BodyHandler.create()).handler(this::createFullTrigger);
+        router.put(path + "/trigger/:triggerId").handler(BodyHandler.create()).handler(this::updateFullTrigger);
+        router.post(path + "/groups").handler(BodyHandler.create()).handler(this::createGroupTrigger);
         router.put(path + "/enabled").handler(this::setTriggersEnabled);
-        router.put(path + "/:triggerId").handler(this::updateTrigger);
+        router.put(path + "/:triggerId").handler(BodyHandler.create()).handler(this::updateTrigger);
         router.put(path + "/:triggerId/enable").handler(this::setTriggerEnabled);
         router.delete(path + "/:triggerId/enable").handler(this::setTriggerDisabled);
         router.delete(path + "/:triggerId").handler(this::deleteTrigger);
         router.get(path + "/trigger/:triggerId").handler(this::getFullTrigger);
         router.get(path + "/:triggerId/dampenings").handler(this::getTriggerDampenings);
         router.get(path + "/:triggerId/conditions").handler(this::getTriggerConditions);
-        router.post(path + "/groups/members").handler(this::createGroupMember);
-        router.post(path + "/:triggerId/dampenings").handler(this::createDampening);
+        router.post(path + "/groups/members").handler(BodyHandler.create()).handler(this::createGroupMember);
+        router.post(path + "/:triggerId/dampenings").handler(BodyHandler.create()).handler(this::createDampening);
         router.put(path + "/groups/enabled").handler(this::setGroupTriggersEnabled);
-        router.put(path + "/groups/:groupId").handler(this::updateGroupTrigger);
-        router.put(path + "/:triggerId/conditions").handler(this::setAllConditions);
+        router.put(path + "/groups/:groupId").handler(BodyHandler.create()).handler(this::updateGroupTrigger);
+        router.put(path + "/:triggerId/conditions").handler(BodyHandler.create()).handler(this::setAllConditions);
         router.delete(path + "/groups/:groupId").handler(this::deleteGroupTrigger);
         router.get(path + "/:triggerId/dampenings/:dampeningId").handler(this::getDampening);
         router.get(path + "/groups/:groupId/members").handler(this::findGroupMembers);
-        router.post(path + "/groups/:groupId/dampenings").handler(this::createGroupDampening);
-        router.put(path + "/:triggerId/dampenings/:dampeningId").handler(this::updateDampening);
-        router.put(path + "/:triggerId/conditions/:triggerMode").handler(this::setConditions);
-        router.put(path + "/groups/:groupId/conditions").handler(this::setGroupConditions);
+        router.post(path + "/groups/:groupId/dampenings").handler(BodyHandler.create()).handler(this::createGroupDampening);
+        router.put(path + "/:triggerId/dampenings/:dampeningId").handler(BodyHandler.create()).handler(this::updateDampening);
+        router.put(path + "/:triggerId/conditions/:triggerMode").handler(BodyHandler.create()).handler(this::setConditions);
+        router.put(path + "/groups/:groupId/conditions").handler(BodyHandler.create()).handler(this::setGroupConditions);
         router.delete(path + "/:triggerId/dampenings/:dampeningId").handler(this::deleteDampening);
         router.get(path + "/:triggerId/dampenings/mode/:triggerMode").handler(this::getTriggerModeDampenings);
         router.put(path + "/groups/members/:memberId/orphan").handler(this::orphanMemberTrigger);
-        router.put(path + "/groups/members/:memberId/unorphan").handler(this::unorphanMemberTrigger);
-        router.put(path + "/groups/:groupId/dampenings/:dampeningId").handler(this::updateGroupDampening);
-        router.put(path + "/groups/:groupId/conditions/:triggerMode").handler(this::setGroupConditionsTriggerMode);
+        router.put(path + "/groups/members/:memberId/unorphan").handler(BodyHandler.create()).handler(this::unorphanMemberTrigger);
+        router.put(path + "/groups/:groupId/dampenings/:dampeningId").handler(BodyHandler.create()).handler(this::updateGroupDampening);
+        router.put(path + "/groups/:groupId/conditions/:triggerMode").handler(BodyHandler.create()).handler(this::setGroupConditionsTriggerMode);
         router.delete(path + "/groups/:groupId/dampenings/:dampeningId").handler(this::deleteGroupDampening);
     }
 
