@@ -42,7 +42,7 @@
     <version.org.antlr>4.7.2</version.org.antlr>
     <version.org.apache.commons.commons-math3>3.4.1</version.org.apache.commons.commons-math3>
     <version.org.drools>7.38.0.Final</version.org.drools>
-    <version.com.google.guava>28.1-jre</version.com.google.guava>
+    <version.com.google.guava>29.0-jre</version.com.google.guava>
 
     <!-- Used for openapi generation and itests -->
     <version.org.codehaus.groovy>3.0.2</version.org.codehaus.groovy>
