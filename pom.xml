@@ -166,23 +166,6 @@
           <forceJavacCompilerUse>true</forceJavacCompilerUse>
         </configuration>
       </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <version>${version.org.codehaus.mojo.exec-maven-plugin}</version>
-        <configuration>
-          <executable>${project.basedir}/helpers/create_manifest.sh</executable>
-        </configuration>
-        <inherited>false</inherited>
-        <executions>
-          <execution>
-            <goals>
-              <goal>exec</goal>
-            </goals>
-            <phase>post-integration-test</phase>
-          </execution>
-        </executions>
-      </plugin>
     </plugins>
   </build>
 
