@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 public class PoliciesPayloadBuilder {
-    private static class Tag {
+    public static class Tag {
         private String key;
         private String value;
 

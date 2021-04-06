@@ -157,8 +157,9 @@ public class ReceiverTest {
         hostEmitter.send(inputJson);
 
         // Wait for the async messaging to arrive
-        testSubscriber.awaitCount(2);
-        testSubscriber.assertValueCount(2);
+        // It's aggregated into one message
+        testSubscriber.awaitCount(1);
+        testSubscriber.assertValueCount(1);
 
         Action action = deserializeAction(testSubscriber.values().get(0));
 
@@ -166,7 +167,7 @@ public class ReceiverTest {
         assertTrue(action.getPayload().containsKey("insights_id"));
         assertTrue(action.getPayload().containsKey("triggers"));
         Map triggers = (Map) action.getPayload().get("triggers");
-        assertEquals(1, triggers.size());
+        assertEquals(2, triggers.size());
 
         // Now send broken data and then working and expect things to still work
         String brokenJson = "{ \"json\": ";
@@ -174,8 +175,8 @@ public class ReceiverTest {
         hostEmitter.send(inputJson);
 
         // Wait for the async messaging to arrive
-        testSubscriber.awaitCount(4);
-        testSubscriber.assertValueCount(4);
+        testSubscriber.awaitCount(2);
+        testSubscriber.assertValueCount(2);
 
         Counter hostEgressProcessingErrors = meterRegistry.find(errorCount.getName()).counter();
         assertEquals(1.0, hostEgressProcessingErrors.count());

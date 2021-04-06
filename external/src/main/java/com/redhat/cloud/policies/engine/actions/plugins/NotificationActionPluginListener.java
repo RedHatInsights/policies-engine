@@ -27,10 +27,9 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.logging.Logger;
 
 /**
  * NotificationActionPluginListener sends a JSON encoded message in the format understood by the
@@ -44,6 +43,8 @@ public class NotificationActionPluginListener implements ActionPluginListener {
     public static final String APP_NAME = "policies";
     public static final String EVENT_TYPE_NAME = "policy-triggered";
 
+    private final Logger log = Logger.getLogger(this.getClass().getName());
+    private final ConcurrentSkipListMap<String, Action> notifyBuffer = new ConcurrentSkipListMap<>();
 
     @Inject
     @Channel("webhook")
@@ -51,9 +52,12 @@ public class NotificationActionPluginListener implements ActionPluginListener {
     Emitter<String> channel;
 
     @Inject
-    @Metric(absolute = true, name = "engine.actions.webhook.processed")
+    @Metric(absolute = true, name = "engine.actions.notifications.processed")
     Counter messagesCount;
 
+    @Inject
+    @Metric(absolute = true, name = "engine.actions.notifications.aggregated")
+    Counter messagesAggregated;
 
     @Override
     public void process(ActionMessage actionMessage) throws Exception {
@@ -102,14 +106,37 @@ public class NotificationActionPluginListener implements ActionPluginListener {
                 }
             }
         }
+        Map payload = payloadBuilder.build();
+        notificationAction.setPayload(payload);
 
-        notificationAction.setPayload(payloadBuilder.build());
-        channel.send(serializeAction(notificationAction));
+        String key = payload.get("insights_id").toString() + payload.get("system_check_in").toString();
+        notifyBuffer.merge(key, notificationAction,(existing, addition) -> {
+            ((List<PoliciesPayloadBuilder.Tag>)existing.getPayload().get("tags")).addAll((List<PoliciesPayloadBuilder.Tag>)addition.getPayload().get("tags"));
+            ((Map<String, String>)existing.getPayload().get("triggers")).putAll((Map<String, String>)addition.getPayload().get("triggers"));
+            return existing;
+        });
+        // channel.send(serializeAction(notificationAction));
     }
 
     @Override
     public void flush() {
+        log.fine(() -> String.format("Starting flush of %d email messages", notifyBuffer.size()));
 
+        while (true) {
+            Map.Entry<String, Action> notificationEntry = notifyBuffer.pollFirstEntry();
+            if (notificationEntry == null) {
+                break;
+            }
+
+            Action action = notificationEntry.getValue();
+            try {
+                channel.send(serializeAction(action));
+                messagesAggregated.inc();
+            } catch (IOException ex) {
+                log.warning(() -> "Failed to serialize action for accountId" + action.getAccountId());
+            }
+
+        }
     }
 
     @Override
