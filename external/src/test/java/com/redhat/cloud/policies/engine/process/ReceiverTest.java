@@ -1,6 +1,5 @@
 package com.redhat.cloud.policies.engine.process;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.redhat.cloud.notifications.ingress.Action;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -43,15 +42,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @QuarkusTest
 @Tag("integration")
@@ -121,6 +118,7 @@ public class ReceiverTest {
         Set<TriggerAction> actions = Collections.singleton(action);
 
         Trigger trigger = new Trigger(TENANT_ID, triggerId, "Trigger from arch", null);
+        trigger.setDescription("My description");
         trigger.setEventType(EventType.ALERT);
         trigger.setActions(actions);
         trigger.setMode(Mode.FIRING);
@@ -164,10 +162,8 @@ public class ReceiverTest {
         Action action = deserializeAction(testSubscriber.values().get(0));
 
         assertEquals(TENANT_ID, action.getAccountId());
-        assertTrue(action.getPayload().containsKey("insights_id"));
-        assertTrue(action.getPayload().containsKey("triggers"));
-        Map triggers = (Map) action.getPayload().get("triggers");
-        assertEquals(2, triggers.size());
+        assertTrue(action.getContext().containsKey("insights_id"));
+        assertEquals(2, action.getEvents().size());
 
         // Now send broken data and then working and expect things to still work
         String brokenJson = "{ \"json\": ";
@@ -208,7 +204,9 @@ public class ReceiverTest {
         testSubscriber.assertValueCount(1);
 
         Action action = deserializeAction(testSubscriber.values().get(0));
-        List<Map<String, String>> tags = (List<Map<String, String>>) action.getPayload().get("tags");
+        assertEquals(1, action.getEvents().size());
+
+        List<Map<String, String>> tags = (List<Map<String, String>>) action.getContext().get("tags");
         boolean foundNeuchatel = false;
         boolean foundCharmey = false;
         for(Map<String, String> tag : tags) {
@@ -228,9 +226,9 @@ public class ReceiverTest {
     void testWebhookAvroOutput() throws Exception {
         FullTrigger fullTrigger = createTriggeringTrigger(TRIGGER_ID + "3");
 
-        TriggerAction action = new TriggerAction();
-        action.setActionPlugin("notification");
-        Set<TriggerAction> actions = Collections.singleton(action);
+        TriggerAction triggerAction = new TriggerAction();
+        triggerAction.setActionPlugin("notification");
+        Set<TriggerAction> actions = Collections.singleton(triggerAction);
 
         fullTrigger.getTrigger().setActions(actions);
         definitionsService.createFullTrigger(TENANT_ID + "2", fullTrigger);
@@ -248,20 +246,20 @@ public class ReceiverTest {
         testSubscriber.awaitCount(1);
         testSubscriber.assertValueCount(1);
 
-        JsonObject webhookOutput = new JsonObject(testSubscriber.values().get(0));
-        assertEquals("policies", webhookOutput.getString("application"));
-        assertEquals("policy-triggered", webhookOutput.getString("event_type"));
-
-        assertEquals(TENANT_ID + "2", webhookOutput.getString("account_id"));
+        Action action = deserializeAction(testSubscriber.values().get(0));
+        assertEquals("rhel", action.getBundle());
+        assertEquals("policies", action.getApplication());
+        assertEquals("policy-triggered", action.getEventType());
+        assertEquals(TENANT_ID + "2", action.getAccountId());
     }
 
     @Test
     void testTakeSystemCheckInFromUpdate() throws Exception {
         FullTrigger fullTrigger = createTriggeringTrigger(TRIGGER_ID + "4");
 
-        TriggerAction action = new TriggerAction();
-        action.setActionPlugin("notification");
-        Set<TriggerAction> actions = Collections.singleton(action);
+        TriggerAction triggerAction = new TriggerAction();
+        triggerAction.setActionPlugin("notification");
+        Set<TriggerAction> actions = Collections.singleton(triggerAction);
 
         fullTrigger.getTrigger().setActions(actions);
         definitionsService.createFullTrigger(TENANT_ID + "2", fullTrigger);
@@ -279,19 +277,14 @@ public class ReceiverTest {
         testSubscriber.awaitCount(1);
         testSubscriber.assertValueCount(1);
 
-        JsonObject webhookOutput = new JsonObject(testSubscriber.values().get(0));
-        assertEquals("policies", webhookOutput.getString("application"));
-        assertEquals("policy-triggered", webhookOutput.getString("event_type"));
+        Action action = deserializeAction(testSubscriber.values().get(0));
+        assertEquals("rhel", action.getBundle());
+        assertEquals("policies", action.getApplication());
+        assertEquals("policy-triggered", action.getEventType());
+        assertEquals(TENANT_ID + "2", action.getAccountId());
 
-        ObjectMapper mapper = new ObjectMapper();
-        Map payload = mapper.readValue(webhookOutput.getString("payload"), Map.class);
-
-        // timestamp should be in ISO format
-        assertTrue(LocalDateTime.parse(webhookOutput.getString("timestamp"), DateTimeFormatter.ISO_LOCAL_DATE_TIME) != null);
-        // File has: "updated":"2020-04-16T16:10:42.199046+00:00",
-        assertEquals("2020-04-16T16:10:42.199046", payload.get("system_check_in"));
-
-        assertEquals(TENANT_ID + "2", webhookOutput.getString("account_id"));
+        assertNotNull(action.getTimestamp());
+        assertEquals("2020-04-16T16:10:42.199046", action.getContext().get("system_check_in"));
     }
 
     @AfterAll

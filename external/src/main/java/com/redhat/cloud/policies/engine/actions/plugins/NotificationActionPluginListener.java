@@ -1,7 +1,10 @@
 package com.redhat.cloud.policies.engine.actions.plugins;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.redhat.cloud.notifications.ingress.Action;
-import com.redhat.cloud.policies.engine.actions.plugins.notification.PoliciesPayloadBuilder;
+import com.redhat.cloud.notifications.ingress.Event;
+import com.redhat.cloud.notifications.ingress.Metadata;
+import com.redhat.cloud.policies.engine.actions.plugins.notification.PoliciesAction;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.io.JsonEncoder;
@@ -30,6 +33,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * NotificationActionPluginListener sends a JSON encoded message in the format understood by the
@@ -44,7 +48,7 @@ public class NotificationActionPluginListener implements ActionPluginListener {
     public static final String EVENT_TYPE_NAME = "policy-triggered";
 
     private final Logger log = Logger.getLogger(this.getClass().getName());
-    private final ConcurrentSkipListMap<String, Action> notifyBuffer = new ConcurrentSkipListMap<>();
+    private final ConcurrentSkipListMap<String, PoliciesAction> notifyBuffer = new ConcurrentSkipListMap<>();
 
     @Inject
     @Channel("webhook")
@@ -59,18 +63,20 @@ public class NotificationActionPluginListener implements ActionPluginListener {
     @Metric(absolute = true, name = "engine.actions.notifications.aggregated")
     Counter messagesAggregated;
 
+    @Inject
+    ObjectMapper objectMapper;
+
     @Override
     public void process(ActionMessage actionMessage) throws Exception {
         messagesCount.inc();
-        Action notificationAction = new Action();
-        notificationAction.setEventType(EVENT_TYPE_NAME);
-        notificationAction.setApplication(APP_NAME);
-        notificationAction.setBundle(BUNDLE_NAME);
-        notificationAction.setTimestamp(
-                LocalDateTime.ofInstant(Instant.ofEpochMilli(actionMessage.getAction().getCtime()), ZoneId.systemDefault())
+        PoliciesAction policiesAction = new PoliciesAction();
+        policiesAction.setAccountId(actionMessage.getAction().getTenantId());
+        policiesAction.setTimestamp(
+            LocalDateTime.ofInstant(Instant.ofEpochMilli(actionMessage.getAction().getCtime()), ZoneId.systemDefault())
         );
 
-        PoliciesPayloadBuilder payloadBuilder = new PoliciesPayloadBuilder();
+        PoliciesAction.Context context = policiesAction.getContext();
+        Set<PoliciesAction.Event> events = policiesAction.getEvents();
 
         for (Map.Entry<String, String> tagEntry : actionMessage.getAction().getEvent().getTags().entries()) {
             String value = tagEntry.getValue();
@@ -78,44 +84,49 @@ public class NotificationActionPluginListener implements ActionPluginListener {
                 // Same behavior as previously with JsonObjectNoNullSerializer with old hooks
                 value = "";
             }
-            payloadBuilder.addTag(tagEntry.getKey(), value);
+
+            if (!context.getTags().containsKey(tagEntry.getKey())) {
+                context.getTags().put(tagEntry.getKey(), new HashSet<>());
+            }
+
+            context.getTags().get(tagEntry.getKey()).add(value);
         }
 
-        notificationAction.setAccountId(actionMessage.getAction().getTenantId());
-
-        // Add the wanted properties here..
         Trigger trigger = actionMessage.getAction().getEvent().getTrigger();
-
-        payloadBuilder.setPolicyId(trigger.getId())
-                .setPolicyName(trigger.getName())
-                .setPolicyDescription(trigger.getDescription());
 
         for (Set<ConditionEval> evalSet : actionMessage.getAction().getEvent().getEvalSets()) {
             for (ConditionEval conditionEval : evalSet) {
                 if (conditionEval instanceof EventConditionEval) {
                     EventConditionEval eventEval = (EventConditionEval) conditionEval;
-                    payloadBuilder.setPolicyCondition(eventEval.getCondition().getExpression())
-                            .setSystemCheckIn(LocalDateTime.from(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(eventEval.getContext().get("check_in"))))
-                            .setInsightsId(eventEval.getContext().get("insights_id"))
-                            .setDisplayName(eventEval.getValue().getTags().get("display_name").iterator().next());
 
-                    String name = actionMessage.getAction().getEvent().getTrigger().getName();
-                    String triggerId = actionMessage.getAction().getEvent().getTrigger().getId();
+                    context.setSystemCheckIn(LocalDateTime.from(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(eventEval.getContext().get("check_in"))));
+                    context.setInsightsId(eventEval.getContext().get("insights_id"));
+                    context.setDisplayName(eventEval.getValue().getTags().get("display_name").iterator().next());
 
-                    payloadBuilder.addTrigger(triggerId, name);
+                    PoliciesAction.Event event = new PoliciesAction.Event();
+                    event.getPayload().setPolicyCondition(eventEval.getCondition().getExpression());
+                    event.getPayload().setPolicyId(trigger.getId());
+                    event.getPayload().setPolicyName(trigger.getName());
+                    event.getPayload().setPolicyDescription(trigger.getDescription());
+
+                    policiesAction.getEvents().add(event);
+                    break;
                 }
             }
         }
-        Map payload = payloadBuilder.build();
-        notificationAction.setPayload(payload);
 
-        String key = payload.get("insights_id").toString() + payload.get("system_check_in").toString();
-        notifyBuffer.merge(key, notificationAction,(existing, addition) -> {
-            ((List<PoliciesPayloadBuilder.Tag>)existing.getPayload().get("tags")).addAll((List<PoliciesPayloadBuilder.Tag>)addition.getPayload().get("tags"));
-            ((Map<String, String>)existing.getPayload().get("triggers")).putAll((Map<String, String>)addition.getPayload().get("triggers"));
+        notifyBuffer.merge(policiesAction.getKey(), policiesAction,(existing, addition) -> {
+            for (String tagKey : addition.getContext().getTags().keySet()) {
+                existing.getContext().getTags().merge(tagKey, addition.getContext().getTags().get(tagKey), (existingTags, additionTags) -> {
+                    existingTags.addAll(additionTags);
+                    return existingTags;
+                });
+            }
+
+            existing.getEvents().addAll(addition.getEvents());
+
             return existing;
         });
-        // channel.send(serializeAction(notificationAction));
     }
 
     @Override
@@ -123,12 +134,12 @@ public class NotificationActionPluginListener implements ActionPluginListener {
         log.fine(() -> String.format("Starting flush of %d email messages", notifyBuffer.size()));
 
         while (true) {
-            Map.Entry<String, Action> notificationEntry = notifyBuffer.pollFirstEntry();
+            Map.Entry<String, PoliciesAction> notificationEntry = notifyBuffer.pollFirstEntry();
             if (notificationEntry == null) {
                 break;
             }
 
-            Action action = notificationEntry.getValue();
+            PoliciesAction action = notificationEntry.getValue();
             try {
                 channel.send(serializeAction(action));
                 messagesAggregated.inc();
@@ -154,11 +165,27 @@ public class NotificationActionPluginListener implements ActionPluginListener {
         return defaultProperties;
     }
 
-    public static String serializeAction(Action action) throws IOException {
+    private String serializeAction(PoliciesAction action) throws IOException {
+        var avroAction = Action.newBuilder()
+                .setBundle(BUNDLE_NAME)
+                .setApplication(APP_NAME)
+                .setEventType(EVENT_TYPE_NAME)
+                .setAccountId(action.getAccountId())
+                .setTimestamp(action.getTimestamp())
+                .setContext(objectMapper.convertValue(action.getContext(), Map.class))
+                .setEvents(action.getEvents().stream().map(event ->
+                        Event.newBuilder()
+                                .setMetadata(Metadata.newBuilder().build())
+                                .setPayload(objectMapper.convertValue(event.getPayload(), Map.class))
+                                .build()
+                ).collect(Collectors.toList()))
+                .build();
+
+
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         JsonEncoder jsonEncoder = EncoderFactory.get().jsonEncoder(Action.getClassSchema(), baos);
         DatumWriter<Action> writer = new SpecificDatumWriter<>(Action.class);
-        writer.write(action, jsonEncoder);
+        writer.write(avroAction, jsonEncoder);
         jsonEncoder.flush();
 
         return baos.toString(StandardCharsets.UTF_8);
