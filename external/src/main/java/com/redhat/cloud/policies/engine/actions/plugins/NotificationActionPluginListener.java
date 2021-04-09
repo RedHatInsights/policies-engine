@@ -28,10 +28,14 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -47,7 +51,7 @@ public class NotificationActionPluginListener implements ActionPluginListener {
     public static final String APP_NAME = "policies";
     public static final String EVENT_TYPE_NAME = "policy-triggered";
 
-    private final Logger log = Logger.getLogger(this.getClass().getName());
+    private static final Logger log = Logger.getLogger(NotificationActionPluginListener.class.getName());
     private final ConcurrentSkipListMap<String, PoliciesAction> notifyBuffer = new ConcurrentSkipListMap<>();
 
     @Inject
@@ -72,7 +76,7 @@ public class NotificationActionPluginListener implements ActionPluginListener {
         PoliciesAction policiesAction = new PoliciesAction();
         policiesAction.setAccountId(actionMessage.getAction().getTenantId());
         policiesAction.setTimestamp(
-            LocalDateTime.ofInstant(Instant.ofEpochMilli(actionMessage.getAction().getCtime()), ZoneId.systemDefault())
+            LocalDateTime.ofInstant(Instant.ofEpochMilli(actionMessage.getAction().getCtime()), ZoneOffset.UTC)
         );
 
         PoliciesAction.Context context = policiesAction.getContext();
@@ -85,11 +89,7 @@ public class NotificationActionPluginListener implements ActionPluginListener {
                 value = "";
             }
 
-            if (!context.getTags().containsKey(tagEntry.getKey())) {
-                context.getTags().put(tagEntry.getKey(), new HashSet<>());
-            }
-
-            context.getTags().get(tagEntry.getKey()).add(value);
+            context.getTags().computeIfAbsent(tagEntry.getKey(), _key -> new HashSet<>()).add(value);
         }
 
         Trigger trigger = actionMessage.getAction().getEvent().getTrigger();
@@ -116,8 +116,8 @@ public class NotificationActionPluginListener implements ActionPluginListener {
         }
 
         notifyBuffer.merge(policiesAction.getKey(), policiesAction,(existing, addition) -> {
-            for (String tagKey : addition.getContext().getTags().keySet()) {
-                existing.getContext().getTags().merge(tagKey, addition.getContext().getTags().get(tagKey), (existingTags, additionTags) -> {
+            for (Map.Entry<String, Set<String>> tagEntry : addition.getContext().getTags().entrySet()) {
+                existing.getContext().getTags().merge(tagEntry.getKey(), tagEntry.getValue(), (existingTags, additionTags) -> {
                     existingTags.addAll(additionTags);
                     return existingTags;
                 });
@@ -144,7 +144,7 @@ public class NotificationActionPluginListener implements ActionPluginListener {
                 channel.send(serializeAction(action));
                 messagesAggregated.inc();
             } catch (IOException ex) {
-                log.warning(() -> "Failed to serialize action for accountId" + action.getAccountId());
+                log.log(Level.WARNING, ex, () -> "Failed to serialize action for accountId" + action.getAccountId());
             }
 
         }
