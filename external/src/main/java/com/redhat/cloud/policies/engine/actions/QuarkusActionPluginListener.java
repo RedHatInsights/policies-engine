@@ -49,10 +49,6 @@ public class QuarkusActionPluginListener implements ActionListener {
 
         try {
             String actionPlugin = action.getActionPlugin();
-            if (actionPlugin.equalsIgnoreCase("email")) {
-                actionPlugin = "notification";
-                action.setActionPlugin(actionPlugin);
-            }
             final ActionPluginListener plugin = plugins.get(actionPlugin);
             if (plugin == null) {
                 if (log.isDebugEnabled()) {
