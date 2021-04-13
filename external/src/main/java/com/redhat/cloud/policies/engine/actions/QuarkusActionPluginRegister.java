@@ -70,6 +70,11 @@ public class QuarkusActionPluginRegister {
                 if(declaredAnnotation instanceof Plugin) {
                     Plugin pluginAnnotation = (Plugin) declaredAnnotation;
                     addPlugin(pluginAnnotation.name(), pluginListener);
+
+                    if (pluginAnnotation.name().equals("notification")) {
+                        // Reroute email to notification plugin
+                        addPlugin("email", pluginListener);
+                    }
                 }
             }
         }

@@ -59,7 +59,7 @@
     <!--Distributed tracing support for Vert.x which is not covered by SmallRye-OT -->
     <version.opentracing-vertx-web>1.0.0</version.opentracing-vertx-web>
 
-    <insights-notification-schemas-java.version>0.2</insights-notification-schemas-java.version>
+    <insights-notification-schemas-java.version>0.3</insights-notification-schemas-java.version>
   </properties>
 
   <dependencyManagement>
