@@ -70,12 +70,12 @@ public class ReceiverFilterTest {
     }
 
     @Test
-    public void testFilterWithoutInsightsId() throws Exception {
+    public void testFilterWithoutInventoryId() throws Exception {
         InputStream is = getClass().getClassLoader().getResourceAsStream("input/host.json");
         String inputJson = IOUtils.toString(is, StandardCharsets.UTF_8);
 
         JsonObject jsonObject = new JsonObject(inputJson);
-        jsonObject.getJsonObject("host").remove("insights_id");
+        jsonObject.getJsonObject("host").remove("id");
         inputJson = jsonObject.toString();
 
         CompletionStage<Void> voidCompletionStage = receiver.processAsync(Message.of(inputJson));

@@ -53,7 +53,6 @@ public class Receiver {
     public static final String INSIGHTS_REPORT_DATA_ID = "platform.inventory.host-egress";
 
     public static final String CATEGORY_NAME = "insight_report";
-    public static final String INSIGHT_ID_FIELD = "insights_id";
     public static final String DISPLAY_NAME_FIELD = "display_name";
     public static final String INVENTORY_ID_FIELD = "inventory_id";
     public static final String HOST_ID = "id";
@@ -149,9 +148,9 @@ public class Receiver {
             return input.ack();
         }
 
-        String insightsId = json.getString(INSIGHT_ID_FIELD);
+        String inventoryId = json.getString(HOST_ID);
 
-        if (isEmpty(insightsId)) {
+        if (isEmpty(inventoryId)) {
             rejectedCount.inc();
             rejectedCountId.inc();
             return input.ack();
@@ -159,7 +158,7 @@ public class Receiver {
 
         String tenantId = json.getString(TENANT_ID_FIELD);
         String displayName = json.getString(DISPLAY_NAME_FIELD);
-        String text = String.format("host-egress report %s for %s", insightsId, displayName);
+        String text = String.format("host-egress report %s for %s", inventoryId, displayName);
 
         Event event = new Event(tenantId, UUID.randomUUID().toString(), INSIGHTS_REPORT_DATA_ID, CATEGORY_NAME, text);
         // Indexed searchable events
@@ -170,7 +169,7 @@ public class Receiver {
 
         // Additional context for processing
         Map<String, String> contextMap = new HashMap<>();
-        contextMap.put(INSIGHT_ID_FIELD, insightsId);
+        contextMap.put(INVENTORY_ID_FIELD, inventoryId);
         contextMap.put(CHECK_IN_FIELD, json.getString(UPDATED));
         event.setContext(contextMap);
 

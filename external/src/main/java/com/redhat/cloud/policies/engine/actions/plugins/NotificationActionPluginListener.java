@@ -100,7 +100,7 @@ public class NotificationActionPluginListener implements ActionPluginListener {
                     EventConditionEval eventEval = (EventConditionEval) conditionEval;
 
                     context.setSystemCheckIn(LocalDateTime.from(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(eventEval.getContext().get("check_in"))));
-                    context.setInsightsId(eventEval.getContext().get("insights_id"));
+                    context.setInventoryId(eventEval.getContext().get("inventory_id"));
                     context.setDisplayName(eventEval.getValue().getTags().get("display_name").iterator().next());
 
                     PoliciesAction.Event event = new PoliciesAction.Event();

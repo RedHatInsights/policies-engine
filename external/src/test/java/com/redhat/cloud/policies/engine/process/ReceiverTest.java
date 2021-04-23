@@ -161,7 +161,7 @@ public class ReceiverTest {
         Action action = deserializeAction(testSubscriber.values().get(0));
 
         assertEquals(TENANT_ID, action.getAccountId());
-        assertTrue(action.getContext().containsKey("insights_id"));
+        assertTrue(action.getContext().containsKey("inventory_id"));
         assertEquals(2, action.getEvents().size());
 
         // Now send broken data and then working and expect things to still work

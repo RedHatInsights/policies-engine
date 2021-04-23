@@ -140,7 +140,7 @@ public class PoliciesAction {
             }
         }
 
-        private String insightsId;
+        private String inventoryId;
 
         @JsonFormat(shape = JsonFormat.Shape.STRING)
         @JsonSerialize(using = IsoDateTimeSerializer.class)
@@ -155,12 +155,12 @@ public class PoliciesAction {
             tags = new HashMap<>();
         }
 
-        public String getInsightsId() {
-            return insightsId;
+        public String getInventoryId() {
+            return inventoryId;
         }
 
-        public void setInsightsId(String insightsId) {
-            this.insightsId = insightsId;
+        public void setInventoryId(String inventoryId) {
+            this.inventoryId = inventoryId;
         }
 
         public LocalDateTime getSystemCheckIn() {
