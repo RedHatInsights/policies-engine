@@ -83,6 +83,12 @@
       <version>${version.opentracing-vertx-web}</version>
     </dependency>
 
+    <!-- Logging -->
+    <dependency>
+      <groupId>io.quarkiverse.logging.cloudwatch</groupId>
+      <artifactId>quarkus-logging-cloudwatch</artifactId>
+    </dependency>
+
     <!-- Tests -->
     <dependency>
       <groupId>io.quarkus</groupId>
