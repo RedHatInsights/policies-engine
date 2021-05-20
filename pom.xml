@@ -60,10 +60,21 @@
     <version.opentracing-vertx-web>1.0.0</version.opentracing-vertx-web>
 
     <insights-notification-schemas-java.version>0.3</insights-notification-schemas-java.version>
+
+    <version.maven>3.8.1</version.maven>
   </properties>
 
   <dependencyManagement>
     <dependencies>
+      <!-- TODO: Remove this when we move to Quarkus 2.x. See the JIRA ticket for more details about this. -->
+      <dependency>
+        <groupId>org.apache.maven</groupId>
+        <artifactId>maven</artifactId>
+        <version>${version.maven}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
       <dependency>
         <groupId>org.infinispan</groupId>
         <artifactId>infinispan-cachestore-rocksdb</artifactId>
