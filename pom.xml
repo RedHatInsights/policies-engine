@@ -50,7 +50,7 @@
     <version.org.codehaus.groovy.modules.http-builder>0.7.1</version.org.codehaus.groovy.modules.http-builder>
 
     <!-- Wildfly to Quarkus related stuff to be ported / removed -->
-    <version.org.infinispan>10.1.8.Final</version.org.infinispan>
+    <version.org.infinispan>12.1.4.Final</version.org.infinispan>
     <version.org.jboss.logging.jboss-logging-tools>2.2.1.Final</version.org.jboss.logging.jboss-logging-tools>
 
     <!-- Quarkus -->
