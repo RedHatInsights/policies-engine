@@ -35,8 +35,7 @@ public class ImportHandler {
     @PostConstruct
     public void init(@Observes Router router) {
         String path = "/hawkular/alerts/import";
-        router.route().handler(BodyHandler.create());
-        router.post(path + "/:strategy").handler(this::importDefinitions);
+        router.post(path + "/:strategy").handler(BodyHandler.create()).handler(this::importDefinitions);
     }
 
     @DocPath(method = POST,

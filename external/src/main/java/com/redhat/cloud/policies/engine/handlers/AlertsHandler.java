@@ -103,7 +103,6 @@ public class AlertsHandler {
     @PostConstruct
     public void init(@Observes Router router) {
         String baseUrl = "/hawkular/alerts";
-        router.route().handler(BodyHandler.create());
         router.get(baseUrl).handler(this::findAlerts);
         router.get(baseUrl + "/watch").blockingHandler(this::watchAlerts);
         router.put(baseUrl + "/tags").handler(this::addTags);
@@ -111,7 +110,7 @@ public class AlertsHandler {
         router.put(baseUrl + "/ack").handler(this::ackAlerts);
         router.put(baseUrl + "/delete").handler(this::deleteAlerts);
         router.put(baseUrl + "/resolve").handler(this::resolveAlerts);
-        router.post(baseUrl + "/data").handler(this::sendData);
+        router.post(baseUrl + "/data").handler(BodyHandler.create()).handler(this::sendData);
         router.delete(baseUrl + "/:alertId").handler(this::deleteAlert);
         router.put(baseUrl + "/ack/:alertId").handler(this::ackAlert);
         router.put(baseUrl + "/note/:alertId").handler(this::addAlertNote);
