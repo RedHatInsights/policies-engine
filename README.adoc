@@ -16,7 +16,7 @@ link:http://www.hawkular.org/docs/rest/rest-alerts-v2.html[Hawkular Alerting RES
 
 ``engine`` module depends on ``api``
 
-``engine`` is using a modified version of Infinispan's RocksDB cache-store. To build it, use the link:https://github.com/burmanm/infinispan/tree/10.1-mod[10.1-mod] branch. In the ``persistence/rocksdb`` run ``mvn clean install deploy -DskipTests`` and copy the resulting files from ``target/mvn-repo`` to ``engine/src/main/resources/repo``. Modify the ``.pom`` file by making the parent point to ``10.1.8.Final`` and then update the SNAPSHOT version in `dependencyManagement` to enable the newer build. You can also update the ``.md5`` and `.sha1` files with `openssl dgst -sha1 file.pom` after modifying the parent version.
+``engine`` is using a modified version of Infinispan's RocksDB cache-store. To build it, use the link:https://github.com/burmanm/infinispan/tree/10.1-mod[10.1-mod] branch. In the ``persistence/rocksdb`` run ``./mvnw clean install deploy -DskipTests`` and copy the resulting files from ``target/mvn-repo`` to ``engine/src/main/resources/repo``. Modify the ``.pom`` file by making the parent point to ``10.1.8.Final`` and then update the SNAPSHOT version in `dependencyManagement` to enable the newer build. You can also update the ``.md5`` and `.sha1` files with `openssl dgst -sha1 file.pom` after modifying the parent version.
 
 == Run
 

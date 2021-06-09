@@ -61,6 +61,12 @@
       <artifactId>guava</artifactId>
     </dependency>
 
+    <!-- Logging -->
+    <dependency>
+      <groupId>io.quarkiverse.logging.cloudwatch</groupId>
+      <artifactId>quarkus-logging-cloudwatch</artifactId>
+    </dependency>
+
     <!-- Infinispan -->
     <dependency>
       <groupId>org.infinispan</groupId>

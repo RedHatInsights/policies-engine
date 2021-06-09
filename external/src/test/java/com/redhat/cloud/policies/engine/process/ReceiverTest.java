@@ -1,15 +1,20 @@
 package com.redhat.cloud.policies.engine.process;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.redhat.cloud.notifications.ingress.Action;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
-import io.reactivex.subscribers.TestSubscriber;
+import io.smallrye.reactive.messaging.connectors.InMemoryConnector;
+import io.smallrye.reactive.messaging.connectors.InMemorySink;
+import io.smallrye.reactive.messaging.connectors.InMemorySource;
 import io.vertx.core.json.JsonObject;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.io.JsonDecoder;
+import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.microprofile.metrics.MetricID;
-import org.eclipse.microprofile.reactive.messaging.Channel;
-import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.hawkular.alerts.api.model.action.ActionDefinition;
 import org.hawkular.alerts.api.model.condition.Condition;
 import org.hawkular.alerts.api.model.condition.EventCondition;
@@ -26,31 +31,35 @@ import org.hawkular.alerts.api.services.DefinitionsService;
 import org.hawkular.alerts.api.services.StatusService;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
-import org.reactivestreams.Publisher;
 
+import javax.annotation.PostConstruct;
+import javax.enterprise.inject.Any;
 import javax.inject.Inject;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static com.redhat.cloud.policies.engine.process.ReactiveMessagingLifecycleManager.EVENTS_CHANNEL;
+import static com.redhat.cloud.policies.engine.process.ReactiveMessagingLifecycleManager.WEBHOOK_CHANNEL;
+import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assertions.*;
 
 @QuarkusTest
 @Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@QuarkusTestResource(ReactiveMessagingLifecycleManager.class)
 public class ReceiverTest {
 
     @Inject
@@ -68,18 +77,6 @@ public class ReceiverTest {
     }
 
     @Inject
-    @Channel("events")
-    Emitter<String> hostEmitter;
-
-    @Inject
-    @Channel("email")
-    Publisher<JsonObject> emailReceiver;
-
-    @Inject
-    @Channel("webhook")
-    Publisher<String> webhookReceiver;
-
-    @Inject
     DefinitionsService definitionsService;
 
     @Inject
@@ -88,12 +85,37 @@ public class ReceiverTest {
     @Inject
     MeterRegistry meterRegistry;
 
+    @Inject
+    @Any
+    InMemoryConnector reactiveMessagingConnector;
+
+    InMemorySource<String> hostEmitter;
+    InMemorySink<String> webhookReceiver;
+
+    @PostConstruct
+    public void initReactiveMessagingChannels() {
+        hostEmitter = reactiveMessagingConnector.source(EVENTS_CHANNEL);
+        webhookReceiver = reactiveMessagingConnector.sink(WEBHOOK_CHANNEL);
+    }
+
     private static final String TENANT_ID = "integration-test";
     private static final String ACTION_PLUGIN = "email";
     private static final String ACTION_ID = "email-notif";
     private static final String TRIGGER_ID = "arch-trigger";
 
     private final MetricID errorCount = new MetricID("engine.input.processed.errors", new org.eclipse.microprofile.metrics.Tag("queue", "host-egress"));
+
+    private Action deserializeAction(String payload) {
+        Action action = new Action();
+        try {
+            JsonDecoder jsonDecoder = DecoderFactory.get().jsonDecoder(Action.getClassSchema(), payload);
+            DatumReader<Action> reader = new SpecificDatumReader<>(Action.class);
+            reader.read(action, jsonDecoder);
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Payload extraction failed", e);
+        }
+        return action;
+    }
 
     private FullTrigger createTriggeringTrigger(String triggerId) {
         EventCondition evCond = new EventCondition();
@@ -107,6 +129,7 @@ public class ReceiverTest {
         Set<TriggerAction> actions = Collections.singleton(action);
 
         Trigger trigger = new Trigger(TENANT_ID, triggerId, "Trigger from arch", null);
+        trigger.setDescription("My description");
         trigger.setEventType(EventType.ALERT);
         trigger.setActions(actions);
         trigger.setMode(Mode.FIRING);
@@ -115,6 +138,11 @@ public class ReceiverTest {
         FullTrigger fullTrigger = new FullTrigger(trigger, null, conditions);
 
         return fullTrigger;
+    }
+
+    @BeforeEach
+    public void resetWebhookReceiver() {
+        webhookReceiver.clear();
     }
 
     @Test
@@ -134,25 +162,20 @@ public class ReceiverTest {
         FullTrigger fullTrigger2 = createTriggeringTrigger(TRIGGER_ID + "2");
         definitionsService.createFullTrigger(TENANT_ID, fullTrigger2);
 
-        TestSubscriber<JsonObject> testSubscriber = new TestSubscriber<>();
-        emailReceiver.subscribe(testSubscriber);
-
         // Read the input file and send it
         InputStream is = getClass().getClassLoader().getResourceAsStream("input/host.json");
         String inputJson = IOUtils.toString(is, StandardCharsets.UTF_8);
         hostEmitter.send(inputJson);
 
         // Wait for the async messaging to arrive
-        testSubscriber.awaitCount(1);
-        testSubscriber.assertValueCount(1);
+        // It's aggregated into one message
+        await().until(() -> webhookReceiver.received().size() == 1);
 
-        JsonObject emailOutput = testSubscriber.values().get(0);
-        assertEquals(TENANT_ID, emailOutput.getString("tenantId"));
-        assertTrue(emailOutput.containsKey("tags"));
-        assertTrue(emailOutput.containsKey("insightId"));
-        assertTrue(emailOutput.containsKey("triggers"));
-        JsonObject triggers = emailOutput.getJsonObject("triggers");
-        assertEquals(2, triggers.size());
+        Action action = deserializeAction(webhookReceiver.received().get(0).getPayload());
+
+        assertEquals(TENANT_ID, action.getAccountId());
+        assertTrue(action.getContext().containsKey("inventory_id"));
+        assertEquals(2, action.getEvents().size());
 
         // Now send broken data and then working and expect things to still work
         String brokenJson = "{ \"json\": ";
@@ -160,12 +183,10 @@ public class ReceiverTest {
         hostEmitter.send(inputJson);
 
         // Wait for the async messaging to arrive
-        testSubscriber.awaitCount(2);
-        testSubscriber.assertValueCount(2);
+        await().until(() -> webhookReceiver.received().size() == 2);
 
         Counter hostEgressProcessingErrors = meterRegistry.find(errorCount.getName()).counter();
         assertEquals(1.0, hostEgressProcessingErrors.count());
-        testSubscriber.dispose();
 
         // Verify the alert includes the tags from the event
         AlertsCriteria criteria = new AlertsCriteria();
@@ -185,93 +206,91 @@ public class ReceiverTest {
         String inputJson = IOUtils.toString(is, StandardCharsets.UTF_8);
         hostEmitter.send(inputJson);
 
-        TestSubscriber<JsonObject> testSubscriber = new TestSubscriber<>();
-        emailReceiver.subscribe(testSubscriber);
-
         // Wait for the async messaging to arrive (there's two identical triggers..)
-        testSubscriber.awaitCount(1);
-        testSubscriber.assertValueCount(1);
+        await().until(() -> webhookReceiver.received().size() == 1);
 
-        // Verify the alert includes the tags from the event
-        AlertsCriteria criteria = new AlertsCriteria();
-        criteria.setTagQuery("tags.location = 'Neuchatel'");
-        Page<Alert> alerts = alertsService.getAlerts(TENANT_ID, criteria, null);
-        assertEquals(1, alerts.size());
+        Action action = deserializeAction(webhookReceiver.received().get(0).getPayload());
+        assertEquals(1, action.getEvents().size());
 
-        // Both values should be accepted by "="
-        criteria.setTagQuery("tags.Location = 'Charmey'");
-        alerts = alertsService.getAlerts(TENANT_ID, criteria, null);
-        assertEquals(1, alerts.size());
+        List<Map<String, String>> tags = (List<Map<String, String>>) action.getContext().get("tags");
+        boolean foundNeuchatel = false;
+        boolean foundCharmey = false;
+        for(Map<String, String> tag : tags) {
+            if (tag.get("key").equals("location")) {
+                if (tag.get("value").equals("Neuchatel")) {
+                    foundNeuchatel = true;
+                } else if (tag.get("value").equals("Charmey")) {
+                    foundCharmey =  true;
+                }
+            }
+        }
+        assertTrue(foundNeuchatel);
+        assertTrue(foundCharmey);
     }
 
     @Test
     void testWebhookAvroOutput() throws Exception {
+        String tenantId = TENANT_ID + "2";
         FullTrigger fullTrigger = createTriggeringTrigger(TRIGGER_ID + "3");
 
-        TriggerAction action = new TriggerAction();
-        action.setActionPlugin("notification");
-        Set<TriggerAction> actions = Collections.singleton(action);
+        TriggerAction triggerAction = new TriggerAction();
+        triggerAction.setActionPlugin("notification");
+        Set<TriggerAction> actions = Collections.singleton(triggerAction);
 
         fullTrigger.getTrigger().setActions(actions);
-        definitionsService.createFullTrigger(TENANT_ID + "2", fullTrigger);
-
-        TestSubscriber<String> testSubscriber = new TestSubscriber<>();
-        webhookReceiver.subscribe(testSubscriber);
+        definitionsService.createFullTrigger(tenantId, fullTrigger);
 
         InputStream is = getClass().getClassLoader().getResourceAsStream("input/thomas-host.json");
         JsonObject pushJson = new JsonObject(IOUtils.toString(is, StandardCharsets.UTF_8));
 
-        pushJson.getJsonObject("host").put("account", TENANT_ID + "2");
+        pushJson.getJsonObject("host").put("account", tenantId);
         hostEmitter.send(pushJson.encode());
 
         // Wait for the async messaging to arrive (there's two identical triggers..)
-        testSubscriber.awaitCount(1);
-        testSubscriber.assertValueCount(1);
+        await().until(() -> webhookReceiver.received().size() == 1);
 
-        JsonObject webhookOutput = new JsonObject(testSubscriber.values().get(0));
-        assertEquals("policies", webhookOutput.getString("application"));
-        assertEquals("policy-triggered", webhookOutput.getString("event_type"));
+        Action action = deserializeAction(webhookReceiver.received().get(0).getPayload());
+        assertEquals("rhel", action.getBundle());
+        assertEquals("policies", action.getApplication());
+        assertEquals("policy-triggered", action.getEventType());
+        assertEquals(tenantId, action.getAccountId());
 
-        assertEquals(TENANT_ID + "2", webhookOutput.getString("account_id"));
+        // The trigger must be removed to prevent side-effects on other tests.
+        definitionsService.removeTrigger(tenantId, fullTrigger.getTrigger().getId());
     }
 
     @Test
     void testTakeSystemCheckInFromUpdate() throws Exception {
+        String tenantId = TENANT_ID + "2";
         FullTrigger fullTrigger = createTriggeringTrigger(TRIGGER_ID + "4");
 
-        TriggerAction action = new TriggerAction();
-        action.setActionPlugin("notification");
-        Set<TriggerAction> actions = Collections.singleton(action);
+        TriggerAction triggerAction = new TriggerAction();
+        triggerAction.setActionPlugin("notification");
+        Set<TriggerAction> actions = Collections.singleton(triggerAction);
 
         fullTrigger.getTrigger().setActions(actions);
-        definitionsService.createFullTrigger(TENANT_ID + "2", fullTrigger);
-
-        TestSubscriber<String> testSubscriber = new TestSubscriber<>();
-        webhookReceiver.subscribe(testSubscriber);
+        definitionsService.createFullTrigger(tenantId, fullTrigger);
 
         InputStream is = getClass().getClassLoader().getResourceAsStream("input/thomas-host.json");
         JsonObject pushJson = new JsonObject(IOUtils.toString(is, StandardCharsets.UTF_8));
 
-        pushJson.getJsonObject("host").put("account", TENANT_ID + "2");
+        pushJson.getJsonObject("host").put("account", tenantId);
         hostEmitter.send(pushJson.encode());
 
         // Wait for the async messaging to arrive (there's two identical triggers..)
-        testSubscriber.awaitCount(1);
-        testSubscriber.assertValueCount(1);
+        await().until(() -> webhookReceiver.received().size() == 1);
 
-        JsonObject webhookOutput = new JsonObject(testSubscriber.values().get(0));
-        assertEquals("policies", webhookOutput.getString("application"));
-        assertEquals("policy-triggered", webhookOutput.getString("event_type"));
+        Action action = deserializeAction(webhookReceiver.received().get(0).getPayload());
+        assertEquals("rhel", action.getBundle());
+        assertEquals("policies", action.getApplication());
+        assertEquals("policy-triggered", action.getEventType());
+        assertEquals(TENANT_ID + "2", action.getAccountId());
 
-        ObjectMapper mapper = new ObjectMapper();
-        Map payload = mapper.readValue(webhookOutput.getString("payload"), Map.class);
+        assertNotNull(action.getTimestamp());
+        assertEquals("2020-04-16T16:10:42.199046", action.getContext().get("system_check_in"));
 
-        // timestamp should be in ISO format
-        assertTrue(LocalDateTime.parse(webhookOutput.getString("timestamp"), DateTimeFormatter.ISO_LOCAL_DATE_TIME) != null);
-        // File has: "updated":"2020-04-16T16:10:42.199046+00:00",
-        assertEquals("2020-04-16T16:10:42.199046", payload.get("system_check_in"));
-
-        assertEquals(TENANT_ID + "2", webhookOutput.getString("account_id"));
+        // The trigger must be removed to prevent side-effects on other tests.
+        definitionsService.removeTrigger(tenantId, fullTrigger.getTrigger().getId());
     }
 
     @AfterAll
