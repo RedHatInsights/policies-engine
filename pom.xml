@@ -46,7 +46,7 @@
 
     <!-- Used for openapi generation and itests -->
     <version.org.codehaus.groovy>3.0.2</version.org.codehaus.groovy>
-    <version.org.codehaus.gmavenplus>1.10.0</version.org.codehaus.gmavenplus>
+    <version.org.codehaus.gmavenplus>1.12.1</version.org.codehaus.gmavenplus>
     <version.org.codehaus.groovy.modules.http-builder>0.7.1</version.org.codehaus.groovy.modules.http-builder>
 
     <!-- Wildfly to Quarkus related stuff to be ported / removed -->
