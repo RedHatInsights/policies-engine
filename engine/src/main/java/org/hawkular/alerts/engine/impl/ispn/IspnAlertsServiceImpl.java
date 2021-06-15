@@ -80,8 +80,8 @@ public class IspnAlertsServiceImpl implements AlertsService {
     boolean saveThinAlerts = false;
 
     public void init() {
-        eventLifespanInHours = ConfigProvider.getConfig().getValue("engine.backend.ispn.events-lifespan", Long.class);
         alertsLifespanInHours = ConfigProvider.getConfig().getValue("engine.backend.ispn.alerts-lifespan", Long.class);
+        eventLifespanInHours = ConfigProvider.getConfig().getValue("engine.backend.ispn.events-lifespan", Long.class);
         saveThinAlerts = ConfigProvider.getConfig().getValue("engine.backend.ispn.alerts-thin", Boolean.class);
         backend = IspnCacheManager.getCacheManager().getCache("backend");
         if (backend == null) {

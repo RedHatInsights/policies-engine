@@ -153,36 +153,34 @@ public class AlertsStandalone {
         status.setPartitionManager(partitionManager);
     }
 
-    public CompletableFuture<Void> init() {
-        return CompletableFuture.runAsync(() -> {
-            if (this.ispnReindex) {
-                log.info("Reindexing of Infinispan [backend] started.");
-                status.setReindexing(true);
-                long startReindex = System.currentTimeMillis();
-                SearchManager searchManager = Search
-                        .getSearchManager(IspnCacheManager.getCacheManager().getCache("backend"));
-                DistributedExecutorMassIndexer massIndexer = (DistributedExecutorMassIndexer) searchManager.getMassIndexer();
-                // Lets block instead of async
-                massIndexer.start();
-                long stopReindex = System.currentTimeMillis();
-                log.info("Reindexing of Infinispan [backend] completed in [" + (stopReindex - startReindex) + " ms]");
-                ispnReindex = false;
-                status.setReindexing(false);
-            }
-            // Initialization needs order and needs to be done after reindexing
-            ispnAlerts.init();
-            ispnDefinitions.init();
-            ispnActions.init();
-            adminService.init();
+    public void init() {
+        if (this.ispnReindex) {
+            log.info("Reindexing of Infinispan [backend] started.");
+            status.setReindexing(true);
+            long startReindex = System.currentTimeMillis();
+            SearchManager searchManager = Search
+                    .getSearchManager(IspnCacheManager.getCacheManager().getCache("backend"));
+            DistributedExecutorMassIndexer massIndexer = (DistributedExecutorMassIndexer) searchManager.getMassIndexer();
+            // Lets block instead of async
+            massIndexer.start();
+            long stopReindex = System.currentTimeMillis();
+            log.info("Reindexing of Infinispan [backend] completed in [" + (stopReindex - startReindex) + " ms]");
+            ispnReindex = false;
+            status.setReindexing(false);
+        }
+        // Initialization needs order and needs to be done after reindexing
+        ispnAlerts.init();
+        ispnDefinitions.init();
+        ispnActions.init();
+        adminService.init();
 
-            partitionManager.init();
-            alertsContext.init();
-            dataDrivenGroupCacheManager.init();
-            actionsCacheManager.init();
-            publishCacheManager.init();
-            extensions.init();
-            engine.initServices();
-        });
+        partitionManager.init();
+        alertsContext.init();
+        dataDrivenGroupCacheManager.init();
+        actionsCacheManager.init();
+        publishCacheManager.init();
+        extensions.init();
+        engine.initServices();
     }
 
     public void stop() {
