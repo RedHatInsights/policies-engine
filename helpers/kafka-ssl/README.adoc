@@ -1,0 +1,31 @@
+This folder contains files to help test the connection from `policies-engine` to a Kafka instance with SSL.
+
+## Usage
+
+.Generate a jsk keystore for kafka signed by a CA (it can be a self signed CA). You can use the script `create-certs.sh` to generate them locally.
+
+.The server keystore needs to be placed on `certs/server/server-keystore.jks` with password `supersecure` and the ca on
+`./certs/ca/cacert.pem` (above script takes care of it).
+You can use other paths/password, but you would need to update the `docker-compose.yml` file to use the new params.
+
+```bash
+./create-certs.sh
+```
+
+. Start the docker-compose instance
+
+```bash
+docker-compose up
+```
+
+.Start `policies-engine` passing the following environment variables:
+
+```bash
+cd external;
+KAFKA_BOOTSTRAP_SERVERS="localhost:29092" \
+KAFKA_SECURITY_PROTOCOL="SSL" \
+KAFKA_SSL_TRUSTSTORE_LOCATION="`pwd`/../helpers/kafka-ssl/certs/ca/cacert.pem" \
+KAFKA_SSL_TRUSTSTORE_TYPE="PEM" \
+KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM="" \
+mvn compile quarkus:dev
+```
