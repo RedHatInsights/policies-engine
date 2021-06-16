@@ -59,13 +59,13 @@ public class AlertStarter {
     }
 
     void startApp(@Observes StartupEvent startup) {
+        initAccessLogFilter();
         String commit = System.getenv(BUILD_COMMIT_ENV_NAME);
         if(!isEmpty(commit)) {
             LOGGER.infof("Starting Policies Engine, build: %s", commit);
         } else {
             LOGGER.info("Starting Policies Engine.");
         }
-        initAccessLogFilter();
         initialize();
     }
 
