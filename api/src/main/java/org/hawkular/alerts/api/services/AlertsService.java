@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import io.smallrye.mutiny.Uni;
 import org.hawkular.alerts.api.model.condition.ConditionEval;
 import org.hawkular.alerts.api.model.data.Data;
 import org.hawkular.alerts.api.model.event.Alert;
@@ -54,7 +55,7 @@ public interface AlertsService {
      * @param events Set of unpersisted Events.
      * @throws Exception any problem
      */
-    void addEvents(Collection<Event> events) throws Exception;
+    Uni<Void> addEvents(Collection<Event> events) throws Exception;
 
     /**
      * Add the provided tags to the specified events.
@@ -70,7 +71,7 @@ public interface AlertsService {
      * @param events Set of unpersisted Events.
      * @throws Exception any problem
      */
-    void persistEvents(Collection<Event> events) throws Exception;
+    Uni<Void> persistEvents(Collection<Event> events) throws Exception;
 
     /**
      * Add a note on an existing Alert.
@@ -227,7 +228,7 @@ public interface AlertsService {
      * @param events Not null. The events to be evaluated by the alerting engine.
      * @throws Exception
      */
-    void sendEvents(Collection<Event> events) throws Exception;
+    Uni<Void> sendEvents(Collection<Event> events) throws Exception;
 
     /**
      * Send events to the engine for alerts evaluation.
@@ -237,5 +238,5 @@ public interface AlertsService {
      * @param ignoreFiltering  An optimization. Set true *only* if you are sure the data is useful for evaluation.
      * @throws Exception
      */
-    void sendEvents(Collection<Event> events, boolean ignoreFiltering) throws Exception;
+    Uni<Void> sendEvents(Collection<Event> events, boolean ignoreFiltering) throws Exception;
 }

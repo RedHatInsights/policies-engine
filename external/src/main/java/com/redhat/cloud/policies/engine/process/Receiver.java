@@ -2,6 +2,7 @@ package com.redhat.cloud.policies.engine.process;
 
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
+import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -24,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.CompletionStage;
 
 import static org.hawkular.alerts.api.util.Util.isEmpty;
 
@@ -108,7 +108,7 @@ public class Receiver {
 
     @Incoming("events")
     @Acknowledgment(Acknowledgment.Strategy.MANUAL)
-    public CompletionStage<Void> processAsync(Message<String> input) {
+    public Uni<Void> processAsync(Message<String> input) {
         incomingMessagesCount.inc();
         if (log.isTraceEnabled()) {
             log.tracef("Received message, input payload: %s", input.getPayload());
@@ -118,7 +118,7 @@ public class Receiver {
             json = new JsonObject(input.getPayload());
         } catch(Exception e) {
             processingErrors.inc();
-            return input.ack();
+            return ack(input);
         }
         if (json.containsKey(TYPE_FIELD)) {
             String eventType = json.getString(TYPE_FIELD);
@@ -128,7 +128,7 @@ public class Receiver {
                 }
                 rejectedCount.inc();
                 rejectedCountType.inc();
-                return input.ack();
+                return ack(input);
             }
         }
 
@@ -137,7 +137,7 @@ public class Receiver {
         } else {
             rejectedCount.inc();
             rejectedCountHost.inc();
-            return input.ack();
+            return ack(input);
         }
 
         // Verify host.reporter (not platform_metadata.metadata.reporter!) is one of the accepted values
@@ -145,7 +145,7 @@ public class Receiver {
         if(!ACCEPTED_REPORTERS.contains(reporter)) {
             rejectedCount.inc();
             rejectedCountReporter.inc();
-            return input.ack();
+            return ack(input);
         }
 
         String inventoryId = json.getString(HOST_ID);
@@ -153,7 +153,7 @@ public class Receiver {
         if (isEmpty(inventoryId)) {
             rejectedCount.inc();
             rejectedCountId.inc();
-            return input.ack();
+            return ack(input);
         }
 
         String tenantId = json.getString(TENANT_ID_FIELD);
@@ -184,15 +184,19 @@ public class Receiver {
             List<Event> eventList = new ArrayList<>(1);
             eventList.add(event);
             if (storeEvents) {
-                alertsService.addEvents(eventList);
+                return alertsService.addEvents(eventList)
+                        .replaceWith(ack(input));
             } else {
-                alertsService.sendEvents(eventList);
+                return alertsService.sendEvents(eventList)
+                        .replaceWith(ack(input));
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
 
-        return input.ack();
+    private Uni<Void> ack(Message<String> input) {
+        return Uni.createFrom().completionStage(() -> input.ack());
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.redhat.cloud.policies.engine.process;
 
+import io.smallrye.mutiny.Uni;
 import org.hawkular.alerts.api.model.condition.ConditionEval;
 import org.hawkular.alerts.api.model.data.Data;
 import org.hawkular.alerts.api.model.event.Alert;
@@ -36,8 +37,11 @@ public class MockedAlertsService implements AlertsService {
     }
 
     @Override
-    public void addEvents(Collection<Event> events) throws Exception {
-        pushedEvents.addAll(events);
+    public Uni<Void> addEvents(Collection<Event> events) throws Exception {
+        return Uni.createFrom().item(() -> {
+            pushedEvents.addAll(events);
+            return null;
+        });
     }
 
     @Override
@@ -46,8 +50,8 @@ public class MockedAlertsService implements AlertsService {
     }
 
     @Override
-    public void persistEvents(Collection<Event> events) throws Exception {
-
+    public Uni<Void> persistEvents(Collection<Event> events) throws Exception {
+        return Uni.createFrom().nullItem();
     }
 
     @Override
@@ -126,13 +130,16 @@ public class MockedAlertsService implements AlertsService {
     }
 
     @Override
-    public void sendEvents(Collection<Event> events) throws Exception {
-        pushedEvents.addAll(events);
+    public Uni<Void> sendEvents(Collection<Event> events) throws Exception {
+        return Uni.createFrom().item(() -> {
+            pushedEvents.addAll(events);
+            return null;
+        });
     }
 
     @Override
-    public void sendEvents(Collection<Event> events, boolean ignoreFiltering) throws Exception {
-
+    public Uni<Void> sendEvents(Collection<Event> events, boolean ignoreFiltering) throws Exception {
+        return Uni.createFrom().nullItem();
     }
 
     public List<Event> getPushedEvents() {

@@ -209,7 +209,7 @@ public abstract class IspnBaseServiceImplTest {
                 }
             }
         }
-        alerts.addEvents(newEvents);
+        alerts.addEvents(newEvents).await().indefinitely();
         return eventStartTime;
     }
 

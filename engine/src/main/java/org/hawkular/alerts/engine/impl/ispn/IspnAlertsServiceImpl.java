@@ -1,5 +1,6 @@
 package org.hawkular.alerts.engine.impl.ispn;
 
+import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.hawkular.alerts.api.model.Note;
 import org.hawkular.alerts.api.model.condition.ConditionEval;
@@ -188,12 +189,12 @@ public class IspnAlertsServiceImpl implements AlertsService {
     }
 
     @Override
-    public void addEvents(Collection<Event> events) throws Exception {
+    public Uni<Void> addEvents(Collection<Event> events) throws Exception {
         if (null == events || events.isEmpty()) {
-            return;
+            return Uni.createFrom().nullItem();
         }
-        persistEvents(events);
-        sendEvents(events);
+        return persistEvents(events)
+                .replaceWith(sendEvents(events));
     }
 
     @Override
@@ -219,17 +220,20 @@ public class IspnAlertsServiceImpl implements AlertsService {
     }
 
     @Override
-    public void persistEvents(Collection<Event> events) throws Exception {
+    public Uni<Void> persistEvents(Collection<Event> events) {
         if (events == null) {
             throw new IllegalArgumentException("Events must be not null");
         }
         if (events.isEmpty()) {
-            return;
+            return Uni.createFrom().nullItem();
         }
         log.debugf("Adding %s events", events.size());
-        for (Event event : events) {
-            store(event);
-        }
+        return Uni.createFrom().item(() -> {
+            for (Event event : events) {
+                store(event);
+            }
+            return null;
+        });
     }
 
     @Override
@@ -660,22 +664,25 @@ public class IspnAlertsServiceImpl implements AlertsService {
     }
 
     @Override
-    public void sendEvents(Collection<Event> events) throws Exception {
-        sendEvents(events, false);
+    public Uni<Void> sendEvents(Collection<Event> events) {
+        return sendEvents(events, false);
     }
 
     @Override
-    public void sendEvents(Collection<Event> events, boolean ignoreFiltering) throws Exception {
+    public Uni<Void> sendEvents(Collection<Event> events, boolean ignoreFiltering) {
         if (isEmpty(events)) {
-            return;
+            return Uni.createFrom().nullItem();
         }
 
         if (incomingDataManager == null) {
             log.debug("incomingDataManager is not defined. Only valid for testing.");
-            return;
+            return Uni.createFrom().nullItem();
         }
 
-        incomingDataManager.bufferEvents(new IncomingDataManagerImpl.IncomingEvents(events, !ignoreFiltering));
+        return Uni.createFrom().item(() -> {
+            incomingDataManager.bufferEvents(new IncomingDataManagerImpl.IncomingEvents(events, !ignoreFiltering));
+            return null;
+        });
     }
 
     private boolean isServerSideSorted(Pager pager) {
