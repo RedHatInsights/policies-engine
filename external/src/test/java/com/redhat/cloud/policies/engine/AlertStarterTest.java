@@ -81,4 +81,16 @@ class AlertStarterTest {
         String inputWithHttpTwoZero = "127.0.0.1 - - 09/Jun/2021:16:07:07 +0200 \"GET /q/health/ready HTTP/2.0\" 200 46 \"-\" \"Mozilla/5.0 (X11; Fedora; Linux x86_64; rv:88.0) Gecko/20100101 Firefox/88.0\"\n";
         assertTrue(Pattern.matches(FILTER_REGEX, inputWithHttpTwoZero.trim()));
     }
+
+    @Test
+    void shouldFilterDummyHawkularTriggersWhenHttpStatusIs200() {
+        String inputWithHttpTwoZero = "2021-06-22 00:47:44,003 INFO  [access_log] (vert.x-eventloop-thread-0) 10.131.7.144 - - 22/Jun/2021:00:47:44 +0000 \"GET /hawkular/alerts/triggers?triggerIds=dummy HTTP/1.1\" 200 2 \"-\" \"Apache-HttpClient/4.5.13 (Java/11.0.11)\"";
+        assertTrue(Pattern.matches(FILTER_REGEX, inputWithHttpTwoZero));
+    }
+
+    @Test
+    void shouldNotFilterDummyHawkularTriggersWhenHttpStatusIs400() {
+        String input ="2021-06-22 08:22:32,005 INFO  [access_log] (vert.x-eventloop-thread-0) 10.131.8.85 - - 22/Jun/2021:08:22:32 +0000 \"GET /hawkular/alerts/triggers?triggerIds=dummy HTTP/1.1\" 400 2 \"-\" \"Apache-HttpClient/4.5.13 (Java/11.0.11)\"";
+        assertFalse(Pattern.matches(FILTER_REGEX, input));
+    }
 }
