@@ -28,7 +28,7 @@ public class AlertStarter {
     public static MsgLogger LOGGER = MsgLogging.getMsgLogger(AlertStarter.class);
     private final static String BUILD_COMMIT_ENV_NAME = "OPENSHIFT_BUILD_COMMIT";
 
-    public static final String FILTER_REGEX = ".*(/health(/\\w+)?|/metrics) HTTP/[0-9].[0-9]\" 200.*\\n?";
+    static final String FILTER_REGEX = ".*(/health(/\\w+)?|/metrics|/hawkular/alerts/triggers\\?triggerIds=dummy) HTTP/[0-9].[0-9]\" 200.*\\n?";
     private static final Pattern pattern = Pattern.compile(FILTER_REGEX);
 
     @ConfigProperty(name = "quarkus.http.access-log.category")
