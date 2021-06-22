@@ -11,7 +11,6 @@ import org.junit.jupiter.api.TestInstance;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.CompletionStage;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,8 +32,7 @@ public class ReceiverFilterTest {
         InputStream is = getClass().getClassLoader().getResourceAsStream("input/host.json");
         String inputJson = IOUtils.toString(is, StandardCharsets.UTF_8);
 
-        CompletionStage<Void> voidCompletionStage = receiver.processAsync(Message.of(inputJson));
-        voidCompletionStage.toCompletableFuture().get();
+        receiver.processAsync(Message.of(inputJson)).await().indefinitely();
 
         assertEquals(1, mockedAlertsService.getPushedEvents().size());
         assertEquals(1, incomingMessagesCount.getCount());
@@ -78,8 +76,7 @@ public class ReceiverFilterTest {
         jsonObject.getJsonObject("host").remove("id");
         inputJson = jsonObject.toString();
 
-        CompletionStage<Void> voidCompletionStage = receiver.processAsync(Message.of(inputJson));
-        voidCompletionStage.toCompletableFuture().get();
+        receiver.processAsync(Message.of(inputJson)).await().indefinitely();
 
         assertEquals(0, mockedAlertsService.getPushedEvents().size());
         assertEquals(1, incomingMessagesCount.getCount());
@@ -91,8 +88,7 @@ public class ReceiverFilterTest {
         InputStream is = getClass().getClassLoader().getResourceAsStream("input/host.json");
         String inputJson = IOUtils.toString(is, StandardCharsets.UTF_8);
 
-        CompletionStage<Void> voidCompletionStage = receiver.processAsync(Message.of(inputJson));
-        voidCompletionStage.toCompletableFuture().get();
+        receiver.processAsync(Message.of(inputJson)).await().indefinitely();
 
         assertEquals("ba11a21a-8b22-431b-9b4b-b06006472d54", mockedAlertsService.getPushedEvents().get(0).getTags().get(Receiver.INVENTORY_ID_FIELD).iterator().next());
     }
@@ -106,8 +102,7 @@ public class ReceiverFilterTest {
         jsonObject.put("type", "deleted");
         inputJson = jsonObject.toString();
 
-        CompletionStage<Void> voidCompletionStage = receiver.processAsync(Message.of(inputJson));
-        voidCompletionStage.toCompletableFuture().get();
+        receiver.processAsync(Message.of(inputJson)).await().indefinitely();
 
         assertEquals(0, mockedAlertsService.getPushedEvents().size());
         assertEquals(1, incomingMessagesCount.getCount());
@@ -120,8 +115,7 @@ public class ReceiverFilterTest {
         jsonObject.getJsonObject("host").put("reporter", "rhsm-conduit");
         inputJson = jsonObject.toString();
 
-        voidCompletionStage = receiver.processAsync(Message.of(inputJson));
-        voidCompletionStage.toCompletableFuture().get();
+        receiver.processAsync(Message.of(inputJson)).await().indefinitely();
 
         assertEquals(0, mockedAlertsService.getPushedEvents().size());
         assertEquals(2, incomingMessagesCount.getCount());

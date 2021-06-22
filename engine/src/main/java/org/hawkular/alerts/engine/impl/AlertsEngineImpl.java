@@ -619,7 +619,7 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
                     }
 
                     handleAlerts();
-                    alertsService.persistEvents(events);
+                    alertsService.persistEvents(events).await().indefinitely();
                     if (distributed && !events.isEmpty()) {
                         /*
                             Generated events on a node should be notified to other nodes for chained triggers

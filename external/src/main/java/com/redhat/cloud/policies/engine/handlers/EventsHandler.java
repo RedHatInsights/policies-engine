@@ -143,7 +143,7 @@ public class EventsHandler {
                     }
 
                     try {
-                        alertsService.addEvents(Collections.singletonList(event));
+                        alertsService.addEvents(Collections.singletonList(event)).await().indefinitely();
                         future.complete(event);
                     } catch (IllegalArgumentException e) {
                         throw new ResponseUtil.BadRequestException("Bad arguments: " + e.getMessage());
@@ -185,7 +185,7 @@ public class EventsHandler {
                     }
                     try {
                         events.stream().forEach(ev -> ev.setTenantId(tenantId));
-                        alertsService.sendEvents(events);
+                        alertsService.sendEvents(events).await().indefinitely();
                         // log.debugf(Events: ", events);
                         future.complete(events);
                     } catch (IllegalArgumentException e) {
