@@ -3,6 +3,7 @@ package com.redhat.cloud.policies.engine.process;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -185,10 +186,12 @@ public class Receiver {
             eventList.add(event);
             if (storeEvents) {
                 return alertsService.addEvents(eventList)
-                        .replaceWith(ack(input));
+                        .replaceWith(ack(input))
+                        .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
             } else {
                 return alertsService.sendEvents(eventList)
-                        .replaceWith(ack(input));
+                        .replaceWith(ack(input))
+                        .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
