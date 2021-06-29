@@ -73,13 +73,13 @@ class AlertStarterTest {
     @Test
     void shouldMatchWhenThereIsSomethingBehindHealth() {
         String inputWithHttpTwoZero = "127.0.0.1 - - 09/Jun/2021:16:07:07 +0200 \"GET /q/health/live HTTP/2.0\" 200 46 \"-\" \"Mozilla/5.0 (X11; Fedora; Linux x86_64; rv:88.0) Gecko/20100101 Firefox/88.0\"\n";
-        assertTrue(Pattern.matches(FILTER_REGEX, inputWithHttpTwoZero.trim()));
+        assertTrue(Pattern.matches(FILTER_REGEX, inputWithHttpTwoZero));
     }
 
     @Test
     void shouldMatchWithHealthReady() {
         String inputWithHttpTwoZero = "127.0.0.1 - - 09/Jun/2021:16:07:07 +0200 \"GET /q/health/ready HTTP/2.0\" 200 46 \"-\" \"Mozilla/5.0 (X11; Fedora; Linux x86_64; rv:88.0) Gecko/20100101 Firefox/88.0\"\n";
-        assertTrue(Pattern.matches(FILTER_REGEX, inputWithHttpTwoZero.trim()));
+        assertTrue(Pattern.matches(FILTER_REGEX, inputWithHttpTwoZero));
     }
 
     @Test
@@ -91,6 +91,12 @@ class AlertStarterTest {
     @Test
     void shouldNotFilterDummyHawkularTriggersWhenHttpStatusIs400() {
         String input ="2021-06-22 08:22:32,005 INFO  [access_log] (vert.x-eventloop-thread-0) 10.131.8.85 - - 22/Jun/2021:08:22:32 +0000 \"GET /hawkular/alerts/triggers?triggerIds=dummy HTTP/1.1\" 400 2 \"-\" \"Apache-HttpClient/4.5.13 (Java/11.0.11)\"";
+        assertFalse(Pattern.matches(FILTER_REGEX, input));
+    }
+
+    @Test
+    void shouldNotMatchHawkularAlertsDifferentThanDummy() {
+        String input = "10.129.19.92 - - 28/Jun/2021:16:08:37 +0000 \\\"GET /hawkular/alerts/triggers?triggerIds=3df53241-3e09-481b-a322-4892caaaaadc%2C062ba34a-6311-4468-b774-083ab770531c HTTP/1.1\\\" 200 536484 \\\"-\\\" \\\"Apache-HttpClient/4.5.13 (Java/11.0.11)\\\"";
         assertFalse(Pattern.matches(FILTER_REGEX, input));
     }
 }
