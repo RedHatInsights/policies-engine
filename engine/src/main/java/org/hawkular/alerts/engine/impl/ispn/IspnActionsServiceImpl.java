@@ -37,6 +37,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static org.hawkular.alerts.api.util.Util.isEmpty;
+import static org.infinispan.context.Flag.IGNORE_RETURN_VALUES;
 
 /**
  * Infinispan implementation of {@link org.hawkular.alerts.api.services.ActionsService}.
@@ -138,7 +139,7 @@ public class IspnActionsServiceImpl implements ActionsService {
             }
             Action existingAction = IspnAction.getAction();
             existingAction.setResult(action.getResult());
-            actionsStore.put(pk, new IspnAction(existingAction));
+            actionsStore.getAdvancedCache().withFlags(IGNORE_RETURN_VALUES).put(pk, new IspnAction(existingAction));
         } catch (Exception e) {
             log.errorDatabaseException(e.getMessage());
             throw e;
@@ -418,9 +419,9 @@ public class IspnActionsServiceImpl implements ActionsService {
         }
         try {
             if(alertsLifespanInHours < 0) {
-                actionsStore.put(IspnPk.pk(action), new IspnAction(action));
+                actionsStore.getAdvancedCache().withFlags(IGNORE_RETURN_VALUES).put(IspnPk.pk(action), new IspnAction(action));
             } else {
-                actionsStore.put(IspnPk.pk(action), new IspnAction(action), alertsLifespanInHours, TimeUnit.HOURS);
+                actionsStore.getAdvancedCache().withFlags(IGNORE_RETURN_VALUES).put(IspnPk.pk(action), new IspnAction(action), alertsLifespanInHours, TimeUnit.HOURS);
             }
         } catch (Exception e) {
             log.errorDatabaseException(e.getMessage());

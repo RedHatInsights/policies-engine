@@ -59,6 +59,8 @@ import org.infinispan.query.dsl.FilterConditionContext;
 import org.infinispan.query.dsl.QueryBuilder;
 import org.infinispan.query.dsl.QueryFactory;
 
+import static org.infinispan.context.Flag.IGNORE_RETURN_VALUES;
+
 /**
  * @author Jay Shaughnessy
  * @author Lucas Ponce
@@ -138,7 +140,7 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
         if (found != null) {
             throw new FoundException(pk);
         }
-        backend.put(pk(actionDefinition), new IspnActionDefinition(actionDefinition));
+        backend.getAdvancedCache().withFlags(IGNORE_RETURN_VALUES).put(pk(actionDefinition), new IspnActionDefinition(actionDefinition));
 
         notifyListeners(new DefinitionsEvent(ACTION_DEFINITION_CREATE, actionDefinition));
     }
@@ -1344,7 +1346,7 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
         if (backend.get(pk) != null) {
             throw new FoundException(pk);
         }
-        backend.put(pk, new IspnActionPlugin(actionPlugin, defaultProperties));
+        backend.getAdvancedCache().withFlags(IGNORE_RETURN_VALUES).put(pk, new IspnActionPlugin(actionPlugin, defaultProperties));
     }
 
     @Override
@@ -1379,7 +1381,7 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
             throw new NotFoundException(pk);
         }
         found.setDefaultProperties(defaultProperties);
-        backend.put(pk, found);
+        backend.getAdvancedCache().withFlags(IGNORE_RETURN_VALUES).put(pk, found);
     }
 
     @Override
@@ -1463,7 +1465,7 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
         if (found == null) {
             throw new NotFoundException(pk);
         }
-        backend.put(pk, new IspnActionDefinition(actionDefinition));
+        backend.getAdvancedCache().withFlags(IGNORE_RETURN_VALUES).put(pk, new IspnActionDefinition(actionDefinition));
 
         notifyListeners(new DefinitionsEvent(ACTION_DEFINITION_UPDATE, actionDefinition));
     }
@@ -1864,7 +1866,7 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
         if (found != null) {
             throw new FoundException(pk);
         }
-        backend.put(pk, new IspnTrigger(trigger));
+        backend.getAdvancedCache().withFlags(IGNORE_RETURN_VALUES).put(pk, new IspnTrigger(trigger));
 
         if (null != alertsEngine) {
             alertsEngine.addTrigger(trigger.getTenantId(), trigger.getId());
@@ -1915,7 +1917,7 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
     private Trigger updateTrigger(Trigger trigger, boolean reload) throws Exception {
         log.info("new IspnTrigger: " + trigger.toString());
         String pk = pk(trigger);
-        backend.put(pk, new IspnTrigger(trigger));
+        backend.getAdvancedCache().withFlags(IGNORE_RETURN_VALUES).put(pk, new IspnTrigger(trigger));
         log.info("IspnTrigger Done: " + trigger.getId());
 
         if (null != alertsEngine && reload) {
@@ -2023,7 +2025,7 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
 
     private Dampening addDampening(Dampening dampening) throws Exception {
         try {
-            backend.put(pk(dampening), new IspnDampening(dampening));
+            backend.getAdvancedCache().withFlags(IGNORE_RETURN_VALUES).put(pk(dampening), new IspnDampening(dampening));
         } catch (Exception e) {
             log.errorDatabaseException(e.getMessage());
             throw e;
@@ -2186,7 +2188,7 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
             String pk = pkFromTriggerId(tenantId, memberTriggerId);
             Trigger memberTrigger = (Trigger) backend.get(pk);
             memberTrigger.setDataIdMap(dataIdMap);
-            backend.put(pk, memberTrigger);
+            backend.getAdvancedCache().withFlags(IGNORE_RETURN_VALUES).put(pk, memberTrigger);
         } catch (Exception e) {
             log.errorDatabaseException(e.getMessage());
             throw e;
@@ -2378,7 +2380,7 @@ public class IspnDefinitionsServiceImpl implements DefinitionsService {
 
     private Dampening updateDampening(Dampening dampening) throws Exception {
         try {
-            backend.put(pk(dampening), new IspnDampening(dampening));
+            backend.getAdvancedCache().withFlags(IGNORE_RETURN_VALUES).put(pk(dampening), new IspnDampening(dampening));
         } catch (Exception e) {
             log.errorDatabaseException(e.getMessage());
             throw e;

@@ -8,6 +8,7 @@ import org.hawkular.alerts.api.services.DefinitionsService;
 import org.hawkular.alerts.filter.CacheKey;
 import org.hawkular.alerts.log.AlertingLogger;
 import org.hawkular.alerts.log.MsgLogging;
+import org.infinispan.AdvancedCache;
 import org.infinispan.Cache;
 
 import java.util.Collection;
@@ -18,6 +19,7 @@ import java.util.Set;
 import static org.hawkular.alerts.api.services.DefinitionsEvent.Type.TRIGGER_CONDITION_CHANGE;
 import static org.hawkular.alerts.api.services.DefinitionsEvent.Type.TRIGGER_REMOVE;
 import static org.hawkular.alerts.api.util.Util.isEmpty;
+import static org.infinispan.context.Flag.IGNORE_RETURN_VALUES;
 
 /**
  * Manages the cache of globally active dataIds. Incoming Data and Events with Ids not in the cache will be filtered
@@ -44,22 +46,22 @@ public class PublishCacheManager {
     boolean resetCache;
 
     // It stores a list of dataIds used per key (tenantId, triggerId).
-    private Cache<TriggerKey, Set<String>> publishDataIdsCache;
+    private AdvancedCache<TriggerKey, Set<String>> publishDataIdsCache;
 
     // It stores a list of triggerIds used per key (tenantId, dataId).
     // This cache is used by CacheClient to check which dataIds are published and forwarded from metrics.
-    private Cache<CacheKey, Set<String>> publishCache;
+    private AdvancedCache<CacheKey, Set<String>> publishCache;
 
     public void setDefinitions(DefinitionsService definitions) {
         this.definitions = definitions;
     }
 
     public void setPublishDataIdsCache(Cache<TriggerKey, Set<String>> publishDataIdsCache) {
-        this.publishDataIdsCache = publishDataIdsCache;
+        this.publishDataIdsCache = publishDataIdsCache.getAdvancedCache();
     }
 
     public void setPublishCache(Cache<CacheKey, Set<String>> publishCache) {
-        this.publishCache = publishCache;
+        this.publishCache = publishCache.getAdvancedCache();
     }
 
     public void init() {
@@ -94,7 +96,7 @@ public class PublishCacheManager {
                                     if (!oldDataIds.equals(newDataIds)) {
                                         removePublishCache(tenantId, triggerId, oldDataIds);
                                         addPublishCache(tenantId, triggerId, newDataIds);
-                                        publishDataIdsCache.put(triggerKey, newDataIds);
+                                        publishDataIdsCache.withFlags(IGNORE_RETURN_VALUES).put(triggerKey, newDataIds);
                                     }
                                     break;
                                 }
@@ -127,7 +129,7 @@ public class PublishCacheManager {
                     if (triggerIds.isEmpty()) {
                         publishCache.remove(cacheKey);
                     } else {
-                        publishCache.put(cacheKey, triggerIds);
+                        publishCache.withFlags(IGNORE_RETURN_VALUES).put(cacheKey, triggerIds);
                     }
                 }
             });
@@ -143,7 +145,7 @@ public class PublishCacheManager {
                     triggerIds = new HashSet<>();
                 }
                 triggerIds.add(triggerId);
-                publishCache.put(cacheKey, triggerIds);
+                publishCache.withFlags(IGNORE_RETURN_VALUES).put(cacheKey, triggerIds);
             });
         }
     }
@@ -171,7 +173,7 @@ public class PublishCacheManager {
                     prevDataIds = new HashSet<>();
                 }
                 prevDataIds.addAll(dataIds);
-                publishDataIdsCache.put(triggerKey, prevDataIds);
+                publishDataIdsCache.withFlags(IGNORE_RETURN_VALUES).put(triggerKey, prevDataIds);
                 addPublishCache(c.getTenantId(), triggerId, dataIds);
             }
             log.debugf("Published after update=%s", publishCache.size());
