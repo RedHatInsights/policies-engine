@@ -73,7 +73,7 @@
       <dependency>
         <groupId>org.infinispan</groupId>
         <artifactId>infinispan-jboss-marshalling</artifactId>
-        <version>10.1.9-20200921.120848-1</version>
+        <version>12.1.6.Final</version>
       </dependency>
 
       <!-- Infinispan BOM, needs to be before Quarkus -->
