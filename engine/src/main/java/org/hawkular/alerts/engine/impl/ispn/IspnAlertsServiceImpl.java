@@ -54,6 +54,8 @@ import static org.hawkular.alerts.api.util.Util.isEmpty;
 import static org.hawkular.alerts.engine.impl.ispn.IspnPk.pk;
 import static org.hawkular.alerts.engine.impl.ispn.IspnPk.pkFromEventId;
 
+import static org.infinispan.context.Flag.IGNORE_RETURN_VALUES;
+
 /**
  * @author Jay Shaughnessy
  * @author Lucas Ponce
@@ -115,9 +117,9 @@ public class IspnAlertsServiceImpl implements AlertsService {
             ttl = alertsLifespanInHours;
         }
         if(ttl < 0) {
-            backend.put(pk(event), new IspnEvent(event));
+            backend.getAdvancedCache().withFlags(IGNORE_RETURN_VALUES).put(pk(event), new IspnEvent(event));
         } else {
-            backend.put(pk(event), new IspnEvent(event), ttl, TimeUnit.HOURS);
+            backend.getAdvancedCache().withFlags(IGNORE_RETURN_VALUES).put(pk(event), new IspnEvent(event), ttl, TimeUnit.HOURS);
         }
     }
 

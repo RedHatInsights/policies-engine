@@ -14,7 +14,10 @@ import org.hawkular.alerts.api.services.DefinitionsService;
 
 import org.hawkular.alerts.log.AlertingLogger;
 import org.hawkular.alerts.log.MsgLogging;
+import org.infinispan.AdvancedCache;
 import org.infinispan.Cache;
+
+import static org.infinispan.context.Flag.IGNORE_RETURN_VALUES;
 
 /**
  * It manages the cache of global actions.
@@ -27,14 +30,14 @@ public class ActionsCacheManager {
 
     DefinitionsService definitions;
 
-    private Cache<ActionKey, ActionDefinition> globalActionsCache;
+    private AdvancedCache<ActionKey, ActionDefinition> globalActionsCache;
 
     public void setDefinitions(DefinitionsService definitions) {
         this.definitions = definitions;
     }
 
     public void setGlobalActionsCache(Cache<ActionKey, ActionDefinition> globalActionsCache) {
-        this.globalActionsCache = globalActionsCache;
+        this.globalActionsCache = globalActionsCache.getAdvancedCache();
     }
 
     public void init() {
@@ -52,7 +55,7 @@ public class ActionsCacheManager {
                     case ACTION_DEFINITION_UPDATE:
                         ActionDefinition actionDefinition = event.getActionDefinition();
                         if (actionDefinition.isGlobal()) {
-                            globalActionsCache.put(key, actionDefinition);
+                            globalActionsCache.withFlags(IGNORE_RETURN_VALUES).put(key, actionDefinition);
                         }
                         break;
                     case ACTION_DEFINITION_REMOVE:
@@ -87,7 +90,7 @@ public class ActionsCacheManager {
                     ActionKey key = new ActionKey(actionDefinition.getTenantId(),
                             actionDefinition.getActionPlugin(),
                             actionDefinition.getActionId());
-                    globalActionsCache.put(key, actionDefinition);
+                    globalActionsCache.withFlags(IGNORE_RETURN_VALUES).put(key, actionDefinition);
                 }
             }
             globalActionsCache.endBatch(true);

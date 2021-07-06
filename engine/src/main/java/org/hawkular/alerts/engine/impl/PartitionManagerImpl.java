@@ -26,8 +26,7 @@ import org.hawkular.alerts.engine.service.PartitionManager;
 import org.hawkular.alerts.engine.service.PartitionTriggerListener;
 import org.hawkular.alerts.log.AlertingLogger;
 import org.hawkular.alerts.log.MsgLogging;
-import org.infinispan.Cache;
-import org.infinispan.context.Flag;
+import org.infinispan.AdvancedCache;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryCreated;
@@ -39,6 +38,8 @@ import org.infinispan.notifications.cachemanagerlistener.event.ViewChangedEvent;
 
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
+
+import static org.infinispan.context.Flag.IGNORE_RETURN_VALUES;
 
 /**
  * Implementation of {@link PartitionManager} services based on Infinispan cache.
@@ -114,19 +115,19 @@ public class PartitionManagerImpl implements PartitionManager {
      *
      * Partition cache is modified by cluster coordinator.
      */
-    private Cache partitionCache;
+    private AdvancedCache partitionCache;
 
     /**
      * This cache will be used to propagate a trigger across nodes.
      * It will hold listeners to notify the change.
      */
-    private Cache triggersCache;
+    private AdvancedCache triggersCache;
 
     /**
      * This cache will be used to propagate a data or event across nodes.
      * It will hold listeners to notify the change.
      */
-    private Cache dataCache;
+    private AdvancedCache dataCache;
 
     /**
      * Representation of the current node in a cluster environment.
@@ -178,9 +179,9 @@ public class PartitionManagerImpl implements PartitionManager {
             log.infoPartitionManagerDisabled();
         } else {
             cacheManager = IspnCacheManager.getCacheManager();
-            partitionCache = cacheManager.getCache("partition");
-            triggersCache = cacheManager.getCache("triggers");
-            dataCache = cacheManager.getCache("data");
+            partitionCache = cacheManager.getCache("partition").getAdvancedCache();
+            triggersCache = cacheManager.getCache("triggers").getAdvancedCache();
+            dataCache = cacheManager.getCache("data").getAdvancedCache();
             status.put("currentNode", cacheManager.getAddress().toString());
             currentNode = cacheManager.getAddress().hashCode();
             cacheManager.addListener(topologyChangeListener);
@@ -218,7 +219,7 @@ public class PartitionManagerImpl implements PartitionManager {
             int toNode = calculateNewEntry(newEntry, (Map<Integer, Integer>)partitionCache.get(BUCKETS));
             NotifyTrigger nTrigger = new NotifyTrigger(currentNode, toNode, operation, tenantId, triggerId);
             Integer key = nTrigger.hashCode();
-            triggersCache.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES)
+            triggersCache.withFlags(IGNORE_RETURN_VALUES)
                     .putAsync(key, nTrigger, LIFESPAN, TimeUnit.MILLISECONDS);
         }
     }
@@ -235,7 +236,7 @@ public class PartitionManagerImpl implements PartitionManager {
             NotifyData nData = new NotifyData(currentNode, data, Data.class);
             Integer key = nData.hashCode();
             log.debugf("Sending data [%s]", nData);
-            dataCache.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES)
+            dataCache.withFlags(IGNORE_RETURN_VALUES)
                     .putAsync(key, nData, LIFESPAN, TimeUnit.MILLISECONDS);
         }
     }
@@ -247,7 +248,7 @@ public class PartitionManagerImpl implements PartitionManager {
             NotifyData nEvent = new NotifyData(currentNode, events, Event.class);
             Integer key = nEvent.hashCode();
             log.debugf("Sending events [%s]", nEvent);
-            dataCache.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES)
+            dataCache.withFlags(IGNORE_RETURN_VALUES)
                     .putAsync(key, nEvent, LIFESPAN, TimeUnit.MILLISECONDS);
         }
     }
@@ -312,13 +313,13 @@ public class PartitionManagerImpl implements PartitionManager {
             }
 
             partitionCache.startBatch();
-            partitionCache.put(BUCKETS, newBuckets);
+            partitionCache.withFlags(IGNORE_RETURN_VALUES).put(BUCKETS, newBuckets);
             if (oldPartition != null) {
-                partitionCache.put(PREVIOUS, oldPartition);
+                partitionCache.withFlags(IGNORE_RETURN_VALUES).put(PREVIOUS, oldPartition);
             }
-            partitionCache.put(CURRENT, newPartition);
+            partitionCache.withFlags(IGNORE_RETURN_VALUES).put(CURRENT, newPartition);
             partitionCache.endBatch(true);
-            partitionCache.put(PARTITION_CHANGE, new Date(), LIFESPAN, TimeUnit.MILLISECONDS);
+            partitionCache.withFlags(IGNORE_RETURN_VALUES).put(PARTITION_CHANGE, new Date(), LIFESPAN, TimeUnit.MILLISECONDS);
         }
     }
 
@@ -651,8 +652,8 @@ public class PartitionManagerImpl implements PartitionManager {
                 newPartition.put(entry, currentNode);
             }
             partitionCache.startBatch();
-            partitionCache.put(PREVIOUS, current);
-            partitionCache.put(CURRENT, newPartition);
+            partitionCache.withFlags(IGNORE_RETURN_VALUES).put(PREVIOUS, current);
+            partitionCache.withFlags(IGNORE_RETURN_VALUES).put(CURRENT, newPartition);
             partitionCache.endBatch(true);
             if (log.isDebugEnabled()) {
                 log.debug("modifyPartition()");

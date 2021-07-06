@@ -39,10 +39,10 @@ public class Lifecycle implements Serializable {
         }
         this.status = lifeCycle.getStatus();
         this.stime = lifeCycle.getStime();
-        this.notes = new ArrayList<>();
-        lifeCycle.getNotes().stream().forEach(n -> {
-            notes.add(new Note(n));
-        });
+        notes = new ArrayList<>(lifeCycle.getNotes().size());
+        for (int i = 0; i < lifeCycle.getNotes().size(); i++) {
+            notes.add(new Note(lifeCycle.getNotes().get(i)));
+        }
     }
 
     public Lifecycle(String status, long stime) {

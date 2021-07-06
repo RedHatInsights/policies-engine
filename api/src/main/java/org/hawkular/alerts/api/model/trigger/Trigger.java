@@ -52,6 +52,7 @@ import static org.hawkular.alerts.api.util.Util.isEmpty;
 public class Trigger implements Serializable {
 
     private static final long serialVersionUID = 1L;
+    private static final float HASHSET_DEFAULT_LOAD_FACTOR = 0.75f;
 
     @DocModelProperty(description = "Tenant id owner of this trigger.", position = 0, required = true, allowableValues = "Tenant is overwritten from Hawkular-Tenant HTTP header parameter request")
     @JsonInclude
@@ -227,7 +228,7 @@ public class Trigger implements Serializable {
         this.context = new HashMap<>(trigger.getContext());
         this.tags = tagsBuilder();
         this.tags.putAll(trigger.getTags());
-        this.actions = new HashSet<>();
+        actions = new HashSet<>((int) Math.ceil(trigger.getActions().size() / HASHSET_DEFAULT_LOAD_FACTOR) + 1);
         for (TriggerAction action : trigger.getActions()) {
             this.actions.add(new TriggerAction(action));
         }
@@ -247,11 +248,10 @@ public class Trigger implements Serializable {
         this.type = trigger.getType();
         this.source = trigger.getSource();
         this.severity = trigger.getSeverity();
-        this.lifecycle = new ArrayList<>();
-        trigger.getLifecycle()
-                .forEach(l -> {
-                    this.lifecycle.add(new Lifecycle(l));
-                });
+        lifecycle = new ArrayList<>(trigger.getLifecycle().size());
+        for (int i = 0; i < trigger.getLifecycle().size(); i++) {
+            lifecycle.add(new Lifecycle(trigger.getLifecycle().get(i)));
+        }
 
         this.mode = trigger.getMode() != null ? trigger.getMode() : Mode.FIRING;
         this.match = trigger.getMode() == Mode.FIRING ? trigger.getFiringMatch() : trigger.getAutoResolveMatch();

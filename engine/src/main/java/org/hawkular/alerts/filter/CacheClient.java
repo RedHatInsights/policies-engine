@@ -6,7 +6,10 @@ import java.util.stream.Collectors;
 
 import org.hawkular.alerts.api.model.data.Data;
 import org.hawkular.alerts.api.model.event.Event;
+import org.infinispan.AdvancedCache;
 import org.infinispan.Cache;
+
+import static org.infinispan.context.Flag.IGNORE_RETURN_VALUES;
 
 /**
  * Provide access to the cache of dataIds in use by the global trigger population (not node specific). It is
@@ -22,10 +25,10 @@ public class CacheClient {
 
     // It stores a list of triggerIds used per key (tenantId, dataId).
     // This cache is used by CacheClient to check wich dataIds are published and forwarded from metrics.
-    private Cache<CacheKey, Set<String>> cache;
+    private AdvancedCache<CacheKey, Set<String>> cache;
 
     public void setCache(Cache<CacheKey, Set<String>> cache) {
-        this.cache = cache;
+        this.cache = cache.getAdvancedCache();
     }
 
     public Set<CacheKey> keySet() {
@@ -70,6 +73,6 @@ public class CacheClient {
      *  This is here for testing purposes only and should not be called in production code.
      */
     public void addTestKey(CacheKey key, Set<String> value) {
-        cache.put(key, value);
+        cache.withFlags(IGNORE_RETURN_VALUES).put(key, value);
     }
 }
