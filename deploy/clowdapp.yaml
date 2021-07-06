@@ -72,8 +72,6 @@ objects:
     - replicas: 3
       partitions: 64
       topicName: platform.inventory.events
-    optionalDependencies:
-      - ingress
 
 parameters:
 - name: LOG_LEVEL
