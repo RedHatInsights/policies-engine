@@ -1,7 +1,6 @@
 package com.redhat.cloud.policies.engine.history.alert.entities;
 
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -14,15 +13,14 @@ import java.util.UUID;
 import static javax.persistence.CascadeType.PERSIST;
 
 @Entity
-@Table(name = "tag")
+@Table(name = "tags")
 public class TagEntity {
 
     @Id
-    @GeneratedValue
-    private UUID id;
+    private UUID uuid;
 
     @ManyToOne
-    @JoinColumn(name = "event_id")
+    @JoinColumn(name = "event_uuid")
     private EventBaseEntity event;
 
     private String key;
@@ -30,12 +28,12 @@ public class TagEntity {
     @OneToMany(mappedBy = "tag", cascade = PERSIST)
     private Set<TagValueEntity> values;
 
-    public UUID getId() {
-        return id;
+    public UUID getUuid() {
+        return uuid;
     }
 
-    public void setId(UUID id) {
-        this.id = id;
+    public void setUuid(UUID id) {
+        this.uuid = id;
     }
 
     public EventBaseEntity getEvent() {
@@ -69,13 +67,13 @@ public class TagEntity {
         }
         if (o instanceof TagEntity) {
             TagEntity other = (TagEntity) o;
-            return Objects.equals(id, other.id);
+            return Objects.equals(uuid, other.uuid);
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        return Objects.hash(uuid);
     }
 }

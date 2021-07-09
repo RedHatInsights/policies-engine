@@ -13,11 +13,19 @@ public class FactsConverter implements AttributeConverter<Map<String, Object>, S
 
     @Override
     public String convertToDatabaseColumn(Map<String, Object> attribute) {
-        return Json.encode(attribute);
+        if (attribute == null) {
+            return null;
+        } else {
+            return Json.encode(attribute);
+        }
     }
 
     @Override
     public Map<String, Object> convertToEntityAttribute(String dbData) {
-        return JacksonCodec.decodeValue(dbData, new TypeReference<>() {});
+        if (dbData == null) {
+            return null;
+        } else {
+            return JacksonCodec.decodeValue(dbData, new TypeReference<>() {});
+        }
     }
 }

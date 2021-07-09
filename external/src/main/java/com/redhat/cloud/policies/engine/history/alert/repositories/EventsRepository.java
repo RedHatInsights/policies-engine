@@ -2,6 +2,8 @@ package com.redhat.cloud.policies.engine.history.alert.repositories;
 
 import com.redhat.cloud.policies.engine.history.alert.requests.EventsRequest;
 import com.redhat.cloud.policies.engine.history.alert.entities.EventEntity;
+import com.redhat.cloud.policies.engine.history.alert.tags.TagQueryCondition;
+import com.redhat.cloud.policies.engine.history.alert.tags.TagQueryParser;
 import org.hibernate.Session;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -10,15 +12,14 @@ import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Pattern;
+
+import static org.hibernate.annotations.QueryHints.PASS_DISTINCT_THROUGH;
 
 @ApplicationScoped
 public class EventsRepository {
 
-    private static final String BASE_SELECT_QUERY = "SELECT e FROM EventEntity e";
+    private static final String BASE_SELECT_QUERY = "SELECT DISTINCT e FROM EventEntity e LEFT JOIN FETCH e.tags t LEFT JOIN FETCH t.values";
     private static final String BASE_DELETE_QUERY = "DELETE FROM EventEntity e";
-    private static final Pattern TAG_QUERY_OUTER_SPLIT_PATTERN = Pattern.compile("[ ]?AND[ ]?");
-    private static final Pattern TAG_QUERY_INNER_SPLIT_PATTERN = Pattern.compile("[ ]?=[ ]?");
 
     @Inject
     Session session;
@@ -36,25 +37,27 @@ public class EventsRepository {
     }
 
     public List<EventEntity> findAll(EventsRequest eventsRequest) {
-        String hqlQuery = buildHqlQuery(includeTagQuery(BASE_SELECT_QUERY, eventsRequest), eventsRequest);
+        List<TagQueryCondition> tagQueryConditions = TagQueryParser.parse(eventsRequest.getTagQuery());
+        String hqlQuery = buildHqlQuery(BASE_SELECT_QUERY, eventsRequest, tagQueryConditions);
         TypedQuery<EventEntity> typedQuery = session.createQuery(hqlQuery, EventEntity.class)
+                .setHint(PASS_DISTINCT_THROUGH, false)
                 .setParameter("tenantId", eventsRequest.getTenantId());
-        setQueryParameters(typedQuery, eventsRequest);
+        setQueryParameters(typedQuery, eventsRequest, tagQueryConditions);
         return typedQuery.getResultList();
     }
 
     public int delete(EventsRequest eventsRequest) {
-        String hqlQuery = buildHqlQuery(BASE_DELETE_QUERY, eventsRequest);
-        // TODO Include tag query.
+        List<TagQueryCondition> tagQueryConditions = TagQueryParser.parse(eventsRequest.getTagQuery());
+        String hqlQuery = buildHqlQuery(BASE_DELETE_QUERY, eventsRequest, tagQueryConditions);
         Query query = session.createQuery(hqlQuery)
                 .setParameter("tenantId", eventsRequest.getTenantId());
-        setQueryParameters(query, eventsRequest);
+        setQueryParameters(query, eventsRequest, tagQueryConditions);
         return query.executeUpdate();
     }
 
-    private static String buildHqlQuery(String baseHqlQuery, EventsRequest eventsRequest) {
+    private static String buildHqlQuery(String baseHqlQuery, EventsRequest eventsRequest, List<TagQueryCondition> tagQueryConditions) {
         List<String> conditions = new ArrayList<>();
-        conditions.add("e.id.tenantId = :tenantId");
+        conditions.add("e.tenantId = :tenantId");
 
         if (eventsRequest.getEventType() != null) {
             conditions.add("e.eventType = :eventType");
@@ -69,7 +72,7 @@ public class EventsRepository {
         }
 
         if (eventsRequest.getEventIds() != null && !eventsRequest.getEventIds().isEmpty()) {
-            conditions.add("e.id.eventId IN (:eventIds)");
+            conditions.add("e.id IN (:eventIds)");
         }
 
         if (eventsRequest.getTriggerIds() != null && !eventsRequest.getTriggerIds().isEmpty()) {
@@ -80,36 +83,31 @@ public class EventsRepository {
             conditions.add("e.category IN (:categories)");
         }
 
-        baseHqlQuery += hasTagQuery(eventsRequest) ? " AND " : " WHERE ";
-
-        if (eventsRequest.getTagQuery() != null && !eventsRequest.getTagQuery().isBlank()) {
-            conditions.add(eventsRequest.getTagQuery());
+        for (int i = 0; i < tagQueryConditions.size(); i++) {
+            switch (tagQueryConditions.get(i).getOperator()) {
+                case EQUAL:
+                    conditions.add("EXISTS (SELECT 1 FROM TagEntity t JOIN t.values v WHERE t.event = e AND t.key = :tagQueryKey" + i + " AND LOWER(v.value) = LOWER(:tagQueryValue" + i + "))");
+                    break;
+                case NOT_EQUAL:
+                    conditions.add("NOT EXISTS (SELECT 1 FROM TagEntity t JOIN t.values v WHERE t.event = e AND t.key = :tagQueryKey" + i + " AND LOWER(v.value) = LOWER(:tagQueryValue" + i + "))");
+                    break;
+                case LIKE:
+                    conditions.add("EXISTS (SELECT 1 FROM TagEntity t JOIN t.values v WHERE t.event = e AND t.key = :tagQueryKey" + i + " AND LOWER(v.value) LIKE LOWER(:tagQueryValue" + i + "))");
+                    break;
+                default:
+                    // This line should never be reached.
+                    break;
+            }
         }
 
         if (!conditions.isEmpty()) {
-            baseHqlQuery += String.join(" AND ", conditions);
+            baseHqlQuery += " WHERE " + String.join(" AND ", conditions);
         }
 
         return baseHqlQuery;
     }
 
-    private static boolean hasTagQuery(EventsRequest eventsRequest) {
-        return eventsRequest.getTagQuery() != null && !eventsRequest.getTagQuery().isBlank();
-    }
-
-    // FIXME This is far from being complete. The immediate goal is only to have the tests pass.
-    private static String includeTagQuery(String baseHqlQuery, EventsRequest eventsRequest) {
-        if (hasTagQuery(eventsRequest)) {
-            baseHqlQuery += " JOIN a.tags t JOIN t.values v WHERE ";
-            for (String tagCondition : TAG_QUERY_OUTER_SPLIT_PATTERN.split(eventsRequest.getTagQuery())) {
-                String[] tagConditionElements = TAG_QUERY_INNER_SPLIT_PATTERN.split(tagCondition);
-                baseHqlQuery += "t.key = '" + tagConditionElements[0].replace("tags.", "") + "' AND v.value = " + tagConditionElements[1];
-            }
-        }
-        return baseHqlQuery;
-    }
-
-    private static void setQueryParameters(Query query, EventsRequest eventsRequest) {
+    private static void setQueryParameters(Query query, EventsRequest eventsRequest, List<TagQueryCondition> tagQueryConditions) {
 
         if (eventsRequest.getEventType() != null) {
             query.setParameter("eventType", eventsRequest.getEventType());
@@ -133,6 +131,11 @@ public class EventsRepository {
 
         if (eventsRequest.getCategories() != null && !eventsRequest.getCategories().isEmpty()) {
             query.setParameter("categories", eventsRequest.getCategories());
+        }
+
+        for (int i = 0; i < tagQueryConditions.size(); i++) {
+            query.setParameter("tagQueryKey" + i, tagQueryConditions.get(i).getKey());
+            query.setParameter("tagQueryValue" + i, tagQueryConditions.get(i).getValue());
         }
     }
 }

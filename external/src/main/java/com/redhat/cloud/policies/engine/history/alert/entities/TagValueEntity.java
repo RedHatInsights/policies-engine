@@ -1,7 +1,6 @@
 package com.redhat.cloud.policies.engine.history.alert.entities;
 
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -14,29 +13,20 @@ import java.util.UUID;
 public class TagValueEntity {
 
     @Id
-    @GeneratedValue
-    private UUID id;
+    private UUID uuid;
 
     @ManyToOne
-    @JoinColumn(name = "tag_id")
+    @JoinColumn(name = "tag_uuid")
     private TagEntity tag;
 
     private String value;
 
-    public UUID getId() {
-        return id;
+    public UUID getUuid() {
+        return uuid;
     }
 
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public String getValue() {
-        return value;
-    }
-
-    public void setValue(String value) {
-        this.value = value;
+    public void setUuid(UUID id) {
+        this.uuid = id;
     }
 
     public TagEntity getTag() {
@@ -47,6 +37,14 @@ public class TagValueEntity {
         this.tag = tag;
     }
 
+    public String getValue() {
+        return value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -54,13 +52,13 @@ public class TagValueEntity {
         }
         if (o instanceof TagValueEntity) {
             TagValueEntity other = (TagValueEntity) o;
-            return Objects.equals(id, other.id);
+            return Objects.equals(uuid, other.uuid);
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        return Objects.hash(uuid);
     }
 }

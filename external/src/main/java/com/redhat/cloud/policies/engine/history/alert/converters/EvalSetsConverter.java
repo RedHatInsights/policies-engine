@@ -15,11 +15,19 @@ public class EvalSetsConverter implements AttributeConverter<List<Set<ConditionE
 
     @Override
     public String convertToDatabaseColumn(List<Set<ConditionEval>> attribute) {
-        return Json.encode(attribute);
+        if (attribute == null) {
+            return null;
+        } else {
+            return Json.encode(attribute);
+        }
     }
 
     @Override
     public List<Set<ConditionEval>> convertToEntityAttribute(String dbData) {
-        return JacksonCodec.decodeValue(dbData, new TypeReference<>() {});
+        if (dbData == null) {
+            return null;
+        } else {
+            return JacksonCodec.decodeValue(dbData, new TypeReference<>() {});
+        }
     }
 }

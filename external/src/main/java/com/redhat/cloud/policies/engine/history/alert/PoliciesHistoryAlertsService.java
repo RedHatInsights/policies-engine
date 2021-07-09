@@ -51,6 +51,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.redhat.cloud.policies.engine.history.alert.PoliciesHistoryAlertsService.POLICIES_HISTORY_ALERTS_SERVICE_ENABLED_CONF_KEY;
@@ -109,15 +110,16 @@ public class PoliciesHistoryAlertsService implements AlertsService {
         }
         setEventBaseEntityFields(alertEntity, alert);
         alertEntity.setSeverity(alert.getSeverity());
-        alertEntity.setStatus(alert.getStatus());
+        alertEntity.setStatus(alert.getStatus()); // TODO Is that really the good one or do we need two?
         alertEntity.setLifecycle(alert.getLifecycle());
         alertEntity.setResolvedEvalSets(alert.getResolvedEvalSets());
+        alertEntity.setStime(alert.getCurrentLifecycle().getStime());
         alertsRepository.save(alertEntity);
     }
 
     private void setEventBaseEntityFields(EventBaseEntity eventBaseEntity, Event event) {
         eventBaseEntity.setTenantId(event.getTenantId());
-        eventBaseEntity.setEventId(event.getId());
+        eventBaseEntity.setId(event.getId());
         eventBaseEntity.setEventType(event.getEventType());
         eventBaseEntity.setCtime(event.getCtime());
         eventBaseEntity.setDatasource(event.getDataSource());
@@ -130,16 +132,22 @@ public class PoliciesHistoryAlertsService implements AlertsService {
         eventBaseEntity.setEvalSets(event.getEvalSets());
         eventBaseEntity.setFacts(event.getFacts());
 
+        if (eventBaseEntity.getTrigger() != null) {
+            eventBaseEntity.setTriggerId(eventBaseEntity.getTrigger().getId());
+        }
+
         /*
          * Guava's Multimap can't be persisted and then queried with Hibernate ORM so we have to convert it to something
          * more Hibernate-friendly.
          */
         Set<TagEntity> tagEntities = event.getTags().asMap().entrySet().stream().map(tag -> {
             TagEntity tagEntity = new TagEntity();
+            tagEntity.setUuid(UUID.randomUUID());
             tagEntity.setEvent(eventBaseEntity);
             tagEntity.setKey(tag.getKey());
             Set<TagValueEntity> tagValueEntities = tag.getValue().stream().map(tagValue -> {
                 TagValueEntity tagValueEntity = new TagValueEntity();
+                tagValueEntity.setUuid(UUID.randomUUID());
                 tagValueEntity.setTag(tagEntity);
                 tagValueEntity.setValue(tagValue);
                 return tagValueEntity;
@@ -408,15 +416,24 @@ public class PoliciesHistoryAlertsService implements AlertsService {
             throw new IllegalArgumentException("TenantIds must not be null or empty");
         }
 
+        if (criteria == null) {
+            criteria = new AlertsCriteria();
+        }
+
         // Set the query starting point to the earliest retention time to prevent incorrect
         // return of the Query maxResults
         long earliestRetentionTime = Instant.now().minus(alertsLifespanInHours, ChronoUnit.HOURS).toEpochMilli();
 
+        if (criteria.getStartTime() == null || criteria.getStartTime() < earliestRetentionTime) {
+            criteria.setStartTime(earliestRetentionTime);
+        }
+
         String tenantId = tenantIds.iterator().next();
         AlertsRequest alertsRequest = AlertsRequestBuilder.build(tenantId, criteria, pager);
 
+        boolean thin = criteria.isThin();
         List<Alert> alerts = alertsRepository.findAll(alertsRequest).stream()
-                .map(alertEntity -> convert(alertEntity, criteria.isThin()))
+                .map(alertEntity -> convert(alertEntity, thin))
                 .collect(Collectors.toList());
         return preparePage(alerts, pager, alerts.size());
     }
@@ -819,6 +836,10 @@ public class PoliciesHistoryAlertsService implements AlertsService {
     }
 
     private Alert convert(AlertEntity alertEntity, boolean thin) {
+        if (alertEntity == null) {
+            return null;
+        }
+
         Alert alert = new Alert();
         setEventFields(alert, alertEntity);
         alert.setSeverity(alertEntity.getSeverity());
@@ -845,6 +866,10 @@ public class PoliciesHistoryAlertsService implements AlertsService {
     }
 
     private Event convert(EventEntity eventEntity, boolean thin) {
+        if (eventEntity == null) {
+            return null;
+        }
+
         Event event = new Event();
         setEventFields(event, eventEntity);
 
@@ -855,7 +880,7 @@ public class PoliciesHistoryAlertsService implements AlertsService {
     }
 
     private void setEventFields(Event event, EventBaseEntity eventBaseEntity) {
-        event.setId(eventBaseEntity.getEventId());
+        event.setId(eventBaseEntity.getId());
         event.setEventType(eventBaseEntity.getEventType());
         event.setTenantId(eventBaseEntity.getTenantId());
         event.setCtime(eventBaseEntity.getCtime());

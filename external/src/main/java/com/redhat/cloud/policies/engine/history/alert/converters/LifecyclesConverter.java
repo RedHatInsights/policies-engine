@@ -14,11 +14,19 @@ public class LifecyclesConverter implements AttributeConverter<List<Lifecycle>, 
 
     @Override
     public String convertToDatabaseColumn(List<Lifecycle> attribute) {
-        return Json.encode(attribute);
+        if (attribute == null) {
+            return null;
+        } else {
+            return Json.encode(attribute);
+        }
     }
 
     @Override
     public List<Lifecycle> convertToEntityAttribute(String dbData) {
-        return JacksonCodec.decodeValue(dbData, new TypeReference<>() {});
+        if (dbData == null) {
+            return null;
+        } else {
+            return JacksonCodec.decodeValue(dbData, new TypeReference<>() {});
+        }
     }
 }

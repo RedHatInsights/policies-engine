@@ -2,6 +2,8 @@ package com.redhat.cloud.policies.engine.history.alert.repositories;
 
 import com.redhat.cloud.policies.engine.history.alert.requests.AlertsRequest;
 import com.redhat.cloud.policies.engine.history.alert.entities.AlertEntity;
+import com.redhat.cloud.policies.engine.history.alert.tags.TagQueryCondition;
+import com.redhat.cloud.policies.engine.history.alert.tags.TagQueryParser;
 import org.hibernate.Session;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -13,14 +15,16 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import static org.hawkular.alerts.api.model.event.Alert.Status;
+import static org.hibernate.annotations.QueryHints.PASS_DISTINCT_THROUGH;
+import static java.util.regex.Pattern.CASE_INSENSITIVE;
 
 @ApplicationScoped
 public class AlertsRepository {
 
-    private static final String BASE_SELECT_QUERY = "SELECT a FROM AlertEntity a";
+    private static final String BASE_SELECT_QUERY = "SELECT DISTINCT a FROM AlertEntity a LEFT JOIN FETCH a.tags t LEFT JOIN FETCH t.values";
     private static final String BASE_DELETE_QUERY = "DELETE FROM AlertEntity a";
-    private static final Pattern TAG_QUERY_OUTER_SPLIT_PATTERN = Pattern.compile("[ ]?AND[ ]?");
-    private static final Pattern TAG_QUERY_INNER_SPLIT_PATTERN = Pattern.compile("[ ]?=[ ]?");
+    // FIXME The operator can vary. This only covers one case.
+    private static final Pattern PREFIX_PATTERN = Pattern.compile("( |\\()(eventType|tenantId|id|triggerId|ctime|status|stime|severity|category) ?=", CASE_INSENSITIVE);
 
     @Inject
     Session session;
@@ -38,28 +42,33 @@ public class AlertsRepository {
     }
 
     public List<AlertEntity> findAll(AlertsRequest alertsRequest) {
-        String hqlQuery = buildHqlQuery(includeTagQuery(BASE_SELECT_QUERY, alertsRequest), alertsRequest);
+        List<TagQueryCondition> tagQueryConditions = TagQueryParser.parse(alertsRequest.getTagQuery());
+        String hqlQuery = buildHqlQuery(BASE_SELECT_QUERY, alertsRequest, tagQueryConditions);
         TypedQuery<AlertEntity> typedQuery = session.createQuery(hqlQuery, AlertEntity.class)
+                .setHint(PASS_DISTINCT_THROUGH, false)
                 .setParameter("tenantId", alertsRequest.getTenantId());
-        setQueryParameters(typedQuery, alertsRequest);
+        setQueryParameters(typedQuery, alertsRequest, tagQueryConditions);
         return typedQuery.getResultList();
     }
 
     public int delete(AlertsRequest alertsRequest) {
-        String hqlQuery = buildHqlQuery(BASE_DELETE_QUERY, alertsRequest);
-        // TODO Include tag query.
+        List<TagQueryCondition> tagQueryConditions = TagQueryParser.parse(alertsRequest.getTagQuery());
+        String hqlQuery = buildHqlQuery(BASE_DELETE_QUERY, alertsRequest, tagQueryConditions);
         Query query = session.createQuery(hqlQuery)
                 .setParameter("tenantId", alertsRequest.getTenantId());
-        setQueryParameters(query, alertsRequest);
+        setQueryParameters(query, alertsRequest, tagQueryConditions);
         return query.executeUpdate();
     }
 
-    private static String buildHqlQuery(String baseHqlQuery, AlertsRequest alertsRequest) {
+    private static String buildHqlQuery(String baseHqlQuery, AlertsRequest alertsRequest, List<TagQueryCondition> tagQueryConditions) {
         List<String> conditions = new ArrayList<>();
-        conditions.add("a.id.tenantId = :tenantId");
+        conditions.add("a.tenantId = :tenantId");
 
         if (alertsRequest.getQuery() != null && !alertsRequest.getQuery().isBlank()) {
-            conditions.add(alertsRequest.getQuery());
+            // AlertEntity fields need to be prefixed with "a.".
+            String modifiedQuery = PREFIX_PATTERN.matcher(alertsRequest.getQuery()).replaceAll(matcher -> matcher.group(1) + " a." + matcher.group(2) + " =");
+            conditions.add(modifiedQuery);
+            // TODO Prevent SQL injections: parser?
         }
 
         if (alertsRequest.getStartTime() != null && alertsRequest.getEndTime() != null) {
@@ -101,7 +110,7 @@ public class AlertsRepository {
         }
 
         if (alertsRequest.getAlertIds() != null && !alertsRequest.getAlertIds().isEmpty()) {
-            conditions.add("a.id.eventId IN (:alertIds)");
+            conditions.add("a.id IN (:alertIds)");
         }
 
         if (alertsRequest.getStatuses() != null && !alertsRequest.getStatuses().isEmpty()) {
@@ -116,32 +125,31 @@ public class AlertsRepository {
             conditions.add("a.triggerId IN (:triggerIds)");
         }
 
-        baseHqlQuery += hasTagQuery(alertsRequest) ? " AND " : " WHERE ";
-
-        if (!conditions.isEmpty()) {
-            baseHqlQuery += String.join(" AND ", conditions);
-        }
-
-        return baseHqlQuery;
-    }
-
-    private static boolean hasTagQuery(AlertsRequest alertsRequest) {
-        return alertsRequest.getTagQuery() != null && !alertsRequest.getTagQuery().isBlank();
-    }
-
-    // FIXME This is far from being complete. The immediate goal is only to have the tests pass.
-    private static String includeTagQuery(String baseHqlQuery, AlertsRequest alertsRequest) {
-        if (hasTagQuery(alertsRequest)) {
-            baseHqlQuery += " JOIN a.tags t JOIN t.values v WHERE ";
-            for (String tagCondition : TAG_QUERY_OUTER_SPLIT_PATTERN.split(alertsRequest.getTagQuery())) {
-                String[] tagConditionElements = TAG_QUERY_INNER_SPLIT_PATTERN.split(tagCondition);
-                baseHqlQuery += "t.key = '" + tagConditionElements[0].replace("tags.", "") + "' AND v.value = " + tagConditionElements[1];
+        for (int i = 0; i < tagQueryConditions.size(); i++) {
+            switch (tagQueryConditions.get(i).getOperator()) {
+                case EQUAL:
+                    conditions.add("EXISTS (SELECT 1 FROM TagEntity t JOIN t.values v WHERE t.event = a AND t.key = :tagQueryKey" + i + " AND LOWER(v.value) = LOWER(:tagQueryValue" + i + "))");
+                    break;
+                case NOT_EQUAL:
+                    conditions.add("NOT EXISTS (SELECT 1 FROM TagEntity t JOIN t.values v WHERE t.event = a AND t.key = :tagQueryKey" + i + " AND LOWER(v.value) = LOWER(:tagQueryValue" + i + "))");
+                    break;
+                case LIKE:
+                    conditions.add("EXISTS (SELECT 1 FROM TagEntity t JOIN t.values v WHERE t.event = a AND t.key = :tagQueryKey" + i + " AND LOWER(v.value) LIKE LOWER(:tagQueryValue" + i + "))");
+                    break;
+                default:
+                    // This line should never be reached.
+                    break;
             }
         }
+
+        if (!conditions.isEmpty()) {
+            baseHqlQuery += " WHERE " + String.join(" AND ", conditions);
+        }
+
         return baseHqlQuery;
     }
 
-    private static void setQueryParameters(Query query, AlertsRequest alertsRequest) {
+    private static void setQueryParameters(Query query, AlertsRequest alertsRequest, List<TagQueryCondition> tagQueryConditions) {
 
         if (alertsRequest.getStartTime() != null && alertsRequest.getEndTime() != null) {
             query.setParameter("startTime", alertsRequest.getStartTime()).setParameter("endTime", alertsRequest.getEndTime());
@@ -195,6 +203,11 @@ public class AlertsRepository {
 
         if (alertsRequest.getTriggerIds() != null && !alertsRequest.getTriggerIds().isEmpty()) {
             query.setParameter("triggerIds", alertsRequest.getTriggerIds());
+        }
+
+        for (int i = 0; i < tagQueryConditions.size(); i++) {
+            query.setParameter("tagQueryKey" + i, tagQueryConditions.get(i).getKey());
+            query.setParameter("tagQueryValue" + i, tagQueryConditions.get(i).getValue());
         }
     }
 }

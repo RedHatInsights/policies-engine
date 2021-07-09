@@ -15,7 +15,6 @@ import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -25,40 +24,37 @@ import java.util.UUID;
 
 import static javax.persistence.CascadeType.PERSIST;
 import static javax.persistence.DiscriminatorType.STRING;
-import static javax.persistence.FetchType.EAGER;
 
 @Entity
-@Table(name = "event")
-@DiscriminatorColumn(name = "discriminator", discriminatorType = STRING)
+@Table(name = "events")
+@DiscriminatorColumn(name = "discriminator", discriminatorType = STRING, length = 5)
 public abstract class EventBaseEntity {
 
     @Id
     @GeneratedValue
-    private UUID id;
-
-    @NotNull
-    private String tenantId;
-
-    @NotNull
-    private String eventId;
+    private UUID uuid;
 
     private LocalDateTime expiresAt;
 
-    @NotNull
+    //@NotNull
     private String eventType;
 
-    @NotNull
-    private Long ctime;
+    private String tenantId;
+
+    //@NotNull
+    private String id;
+
+    private long ctime;
 
     private String datasource;
 
-    @NotNull
+    //@NotNull
     private String dataId;
 
-    @NotNull
+    //@NotNull
     private String category;
 
-    @NotNull
+    //@NotNull
     @Lob // FIXME Temp, real field max length to be determined
     private String text;
 
@@ -66,11 +62,15 @@ public abstract class EventBaseEntity {
     @Lob // FIXME Temp, real field max length to be determined
     private Map<String, String> context;
 
-    @OneToMany(fetch = EAGER, mappedBy = "event", cascade = PERSIST)
+    @OneToMany(mappedBy = "event", cascade = PERSIST)
     private Set<TagEntity> tags;
+
+    // FIXME Check everything after that
 
     @Lob // FIXME Temp, real field max length to be determined
     private Trigger trigger;
+
+    private String triggerId;
 
     @Lob // FIXME Temp, real field max length to be determined
     private Dampening dampening;
@@ -83,28 +83,12 @@ public abstract class EventBaseEntity {
     @Lob // FIXME Temp, real field max length to be determined
     private Map<String, Object> facts;
 
-    public UUID getId() {
-        return id;
+    public UUID getUuid() {
+        return uuid;
     }
 
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public String getTenantId() {
-        return tenantId;
-    }
-
-    public void setTenantId(String tenantId) {
-        this.tenantId = tenantId;
-    }
-
-    public String getEventId() {
-        return eventId;
-    }
-
-    public void setEventId(String eventId) {
-        this.eventId = eventId;
+    public void setUuid(UUID id) {
+        this.uuid = id;
     }
 
     public LocalDateTime getExpiresAt() {
@@ -123,11 +107,27 @@ public abstract class EventBaseEntity {
         this.eventType = eventType;
     }
 
-    public Long getCtime() {
+    public String getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(String tenantId) {
+        this.tenantId = tenantId;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String eventId) {
+        this.id = eventId;
+    }
+
+    public long getCtime() {
         return ctime;
     }
 
-    public void setCtime(Long ctime) {
+    public void setCtime(long ctime) {
         this.ctime = ctime;
     }
 
@@ -187,6 +187,14 @@ public abstract class EventBaseEntity {
         this.trigger = trigger;
     }
 
+    public String getTriggerId() {
+        return triggerId;
+    }
+
+    public void setTriggerId(String triggerId) {
+        this.triggerId = triggerId;
+    }
+
     public Dampening getDampening() {
         return dampening;
     }
@@ -218,13 +226,13 @@ public abstract class EventBaseEntity {
         }
         if (o instanceof EventBaseEntity) {
             EventBaseEntity other = (EventBaseEntity) o;
-            return Objects.equals(id, other.id);
+            return Objects.equals(uuid, other.uuid);
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        return Objects.hash(uuid);
     }
 }
