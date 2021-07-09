@@ -1,8 +1,12 @@
 package com.redhat.cloud.policies.engine.history.alert;
 
+import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
 import com.redhat.cloud.policies.engine.history.alert.entities.AlertEntity;
 import com.redhat.cloud.policies.engine.history.alert.entities.EventBaseEntity;
 import com.redhat.cloud.policies.engine.history.alert.entities.EventEntity;
+import com.redhat.cloud.policies.engine.history.alert.entities.TagEntity;
+import com.redhat.cloud.policies.engine.history.alert.entities.TagValueEntity;
 import com.redhat.cloud.policies.engine.history.alert.requests.AlertsRequest;
 import com.redhat.cloud.policies.engine.history.alert.requests.AlertsRequestBuilder;
 import com.redhat.cloud.policies.engine.history.alert.requests.EventsRequest;
@@ -121,11 +125,29 @@ public class PoliciesHistoryAlertsService implements AlertsService {
         eventBaseEntity.setCategory(event.getCategory());
         eventBaseEntity.setText(event.getText());
         eventBaseEntity.setContext(event.getContext());
-        eventBaseEntity.setTags(event.getTags());
         eventBaseEntity.setTrigger(event.getTrigger());
         eventBaseEntity.setDampening(event.getDampening());
         eventBaseEntity.setEvalSets(event.getEvalSets());
         eventBaseEntity.setFacts(event.getFacts());
+
+        /*
+         * Guava's Multimap can't be persisted and then queried with Hibernate ORM so we have to convert it to something
+         * more Hibernate-friendly.
+         */
+        Set<TagEntity> tagEntities = event.getTags().asMap().entrySet().stream().map(tag -> {
+            TagEntity tagEntity = new TagEntity();
+            tagEntity.setEvent(eventBaseEntity);
+            tagEntity.setKey(tag.getKey());
+            Set<TagValueEntity> tagValueEntities = tag.getValue().stream().map(tagValue -> {
+                TagValueEntity tagValueEntity = new TagValueEntity();
+                tagValueEntity.setTag(tagEntity);
+                tagValueEntity.setValue(tagValue);
+                return tagValueEntity;
+            }).collect(Collectors.toSet());
+            tagEntity.setValues(tagValueEntities);
+            return tagEntity;
+        }).collect(Collectors.toSet());
+        eventBaseEntity.setTags(tagEntities);
     }
 
 
@@ -798,7 +820,19 @@ public class PoliciesHistoryAlertsService implements AlertsService {
 
     private Alert convert(AlertEntity alertEntity, boolean thin) {
         Alert alert = new Alert();
-        alert.setAlertId(alertEntity.getEventId());
+        setEventFields(alert, alertEntity);
+        alert.setSeverity(alertEntity.getSeverity());
+        alert.setStatus(alertEntity.getStatus());
+        alert.setLifecycle(alertEntity.getLifecycle());
+        alert.setResolvedEvalSets(alertEntity.getResolvedEvalSets());
+
+        Multimap<String, String> tags = MultimapBuilder.hashKeys(123).hashSetValues(456).build();
+        for (TagEntity tagEntity : alertEntity.getTags()) {
+            tags.putAll(tagEntity.getKey(), tagEntity.getValues().stream().map(TagValueEntity::getValue).collect(Collectors.toSet()));
+        }
+        alert.setTags(tags);
+
+        // TODO Needs more work.
         if (thin) {
             alert.setDampening(null);
             alert.setEvalSets(null);
@@ -806,14 +840,33 @@ public class PoliciesHistoryAlertsService implements AlertsService {
             alert.getTrigger().setActions(null);
             alert.getTrigger().setLifecycle(null);
         }
+
         return alert;
     }
 
     private Event convert(EventEntity eventEntity, boolean thin) {
         Event event = new Event();
-        if (thin) {
+        setEventFields(event, eventEntity);
 
+        // TODO Needs more work.
+        if (thin) {
         }
         return event;
+    }
+
+    private void setEventFields(Event event, EventBaseEntity eventBaseEntity) {
+        event.setId(eventBaseEntity.getEventId());
+        event.setEventType(eventBaseEntity.getEventType());
+        event.setTenantId(eventBaseEntity.getTenantId());
+        event.setCtime(eventBaseEntity.getCtime());
+        event.setDataSource(eventBaseEntity.getDatasource());
+        event.setDataId(eventBaseEntity.getDataId());
+        event.setCategory(eventBaseEntity.getCategory());
+        event.setText(eventBaseEntity.getText());
+        event.setContext(eventBaseEntity.getContext());
+        event.setTrigger(eventBaseEntity.getTrigger());
+        event.setDampening(eventBaseEntity.getDampening());
+        event.setEvalSets(eventBaseEntity.getEvalSets());
+        event.setFacts(eventBaseEntity.getFacts());
     }
 }

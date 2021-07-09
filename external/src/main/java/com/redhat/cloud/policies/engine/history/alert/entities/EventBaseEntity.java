@@ -1,8 +1,6 @@
 package com.redhat.cloud.policies.engine.history.alert.entities;
 
-import com.google.common.collect.Multimap;
 import com.redhat.cloud.policies.engine.history.alert.converters.FactsConverter;
-import com.redhat.cloud.policies.engine.history.alert.converters.TagsConverter;
 import com.redhat.cloud.policies.engine.history.alert.converters.ContextConverter;
 import com.redhat.cloud.policies.engine.history.alert.converters.EvalSetsConverter;
 import org.hawkular.alerts.api.model.condition.ConditionEval;
@@ -11,8 +9,11 @@ import org.hawkular.alerts.api.model.trigger.Trigger;
 
 import javax.persistence.Convert;
 import javax.persistence.DiscriminatorColumn;
-import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Lob;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
@@ -20,16 +21,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 
+import static javax.persistence.CascadeType.PERSIST;
 import static javax.persistence.DiscriminatorType.STRING;
+import static javax.persistence.FetchType.EAGER;
 
 @Entity
 @Table(name = "event")
 @DiscriminatorColumn(name = "discriminator", discriminatorType = STRING)
 public abstract class EventBaseEntity {
 
-    @EmbeddedId
-    private EventBaseEntityId id;
+    @Id
+    @GeneratedValue
+    private UUID id;
+
+    @NotNull
+    private String tenantId;
+
+    @NotNull
+    private String eventId;
 
     private LocalDateTime expiresAt;
 
@@ -48,42 +59,52 @@ public abstract class EventBaseEntity {
     private String category;
 
     @NotNull
+    @Lob // FIXME Temp, real field max length to be determined
     private String text;
 
     @Convert(converter = ContextConverter.class)
+    @Lob // FIXME Temp, real field max length to be determined
     private Map<String, String> context;
 
-    @Convert(converter = TagsConverter.class)
-    private Multimap<String, String> tags;
+    @OneToMany(fetch = EAGER, mappedBy = "event", cascade = PERSIST)
+    private Set<TagEntity> tags;
 
+    @Lob // FIXME Temp, real field max length to be determined
     private Trigger trigger;
 
+    @Lob // FIXME Temp, real field max length to be determined
     private Dampening dampening;
 
     @Convert(converter = EvalSetsConverter.class)
+    @Lob // FIXME Temp, real field max length to be determined
     private List<Set<ConditionEval>> evalSets;
 
     @Convert(converter = FactsConverter.class)
+    @Lob // FIXME Temp, real field max length to be determined
     private Map<String, Object> facts;
 
-    public EventBaseEntity() {
-        id = new EventBaseEntityId();
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
     }
 
     public String getTenantId() {
-        return id.getTenantId();
+        return tenantId;
     }
 
     public void setTenantId(String tenantId) {
-        id.setTenantId(tenantId);
+        this.tenantId = tenantId;
     }
 
     public String getEventId() {
-        return id.getEventId();
+        return eventId;
     }
 
     public void setEventId(String eventId) {
-        id.setEventId(eventId);
+        this.eventId = eventId;
     }
 
     public LocalDateTime getExpiresAt() {
@@ -150,11 +171,11 @@ public abstract class EventBaseEntity {
         this.context = context;
     }
 
-    public Multimap<String, String> getTags() {
+    public Set<TagEntity> getTags() {
         return tags;
     }
 
-    public void setTags(Multimap<String, String> tags) {
+    public void setTags(Set<TagEntity> tags) {
         this.tags = tags;
     }
 
