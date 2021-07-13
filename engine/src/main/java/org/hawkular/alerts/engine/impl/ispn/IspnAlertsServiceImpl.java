@@ -19,6 +19,7 @@ import org.hawkular.alerts.api.model.trigger.Mode;
 import org.hawkular.alerts.api.model.trigger.Trigger;
 import org.hawkular.alerts.api.services.ActionsService;
 import org.hawkular.alerts.api.services.AlertsCriteria;
+import org.hawkular.alerts.api.services.PoliciesHistoryService;
 import org.hawkular.alerts.api.services.AlertsService;
 import org.hawkular.alerts.api.services.DefinitionsService;
 import org.hawkular.alerts.api.services.EventsCriteria;
@@ -77,6 +78,8 @@ public class IspnAlertsServiceImpl implements AlertsService {
 
     SearchManager searchManager;
 
+    PoliciesHistoryService policiesHistoryService;
+
     long eventLifespanInHours;
     long alertsLifespanInHours;
 
@@ -109,6 +112,10 @@ public class IspnAlertsServiceImpl implements AlertsService {
 
     public void setIncomingDataManager(IncomingDataManager incomingDataManager) {
         this.incomingDataManager = incomingDataManager;
+    }
+
+    public void setPoliciesHistoryService(PoliciesHistoryService policiesHistoryService) {
+        this.policiesHistoryService = policiesHistoryService;
     }
 
     private void store(Event event) {
@@ -165,6 +172,10 @@ public class IspnAlertsServiceImpl implements AlertsService {
                 alert.setResolvedEvalSets(null);
             }
             store(alert);
+            // policiesHistoryService can only be null during the policies-engine-engine tests.
+            if (policiesHistoryService != null) {
+                policiesHistoryService.put(alert);
+            }
         }
     }
 
