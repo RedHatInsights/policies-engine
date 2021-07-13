@@ -176,7 +176,7 @@ parameters:
 - description: Determines Clowder deployment
   name: CLOWDER_ENABLED
   value: "false"
-- description: ClowdEnv Name
+- description: ClowdEnv Name: stage, prod, ephemeral...
   name: ENV_NAME
   required: true
 - name: CLOWDER_FILE
@@ -189,8 +189,6 @@ parameters:
   displayName: Application Name
   description: Application name to be used in request paths. Only used when PATH_PREFIX is also specified.
   value: policies
-- name: ENV_NAME
-  displayName: stage, prod, fedramp-stage, fedramp-prod...
 - name: CLOUDWATCH_LOG_STREAM_NAME
   value: ${HOSTNAME}
 - name: PATH_PREFIX
