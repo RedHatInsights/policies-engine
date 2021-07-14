@@ -6,7 +6,7 @@ This project contains the execution engine for policies service. For the user-fa
 
 This repository contains parts of the Hawkular-Alerts core. It is not interchangeable with the previous maven modules as stuff has been moved around, removed and modified. For the old documentation (not necessarily relevant in all parts), see:
 
-link:http://www.hawkular.org/community/docs/developer-guide/alerts-v2.html[Hawkular Alerting User Guide].
+link:http://www.hawkular.org/community/docs/developer-guide/alerts-v2.html[Hawkular Alerting User Guide]
 
 link:http://www.hawkular.org/docs/rest/rest-alerts-v2.html[Hawkular Alerting REST API]
 
