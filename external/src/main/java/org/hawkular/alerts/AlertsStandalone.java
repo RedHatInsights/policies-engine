@@ -4,6 +4,7 @@ import com.redhat.cloud.policies.engine.actions.QuarkusActionPluginRegister;
 import io.quarkus.runtime.LaunchMode;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.hawkular.alerts.api.services.ActionsService;
+import org.hawkular.alerts.api.services.PoliciesHistoryService;
 import org.hawkular.alerts.api.services.AlertsService;
 import org.hawkular.alerts.api.services.DefinitionsService;
 import org.hawkular.alerts.api.services.StatusService;
@@ -30,10 +31,10 @@ import org.infinispan.query.Search;
 import org.infinispan.query.SearchManager;
 import org.infinispan.query.impl.massindex.DistributedExecutorMassIndexer;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -51,6 +52,9 @@ public class AlertsStandalone {
 
     @Inject
     QuarkusActionPluginRegister pluginRegister;
+
+    @Inject
+    PoliciesHistoryService policiesHistoryService;
 
     //    @ConfigProperty(name = "engine.backend.ispn.reindex", defaultValue = "false")
     private boolean ispnReindex;
@@ -151,6 +155,11 @@ public class AlertsStandalone {
         publishCacheManager.setPublishDataIdsCache(cacheManager.getCache("dataIds"));
 
         status.setPartitionManager(partitionManager);
+    }
+
+    @PostConstruct
+    void postConstruct() {
+        ispnAlerts.setPoliciesHistoryService(policiesHistoryService);
     }
 
     public void init() {

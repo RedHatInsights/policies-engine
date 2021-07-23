@@ -1,6 +1,8 @@
 package com.redhat.cloud.policies.engine.process;
 
 import com.redhat.cloud.notifications.ingress.Action;
+import com.redhat.cloud.policies.engine.TestLifecycleManager;
+import com.redhat.cloud.policies.engine.history.PoliciesHistoryEntry;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.test.common.QuarkusTestResource;
@@ -29,6 +31,8 @@ import org.hawkular.alerts.api.services.AlertsCriteria;
 import org.hawkular.alerts.api.services.AlertsService;
 import org.hawkular.alerts.api.services.DefinitionsService;
 import org.hawkular.alerts.api.services.StatusService;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,8 +54,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.redhat.cloud.policies.engine.process.ReactiveMessagingLifecycleManager.EVENTS_CHANNEL;
-import static com.redhat.cloud.policies.engine.process.ReactiveMessagingLifecycleManager.WEBHOOK_CHANNEL;
+import static com.redhat.cloud.policies.engine.TestLifecycleManager.EVENTS_CHANNEL;
+import static com.redhat.cloud.policies.engine.TestLifecycleManager.WEBHOOK_CHANNEL;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -59,7 +63,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-@QuarkusTestResource(ReactiveMessagingLifecycleManager.class)
+@QuarkusTestResource(TestLifecycleManager.class)
 public class ReceiverTest {
 
     @Inject
@@ -88,6 +92,9 @@ public class ReceiverTest {
     @Inject
     @Any
     InMemoryConnector reactiveMessagingConnector;
+
+    @Inject
+    Session session;
 
     InMemorySource<String> hostEmitter;
     InMemorySink<String> webhookReceiver;
@@ -143,6 +150,7 @@ public class ReceiverTest {
     @BeforeEach
     public void resetWebhookReceiver() {
         webhookReceiver.clear();
+        clearPoliciesHistory();
     }
 
     @Test
@@ -170,6 +178,8 @@ public class ReceiverTest {
         // Wait for the async messaging to arrive
         // It's aggregated into one message
         await().until(() -> webhookReceiver.received().size() == 1);
+        checkPoliciesHistoryEntries(fullTrigger, 1);
+        checkPoliciesHistoryEntries(fullTrigger2, 1);
 
         Action action = deserializeAction(webhookReceiver.received().get(0).getPayload());
 
@@ -184,6 +194,8 @@ public class ReceiverTest {
 
         // Wait for the async messaging to arrive
         await().until(() -> webhookReceiver.received().size() == 2);
+        checkPoliciesHistoryEntries(fullTrigger, 2);
+        checkPoliciesHistoryEntries(fullTrigger2, 2);
 
         Counter hostEgressProcessingErrors = meterRegistry.find(errorCount.getName()).counter();
         assertEquals(1.0, hostEgressProcessingErrors.count());
@@ -248,6 +260,7 @@ public class ReceiverTest {
 
         // Wait for the async messaging to arrive (there's two identical triggers..)
         await().until(() -> webhookReceiver.received().size() == 1);
+        checkPoliciesHistoryEntries(fullTrigger, 1);
 
         Action action = deserializeAction(webhookReceiver.received().get(0).getPayload());
         assertEquals("rhel", action.getBundle());
@@ -279,6 +292,7 @@ public class ReceiverTest {
 
         // Wait for the async messaging to arrive (there's two identical triggers..)
         await().until(() -> webhookReceiver.received().size() == 1);
+        checkPoliciesHistoryEntries(fullTrigger, 1);
 
         Action action = deserializeAction(webhookReceiver.received().get(0).getPayload());
         assertEquals("rhel", action.getBundle());
@@ -298,5 +312,20 @@ public class ReceiverTest {
         // Delete what we created..
         definitionsService.removeTrigger(TENANT_ID, TRIGGER_ID);
         definitionsService.removeActionDefinition(TENANT_ID, ACTION_PLUGIN, ACTION_ID);
+    }
+
+    private void clearPoliciesHistory() {
+        Transaction transaction = session.beginTransaction();
+        session.createQuery("DELETE FROM PoliciesHistoryEntry").executeUpdate();
+        transaction.commit();
+    }
+
+    private void checkPoliciesHistoryEntries(FullTrigger trigger, int expectedSize) {
+        String query = "SELECT e FROM PoliciesHistoryEntry e WHERE e.tenantId = :tenantId AND e.policyId = :policyId";
+        List<PoliciesHistoryEntry> history = session.createQuery(query, PoliciesHistoryEntry.class)
+                .setParameter("tenantId", trigger.getTrigger().getTenantId())
+                .setParameter("policyId", trigger.getTrigger().getId())
+                .getResultList();
+        assertEquals(expectedSize, history.size());
     }
 }
