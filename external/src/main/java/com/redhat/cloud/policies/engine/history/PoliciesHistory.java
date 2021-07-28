@@ -22,7 +22,7 @@ public class PoliciesHistory implements PoliciesHistoryService {
     private static final String INVENTORY_ID_TAG_KEY = "inventory_id";
     private static final String DISPLAY_NAME_TAG_KEY = "display_name";
 
-    @ConfigProperty(name = "engine.policies-history.enabled", defaultValue = "false")
+    @ConfigProperty(name = "engine.policies-history.enabled", defaultValue = "true")
     boolean enabled;
 
     @Inject
