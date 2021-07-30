@@ -196,13 +196,10 @@
           </execution>
         </executions>
         <configuration>
-          <useNativeGit>false</useNativeGit>
           <includeOnlyProperties>
             <includeOnlyProperty>git.commit.id.abbrev</includeOnlyProperty>
           </includeOnlyProperties>
-          <dotGitDirectory>${project.basedir}/.git</dotGitDirectory>
           <generateGitPropertiesFile>true</generateGitPropertiesFile>
-          <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
         </configuration>
       </plugin>
     </plugins>
