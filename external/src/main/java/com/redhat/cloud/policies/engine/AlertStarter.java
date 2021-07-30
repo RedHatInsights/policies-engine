@@ -3,6 +3,10 @@ package com.redhat.cloud.policies.engine;
 import com.redhat.cloud.policies.engine.actions.QuarkusActionPluginRegister;
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -19,6 +23,7 @@ import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import org.jboss.logging.Logger;
 
 import static org.hawkular.alerts.api.util.Util.isEmpty;
 
@@ -26,7 +31,6 @@ import static org.hawkular.alerts.api.util.Util.isEmpty;
 public class AlertStarter {
 
     public static MsgLogger LOGGER = MsgLogging.getMsgLogger(AlertStarter.class);
-    private final static String BUILD_COMMIT_ENV_NAME = "OPENSHIFT_BUILD_COMMIT";
 
     static final String FILTER_REGEX = ".*(/health(/\\w+)?|/metrics|/hawkular/alerts/triggers\\?triggerIds=dummy) HTTP/[0-9].[0-9]\" 200.*\\n?";
     private static final Pattern pattern = Pattern.compile(FILTER_REGEX);
@@ -60,12 +64,9 @@ public class AlertStarter {
 
     void startApp(@Observes StartupEvent startup) {
         initAccessLogFilter();
-        String commit = System.getenv(BUILD_COMMIT_ENV_NAME);
-        if(!isEmpty(commit)) {
-            LOGGER.infof("Starting Policies Engine, build: %s", commit);
-        } else {
-            LOGGER.info("Starting Policies Engine.");
-        }
+
+        LOGGER.info(readGitProperties());
+
         initialize();
     }
 
@@ -94,5 +95,32 @@ public class AlertStarter {
             Matcher matcher = pattern.matcher(logMessage);
             return !matcher.matches();
         });
+    }
+
+    private String readGitProperties() {
+        ClassLoader classLoader = getClass().getClassLoader();
+        InputStream inputStream = classLoader.getResourceAsStream("git.properties");
+        try {
+            return readFromInputStream(inputStream);
+        } catch (IOException e) {
+            LOGGER.log(Logger.Level.ERROR, "Could not read git.properties.", e);
+            return "Version information could not be retrieved";
+        }
+    }
+
+    private String readFromInputStream(InputStream inputStream) throws IOException {
+        if (inputStream == null) {
+            return "git.properties file not available";
+        }
+        StringBuilder resultStringBuilder = new StringBuilder();
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (!line.startsWith("#Generated")) {
+                    resultStringBuilder.append(line);
+                }
+            }
+        }
+        return resultStringBuilder.toString();
     }
 }
