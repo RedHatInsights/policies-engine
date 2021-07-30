@@ -109,7 +109,7 @@ public class AlertStarter {
     }
 
     private String readFromInputStream(InputStream inputStream) throws IOException {
-        if(inputStream == null) {
+        if (inputStream == null) {
             return "git.properties file not available";
         }
         StringBuilder resultStringBuilder = new StringBuilder();
