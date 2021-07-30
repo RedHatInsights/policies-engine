@@ -196,7 +196,7 @@
           </execution>
         </executions>
         <configuration>
-          <useNativeGit>true</useNativeGit>
+          <useNativeGit>false</useNativeGit>
           <includeOnlyProperties>
             <includeOnlyProperty>git.commit.id.abbrev</includeOnlyProperty>
           </includeOnlyProperties>
