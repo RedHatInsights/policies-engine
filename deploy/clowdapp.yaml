@@ -10,13 +10,25 @@ objects:
     name: policies-engine-secrets
     labels:
       app: policies-engine
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    labels:
+      app: policies-engine
+    name: policies-engine-data
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: ${INFINISPAN_STORAGE}
 - apiVersion: cloud.redhat.com/v1alpha1
   kind: ClowdApp
   metadata:
-    name: policies
+    name: policies-engine
     labels:
-      app: policies
-      clowdapp: policies
+      app: policies-engine
+      clowdapp: policies-engine
   spec:
     envName: ${ENV_NAME}
     deployments:
@@ -29,79 +41,40 @@ objects:
           failureThreshold: 3
           httpGet:
             path: /health/live
-            port: 8000
+            port: 8080
             scheme: HTTP
-          initialDelaySeconds: 40
-          periodSeconds: 10
+          initialDelaySeconds: 420
+          periodSeconds: 20
           successThreshold: 1
-          timeoutSeconds: 1
+          timeoutSeconds: 5
         readinessProbe:
           failureThreshold: 3
           httpGet:
             path: /health/ready
-            port: 8000
+            port: 8080
             scheme: HTTP
-          initialDelaySeconds: 40
-          periodSeconds: 10
+          initialDelaySeconds: 420
+          periodSeconds: 20
           successThreshold: 1
-          timeoutSeconds: 1
+          timeoutSeconds: 5
+        resources:
+          limits:
+            cpu: ${CPU_LIMIT}
+            memory: ${MEMORY_LIMIT}
+          requests:
+            cpu: ${CPU_REQUEST}
+            memory: ${MEMORY_REQUEST}
         env:
         - name: APP_NAME
           value: ${APP_NAME}
         - name: ENV_NAME
           value: ${ENV_NAME}
-        - name: QUARKUS_LOG_CLOUDWATCH_LOG_GROUP
-          valueFrom:
-            secretKeyRef:
-              name: cloudwatch
-              key: log_group_name
-        - name: QUARKUS_LOG_CLOUDWATCH_LOG_STREAM_NAME
-          value: ${CLOUDWATCH_LOG_STREAM_NAME}
-        - name: QUARKUS_LOG_CLOUDWATCH_ACCESS_KEY_ID
-          valueFrom:
-            secretKeyRef:
-              name: cloudwatch
-              key: aws_access_key_id
-        - name: QUARKUS_LOG_CLOUDWATCH_ACCESS_KEY_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: cloudwatch
-              key: aws_secret_access_key
-        - name: QUARKUS_LOG_CLOUDWATCH_REGION
-          valueFrom:
-            secretKeyRef:
-              name: cloudwatch
-              key: aws_region
         - name: PATH_PREFIX
           value: ${PATH_PREFIX}
         - name: JAVA_APP_JAR
           value: quarkus-run.jar
-        - name: KAFKA_BOOTSTRAP_SERVERS
-          value: ${KAFKA_BOOTSTRAP_HOST}:${KAFKA_BOOTSTRAP_PORT}
         - name: QUARKUS_HTTP_PORT
           value: "8080"
-        - name: KAFKA_SSL_TRUSTSTORE_LOCATION
-          value: "/opt/certs/kafka-cacert"
-        - name: KAFKA_SSL_TRUSTSTORE_TYPE
-          value: "PEM"
-        - name: KAFKA_SASL_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: kafka-credentials
-              key: username
-              optional: true
-        - name: KAFKA_SASL_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: kafka-credentials
-              key: password
-              optional: true
-        - name: KAFKA_SECURITY_PROTOCOL
-          value: ${KAFKA_SECURITY_PROTOCOL}
-        - name: KAFKA_SASL_MECHANISM
-          value: ${KAFKA_SASL_MECHANISM}
-        - name: KAFKA_SASL_JAAS_CONFIG
-          value: ${KAFKA_SASL_JAAS_CONFIG}
         - name: EXTERNAL_NOTIFICATIONS_BACKEND_REGISTER_URL
           value: ${HOOKS_REGISTRATION_URL}
         - name: _JAVA_OPTIONS
@@ -117,31 +90,24 @@ objects:
             https://a22a69dec467495e8dabc9a937104f34@o271843.ingest.sentry.io/5217678?environment=${ENV_NAME}
         - name: QUARKUS_LOG_SENTRY
           value: ${SENTRY_ENABLED}
-        - name: QUARKUS_LOG_CLOUDWATCH_ENABLED
-          value: ${CLOUDWATCH_LOGGING_ENABLED}
         - name: GC_MAX_METASPACE_SIZE
-          value: "256"
+          value: "1024"
         - name: EXTERNAL_LOGGING_LEVEL
           value: 'INFO'
         - name: CLOWDER_FILE
           value: ${CLOWDER_FILE}
         - name: CLOWDER_ENABLED
           value: ${CLOWDER_ENABLED}
-        - name: QUARKUS_LOG_CLOUDWATCH_ENABLED
-          value: ${CLOUDWATCH_LOGGING_ENABLED}
-        resources:
-          limits:
-            cpu: ${CPU_LIMIT}
-            memory: ${MEMORY_LIMIT}
-          requests:
-            cpu: ${CPU_REQUEST}
-            memory: ${MEMORY_REQUEST}
         volumes:
         - emptyDir: {}
           name: tmpdir
+        - emptyDir: {}
+          name: data
         volumeMounts:
         - mountPath: /tmp
           name: tmpdir
+        - mountPath: /data
+          name: data
     kafkaTopics:
     - replicas: 3
       partitions: 64
@@ -150,21 +116,22 @@ objects:
       partitions: 64
       topicName: platform.inventory.events
 
+
 parameters:
 - name: LOG_LEVEL
   value: INFO
 - description: Cpu limit of service
   name: CPU_LIMIT
-  value: 500m
+  value: 1000m
 - description: memory limit of service
   name: MEMORY_LIMIT
-  value: 500Mi
+  value: 4Gi
 - name: CPU_REQUEST
   description: The cpu request
   value: 500m
 - name: MEMORY_REQUEST
   description: The memory request
-  value: 250Mi
+  value: 2Gi
 - name: MIN_REPLICAS
   value: '1'
 - description: Image tag
@@ -182,39 +149,21 @@ parameters:
 - name: CLOWDER_FILE
   value: /cdapp/cdappconfig.json
   description: default path for cdappconfig file
-- name: CLOUDWATCH_LOGGING_ENABLED
-  description: Enable Cloudwatch (or not)
-  value: "false"
 - name: APP_NAME
   displayName: Application Name
   description: Application name to be used in request paths. Only used when PATH_PREFIX is also specified.
   value: policies
-- name: CLOUDWATCH_LOG_STREAM_NAME
-  value: ${HOSTNAME}
 - name: PATH_PREFIX
   displayName: Path Prefix
   description: Base path for the API
   value: engine
-- name: KAFKA_BOOTSTRAP_HOST
-  displayName: Message Queue Hostname
-  description: Hostname which will be used to contact the message queue.
-  value: mq-kafka
-- name: KAFKA_BOOTSTRAP_PORT
-  displayName: Message Queue Port
-  description: Port which will be used to contact the message queue.
-  value: "29092"
-- name: KAFKA_SECURITY_PROTOCOL
-  description: Security protocol used to talk with Kafka
-  value: "PLAINTEXT"
-- name: KAFKA_SASL_JAAS_CONFIG
-  description: Kafka SASL JAAS Config
-  value: ""
-- name: KAFKA_SASL_MECHANISM
-  description: Mechanism to use if using simple auth and security layer (SASL)
-  value: ""
 - name: HOOKS_REGISTRATION_URL
   description: Webhook registration URL
   value: http://hooks-backend:8080/api/hooks/apps/register
 - name: SENTRY_ENABLED
   displayName: Enable Sentry (or not)
   value: "false"
+- description: Amount of storage to request for the database persistent volume
+  displayName: Infinispan's persistent storage size
+  name: INFINISPAN_STORAGE
+  value: 10Gi
