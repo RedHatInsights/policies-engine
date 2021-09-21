@@ -35,6 +35,9 @@ import static org.hawkular.alerts.api.util.Util.isEmpty;
  */
 @ApplicationScoped
 public class Receiver {
+
+    public static final String EVENTS_CHANNEL = "events";
+
     private final MsgLogger log = MsgLogging.getMsgLogger(Receiver.class);
 
     private static final Set<String> ACCEPTED_REPORTERS;
@@ -107,7 +110,7 @@ public class Receiver {
     @Metric(absolute = true, name = "engine.input.processed.errors", tags = {"queue=host-egress"})
     Counter processingErrors;
 
-    @Incoming("events")
+    @Incoming(EVENTS_CHANNEL)
     @Acknowledgment(Acknowledgment.Strategy.MANUAL)
     public Uni<Void> processAsync(Message<String> input) {
         incomingMessagesCount.inc();

@@ -7,13 +7,12 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.redhat.cloud.policies.engine.actions.plugins.NotificationActionPluginListener.WEBHOOK_CHANNEL;
+import static com.redhat.cloud.policies.engine.process.Receiver.EVENTS_CHANNEL;
 import static io.smallrye.reactive.messaging.connectors.InMemoryConnector.switchIncomingChannelsToInMemory;
 import static io.smallrye.reactive.messaging.connectors.InMemoryConnector.switchOutgoingChannelsToInMemory;
 
 public class TestLifecycleManager implements QuarkusTestResourceLifecycleManager {
-
-    public static final String EVENTS_CHANNEL = "events";
-    public static final String WEBHOOK_CHANNEL = "webhook";
 
     private static final PostgreSQLContainer<?> POSTGRESQL_CONTAINER = new PostgreSQLContainer<>("postgres");
 
