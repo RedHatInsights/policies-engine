@@ -10,13 +10,16 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.reactive.messaging.connectors.InMemoryConnector;
 import io.smallrye.reactive.messaging.connectors.InMemorySink;
 import io.smallrye.reactive.messaging.connectors.InMemorySource;
+import io.smallrye.reactive.messaging.kafka.KafkaMessageMetadata;
 import io.vertx.core.json.JsonObject;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.JsonDecoder;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.commons.io.IOUtils;
+import org.apache.kafka.common.header.Header;
 import org.eclipse.microprofile.metrics.MetricID;
+import org.eclipse.microprofile.reactive.messaging.Message;
 import org.hawkular.alerts.api.model.action.ActionDefinition;
 import org.hawkular.alerts.api.model.condition.Condition;
 import org.hawkular.alerts.api.model.condition.EventCondition;
@@ -50,12 +53,17 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
-import static com.redhat.cloud.policies.engine.TestLifecycleManager.EVENTS_CHANNEL;
-import static com.redhat.cloud.policies.engine.TestLifecycleManager.WEBHOOK_CHANNEL;
+import static com.redhat.cloud.policies.engine.actions.plugins.NotificationActionPluginListener.MESSAGE_ID_HEADER;
+import static com.redhat.cloud.policies.engine.actions.plugins.NotificationActionPluginListener.WEBHOOK_CHANNEL;
+import static com.redhat.cloud.policies.engine.process.Receiver.EVENTS_CHANNEL;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -178,6 +186,7 @@ public class ReceiverTest {
         // Wait for the async messaging to arrive
         // It's aggregated into one message
         await().until(() -> webhookReceiver.received().size() == 1);
+        checkMessageIdHeader(webhookReceiver.received().get(0));
         checkPoliciesHistoryEntries(fullTrigger, 1);
         checkPoliciesHistoryEntries(fullTrigger2, 1);
 
@@ -194,6 +203,7 @@ public class ReceiverTest {
 
         // Wait for the async messaging to arrive
         await().until(() -> webhookReceiver.received().size() == 2);
+        checkMessageIdHeader(webhookReceiver.received().get(1));
         checkPoliciesHistoryEntries(fullTrigger, 2);
         checkPoliciesHistoryEntries(fullTrigger2, 2);
 
@@ -220,6 +230,7 @@ public class ReceiverTest {
 
         // Wait for the async messaging to arrive (there's two identical triggers..)
         await().until(() -> webhookReceiver.received().size() == 1);
+        checkMessageIdHeader(webhookReceiver.received().get(0));
 
         Action action = deserializeAction(webhookReceiver.received().get(0).getPayload());
         assertEquals(1, action.getEvents().size());
@@ -260,6 +271,7 @@ public class ReceiverTest {
 
         // Wait for the async messaging to arrive (there's two identical triggers..)
         await().until(() -> webhookReceiver.received().size() == 1);
+        checkMessageIdHeader(webhookReceiver.received().get(0));
         checkPoliciesHistoryEntries(fullTrigger, 1);
 
         Action action = deserializeAction(webhookReceiver.received().get(0).getPayload());
@@ -292,6 +304,7 @@ public class ReceiverTest {
 
         // Wait for the async messaging to arrive (there's two identical triggers..)
         await().until(() -> webhookReceiver.received().size() == 1);
+        checkMessageIdHeader(webhookReceiver.received().get(0));
         checkPoliciesHistoryEntries(fullTrigger, 1);
 
         Action action = deserializeAction(webhookReceiver.received().get(0).getPayload());
@@ -327,5 +340,16 @@ public class ReceiverTest {
                 .setParameter("policyId", trigger.getTrigger().getId())
                 .getResultList();
         assertEquals(expectedSize, history.size());
+    }
+
+    private void checkMessageIdHeader(Message<String> message) {
+        // The message should contain a "rh-message-id" header and its value should be a valid UUID version 4.
+        Optional<KafkaMessageMetadata> messageMetadata = message.getMetadata(KafkaMessageMetadata.class);
+        Iterator<Header> headers = messageMetadata.get().getHeaders().headers(MESSAGE_ID_HEADER).iterator();
+        String headerValue = new String(headers.next().value(), UTF_8);
+        // Is the header value a valid UUID? The following line will throw an exception otherwise.
+        UUID.fromString(headerValue);
+        // If the UUID version is 4, then its 15th character has to be "4".
+        assertEquals("4", headerValue.substring(14, 15));
     }
 }

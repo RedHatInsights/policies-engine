@@ -5,14 +5,17 @@ import com.redhat.cloud.notifications.ingress.Action;
 import com.redhat.cloud.notifications.ingress.Event;
 import com.redhat.cloud.notifications.ingress.Metadata;
 import com.redhat.cloud.policies.engine.actions.plugins.notification.PoliciesAction;
+import io.smallrye.reactive.messaging.kafka.OutgoingKafkaRecordMetadata;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.io.JsonEncoder;
 import org.apache.avro.specific.SpecificDatumWriter;
+import org.apache.kafka.common.header.internals.RecordHeaders;
 import org.eclipse.microprofile.metrics.Counter;
 import org.eclipse.microprofile.metrics.annotation.Metric;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
+import org.eclipse.microprofile.reactive.messaging.Message;
 import org.eclipse.microprofile.reactive.messaging.OnOverflow;
 import org.hawkular.alerts.actions.api.ActionMessage;
 import org.hawkular.alerts.actions.api.ActionPluginListener;
@@ -34,10 +37,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * NotificationActionPluginListener sends a JSON encoded message in the format understood by the
@@ -50,12 +56,14 @@ public class NotificationActionPluginListener implements ActionPluginListener {
     public static final String BUNDLE_NAME = "rhel";
     public static final String APP_NAME = "policies";
     public static final String EVENT_TYPE_NAME = "policy-triggered";
+    public static final String WEBHOOK_CHANNEL = "webhook";
+    public static final String MESSAGE_ID_HEADER = "rh-message-id";
 
     private static final Logger log = Logger.getLogger(NotificationActionPluginListener.class.getName());
     private final ConcurrentSkipListMap<String, PoliciesAction> notifyBuffer = new ConcurrentSkipListMap<>();
 
     @Inject
-    @Channel("webhook")
+    @Channel(WEBHOOK_CHANNEL)
     @OnOverflow(OnOverflow.Strategy.UNBOUNDED_BUFFER)
     Emitter<String> channel;
 
@@ -141,7 +149,8 @@ public class NotificationActionPluginListener implements ActionPluginListener {
 
             PoliciesAction action = notificationEntry.getValue();
             try {
-                channel.send(serializeAction(action));
+                String payload = serializeAction(action);
+                channel.send(buildMessageWithId(payload));
                 messagesAggregated.inc();
             } catch (IOException ex) {
                 log.log(Level.WARNING, ex, () -> "Failed to serialize action for accountId" + action.getAccountId());
@@ -189,5 +198,13 @@ public class NotificationActionPluginListener implements ActionPluginListener {
         jsonEncoder.flush();
 
         return baos.toString(StandardCharsets.UTF_8);
+    }
+
+    private static Message buildMessageWithId(String payload) {
+        byte[] messageId = UUID.randomUUID().toString().getBytes(UTF_8);
+        OutgoingKafkaRecordMetadata metadata = OutgoingKafkaRecordMetadata.builder()
+                .withHeaders(new RecordHeaders().add(MESSAGE_ID_HEADER, messageId))
+                .build();
+        return Message.of(payload).addMetadata(metadata);
     }
 }
