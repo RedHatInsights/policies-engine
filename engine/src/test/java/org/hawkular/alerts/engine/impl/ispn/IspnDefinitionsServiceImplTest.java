@@ -9,9 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import io.quarkus.runtime.configuration.ConfigUtils;
-import io.quarkus.runtime.configuration.QuarkusConfigFactory;
-import io.smallrye.config.SmallRyeConfig;
 import org.hawkular.alerts.api.exception.FoundException;
 import org.hawkular.alerts.api.exception.NotFoundException;
 import org.hawkular.alerts.api.model.Lifecycle;
@@ -20,14 +17,11 @@ import org.hawkular.alerts.api.model.condition.AvailabilityCondition;
 import org.hawkular.alerts.api.model.condition.AvailabilityCondition.Operator;
 import org.hawkular.alerts.api.model.condition.Condition;
 import org.hawkular.alerts.api.model.dampening.Dampening;
-import org.hawkular.alerts.api.model.event.Alert;
-import org.hawkular.alerts.api.model.paging.AlertComparator;
 import org.hawkular.alerts.api.model.paging.Order;
 import org.hawkular.alerts.api.model.paging.Page;
 import org.hawkular.alerts.api.model.paging.Pager;
 import org.hawkular.alerts.api.model.paging.TriggerComparator;
 import org.hawkular.alerts.api.model.trigger.*;
-import org.hawkular.alerts.api.services.AlertsCriteria;
 import org.hawkular.alerts.api.services.TriggersCriteria;
 import org.hawkular.alerts.log.MsgLogger;
 import org.hawkular.alerts.log.MsgLogging;
@@ -46,8 +40,6 @@ public class IspnDefinitionsServiceImplTest extends IspnBaseServiceImplTest {
 
     @BeforeClass
     public static void init() {
-        SmallRyeConfig config = ConfigUtils.configBuilder(true).build();
-        QuarkusConfigFactory.setConfig(config);
         System.setProperty("hawkular.data", "./target/ispn");
         definitions = new IspnDefinitionsServiceImpl();
         definitions.init();

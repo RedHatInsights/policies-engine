@@ -24,7 +24,7 @@ public class ReadinessHandler implements HealthCheck {
     @Override
     public HealthCheckResponse call() {
         HealthCheckResponseBuilder response = HealthCheckResponse.named("Policies Engine readiness check")
-                .state(statusService.isHealthy());
+                .status(statusService.isHealthy());
 
         if(!statusService.isStarted()) {
             response.withData("starting", "true");

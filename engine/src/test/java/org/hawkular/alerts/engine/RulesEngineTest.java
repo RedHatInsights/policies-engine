@@ -19,10 +19,7 @@ import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import io.quarkus.runtime.configuration.ConfigUtils;
-import io.quarkus.runtime.configuration.QuarkusConfigFactory;
 import io.quarkus.test.junit.QuarkusTest;
-import io.smallrye.config.SmallRyeConfig;
 import org.hawkular.alerts.api.json.JsonUtil;
 import org.hawkular.alerts.api.model.condition.*;
 import org.hawkular.alerts.api.model.condition.NelsonCondition.NelsonRule;
@@ -69,8 +66,6 @@ public class RulesEngineTest {
 
     @Before
     public void before() {
-        SmallRyeConfig config = ConfigUtils.configBuilder(true).build();
-        QuarkusConfigFactory.setConfig(config);
         rulesEngine = new DroolsRulesEngineImpl();
         rulesEngine.addGlobal("log", log);
         rulesEngine.addGlobal("alerts", alerts);
