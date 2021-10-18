@@ -180,8 +180,11 @@ public class AlertsHandler {
                         Pager pager = ResponseUtil.extractPaging(routing.request().params());
                         AlertsCriteria criteria = buildCriteria(routing.request().params());
                         Page<Alert> alertPage;
-                        try (Scope ignored = tracer.buildSpan("getAlerts").asChildOf(serverSpan).startActive(true)) {
+                        Span span = tracer.buildSpan("getAlerts").asChildOf(serverSpan).start();
+                        try (Scope ignored = tracer.scopeManager().activate(span)) {
                             alertPage = alertsService.getAlerts(tenantId, criteria, pager);
+                        } finally {
+                            span.finish();
                         }
                         if(log.isTraceEnabled()) {
                             log.tracef("Alerts: %s", alertPage);

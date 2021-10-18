@@ -247,13 +247,16 @@ public class TriggersHandler {
                         trigger.setId(Trigger.generateId());
                     } else {
                         Trigger found = null;
-                        try (Scope ignored = tracer.buildSpan("getTrigger").asChildOf(serverSpan).startActive(true)) {
+                        Span span = tracer.buildSpan("getTrigger").asChildOf(serverSpan).start();
+                        try (Scope ignored = tracer.scopeManager().activate(span)) {
                             found = definitionsService.getTrigger(tenantId, trigger.getId());
                         } catch (NotFoundException e) {
                             // Expected
                         } catch (Exception e) {
                             log.debug(e.getMessage(), e);
                             throw new ResponseUtil.InternalServerException(e.toString());
+                        } finally {
+                            span.finish();
                         }
                         if (found != null) {
                             throw new ResponseUtil.BadRequestException("Trigger with ID [" + trigger.getId() + "] exists.");
@@ -262,8 +265,9 @@ public class TriggersHandler {
                     if (!ResponseUtil.checkTags(trigger)) {
                         throw new ResponseUtil.BadRequestException("Tags " + trigger.getTags() + " must be non empty.");
                     }
-                    try (Scope ignored = tracer.buildSpan("createFullTrigger").asChildOf(serverSpan).startActive(true)) {
-                        ignored.span().setTag("dryRun",dryRun);
+                    Span span = tracer.buildSpan("createFullTrigger").asChildOf(serverSpan).start();
+                    try (Scope ignored = tracer.scopeManager().activate(span)) {
+                        span.setTag("dryRun",dryRun);
                         if(!dryRun) {
                             definitionsService.createFullTrigger(tenantId, fullTrigger);
                         }
@@ -274,6 +278,8 @@ public class TriggersHandler {
                     } catch (Exception e) {
                         log.debug(e.getMessage(), e);
                         throw new ResponseUtil.InternalServerException(e);
+                    } finally {
+                        span.finish();
                     }
                 }, res -> ResponseUtil.result(routing, res));
     }
@@ -455,13 +461,16 @@ public class TriggersHandler {
                         trigger.setId(Trigger.generateId());
                     } else {
                         Trigger found = null;
-                        try (Scope ignored = tracer.buildSpan("getTrigger").asChildOf(serverSpan).startActive(true)) {
+                        Span span = tracer.buildSpan("getTrigger").asChildOf(serverSpan).start();
+                        try (Scope ignored = tracer.scopeManager().activate(span)) {
                             found = definitionsService.getTrigger(tenantId, trigger.getId());
                         } catch (NotFoundException e) {
                             // expected
                         } catch (Exception e) {
                             log.debug(e.getMessage(), e);
                             throw new ResponseUtil.InternalServerException(e.toString());
+                        } finally {
+                            span.finish();
                         }
                         if (found != null) {
                             throw new ResponseUtil.BadRequestException("Trigger with ID [" + trigger.getId() + "] exists.");
@@ -471,7 +480,8 @@ public class TriggersHandler {
                     if (!ResponseUtil.checkTags(trigger)) {
                         throw new ResponseUtil.BadRequestException("Tags " + trigger.getTags() + " must be non empty.");
                     }
-                    try (Scope ignored = tracer.buildSpan("addNewTrigger").asChildOf(serverSpan).startActive(true)) {
+                    Span span = tracer.buildSpan("addNewTrigger").asChildOf(serverSpan).start();
+                    try (Scope ignored = tracer.scopeManager().activate(span)) {
                         if (isGroup) {
                             definitionsService.addGroupTrigger(tenantId, trigger);
                         } else {
@@ -484,6 +494,8 @@ public class TriggersHandler {
                     } catch (Exception e) {
                         log.debug(e.getMessage(), e);
                         throw new ResponseUtil.InternalServerException(e.toString());
+                    } finally {
+                        span.finish();
                     }
                 }, res -> ResponseUtil.result(routing, res));
     }
@@ -697,8 +709,11 @@ public class TriggersHandler {
                         Pager pager = ResponseUtil.extractPaging(routing.request().params());
                         TriggersCriteria criteria = buildCriteria(routing.request().params());
                         Page<Trigger> triggerPage;
-                        try (Scope ignored = tracer.buildSpan("getTriggers").asChildOf(serverSpan).startActive(true)) {
+                        Span span = tracer.buildSpan("getTriggers").asChildOf(serverSpan).start();
+                        try (Scope ignored = tracer.scopeManager().activate(span)) {
                             triggerPage = definitionsService.getTriggers(tenantId, criteria, pager);
+                        } finally {
+                            span.finish();
                         }
                         log.debugf("Triggers: %s", triggerPage);
                         future.complete(triggerPage);
@@ -1460,7 +1475,7 @@ public class TriggersHandler {
                         String triggerIds = routing.request().getParam("triggerId");
                         if(triggerIds != null) {
                             // Single enable / disable
-                            switch(routing.request().method()) {
+                            switch(routing.request().method().name()) {
                                 case DELETE:
                                     enabled = false;
                                     break;

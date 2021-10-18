@@ -1,10 +1,7 @@
 package org.hawkular.alerts.engine.impl.ispn;
 
 import com.google.common.collect.Multimap;
-import io.quarkus.runtime.configuration.ConfigUtils;
-import io.quarkus.runtime.configuration.QuarkusConfigFactory;
 import io.quarkus.test.junit.QuarkusTest;
-import io.smallrye.config.SmallRyeConfig;
 import org.hawkular.alerts.api.model.Severity;
 import org.hawkular.alerts.api.model.event.Alert;
 import org.hawkular.alerts.api.model.event.Event;
@@ -48,8 +45,6 @@ public class IspnAlertsServiceImplTest extends IspnBaseServiceImplTest {
 
     @BeforeClass
     public static void init() {
-        SmallRyeConfig config = ConfigUtils.configBuilder(true).build();
-        QuarkusConfigFactory.setConfig(config);
         System.setProperty("hawkular.data", "./target/ispn");
         alerts = new IspnAlertsServiceImpl();
         alerts.init();
