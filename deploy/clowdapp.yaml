@@ -111,8 +111,7 @@ objects:
         - mountPath: /data
           name: data
     database:
-      name: policies-ui-backend-db
-      version: 12
+      sharedDbAppName: policies-ui-backend
     kafkaTopics:
     - replicas: 3
       partitions: 64
@@ -120,7 +119,8 @@ objects:
     - replicas: 3
       partitions: 64
       topicName: platform.inventory.events
-
+    dependencies:
+    - policies-ui-backend
 
 parameters:
 - name: LOG_LEVEL
