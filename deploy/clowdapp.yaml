@@ -74,7 +74,7 @@ objects:
         - name: JAVA_APP_JAR
           value: quarkus-run.jar
         - name: QUARKUS_HTTP_PORT
-          value: "8080"
+          value: "8000"
         - name: EXTERNAL_NOTIFICATIONS_BACKEND_REGISTER_URL
           value: ${HOOKS_REGISTRATION_URL}
         - name: _JAVA_OPTIONS
@@ -98,8 +98,6 @@ objects:
           value: ${CLOWDER_FILE}
         - name: CLOWDER_ENABLED
           value: ${CLOWDER_ENABLED}
-        - name: QUARKUS_HTTP_PORT
-          value: ${QUARKUS_HTTP_PORT}
         volumes:
         - emptyDir: {}
           name: tmpdir
@@ -172,5 +170,3 @@ parameters:
   displayName: Infinispan's persistent storage size
   name: INFINISPAN_STORAGE
   value: 10Gi
-- name: QUARKUS_HTTP_PORT
-  value: "8000"
