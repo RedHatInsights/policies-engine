@@ -96,8 +96,6 @@ objects:
           value: 'INFO'
         - name: CLOWDER_FILE
           value: ${CLOWDER_FILE}
-        - name: CLOWDER_ENABLED
-          value: ${CLOWDER_ENABLED}
         volumes:
         - emptyDir: {}
           name: tmpdir
@@ -143,9 +141,6 @@ parameters:
 - description: Image name
   name: IMAGE
   value: quay.io/cloudservices/policies-engine
-- description: Determines Clowder deployment
-  name: CLOWDER_ENABLED
-  value: "false"
 - description: ClowdEnv Name (stage, prod, ephemeral)
   name: ENV_NAME
   required: true
