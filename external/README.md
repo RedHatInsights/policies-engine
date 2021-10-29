@@ -9,8 +9,6 @@ Running Kafka instance is required to process inbound messages through the queue
 
 To start a clean instance of Policies Engine, run in this directory: ``./mvnw quarkus:dev``
 
-Alternative, create container images from ``src/main/docker/Dockerfile.jvm``
-
 If a debugging UI is required, build it from Hawkular-Alerts and set the path in property ``src/main/resources/application.properties`` by modifying the property ``external.org.hawkular.alerts.ui.path``. The UI will be available from path ``/ui/``
 
 REST-interface will be available by default from port ``8083`` (and ``8080`` in containers).
