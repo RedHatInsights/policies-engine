@@ -1,13 +1,16 @@
 package com.redhat.cloud.policies.engine.process;
 
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Tags;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.io.IOUtils;
-import org.eclipse.microprofile.metrics.Counter;
 import org.eclipse.microprofile.reactive.messaging.Message;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.testcontainers.shaded.com.google.common.util.concurrent.AtomicDouble;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -35,7 +38,7 @@ public class ReceiverFilterTest {
         receiver.processAsync(Message.of(inputJson)).await().indefinitely();
 
         assertEquals(1, mockedAlertsService.getPushedEvents().size());
-        assertEquals(1, incomingMessagesCount.getCount());
+        assertEquals(1, incomingMessagesCount.count());
     }
 
     @BeforeAll
@@ -47,7 +50,7 @@ public class ReceiverFilterTest {
         rejectedCountReporter = new InternalCounter();
         rejectedCountType = new InternalCounter();
 
-        receiver = new Receiver();
+        receiver = new Receiver(new SimpleMeterRegistry());
         receiver.alertsService = mockedAlertsService;
         receiver.processingErrors = processingErrors;
         receiver.incomingMessagesCount = incomingMessagesCount;
@@ -61,10 +64,10 @@ public class ReceiverFilterTest {
     @AfterEach
     public void cleanup() {
         mockedAlertsService.clearEvents();
-        receiver.processingErrors.inc(receiver.processingErrors.getCount() * -1);
-        receiver.incomingMessagesCount.inc(receiver.incomingMessagesCount.getCount() * -1);
-        receiver.rejectedCount.inc(receiver.rejectedCount.getCount() * -1);
-        receiver.rejectedCountReporter.inc(receiver.rejectedCountReporter.getCount() * -1);
+        receiver.processingErrors.increment(receiver.processingErrors.count() * -1);
+        receiver.incomingMessagesCount.increment(receiver.incomingMessagesCount.count() * -1);
+        receiver.rejectedCount.increment(receiver.rejectedCount.count() * -1);
+        receiver.rejectedCountReporter.increment(receiver.rejectedCountReporter.count() * -1);
     }
 
     @Test
@@ -79,8 +82,8 @@ public class ReceiverFilterTest {
         receiver.processAsync(Message.of(inputJson)).await().indefinitely();
 
         assertEquals(0, mockedAlertsService.getPushedEvents().size());
-        assertEquals(1, incomingMessagesCount.getCount());
-        assertEquals(0, processingErrors.getCount());
+        assertEquals(1, incomingMessagesCount.count());
+        assertEquals(0, processingErrors.count());
     }
 
     @Test
@@ -105,10 +108,10 @@ public class ReceiverFilterTest {
         receiver.processAsync(Message.of(inputJson)).await().indefinitely();
 
         assertEquals(0, mockedAlertsService.getPushedEvents().size());
-        assertEquals(1, incomingMessagesCount.getCount());
-        assertEquals(0, processingErrors.getCount());
-        assertEquals(1, rejectedCount.getCount());
-        assertEquals(1, rejectedCountType.getCount());
+        assertEquals(1, incomingMessagesCount.count());
+        assertEquals(0, processingErrors.count());
+        assertEquals(1, rejectedCount.count());
+        assertEquals(1, rejectedCountType.count());
 
         jsonObject = new JsonObject(inputJson);
         jsonObject.put("type","created");
@@ -118,31 +121,36 @@ public class ReceiverFilterTest {
         receiver.processAsync(Message.of(inputJson)).await().indefinitely();
 
         assertEquals(0, mockedAlertsService.getPushedEvents().size());
-        assertEquals(2, incomingMessagesCount.getCount());
-        assertEquals(0, processingErrors.getCount());
-        assertEquals(2, rejectedCount.getCount());
-        assertEquals(1, rejectedCountReporter.getCount());
-        assertEquals(1, rejectedCountType.getCount());
+        assertEquals(2, incomingMessagesCount.count());
+        assertEquals(0, processingErrors.count());
+        assertEquals(2, rejectedCount.count());
+        assertEquals(1, rejectedCountReporter.count());
+        assertEquals(1, rejectedCountType.count());
     }
 
 
     public static class InternalCounter implements Counter {
 
-        private AtomicLong value = new AtomicLong(0);
+        private AtomicDouble value = new AtomicDouble(0);
 
         @Override
-        public void inc() {
-            value.incrementAndGet();
+        public void increment() {
+            value.addAndGet(1);
         }
 
         @Override
-        public void inc(long l) {
+        public void increment(double l) {
             value.addAndGet(l);
         }
 
         @Override
-        public long getCount() {
+        public double count() {
             return value.get();
+        }
+
+        @Override
+        public Id getId() {
+            return new Id("someId", Tags.empty(), "", "", null);
         }
     }
 }

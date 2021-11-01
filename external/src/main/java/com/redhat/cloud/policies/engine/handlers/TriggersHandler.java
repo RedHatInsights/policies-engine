@@ -1,6 +1,7 @@
 package com.redhat.cloud.policies.engine.handlers;
 
 import com.redhat.cloud.policies.engine.handlers.util.ResponseUtil;
+import io.micrometer.core.annotation.Timed;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
@@ -8,7 +9,6 @@ import io.vertx.core.MultiMap;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
-import org.eclipse.microprofile.metrics.annotation.Timed;
 import org.hawkular.alerts.api.doc.*;
 import org.hawkular.alerts.api.exception.NotFoundException;
 import org.hawkular.alerts.api.json.GroupConditionsInfo;
@@ -211,7 +211,7 @@ public class TriggersHandler {
             @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ResponseUtil.ApiError.class),
             @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
-    @Timed(absolute = true, tags = {"path=/triggers/trigger", "method=POST"})
+    @Timed(extraTags = {"path=/triggers/trigger", "method=POST"})
     public void createFullTrigger(RoutingContext routing) {
         routing.vertx()
                 .executeBlocking(future -> {
@@ -302,7 +302,7 @@ public class TriggersHandler {
             @DocResponse(code = 400, message = "Bad Request/Invalid Parameters.", response = ResponseUtil.ApiError.class),
             @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
-    @Timed(absolute = true, tags = {"path=/triggers/trigger/{triggerId}", "method=PUT"})
+    @Timed(extraTags = {"path=/triggers/trigger/{triggerId}", "method=PUT"})
     public void updateFullTrigger(RoutingContext routing) {
         routing.vertx()
                 .executeBlocking(future -> {
@@ -624,7 +624,7 @@ public class TriggersHandler {
             @DocResponse(code = 404, message = "Trigger not found", response = ResponseUtil.ApiError.class),
             @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
-    @Timed(absolute = true, tags = {"path=/triggers/{triggerId}", "method=DELETE"})
+    @Timed(extraTags = {"path=/triggers/{triggerId}", "method=DELETE"})
     public void deleteTrigger(RoutingContext routing) {
         routing.vertx()
                 .executeBlocking(future -> {
@@ -698,7 +698,7 @@ public class TriggersHandler {
             @DocResponse(code = 404, message = "Trigger not found", response = ResponseUtil.ApiError.class),
             @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
-    @Timed(absolute = true, tags = {"path=/triggers", "method=GET"})
+    @Timed(extraTags = {"path=/triggers", "method=GET"})
     public void findTriggers(RoutingContext routing) {
         routing.vertx()
                 .executeBlocking(future -> {
@@ -790,7 +790,7 @@ public class TriggersHandler {
             @DocResponse(code = 404, message = "Trigger not found", response = ResponseUtil.ApiError.class),
             @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
     })
-    @Timed(absolute = true, tags = {"path=/triggers/trigger/{triggerId}", "method=GET"})
+    @Timed(extraTags = {"path=/triggers/trigger/{triggerId}", "method=GET"})
     public void getFullTrigger(RoutingContext routing) {
         getTrigger(routing, true);
     }

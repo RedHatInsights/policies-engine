@@ -20,7 +20,8 @@ public class TypedJsonExtract {
         String inputJson = IOUtils.toString(is, StandardCharsets.UTF_8);
         JsonObject json = new JsonObject(inputJson);
 
-        JsonObject systemProfile = json.getJsonObject("system_profile");
+        final JsonObject host = json.getJsonObject("host");
+        JsonObject systemProfile = host.getJsonObject("system_profile");
         Map<String, Object> facts = Receiver.parseSystemProfile(systemProfile);
 
         Map<String, Object> yum_repos = (Map<String, Object>) facts.get("yum_repos");

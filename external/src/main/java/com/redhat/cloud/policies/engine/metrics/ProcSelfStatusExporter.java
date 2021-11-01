@@ -1,12 +1,13 @@
 package com.redhat.cloud.policies.engine.metrics;
 
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.scheduler.Scheduled;
-import org.eclipse.microprofile.metrics.MetricUnits;
-import org.eclipse.microprofile.metrics.annotation.Gauge;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.io.File;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 
 
@@ -21,8 +22,6 @@ import java.util.logging.Logger;
  * VmData:  3529900 kB
  * VmSize:  13529900 kB
  * Threads: 23
- *
- * @author hrupp
  */
 @ApplicationScoped
 public class ProcSelfStatusExporter {
@@ -34,14 +33,43 @@ public class ProcSelfStatusExporter {
     private boolean hasWarned = false;
 
     private long vmHwm;
+    Gauge vmHwmGauge;
+
     private long vmRss;
+    Gauge vmRssGauge;
+
     private long rssAnon;
+    Gauge rssAnonGauge;
+
     private long rssFile;
+    Gauge rssFileGauge;
+
     private long vmStk;
+    Gauge vmStkGauge;
+
     private long vmLib;
+    Gauge vmLibGauge;
+
     private long vmData;
+    Gauge vmDataGauge;
+
     private long vmSize;
+    Gauge vmSizeGauge;
+
     private int threads;
+    Gauge threadsGauge;
+
+    public ProcSelfStatusExporter(MeterRegistry registry) {
+        vmHwmGauge = Gauge.builder("status.vmHwm", () -> new AtomicLong(vmHwm)).tags("type=proc").register(registry);
+        vmRssGauge = Gauge.builder("status.vmRss", () -> new AtomicLong(vmRss)).tags("type=proc").register(registry);
+        rssAnonGauge = Gauge.builder("status.rssAnon", () -> new AtomicLong(rssAnon)).tags("type=proc").register(registry);
+        rssFileGauge = Gauge.builder("status.rssFile", () -> new AtomicLong(rssFile)).tags("type=proc").register(registry);
+        vmStkGauge = Gauge.builder("status.vmStk", () -> new AtomicLong(vmStk)).tags("type=proc").register(registry);
+        vmLibGauge = Gauge.builder("status.vmLib", () -> new AtomicLong(vmLib)).tags("type=proc").register(registry);
+        vmDataGauge = Gauge.builder("status.vmData", () -> new AtomicLong(vmData)).tags("type=proc").register(registry);
+        vmSizeGauge = Gauge.builder("status.vmSize", () -> new AtomicLong(vmSize)).tags("type=proc").register(registry);
+        threadsGauge = Gauge.builder("status.threads", () -> new AtomicLong(threads)).tags("type=proc").register(registry);
+    }
 
     @Scheduled(every = "10s")
     void gather() {
@@ -96,47 +124,38 @@ public class ProcSelfStatusExporter {
         }
     }
 
-    @Gauge(name = "status.vmHwm", absolute = true, unit = MetricUnits.KILOBYTES, tags = "type=proc")
     public long getVmHwm() {
         return vmHwm;
     }
 
-    @Gauge(name = "status.vmRss", absolute = true, unit = MetricUnits.KILOBYTES, tags = "type=proc")
     public long getVmRss() {
         return vmRss;
     }
 
-    @Gauge(name = "status.rssAnon", absolute = true, unit = MetricUnits.KILOBYTES, tags = "type=proc")
     public long getRssAnon() {
         return rssAnon;
     }
 
-    @Gauge(name = "status.rssFile", absolute = true, unit = MetricUnits.KILOBYTES, tags = "type=proc")
     public long getRssFile() {
         return rssFile;
     }
 
-    @Gauge(name = "status.vmStk", absolute = true, unit = MetricUnits.KILOBYTES, tags = "type=proc")
     public long getVmStk() {
         return vmStk;
     }
 
-    @Gauge(name = "status.vmLib", absolute = true, unit = MetricUnits.KILOBYTES, tags = "type=proc")
     public long getVmLib() {
         return vmLib;
     }
 
-    @Gauge(name = "status.vmData", absolute = true, unit = MetricUnits.KILOBYTES, tags = "type=proc")
     public long getVmData() {
         return vmData;
     }
 
-    @Gauge(name = "status.vmSize", absolute = true, unit = MetricUnits.KILOBYTES, tags = "type=proc")
     public long getVmSize() {
         return vmSize;
     }
 
-    @Gauge(name = "status.threads", absolute = true, unit = MetricUnits.NONE, tags = "type=proc")
     public long getThreads() {
         return threads;
     }

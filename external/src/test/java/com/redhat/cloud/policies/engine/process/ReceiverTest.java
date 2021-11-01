@@ -18,7 +18,6 @@ import org.apache.avro.io.JsonDecoder;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.commons.io.IOUtils;
 import org.apache.kafka.common.header.Header;
-import org.eclipse.microprofile.metrics.MetricID;
 import org.eclipse.microprofile.reactive.messaging.Message;
 import org.hawkular.alerts.api.model.action.ActionDefinition;
 import org.hawkular.alerts.api.model.condition.Condition;
@@ -118,7 +117,7 @@ public class ReceiverTest {
     private static final String ACTION_ID = "email-notif";
     private static final String TRIGGER_ID = "arch-trigger";
 
-    private final MetricID errorCount = new MetricID("engine.input.processed.errors", new org.eclipse.microprofile.metrics.Tag("queue", "host-egress"));
+    private final Counter errorCount = Counter.builder("engine.input.processed.errors").tags("queue", "host-egress").register(meterRegistry);
 
     private Action deserializeAction(String payload) {
         Action action = new Action();
@@ -150,9 +149,7 @@ public class ReceiverTest {
         trigger.setMode(Mode.FIRING);
         trigger.setEnabled(true);
 
-        FullTrigger fullTrigger = new FullTrigger(trigger, null, conditions);
-
-        return fullTrigger;
+        return new FullTrigger(trigger, null, conditions);
     }
 
     @BeforeEach
@@ -179,8 +176,8 @@ public class ReceiverTest {
         definitionsService.createFullTrigger(TENANT_ID, fullTrigger2);
 
         // Read the input file and send it
-        InputStream is = getClass().getClassLoader().getResourceAsStream("input/host.json");
-        String inputJson = IOUtils.toString(is, StandardCharsets.UTF_8);
+        InputStream inputStream = getClass().getClassLoader().getResourceAsStream("input/host.json");
+        String inputJson = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
         hostEmitter.send(inputJson);
 
         // Wait for the async messaging to arrive
@@ -207,7 +204,7 @@ public class ReceiverTest {
         checkPoliciesHistoryEntries(fullTrigger, 2);
         checkPoliciesHistoryEntries(fullTrigger2, 2);
 
-        Counter hostEgressProcessingErrors = meterRegistry.find(errorCount.getName()).counter();
+        Counter hostEgressProcessingErrors = meterRegistry.find(errorCount.getId().getName()).counter();
         assertEquals(1.0, hostEgressProcessingErrors.count());
 
         // Verify the alert includes the tags from the event
