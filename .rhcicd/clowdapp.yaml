@@ -1,0 +1,177 @@
+---
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: policies-engine
+objects:
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: policies-engine-data
+    labels:
+      app: policies-engine
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: ${INFINISPAN_STORAGE}
+- apiVersion: cloud.redhat.com/v1alpha1
+  kind: ClowdApp
+  metadata:
+    name: policies-engine
+    labels:
+      app: policies-engine
+  spec:
+    envName: ${ENV_NAME}
+    dependencies:
+    - host-inventory
+    - ingress
+    database:
+      name: policies_ui_backend
+      version: 12
+    kafkaTopics:
+    - topicName: platform.inventory.events
+      partitions: 64
+      replicas: 3
+    - topicName: platform.notifications.ingress
+      partitions: 3
+      replicas: 3
+    testing:
+      iqePlugin: policies
+    deployments:
+    - name: policies-engine
+      replicas: ${{REPLICAS}}
+      strategy:
+        type: Recreate
+      web: true
+      podSpec:
+        image: ${IMAGE}:${IMAGE_TAG}
+        resources:
+          requests:
+            cpu: ${CPU_REQUEST}
+            memory: ${MEMORY_REQUEST}
+          limits:
+            cpu: ${CPU_LIMIT}
+            memory: ${MEMORY_LIMIT}
+        volumes:
+        - name: policies-engine-data
+          persistentVolumeClaim:
+            claimName: policies-engine-data
+        - name: rds-client-ca
+          emptyDir: {}
+        volumeMounts:
+        - name: policies-engine-data
+          mountPath: /data
+        - name: rds-client-ca
+          mountPath: /tmp
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8000
+            scheme: HTTP
+          initialDelaySeconds: 420
+          periodSeconds: 10
+          timeoutSeconds: 1
+          successThreshold: 1
+          failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8000
+            scheme: HTTP
+          initialDelaySeconds: 420
+          periodSeconds: 10
+          timeoutSeconds: 1
+          successThreshold: 1
+          failureThreshold: 3
+        env:
+        - name: ENV_NAME
+          value: ${ENV_NAME}
+        - name: EXTERNAL_LOGGING_LEVEL
+          value: "INFO"
+        - name: GC_CONTAINER_OPTIONS
+          value: "-XX:+UseG1GC"
+        - name: GC_MAX_METASPACE_SIZE
+          value: "256"
+        - name: JAVA_CORE_LIMIT
+          value: "0"
+        - name: _JAVA_OPTIONS
+          value: -Dhawkular.data=/data -Dengine.alerts.condition-evaluation-time=false -Dengine.data-driven-triggers-enabled=false
+        - name: KAFKA_SASL_JAAS_CONFIG
+          value: ${KAFKA_SASL_JAAS_CONFIG}
+        - name: KAFKA_SASL_MECHANISM
+          value: ${KAFKA_SASL_MECHANISM}
+        - name: KAFKA_SASL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: kafka-credentials
+              key: password
+              optional: true
+        - name: KAFKA_SASL_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: kafka-credentials
+              key: username
+              optional: true
+        - name: KAFKA_SECURITY_PROTOCOL
+          value: ${KAFKA_SECURITY_PROTOCOL}
+        - name: KAFKA_SSL_TRUSTSTORE_LOCATION
+          value: "/opt/certs/kafka-cacert"
+        - name: KAFKA_SSL_TRUSTSTORE_TYPE
+          value: "PEM"
+        - name: QUARKUS_HTTP_PORT
+          value: "8000"
+        - name: QUARKUS_LOG_CLOUDWATCH_ENABLED
+          value: ${CLOUDWATCH_ENABLED}
+        - name: QUARKUS_LOG_CLOUDWATCH_LOG_STREAM_NAME
+          value: ${HOSTNAME}
+        - name: QUARKUS_LOG_SENTRY
+          value: ${SENTRY_ENABLED}
+        - name: QUARKUS_LOG_SENTRY_DSN
+          value: https://a22a69dec467495e8dabc9a937104f34@o271843.ingest.sentry.io/5217678?environment=${ENV_NAME}
+        - name: QUARKUS_LOG_SENTRY_ENVIRONMENT
+          value: ${ENV_NAME}
+parameters:
+- name: CLOUDWATCH_ENABLED
+  description: Enable Cloudwatch (or not)
+  value: "false"
+- name: CPU_LIMIT
+  description: CPU limit on ephemeral
+  value: 1000m
+- name: CPU_REQUEST
+  description: CPU request on ephemeral
+  value: 500m
+- name: ENV_NAME
+  description: ClowdEnvironment name (stage, prod, ephemeral)
+  required: true
+- name: IMAGE
+  description: Image URL
+  value: quay.io/cloudservices/policies-engine
+- name: IMAGE_TAG
+  description: Image tag
+  value: latest
+- name: INFINISPAN_STORAGE
+  displayName: Infinispan's persistent storage size
+  description: Amount of storage to request for the database persistent volume
+  value: 10Gi
+- name: KAFKA_SASL_JAAS_CONFIG
+  description: Kafka SASL JAAS Config
+  value: ""
+- name: KAFKA_SASL_MECHANISM
+  description: Mechanism to use if using simple auth and security layer (SASL)
+  value: ""
+- name: KAFKA_SECURITY_PROTOCOL
+  description: Security protocol used to talk with Kafka
+  value: "PLAINTEXT"
+- name: MEMORY_LIMIT
+  description: Memory limit on ephemeral
+  value: 3Gi
+- name: MEMORY_REQUEST
+  description: Memory request on ephemeral
+  value: 1.5Gi
+- name: REPLICAS
+  value: "1"
+- name: SENTRY_ENABLED
+  description: Enable Sentry (or not)
+  value: "false"
