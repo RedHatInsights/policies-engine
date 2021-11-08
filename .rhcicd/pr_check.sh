@@ -2,13 +2,24 @@
 
 set -exv
 
-IMAGE="quay.io/cloudservices/policies-engine"
-IMAGE_TAG=$(git rev-parse --short=7 HEAD)
+# Clowder config
+export APP_NAME="policies"
+export COMPONENT_NAME="policies-engine"
+export IMAGE="quay.io/cloudservices/policies-engine"
+export DEPLOY_TIMEOUT="720"
 
-DOCKER_CONF="$PWD/.docker"
-mkdir -p "$DOCKER_CONF"
+# Bonfire init
+CICD_URL=https://raw.githubusercontent.com/RedHatInsights/bonfire/master/cicd
+curl -s $CICD_URL/bootstrap.sh > .cicd_bootstrap.sh && source .cicd_bootstrap.sh
 
-docker --config="$DOCKER_CONF" build -t "${IMAGE}:${IMAGE_TAG}" . -f external/src/main/docker/Dockerfile-build.jvm
+# Build the image and push to Quay
+export DOCKERFILE=external/src/main/docker/Dockerfile-build.jvm
+source $CICD_ROOT/build.sh
+
+# Deploy on ephemeral
+export COMPONENTS="policies-engine"
+export COMPONENTS_W_RESOURCES="policies-engine"
+source $CICD_ROOT/deploy_ephemeral_env.sh
 
 # Until test results produce a junit XML file, create a dummy result file so Jenkins will pass
 mkdir -p $WORKSPACE/artifacts

@@ -40,7 +40,7 @@ objects:
     testing:
       iqePlugin: policies
     deployments:
-    - name: policies-engine
+    - name: service
       replicas: ${{REPLICAS}}
       strategy:
         type: Recreate
@@ -137,13 +137,13 @@ parameters:
   description: Enable Cloudwatch (or not)
   value: "false"
 - name: CPU_LIMIT
-  description: CPU limit on ephemeral
+  description: CPU limit
   value: 1000m
 - name: CPU_REQUEST
-  description: CPU request on ephemeral
+  description: CPU request
   value: 500m
 - name: ENV_NAME
-  description: ClowdEnvironment name (stage, prod, ephemeral)
+  description: ClowdEnvironment name (ephemeral, stage, prod)
   required: true
 - name: IMAGE
   description: Image URL
@@ -165,10 +165,10 @@ parameters:
   description: Security protocol used to talk with Kafka
   value: "PLAINTEXT"
 - name: MEMORY_LIMIT
-  description: Memory limit on ephemeral
+  description: Memory limit
   value: 3Gi
 - name: MEMORY_REQUEST
-  description: Memory request on ephemeral
+  description: Memory request
   value: 1.5Gi
 - name: REPLICAS
   value: "1"
