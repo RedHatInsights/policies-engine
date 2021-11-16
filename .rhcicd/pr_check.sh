@@ -6,7 +6,7 @@ set -exv
 export APP_NAME="policies"
 export COMPONENT_NAME="policies-engine"
 export IMAGE="quay.io/cloudservices/policies-engine"
-export DEPLOY_TIMEOUT="720"
+export DEPLOY_TIMEOUT="600"
 
 # Bonfire init
 CICD_URL=https://raw.githubusercontent.com/RedHatInsights/bonfire/master/cicd
