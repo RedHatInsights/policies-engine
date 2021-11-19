@@ -27,7 +27,7 @@ objects:
     dependencies:
     - host-inventory
     - ingress
-    - policies-engine
+    - policies-ui-backend
     database:
       sharedDbAppName: policies-ui-backend
     kafkaTopics:

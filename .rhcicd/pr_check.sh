@@ -17,7 +17,6 @@ export DOCKERFILE=external/src/main/docker/Dockerfile-build.jvm
 source $CICD_ROOT/build.sh
 
 # Deploy on ephemeral
-export COMPONENTS="policies-engine"
 export COMPONENTS_W_RESOURCES="policies-engine"
 source $CICD_ROOT/deploy_ephemeral_env.sh
 
