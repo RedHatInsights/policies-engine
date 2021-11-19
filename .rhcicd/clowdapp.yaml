@@ -27,9 +27,9 @@ objects:
     dependencies:
     - host-inventory
     - ingress
+    - policies-engine
     database:
-      name: policies_ui_backend
-      version: 12
+      sharedDbAppName: policies-ui-backend
     kafkaTopics:
     - topicName: platform.inventory.events
       partitions: 64
