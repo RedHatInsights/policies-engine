@@ -12,6 +12,7 @@ import org.hawkular.alerts.api.model.trigger.Mode
 import org.hawkular.alerts.api.model.trigger.Trigger
 import org.hawkular.alerts.log.MsgLogger
 import org.hawkular.alerts.log.MsgLogging
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestMethodOrder
@@ -325,6 +326,7 @@ class LifecycleITest extends AbstractQuarkusITestBase {
     }
 
     @Test
+    @Disabled("The triggers' lifecycle is no longer used by policies-ui-backend. This is still an experimental change so let's keep this test around for a while.")
     void t031_verifyTriggerLifecycle() {
         logger.info( "Running t022_verifyTriggerLifecycle")
         def resp = client.get(path: "triggers/trigger/test-autoresolve-trigger");

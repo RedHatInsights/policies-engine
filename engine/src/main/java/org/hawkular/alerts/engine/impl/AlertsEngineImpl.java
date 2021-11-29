@@ -109,6 +109,8 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
 
     private ExecutorService executor;
 
+    private boolean triggersLifecycleDisabled;
+
     public AlertsEngineImpl() {
         pendingData = new TreeSet<>();
         pendingEvents = new TreeSet<>();
@@ -125,6 +127,10 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
         engineExtensions = ConfigProvider.getConfig().getValue("engine.alerts.engine-extensions", Boolean.class);
         updateLastEvaluated = ConfigProvider.getConfig().getValue("engine.alerts.condition-evaluation-time", Boolean.class);
         wakeUpTimer = new Timer("AlertsEngineImpl-Timer");
+    }
+
+    public void disableTriggersLifecycle() {
+        triggersLifecycleDisabled = true;
     }
 
     public RulesEngine getRules() {
@@ -678,8 +684,10 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
 
     private void handleAlerts() throws Exception {
         alertsService.addAlerts(alerts);
-        for (Alert alert : alerts) {
-            definitions.addLifecycleToTrigger(alert.getTenantId(), alert.getTriggerId(), Trigger.TriggerLifecycle.ALERT_GENERATE);
+        if (!triggersLifecycleDisabled) {
+            for (Alert alert : alerts) {
+                definitions.addLifecycleToTrigger(alert.getTenantId(), alert.getTriggerId(), Trigger.TriggerLifecycle.ALERT_GENERATE);
+            }
         }
         alerts.clear();
     }
