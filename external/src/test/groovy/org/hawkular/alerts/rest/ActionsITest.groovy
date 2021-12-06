@@ -11,6 +11,7 @@ import org.hawkular.alerts.api.model.trigger.Trigger
 import org.hawkular.alerts.api.model.trigger.TriggerAction
 import org.hawkular.alerts.log.MsgLogger
 import org.hawkular.alerts.log.MsgLogging
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
 import static org.hawkular.alerts.api.model.event.Alert.Status
@@ -283,6 +284,7 @@ class ActionsITest extends AbstractQuarkusITestBase {
     }
 
     @Test
+    @Disabled("The actions store is no longer used by the engine. This is still an experimental change so let's keep this test around for a while.")
     void actionByStatusTest() {
         String start = String.valueOf(System.currentTimeMillis());
 
@@ -446,6 +448,7 @@ class ActionsITest extends AbstractQuarkusITestBase {
     }
 
     @Test
+    @Disabled("The actions store is no longer used by the engine. This is still an experimental change so let's keep this test around for a while.")
     void globalActionsTest() {
         String start = String.valueOf(System.currentTimeMillis());
 

@@ -68,8 +68,14 @@ public class IspnActionsServiceImpl implements ActionsService {
      */
     long alertsLifespanInHours;
 
+    boolean actionsStoreDisabled;
+
     public void init() {
         fastActionsStore = ConfigProvider.getConfig().getValue("engine.backend.ispn.actions-ephemeral", Boolean.class);
+        actionsStoreDisabled = ConfigProvider.getConfig().getOptionalValue("engine.actions-store.disabled", Boolean.class).orElse(false);
+        if (actionsStoreDisabled) {
+            log.info("The actions store is disabled");
+        }
         if(fastActionsStore) {
             actionsStore = IspnCacheManager.getCacheManager().getCache("actions");
         } else {
@@ -417,14 +423,16 @@ public class IspnActionsServiceImpl implements ActionsService {
         if (action.getResult() == null) {
             action.setResult(WAITING_RESULT);
         }
-        try {
-            if(alertsLifespanInHours < 0) {
-                actionsStore.getAdvancedCache().withFlags(IGNORE_RETURN_VALUES).put(IspnPk.pk(action), new IspnAction(action));
-            } else {
-                actionsStore.getAdvancedCache().withFlags(IGNORE_RETURN_VALUES).put(IspnPk.pk(action), new IspnAction(action), alertsLifespanInHours, TimeUnit.HOURS);
+        if (!actionsStoreDisabled) {
+            try {
+                if(alertsLifespanInHours < 0) {
+                    actionsStore.getAdvancedCache().withFlags(IGNORE_RETURN_VALUES).put(IspnPk.pk(action), new IspnAction(action));
+                } else {
+                    actionsStore.getAdvancedCache().withFlags(IGNORE_RETURN_VALUES).put(IspnPk.pk(action), new IspnAction(action), alertsLifespanInHours, TimeUnit.HOURS);
+                }
+            } catch (Exception e) {
+                log.errorDatabaseException(e.getMessage());
             }
-        } catch (Exception e) {
-            log.errorDatabaseException(e.getMessage());
         }
     }
 }
