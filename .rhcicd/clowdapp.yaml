@@ -120,6 +120,8 @@ objects:
           value: "/opt/certs/kafka-cacert"
         - name: KAFKA_SSL_TRUSTSTORE_TYPE
           value: "PEM"
+        - name: MP_MESSAGING_INCOMING_EVENTS_ENABLED
+          value: ${KAFKA_EVENTS_ENABLED}
         - name: QUARKUS_HTTP_PORT
           value: "8000"
         - name: QUARKUS_LOG_CLOUDWATCH_ENABLED
@@ -158,6 +160,8 @@ parameters:
 - name: KAFKA_SASL_JAAS_CONFIG
   description: Kafka SASL JAAS Config
   value: ""
+- name: KAFKA_EVENTS_ENABLED
+  value: "true"
 - name: KAFKA_SASL_MECHANISM
   description: Mechanism to use if using simple auth and security layer (SASL)
   value: ""
