@@ -44,7 +44,9 @@ objects:
       replicas: ${{REPLICAS}}
       strategy:
         type: Recreate
-      web: true
+      webServices:
+        public:
+          enabled: true
       podSpec:
         image: ${IMAGE}:${IMAGE_TAG}
         resources:
