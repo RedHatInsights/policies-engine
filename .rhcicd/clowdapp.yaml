@@ -100,28 +100,6 @@ objects:
           value: "0"
         - name: _JAVA_OPTIONS
           value: -Dhawkular.data=/data -Dengine.alerts.condition-evaluation-time=false -Dengine.data-driven-triggers-enabled=false
-        - name: KAFKA_SASL_JAAS_CONFIG
-          value: ${KAFKA_SASL_JAAS_CONFIG}
-        - name: KAFKA_SASL_MECHANISM
-          value: ${KAFKA_SASL_MECHANISM}
-        - name: KAFKA_SASL_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: kafka-credentials
-              key: password
-              optional: true
-        - name: KAFKA_SASL_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: kafka-credentials
-              key: username
-              optional: true
-        - name: KAFKA_SECURITY_PROTOCOL
-          value: ${KAFKA_SECURITY_PROTOCOL}
-        - name: KAFKA_SSL_TRUSTSTORE_LOCATION
-          value: "/opt/certs/kafka-cacert"
-        - name: KAFKA_SSL_TRUSTSTORE_TYPE
-          value: "PEM"
         - name: QUARKUS_HTTP_PORT
           value: "8000"
         - name: QUARKUS_LOG_CLOUDWATCH_ENABLED
@@ -157,15 +135,6 @@ parameters:
   displayName: Infinispan's persistent storage size
   description: Amount of storage to request for the database persistent volume
   value: 10Gi
-- name: KAFKA_SASL_JAAS_CONFIG
-  description: Kafka SASL JAAS Config
-  value: ""
-- name: KAFKA_SASL_MECHANISM
-  description: Mechanism to use if using simple auth and security layer (SASL)
-  value: ""
-- name: KAFKA_SECURITY_PROTOCOL
-  description: Security protocol used to talk with Kafka
-  value: "PLAINTEXT"
 - name: MEMORY_LIMIT
   description: Memory limit
   value: 3Gi
