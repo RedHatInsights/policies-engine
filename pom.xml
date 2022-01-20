@@ -60,7 +60,7 @@
     <version.opentracing-vertx-web>1.0.0</version.opentracing-vertx-web>
 
     <insights-notification-schemas-java.version>0.4</insights-notification-schemas-java.version>
-    <clowder-quarkus-config-source.version>0.5.0</clowder-quarkus-config-source.version>
+    <clowder-quarkus-config-source.version>0.5.1</clowder-quarkus-config-source.version>
   </properties>
 
   <dependencyManagement>
