@@ -25,7 +25,11 @@ public class KafkaSaslInitializer {
             LOGGER.info("Initializing Kafka SASL configuration...");
             setValue(KAFKA_SASL_JAAS_CONFIG, kafkaSaslJaasConfig);
             setValue(KAFKA_SASL_MECHANISM, kafkaSaslMechanism);
+            // TODO Temp, remove it ASAP
+            kafkaSaslMechanism.ifPresent(value -> LOGGER.infof(KAFKA_SASL_MECHANISM + "=%s", value));
             setValue(KAFKA_SECURITY_PROTOCOL, kafkaSecurityProtocol);
+            // TODO Temp, remove it ASAP
+            kafkaSecurityProtocol.ifPresent(value -> LOGGER.infof(KAFKA_SECURITY_PROTOCOL + "=%s", value));
             setValue(KAFKA_SSL_TRUSTSTORE_LOCATION, kafkaSslTruststoreLocation);
             // TODO Temp, remove it ASAP
             kafkaSslTruststoreLocation.ifPresent(value -> LOGGER.infof(KAFKA_SSL_TRUSTSTORE_LOCATION + "=%s", value));
