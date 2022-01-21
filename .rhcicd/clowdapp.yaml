@@ -60,12 +60,12 @@ objects:
         - name: policies-engine-data
           persistentVolumeClaim:
             claimName: policies-engine-data
-        - name: rds-client-ca
+        - name: certs
           emptyDir: {}
         volumeMounts:
         - name: policies-engine-data
           mountPath: /data
-        - name: rds-client-ca
+        - name: certs
           mountPath: /tmp
         readinessProbe:
           httpGet:
