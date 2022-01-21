@@ -23,6 +23,8 @@ public class KafkaSaslInitializer {
 
         if (kafkaSaslJaasConfig.isPresent() || kafkaSaslMechanism.isPresent() || kafkaSecurityProtocol.isPresent() || kafkaSslTruststoreLocation.isPresent()) {
             LOGGER.info("Initializing Kafka SASL configuration...");
+            // TODO Move this to clowder-quarkus-config-source
+            System.setProperty("kafka.ssl.truststore.type", "PEM");
             setValue(KAFKA_SASL_JAAS_CONFIG, kafkaSaslJaasConfig);
             setValue(KAFKA_SASL_MECHANISM, kafkaSaslMechanism);
             // TODO Temp, remove it ASAP
