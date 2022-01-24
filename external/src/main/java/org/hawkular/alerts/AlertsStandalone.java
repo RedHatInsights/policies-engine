@@ -1,7 +1,6 @@
 package org.hawkular.alerts;
 
 import com.redhat.cloud.policies.engine.actions.QuarkusActionPluginRegister;
-import com.redhat.cloud.policies.engine.clowder.KafkaSaslInitializer;
 import io.quarkus.runtime.LaunchMode;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -83,9 +82,6 @@ public class AlertsStandalone {
     private IspnAdminService adminService;
 
     public AlertsStandalone() {
-        // The Kafka SASL configuration must be initialized before SmallRye Reactive Messaging connects to Kafka.
-        KafkaSaslInitializer.init();
-
         log.info("Policies Engine uses Infinispan backend");
 
         if((LaunchMode.current() == LaunchMode.DEVELOPMENT || LaunchMode.current() == LaunchMode.TEST) && isEmpty(System.getProperty("hawkular.data"))) {
