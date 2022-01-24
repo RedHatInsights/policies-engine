@@ -13,6 +13,7 @@ public class KafkaSaslInitializer {
     private static final String KAFKA_SASL_MECHANISM = "kafka.sasl.mechanism";
     private static final String KAFKA_SECURITY_PROTOCOL = "kafka.security.protocol";
     private static final String KAFKA_SSL_TRUSTSTORE_LOCATION = "kafka.ssl.truststore.location";
+    private static final String KAFKA_SSL_TRUSTSTORE_TYPE = "kafka.ssl.truststore.type";
 
     public static void init() {
         Config config = ConfigProvider.getConfig();
@@ -20,21 +21,15 @@ public class KafkaSaslInitializer {
         Optional<String> kafkaSaslMechanism = config.getOptionalValue(KAFKA_SASL_MECHANISM, String.class);
         Optional<String> kafkaSecurityProtocol = config.getOptionalValue(KAFKA_SECURITY_PROTOCOL, String.class);
         Optional<String> kafkaSslTruststoreLocation = config.getOptionalValue(KAFKA_SSL_TRUSTSTORE_LOCATION, String.class);
+        Optional<String> kafkaSslTruststoreType = config.getOptionalValue(KAFKA_SSL_TRUSTSTORE_TYPE, String.class);
 
         if (kafkaSaslJaasConfig.isPresent() || kafkaSaslMechanism.isPresent() || kafkaSecurityProtocol.isPresent() || kafkaSslTruststoreLocation.isPresent()) {
             LOGGER.info("Initializing Kafka SASL configuration...");
-            // TODO Move this to clowder-quarkus-config-source
-            System.setProperty("kafka.ssl.truststore.type", "PEM");
             setValue(KAFKA_SASL_JAAS_CONFIG, kafkaSaslJaasConfig);
             setValue(KAFKA_SASL_MECHANISM, kafkaSaslMechanism);
-            // TODO Temp, remove it ASAP
-            kafkaSaslMechanism.ifPresent(value -> LOGGER.infof(KAFKA_SASL_MECHANISM + "=%s", value));
             setValue(KAFKA_SECURITY_PROTOCOL, kafkaSecurityProtocol);
-            // TODO Temp, remove it ASAP
-            kafkaSecurityProtocol.ifPresent(value -> LOGGER.infof(KAFKA_SECURITY_PROTOCOL + "=%s", value));
             setValue(KAFKA_SSL_TRUSTSTORE_LOCATION, kafkaSslTruststoreLocation);
-            // TODO Temp, remove it ASAP
-            kafkaSslTruststoreLocation.ifPresent(value -> LOGGER.infof(KAFKA_SSL_TRUSTSTORE_LOCATION + "=%s", value));
+            setValue(KAFKA_SSL_TRUSTSTORE_TYPE, kafkaSslTruststoreType);
         }
     }
 
