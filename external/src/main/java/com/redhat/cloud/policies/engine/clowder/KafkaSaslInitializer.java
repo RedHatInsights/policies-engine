@@ -5,15 +5,18 @@ import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.jboss.logging.Logger;
 
+import javax.annotation.Priority;
+import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
-import javax.inject.Singleton;
 import java.util.Optional;
+
+import static javax.interceptor.Interceptor.Priority.PLATFORM_BEFORE;
 
 /*
  * This bean is required to make sure that SmallRye Reactive Messaging will use the configuration from
  * clowder-quarkus-config-source during the Kafka SASL authentication process.
  */
-@Singleton
+@ApplicationScoped
 public class KafkaSaslInitializer {
 
     private static final Logger LOGGER = Logger.getLogger(KafkaSaslInitializer.class);
@@ -23,7 +26,7 @@ public class KafkaSaslInitializer {
     private static final String KAFKA_SSL_TRUSTSTORE_LOCATION = "kafka.ssl.truststore.location";
     private static final String KAFKA_SSL_TRUSTSTORE_TYPE = "kafka.ssl.truststore.type";
 
-    void init(@Observes StartupEvent event) {
+    void init(@Observes @Priority(PLATFORM_BEFORE) StartupEvent event) {
         Config config = ConfigProvider.getConfig();
         Optional<String> kafkaSaslJaasConfig = config.getOptionalValue(KAFKA_SASL_JAAS_CONFIG, String.class);
         Optional<String> kafkaSaslMechanism = config.getOptionalValue(KAFKA_SASL_MECHANISM, String.class);
