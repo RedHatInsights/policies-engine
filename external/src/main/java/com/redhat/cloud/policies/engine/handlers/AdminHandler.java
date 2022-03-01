@@ -3,6 +3,7 @@ package com.redhat.cloud.policies.engine.handlers;
 import com.redhat.cloud.policies.engine.handlers.util.ResponseUtil;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.handler.BodyHandler;
 import org.hawkular.alerts.api.doc.DocEndpoint;
 import org.hawkular.alerts.api.doc.DocPath;
 import org.hawkular.alerts.api.doc.DocResponse;
@@ -46,6 +47,7 @@ public class AdminHandler {
         router.get(path + "/stats").handler(this::getKeyStatistics);
         router.put(path + "/rocksdb/compact").handler(this::rocksOperations);
         router.put(path + "/down").handler(this::setAdminDown);
+        router.put(path + "/lucene/clean/event").handler(BodyHandler.create()).handler(this::deleteIndexedEvents);
     }
 
     private void setAdminDown(RoutingContext routing) {
@@ -150,6 +152,39 @@ public class AdminHandler {
                     .end();
         } else {
             ResponseUtil.badRequest(routing, "Blocking RocksDB operation is already running");
+        }
+    }
+
+    @DocPath(method = PUT,
+            path = "/lucene/clean/event",
+            name = "Clean the Lucene event index",
+            notes = "This will update liveness handler with operation annotation and return immediately.")
+    @DocResponses(value = {
+            @DocResponse(code = 204, message = "Success, processing results.", response = String.class),
+            @DocResponse(code = 500, message = "Internal server error.", response = ResponseUtil.ApiError.class)
+    })
+    public void deleteIndexedEvents(RoutingContext routing) {
+        if (blockRunning.compareAndSet(false, true)) {
+            executorService.submit(() -> {
+                int ageInDays = 0;
+                if (routing.getBody() != null) {
+                    ageInDays = Integer.valueOf(routing.getBodyAsString());
+                }
+                try {
+                    statusService.setAdditionalStatus("operation", "running Lucene index cleaning");
+                    adminService.deleteIndexedEventsBefore(ageInDays);
+                } catch (Exception e) {
+                    log.error("Failed to clean Lucene 'event' index",e);
+                } finally {
+                    blockRunning.lazySet(false);
+                    statusService.setAdditionalStatus("operation", null);
+                }
+            });
+            routing.response()
+                    .setStatusCode(204)
+                    .end();
+        } else {
+            ResponseUtil.badRequest(routing, "Blocking Lucene operation is already running");
         }
     }
 }
