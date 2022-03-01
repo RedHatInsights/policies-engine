@@ -1,5 +1,14 @@
 package org.hawkular.alerts.engine.impl.ispn;
 
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.document.DateTools;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.TermRangeQuery;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.store.NoLockFactory;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.hawkular.alerts.engine.cache.IspnCacheManager;
 import org.hawkular.alerts.log.AlertingLogger;
@@ -10,12 +19,18 @@ import org.infinispan.persistence.rocksdb.RocksDBStore;
 import org.infinispan.query.Search;
 import org.infinispan.query.dsl.QueryFactory;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
+
+import static java.time.ZoneOffset.UTC;
 
 public class IspnAdminService {
 
@@ -130,5 +145,23 @@ public class IspnAdminService {
             }
         }
         log.info("Finished RocksDB Compaction");
+    }
+
+    public void deleteIndexedEventsBefore(int ageInDays) {
+        log.infof("Executing Lucene 'event' index cleaning. Events older than %d day(s) will be removed from the index.", ageInDays);
+        try {
+            try (
+                    Directory directory = FSDirectory.open(Path.of(System.getProperty("hawkular.data") + "/alerting/event"), NoLockFactory.INSTANCE);
+                    IndexWriter indexWriter = new IndexWriter(directory, new IndexWriterConfig(new StandardAnalyzer()))
+            ) {
+                String before = String.valueOf(LocalDateTime.now().minusDays(ageInDays).toEpochSecond(UTC));
+                Query query = TermRangeQuery.newStringRange("ctime", null, before, false, false);
+                indexWriter.deleteDocuments(query);
+            }
+        } catch (IOException e) {
+            log.error("Failed to clean Lucene 'event' index", e);
+            throw new UncheckedIOException(e);
+        }
+        log.info("Finished cleaning Lucene 'event' index");
     }
 }
