@@ -91,7 +91,7 @@ objects:
         - name: ENV_NAME
           value: ${ENV_NAME}
         - name: EXTERNAL_LOGGING_LEVEL
-          value: "INFO"
+          value: ${EXTERNAL_LOGGING_LEVEL}
         - name: GC_CONTAINER_OPTIONS
           value: "-XX:+UseG1GC"
         - name: GC_MAX_METASPACE_SIZE
@@ -135,6 +135,8 @@ parameters:
   displayName: Infinispan's persistent storage size
   description: Amount of storage to request for the database persistent volume
   value: 10Gi
+- name: EXTERNAL_LOGGING_LEVEL
+  value: INFO
 - name: MEMORY_LIMIT
   description: Memory limit
   value: 3Gi
