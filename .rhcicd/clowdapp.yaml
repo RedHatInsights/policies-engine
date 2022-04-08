@@ -126,7 +126,7 @@ parameters:
   value: 500m
 - name: ENGINE_ALERTS_ENGINE_PERIOD
   description: Delay in milliseconds between two executions of the TimerTask that processes the events
-  value: 2000
+  value: "2000"
 - name: ENV_NAME
   description: ClowdEnvironment name (ephemeral, stage, prod)
   required: true
