@@ -166,7 +166,8 @@ public class AdminHandler {
     public void deleteIndexedEvents(RoutingContext routing) {
         if (blockRunning.compareAndSet(false, true)) {
             executorService.submit(() -> {
-                int ageInDays = 0;
+                // Unless requested otherwise with the request body, the index data of events older than 2 days will be deleted.
+                int ageInDays = 2;
                 if (routing.getBody() != null) {
                     ageInDays = Integer.valueOf(routing.getBodyAsString());
                 }
