@@ -1,6 +1,7 @@
 package com.redhat.cloud.policies.engine.process;
 
 import com.redhat.cloud.notifications.ingress.Action;
+import com.redhat.cloud.notifications.ingress.Parser;
 import com.redhat.cloud.policies.engine.TestLifecycleManager;
 import com.redhat.cloud.policies.engine.history.PoliciesHistoryEntry;
 import io.micrometer.core.instrument.Counter;
@@ -12,10 +13,6 @@ import io.smallrye.reactive.messaging.providers.connectors.InMemoryConnector;
 import io.smallrye.reactive.messaging.providers.connectors.InMemorySink;
 import io.smallrye.reactive.messaging.providers.connectors.InMemorySource;
 import io.vertx.core.json.JsonObject;
-import org.apache.avro.io.DatumReader;
-import org.apache.avro.io.DecoderFactory;
-import org.apache.avro.io.JsonDecoder;
-import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.commons.io.IOUtils;
 import org.apache.kafka.common.header.Header;
 import org.eclipse.microprofile.metrics.MetricID;
@@ -121,15 +118,7 @@ public class ReceiverTest {
     private final MetricID errorCount = new MetricID("engine.input.processed.errors", new org.eclipse.microprofile.metrics.Tag("queue", "host-egress"));
 
     private Action deserializeAction(String payload) {
-        Action action = new Action();
-        try {
-            JsonDecoder jsonDecoder = DecoderFactory.get().jsonDecoder(Action.getClassSchema(), payload);
-            DatumReader<Action> reader = new SpecificDatumReader<>(Action.class);
-            reader.read(action, jsonDecoder);
-        } catch (IOException e) {
-            throw new IllegalArgumentException("Payload extraction failed", e);
-        }
-        return action;
+        return Parser.decode(payload);
     }
 
     private FullTrigger createTriggeringTrigger(String triggerId) {
@@ -193,7 +182,7 @@ public class ReceiverTest {
         Action action = deserializeAction(webhookReceiver.received().get(0).getPayload());
 
         assertEquals(TENANT_ID, action.getAccountId());
-        assertTrue(action.getContext().containsKey("inventory_id"));
+        assertTrue(action.getContext().getAdditionalProperties().containsKey("inventory_id"));
         assertEquals(2, action.getEvents().size());
 
         // Now send broken data and then working and expect things to still work
@@ -235,7 +224,7 @@ public class ReceiverTest {
         Action action = deserializeAction(webhookReceiver.received().get(0).getPayload());
         assertEquals(1, action.getEvents().size());
 
-        List<Map<String, String>> tags = (List<Map<String, String>>) action.getContext().get("tags");
+        List<Map<String, String>> tags = (List<Map<String, String>>) action.getContext().getAdditionalProperties().get("tags");
         boolean foundNeuchatel = false;
         boolean foundCharmey = false;
         for(Map<String, String> tag : tags) {
@@ -314,7 +303,7 @@ public class ReceiverTest {
         assertEquals(TENANT_ID + "2", action.getAccountId());
 
         assertNotNull(action.getTimestamp());
-        assertEquals("2020-04-16T16:10:42.199046", action.getContext().get("system_check_in"));
+        assertEquals("2020-04-16T16:10:42.199046", action.getContext().getAdditionalProperties().get("system_check_in"));
 
         // The trigger must be removed to prevent side-effects on other tests.
         definitionsService.removeTrigger(tenantId, fullTrigger.getTrigger().getId());

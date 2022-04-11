@@ -2,14 +2,13 @@ package com.redhat.cloud.policies.engine.actions.plugins;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.redhat.cloud.notifications.ingress.Action;
+import com.redhat.cloud.notifications.ingress.Context;
 import com.redhat.cloud.notifications.ingress.Event;
 import com.redhat.cloud.notifications.ingress.Metadata;
+import com.redhat.cloud.notifications.ingress.Parser;
+import com.redhat.cloud.notifications.ingress.Payload;
 import com.redhat.cloud.policies.engine.actions.plugins.notification.PoliciesAction;
 import io.smallrye.reactive.messaging.kafka.OutgoingKafkaRecordMetadata;
-import org.apache.avro.io.DatumWriter;
-import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.io.JsonEncoder;
-import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.kafka.common.header.internals.RecordHeaders;
 import org.eclipse.microprofile.metrics.Counter;
 import org.eclipse.microprofile.metrics.annotation.Metric;
@@ -26,9 +25,7 @@ import org.hawkular.alerts.api.model.trigger.Trigger;
 
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -175,29 +172,36 @@ public class NotificationActionPluginListener implements ActionPluginListener {
     }
 
     private String serializeAction(PoliciesAction action) throws IOException {
-        var avroAction = Action.newBuilder()
-                .setBundle(BUNDLE_NAME)
-                .setApplication(APP_NAME)
-                .setEventType(EVENT_TYPE_NAME)
-                .setAccountId(action.getAccountId())
-                .setTimestamp(action.getTimestamp())
-                .setContext(objectMapper.convertValue(action.getContext(), Map.class))
-                .setEvents(action.getEvents().stream().map(event ->
-                        Event.newBuilder()
-                                .setMetadata(Metadata.newBuilder().build())
-                                .setPayload(objectMapper.convertValue(event.getPayload(), Map.class))
+        Action notificationAction = new Action.ActionBuilder()
+                .withBundle(BUNDLE_NAME)
+                .withApplication(APP_NAME)
+                .withEventType(EVENT_TYPE_NAME)
+                .withAccountId(action.getAccountId())
+                .withTimestamp(action.getTimestamp())
+                .withContext(
+                        new Context.ContextBuilder()
+                                .withAdditionalProperty("inventory_id", action.getContext().getInventoryId())
+                                .withAdditionalProperty("system_check_in", action.getContext().getSystemCheckIn())
+                                .withAdditionalProperty("display_name", action.getContext().getDisplayName())
+                                .withAdditionalProperty("tags", action.getContext().serializedTags())
+                                .build()
+                )
+                .withEvents(action.getEvents().stream().map(event ->
+                        new Event.EventBuilder()
+                                .withMetadata(new Metadata.MetadataBuilder().build())
+                                .withPayload(
+                                        new Payload.PayloadBuilder()
+                                                .withAdditionalProperty("policy_id", event.getPayload().getPolicyId())
+                                                .withAdditionalProperty("policy_name", event.getPayload().getPolicyName())
+                                                .withAdditionalProperty("policy_description", event.getPayload().getPolicyDescription())
+                                                .withAdditionalProperty("policy_condition", event.getPayload().getPolicyCondition())
+                                                .build()
+                                )
                                 .build()
                 ).collect(Collectors.toList()))
                 .build();
 
-
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        JsonEncoder jsonEncoder = EncoderFactory.get().jsonEncoder(Action.getClassSchema(), baos);
-        DatumWriter<Action> writer = new SpecificDatumWriter<>(Action.class);
-        writer.write(avroAction, jsonEncoder);
-        jsonEncoder.flush();
-
-        return baos.toString(StandardCharsets.UTF_8);
+        return Parser.encode(notificationAction);
     }
 
     private static Message buildMessageWithId(String payload) {

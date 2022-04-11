@@ -62,7 +62,6 @@ public class PoliciesAction {
         this.events = events;
     }
 
-    @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
     public static class Payload {
         private String policyId;
         private String policyName;
@@ -118,37 +117,11 @@ public class PoliciesAction {
         }
     }
 
-    @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
     public static class Context {
 
-        private static class IsoDateTimeSerializer extends LocalDateTimeSerializer {
-            @Override
-            protected DateTimeFormatter _defaultFormatter() {
-                return DateTimeFormatter.ISO_DATE_TIME;
-            }
-        }
-
-        private static class TagsSerializer extends JsonSerializer<HashMap<String, Set<String>>> {
-            @Override
-            public void serialize(HashMap<String, Set<String>> tags, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
-                jsonGenerator.writeObject(tags.entrySet().stream().map(tagsSet -> tagsSet.getValue().stream().map(tagValue -> {
-                    Map<String, String> tag = new HashMap<>();
-                    tag.put("key", tagsSet.getKey());
-                    tag.put("value", tagValue);
-                    return tag;
-                }).collect(Collectors.toList())).flatMap(List::stream).collect(Collectors.toList()));
-            }
-        }
-
         private String inventoryId;
-
-        @JsonFormat(shape = JsonFormat.Shape.STRING)
-        @JsonSerialize(using = IsoDateTimeSerializer.class)
         private LocalDateTime systemCheckIn;
-
         private String displayName;
-
-        @JsonSerialize(using = TagsSerializer.class)
         private HashMap<String, Set<String>> tags;
 
         public Context() {
@@ -185,6 +158,15 @@ public class PoliciesAction {
 
         public void setTags(HashMap<String, Set<String>> tags) {
             this.tags = tags;
+        }
+
+        public List<Map<String, String>> serializedTags() {
+            return tags.entrySet().stream().map(tagsSet -> tagsSet.getValue().stream().map(tagValue -> {
+                Map<String, String> tag = new HashMap<>();
+                tag.put("key", tagsSet.getKey());
+                tag.put("value", tagValue);
+                return tag;
+            }).collect(Collectors.toList())).flatMap(List::stream).collect(Collectors.toList());
         }
     }
 }
