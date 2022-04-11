@@ -8,6 +8,8 @@ import io.vertx.core.MultiMap;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
+import org.eclipse.microprofile.metrics.MetricRegistry;
+import org.eclipse.microprofile.metrics.Tag;
 import org.eclipse.microprofile.metrics.annotation.Timed;
 import org.hawkular.alerts.api.doc.*;
 import org.hawkular.alerts.api.exception.NotFoundException;
@@ -72,6 +74,9 @@ public class TriggersHandler {
 
     @Inject
     Tracer tracer;
+
+    @Inject
+    MetricRegistry metricRegistry;
 
     @PostConstruct
     public void init(@Observes Router router) {
@@ -153,6 +158,10 @@ public class TriggersHandler {
         routing.vertx()
                 .executeBlocking(future -> {
                     String tenantId = ResponseUtil.checkTenant(routing);
+
+                    // TODO Temp counter used to investigate the engine instability, remove ASAP.
+                    metricRegistry.counter("policies_engine_createDampening", new Tag("account", tenantId)).inc();
+
                     String json = routing.getBodyAsString();
                     String triggerId = routing.request().getParam("triggerId");
                     String groupId = routing.request().getParam("groupId");
@@ -216,6 +225,10 @@ public class TriggersHandler {
         routing.vertx()
                 .executeBlocking(future -> {
                     String tenantId = ResponseUtil.checkTenant(routing);
+
+                    // TODO Temp counter used to investigate the engine instability, remove ASAP.
+                    metricRegistry.counter("policies_engine_createFullTrigger", new Tag("account", tenantId)).inc();
+
                     String json = routing.getBodyAsString();
                     Span serverSpan = getServerSpan(routing);
                     Boolean dryRun = Boolean.valueOf(routing.request().getParam("dry"));
@@ -307,6 +320,10 @@ public class TriggersHandler {
         routing.vertx()
                 .executeBlocking(future -> {
                     String tenantId = ResponseUtil.checkTenant(routing);
+
+                    // TODO Temp counter used to investigate the engine instability, remove ASAP.
+                    metricRegistry.counter("policies_engine_updateFullTrigger", new Tag("account", tenantId)).inc();
+
                     String json = routing.getBodyAsString();
                     String triggerId = routing.request().getParam("triggerId");
                     Boolean dryRun = Boolean.valueOf(routing.request().getParam("dry"));
@@ -375,6 +392,10 @@ public class TriggersHandler {
         routing.vertx()
                 .executeBlocking(future -> {
                     String tenantId = ResponseUtil.checkTenant(routing);
+
+                    // TODO Temp counter used to investigate the engine instability, remove ASAP.
+                    metricRegistry.counter("policies_engine_createGroupMember", new Tag("account", tenantId)).inc();
+
                     String json = routing.getBodyAsString();
                     GroupMemberInfo groupMember;
                     try {
@@ -449,6 +470,10 @@ public class TriggersHandler {
                 .executeBlocking(future -> {
                     Span serverSpan = getServerSpan(routing);
                     String tenantId = ResponseUtil.checkTenant(routing);
+
+                    // TODO Temp counter used to investigate the engine instability, remove ASAP.
+                    metricRegistry.counter("policies_engine_createGroupTrigger", new Tag("account", tenantId)).inc();
+
                     String json = routing.getBodyAsString();
                     Trigger trigger;
                     try {
@@ -540,6 +565,10 @@ public class TriggersHandler {
         routing.vertx()
                 .executeBlocking(future -> {
                     String tenantId = ResponseUtil.checkTenant(routing);
+
+                    // TODO Temp counter used to investigate the engine instability, remove ASAP.
+                    metricRegistry.counter("policies_engine_deleteGroupDampening", new Tag("account", tenantId)).inc();
+
                     String dampeningId = routing.request().getParam("dampeningId");
                     Dampening found;
                     try {
@@ -585,6 +614,10 @@ public class TriggersHandler {
         routing.vertx()
                 .executeBlocking(future -> {
                     String tenantId = ResponseUtil.checkTenant(routing);
+
+                    // TODO Temp counter used to investigate the engine instability, remove ASAP.
+                    metricRegistry.counter("policies_engine_deleteGroupTrigger", new Tag("account", tenantId)).inc();
+
                     String groupId = routing.request().getParam("groupId");
                     try {
                         boolean keepNonOrphans = false;
@@ -629,6 +662,10 @@ public class TriggersHandler {
         routing.vertx()
                 .executeBlocking(future -> {
                     String tenantId = ResponseUtil.checkTenant(routing);
+
+                    // TODO Temp counter used to investigate the engine instability, remove ASAP.
+                    metricRegistry.counter("policies_engine_deleteTrigger", new Tag("account", tenantId)).inc();
+
                     String triggerId = routing.request().getParam("triggerId");
                     try {
                         definitionsService.removeTrigger(tenantId, triggerId);
@@ -664,6 +701,10 @@ public class TriggersHandler {
         routing.vertx()
                 .executeBlocking(future -> {
                     String tenantId = ResponseUtil.checkTenant(routing);
+
+                    // TODO Temp counter used to investigate the engine instability, remove ASAP.
+                    metricRegistry.counter("policies_engine_findGroupMembers", new Tag("account", tenantId)).inc();
+
                     String groupId = routing.request().getParam("groupId");
                     try {
                         boolean includeOrphans = false;
@@ -704,6 +745,10 @@ public class TriggersHandler {
                 .executeBlocking(future -> {
                     Span serverSpan = getServerSpan(routing);
                     String tenantId = ResponseUtil.checkTenant(routing);
+
+                    // TODO Temp counter used to investigate the engine instability, remove ASAP.
+                    metricRegistry.counter("policies_engine_findTriggers", new Tag("account", tenantId)).inc();
+
                     try {
                         ResponseUtil.checkForUnknownQueryParams(routing.request().params(), queryParamValidationMap.get(FIND_TRIGGERS));
                         Pager pager = ResponseUtil.extractPaging(routing.request().params());
@@ -744,6 +789,10 @@ public class TriggersHandler {
         routing.vertx()
                 .executeBlocking(future -> {
                     String tenantId = ResponseUtil.checkTenant(routing);
+
+                    // TODO Temp counter used to investigate the engine instability, remove ASAP.
+                    metricRegistry.counter("policies_engine_getDampening", new Tag("account", tenantId)).inc();
+
                     String dampeningId = routing.request().getParam("dampeningId");
                     Dampening found;
                     try {
@@ -799,6 +848,10 @@ public class TriggersHandler {
         routing.vertx()
                 .executeBlocking(future -> {
                     String tenantId = ResponseUtil.checkTenant(routing);
+
+                    // TODO Temp counter used to investigate the engine instability, remove ASAP.
+                    metricRegistry.counter("policies_engine_getFullTrigger", new Tag("account", tenantId)).inc();
+
                     String triggerId = routing.request().getParam("triggerId");
                     Object found = null;
                     try {
@@ -835,6 +888,10 @@ public class TriggersHandler {
         routing.vertx()
                 .executeBlocking(future -> {
                     String tenantId = ResponseUtil.checkTenant(routing);
+
+                    // TODO Temp counter used to investigate the engine instability, remove ASAP.
+                    metricRegistry.counter("policies_engine_getTriggerConditions", new Tag("account", tenantId)).inc();
+
                     String triggerId = routing.request().getParam("triggerId");
                     try {
                         Collection<Condition> conditions = definitionsService.getTriggerConditions(tenantId, triggerId, null);
@@ -864,6 +921,10 @@ public class TriggersHandler {
         routing.vertx()
                 .executeBlocking(future -> {
                     String tenantId = ResponseUtil.checkTenant(routing);
+
+                    // TODO Temp counter used to investigate the engine instability, remove ASAP.
+                    metricRegistry.counter("policies_engine_getTriggerDampenings", new Tag("account", tenantId)).inc();
+
                     String triggerId = routing.request().getParam("triggerId");
                     String triggerMode = routing.request().getParam("triggerMode");
                     Mode mode = null;
@@ -947,6 +1008,10 @@ public class TriggersHandler {
         routing.vertx()
                 .executeBlocking(future -> {
                     String tenantId = ResponseUtil.checkTenant(routing);
+
+                    // TODO Temp counter used to investigate the engine instability, remove ASAP.
+                    metricRegistry.counter("policies_engine_updateGroupTrigger", new Tag("account", tenantId)).inc();
+
                     String json = routing.getBodyAsString();
                     String triggerId = routing.request().getParam("triggerId");
                     String groupId = routing.request().getParam("groupId");
@@ -1000,6 +1065,10 @@ public class TriggersHandler {
         routing.vertx()
                 .executeBlocking(future -> {
                     String tenantId = ResponseUtil.checkTenant(routing);
+
+                    // TODO Temp counter used to investigate the engine instability, remove ASAP.
+                    metricRegistry.counter("policies_engine_orphanMemberTrigger", new Tag("account", tenantId)).inc();
+
                     String memberId = routing.request().getParam("memberId");
                     try {
                         Trigger child = definitionsService.orphanMemberTrigger(tenantId, memberId);
@@ -1066,6 +1135,10 @@ public class TriggersHandler {
         routing.vertx()
                 .executeBlocking(future -> {
                     String tenantId = ResponseUtil.checkTenant(routing);
+
+                    // TODO Temp counter used to investigate the engine instability, remove ASAP.
+                    metricRegistry.counter("policies_engine_updateGroupDampening", new Tag("account", tenantId)).inc();
+
                     String json = routing.getBodyAsString();
                     String triggerId = routing.request().getParam("triggerId");
                     String groupId = routing.request().getParam("groupId");
@@ -1124,6 +1197,10 @@ public class TriggersHandler {
         routing.vertx()
                 .executeBlocking(future -> {
                     String tenantId = ResponseUtil.checkTenant(routing);
+
+                    // TODO Temp counter used to investigate the engine instability, remove ASAP.
+                    metricRegistry.counter("policies_engine_unorphanMemberTrigger", new Tag("account", tenantId)).inc();
+
                     String json = routing.getBodyAsString();
                     String memberId = routing.request().getParam("memberId");
                     UnorphanMemberInfo unorphanMemberInfo;
@@ -1175,6 +1252,10 @@ public class TriggersHandler {
         routing.vertx()
                 .executeBlocking(future -> {
                     String tenantId = ResponseUtil.checkTenant(routing);
+
+                    // TODO Temp counter used to investigate the engine instability, remove ASAP.
+                    metricRegistry.counter("policies_engine_setAllConditions", new Tag("account", tenantId)).inc();
+
                     String json = routing.getBodyAsString();
                     String triggerId = routing.request().getParam("triggerId");
                     Collection<Condition> conditions;
@@ -1224,6 +1305,10 @@ public class TriggersHandler {
         routing.vertx()
                 .executeBlocking(future -> {
                     String tenantId = ResponseUtil.checkTenant(routing);
+
+                    // TODO Temp counter used to investigate the engine instability, remove ASAP.
+                    metricRegistry.counter("policies_engine_setConditions", new Tag("account", tenantId)).inc();
+
                     String json = routing.getBodyAsString();
                     String triggerId = routing.request().getParam("triggerId");
                     String triggerMode = routing.request().getParam("triggerMode");
@@ -1286,6 +1371,10 @@ public class TriggersHandler {
         routing.vertx()
                 .executeBlocking(future -> {
                     String tenantId = ResponseUtil.checkTenant(routing);
+
+                    // TODO Temp counter used to investigate the engine instability, remove ASAP.
+                    metricRegistry.counter("policies_engine_setGroupConditions", new Tag("account", tenantId)).inc();
+
                     String json = routing.getBodyAsString();
                     String groupId = routing.request().getParam("groupId");
                     String triggerMode = routing.request().getParam("triggerMode");
@@ -1470,6 +1559,10 @@ public class TriggersHandler {
         routing.vertx()
                 .executeBlocking(future -> {
                     String tenantId = ResponseUtil.checkTenant(routing);
+
+                    // TODO Temp counter used to investigate the engine instability, remove ASAP.
+                    metricRegistry.counter("policies_engine_setTriggersEnabled", new Tag("account", tenantId)).inc();
+
                     try {
                         Boolean enabled = null;
                         String triggerIds = routing.request().getParam("triggerId");
