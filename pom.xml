@@ -39,7 +39,7 @@
 
     <!-- Rest of them -->
     <version.junit>4.13.2</version.junit> <!-- External module uses Quarkus' JUnit 5 -->
-    <version.org.antlr>4.9.3</version.org.antlr>
+    <version.org.antlr>4.10</version.org.antlr>
     <version.org.apache.commons.commons-math3>3.6.1</version.org.apache.commons.commons-math3>
     <version.org.drools>7.38.0.Final</version.org.drools>
     <version.com.google.guava>31.1-jre</version.com.google.guava>
