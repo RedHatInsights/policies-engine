@@ -1,16 +1,17 @@
 package com.redhat.cloud.policies.engine.process;
 
 import com.redhat.cloud.policies.engine.config.OrgIdConfig;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.test.junit.QuarkusTest;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.io.IOUtils;
-import org.eclipse.microprofile.metrics.Counter;
-import org.eclipse.microprofile.metrics.annotation.Metric;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
+import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,32 +47,26 @@ public class PayloadParserTest {
     OrgIdConfig orgIdConfig;
 
     @Inject
-    @Metric(absolute = true, name = "engine.input.processed", tags = {"queue=host-egress"})
+    MeterRegistry meterRegistry;
+
     Counter incomingMessagesCount;
-
-    @Inject
-    @Metric(absolute = true, name = "engine.input.rejected", tags = {"queue=host-egress"})
     Counter rejectedCount;
-
-    @Inject
-    @Metric(absolute = true, name = "engine.input.rejected.detail", tags = {"queue=host-egress","reason=type"})
     Counter rejectedCountType;
-
-    @Inject
-    @Metric(absolute = true, name = "engine.input.rejected.detail", tags = {"queue=host-egress","reason=noHost"})
     Counter rejectedCountHost;
-
-    @Inject
-    @Metric(absolute = true, name = "engine.input.rejected.detail", tags = {"queue=host-egress","reason=reporter"})
     Counter rejectedCountReporter;
-
-    @Inject
-    @Metric(absolute = true, name = "engine.input.rejected.detail", tags = {"queue=host-egress","reason=insightsId"})
     Counter rejectedCountId;
-
-    @Inject
-    @Metric(absolute = true, name = "engine.input.processed.errors", tags = {"queue=host-egress"})
     Counter processingErrors;
+
+    @PostConstruct
+    void postConstruct() {
+        incomingMessagesCount = meterRegistry.counter("engine.input.processed", "queue", "host-egress");
+        rejectedCount = meterRegistry.counter("engine.input.rejected", "queue", "host-egress");
+        rejectedCountType = meterRegistry.counter("engine.input.rejected.detail", "queue", "host-egress", "reason", "type");
+        rejectedCountHost = meterRegistry.counter("engine.input.rejected.detail", "queue", "host-egress", "reason", "noHost");
+        rejectedCountReporter = meterRegistry.counter("engine.input.rejected.detail", "queue", "host-egress", "reason", "reporter");
+        rejectedCountId = meterRegistry.counter("engine.input.rejected.detail", "queue", "host-egress", "reason", "insightsId");
+        processingErrors = meterRegistry.counter("engine.input.processed.errors", "queue", "host-egress");
+    }
 
     private static class CounterExpectations {
         long incomingMessages;
@@ -83,11 +78,11 @@ public class PayloadParserTest {
         long processingErrors;
     }
 
-    private final Map<Counter, Long> counterValues = new HashMap<>();
+    private final Map<Counter, Double> counterValues = new HashMap<>();
 
     private void saveCounterValues(Counter... counters) {
         for (Counter counter : counters) {
-            counterValues.put(counter, counter.getCount());
+            counterValues.put(counter, counter.count());
         }
     }
 
@@ -101,8 +96,8 @@ public class PayloadParserTest {
         assertEquals(counterExpectations.processingErrors, getCounterIncrease(processingErrors), "Unexpected count: processing errors");
     }
 
-    private long getCounterIncrease(Counter counter) {
-        return counter.getCount() - counterValues.getOrDefault(counter, 0L);
+    private double getCounterIncrease(Counter counter) {
+        return counter.count() - counterValues.getOrDefault(counter, 0D);
     }
 
     @BeforeEach

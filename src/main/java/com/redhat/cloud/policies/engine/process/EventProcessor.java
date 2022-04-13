@@ -5,10 +5,11 @@ import com.redhat.cloud.policies.engine.config.OrgIdConfig;
 import com.redhat.cloud.policies.engine.db.repositories.PoliciesRepository;
 import com.redhat.cloud.policies.engine.db.entities.Policy;
 import com.redhat.cloud.policies.engine.db.repositories.PoliciesHistoryRepository;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.logging.Log;
-import org.eclipse.microprofile.metrics.Counter;
-import org.eclipse.microprofile.metrics.annotation.Metric;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.time.LocalDateTime;
@@ -40,11 +41,17 @@ public class EventProcessor {
     NotificationSender notificationSender;
 
     @Inject
-    @Metric(absolute = true, name = "engine.actions.notifications.processed")
-    Counter firedPoliciesCounter;
+    OrgIdConfig orgIdConfig;
 
     @Inject
-    OrgIdConfig orgIdConfig;
+    MeterRegistry meterRegistry;
+
+    Counter firedPoliciesCounter;
+
+    @PostConstruct
+    void postConstruct() {
+        firedPoliciesCounter = meterRegistry.counter("engine.actions.notifications.processed");
+    }
 
     /**
      * Processes an {@link Event}, evaluating conditions of all policies owned by the account of the event. If the
@@ -109,7 +116,7 @@ public class EventProcessor {
                     }
                 }
             }
-            firedPoliciesCounter.inc(firedPolicies);
+            firedPoliciesCounter.increment(firedPolicies);
             Log.debugf("%d policies fired from the event", firedPolicies);
 
             /*
