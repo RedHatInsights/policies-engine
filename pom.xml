@@ -59,7 +59,7 @@
     <!--Distributed tracing support for Vert.x which is not covered by SmallRye-OT -->
     <version.opentracing-vertx-web>1.0.0</version.opentracing-vertx-web>
 
-    <insights-notification-schemas-java.version>0.6</insights-notification-schemas-java.version>
+    <insights-notification-schemas-java.version>0.8</insights-notification-schemas-java.version>
     <clowder-quarkus-config-source.version>1.0.0</clowder-quarkus-config-source.version>
   </properties>
 
