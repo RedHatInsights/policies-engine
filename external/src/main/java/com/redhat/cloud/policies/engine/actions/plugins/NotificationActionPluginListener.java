@@ -1,15 +1,14 @@
 package com.redhat.cloud.policies.engine.actions.plugins;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.redhat.cloud.notifications.ingress.Action;
+import com.redhat.cloud.notifications.ingress.Context;
 import com.redhat.cloud.notifications.ingress.Event;
 import com.redhat.cloud.notifications.ingress.Metadata;
+import com.redhat.cloud.notifications.ingress.Parser;
+import com.redhat.cloud.notifications.ingress.Payload;
 import com.redhat.cloud.policies.engine.actions.plugins.notification.PoliciesAction;
-import io.smallrye.reactive.messaging.kafka.OutgoingKafkaRecordMetadata;
-import org.apache.avro.io.DatumWriter;
-import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.io.JsonEncoder;
-import org.apache.avro.specific.SpecificDatumWriter;
+import io.smallrye.reactive.messaging.kafka.api.OutgoingKafkaRecordMetadata;
+import io.vertx.core.json.JsonObject;
 import org.apache.kafka.common.header.internals.RecordHeaders;
 import org.eclipse.microprofile.metrics.Counter;
 import org.eclipse.microprofile.metrics.annotation.Metric;
@@ -26,9 +25,7 @@ import org.hawkular.alerts.api.model.trigger.Trigger;
 
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -74,9 +71,6 @@ public class NotificationActionPluginListener implements ActionPluginListener {
     @Inject
     @Metric(absolute = true, name = "engine.actions.notifications.aggregated")
     Counter messagesAggregated;
-
-    @Inject
-    ObjectMapper objectMapper;
 
     @Override
     public void process(ActionMessage actionMessage) throws Exception {
@@ -174,30 +168,33 @@ public class NotificationActionPluginListener implements ActionPluginListener {
         return defaultProperties;
     }
 
-    private String serializeAction(PoliciesAction action) throws IOException {
-        var avroAction = Action.newBuilder()
-                .setBundle(BUNDLE_NAME)
-                .setApplication(APP_NAME)
-                .setEventType(EVENT_TYPE_NAME)
-                .setAccountId(action.getAccountId())
-                .setTimestamp(action.getTimestamp())
-                .setContext(objectMapper.convertValue(action.getContext(), Map.class))
-                .setEvents(action.getEvents().stream().map(event ->
-                        Event.newBuilder()
-                                .setMetadata(Metadata.newBuilder().build())
-                                .setPayload(objectMapper.convertValue(event.getPayload(), Map.class))
-                                .build()
-                ).collect(Collectors.toList()))
+    private String serializeAction(PoliciesAction policiesAction) throws IOException {
+
+        Context.ContextBuilder contextBuilder = new Context.ContextBuilder();
+        Map<String, Object> context = JsonObject.mapFrom(policiesAction.getContext()).getMap();
+        context.forEach(contextBuilder::withAdditionalProperty);
+
+        Action action = new Action.ActionBuilder()
+                .withBundle(BUNDLE_NAME)
+                .withApplication(APP_NAME)
+                .withEventType(EVENT_TYPE_NAME)
+                .withAccountId(policiesAction.getAccountId())
+                .withTimestamp(policiesAction.getTimestamp())
+                .withContext(contextBuilder.build())
+                .withEvents(policiesAction.getEvents().stream().map(event -> {
+
+                    Payload.PayloadBuilder payloadBuilder = new Payload.PayloadBuilder();
+                    Map<String, Object> payload = JsonObject.mapFrom(event.getPayload()).getMap();
+                    payload.forEach(payloadBuilder::withAdditionalProperty);
+
+                    return new Event.EventBuilder()
+                            .withMetadata(new Metadata.MetadataBuilder().build())
+                            .withPayload(payloadBuilder.build())
+                            .build();
+                }).collect(Collectors.toList()))
                 .build();
 
-
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        JsonEncoder jsonEncoder = EncoderFactory.get().jsonEncoder(Action.getClassSchema(), baos);
-        DatumWriter<Action> writer = new SpecificDatumWriter<>(Action.class);
-        writer.write(avroAction, jsonEncoder);
-        jsonEncoder.flush();
-
-        return baos.toString(StandardCharsets.UTF_8);
+        return Parser.encode(action);
     }
 
     private static Message buildMessageWithId(String payload) {
