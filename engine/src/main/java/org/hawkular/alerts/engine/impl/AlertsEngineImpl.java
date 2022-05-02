@@ -18,6 +18,7 @@ import org.hawkular.alerts.api.services.DataExtension;
 import org.hawkular.alerts.api.services.DefinitionsService;
 import org.hawkular.alerts.api.services.EventExtension;
 import org.hawkular.alerts.api.services.ExtensionsService;
+import org.hawkular.alerts.api.services.LightweightEngine;
 import org.hawkular.alerts.engine.impl.AlertsEngineCache.DataEntry;
 import org.hawkular.alerts.engine.service.AlertsEngine;
 import org.hawkular.alerts.engine.service.PartitionDataListener;
@@ -111,6 +112,8 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
 
     private boolean triggersLifecycleDisabled;
 
+    private LightweightEngine lightweightEngine;
+
     public AlertsEngineImpl() {
         pendingData = new TreeSet<>();
         pendingEvents = new TreeSet<>();
@@ -163,6 +166,10 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
 
     public void setExecutor(ExecutorService executor) {
         this.executor = executor;
+    }
+
+    public void setLightweightEngine(LightweightEngine lightweightEngine) {
+        this.lightweightEngine = lightweightEngine;
     }
 
     public void initServices() {
@@ -381,6 +388,9 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
                 if (!dampenings.isEmpty()) {
                     rules.addFacts(dampenings);
                 }
+                if (lightweightEngine != null) {
+                    lightweightEngine.reloadTrigger(trigger, conditionSet);
+                }
             }
         } catch (Exception e) {
             log.debug(e.getMessage(), e);
@@ -404,6 +414,9 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
             rules.addFacts(conditions);
             if (!dampenings.isEmpty()) {
                 rules.addFacts(dampenings);
+            }
+            if (lightweightEngine != null) {
+                lightweightEngine.loadTrigger(fullTrigger);
             }
         }
     }
@@ -437,6 +450,9 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
             partitionManager.notifyTrigger(Operation.REMOVE, triggerToRemove.getTenantId(), triggerToRemove.getId());
         } else {
             removeTrigger(triggerToRemove);
+        }
+        if (lightweightEngine != null) {
+            lightweightEngine.removeTrigger(triggerToRemove.getTenantId(), triggerToRemove.getId());
         }
     }
 

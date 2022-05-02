@@ -5,6 +5,7 @@ import io.quarkus.runtime.LaunchMode;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.hawkular.alerts.api.services.ActionsService;
+import org.hawkular.alerts.api.services.LightweightEngine;
 import org.hawkular.alerts.api.services.PoliciesHistoryService;
 import org.hawkular.alerts.api.services.AlertsService;
 import org.hawkular.alerts.api.services.DefinitionsService;
@@ -56,6 +57,9 @@ public class AlertsStandalone {
 
     @Inject
     PoliciesHistoryService policiesHistoryService;
+
+    @Inject
+    LightweightEngine lightweightEngine;
 
     // The triggers' lifecycle is no longer used by policies-ui-backend. It has been replaced with a Postgres table.
     @ConfigProperty(name = "engine.triggers-lifecycle.disabled", defaultValue = "false")
@@ -165,6 +169,7 @@ public class AlertsStandalone {
     @PostConstruct
     void postConstruct() {
         ispnAlerts.setPoliciesHistoryService(policiesHistoryService);
+        engine.setLightweightEngine(lightweightEngine);
         if (triggersLifecycleDisabled) {
             log.info("Triggers lifecycle is disabled");
             engine.disableTriggersLifecycle();
