@@ -168,7 +168,7 @@ public class NotificationActionPluginListener implements ActionPluginListener {
         return defaultProperties;
     }
 
-    private String serializeAction(PoliciesAction policiesAction) throws IOException {
+    public static String serializeAction(PoliciesAction policiesAction) throws IOException {
 
         Context.ContextBuilder contextBuilder = new Context.ContextBuilder();
         Map<String, Object> context = JsonObject.mapFrom(policiesAction.getContext()).getMap();
@@ -197,7 +197,7 @@ public class NotificationActionPluginListener implements ActionPluginListener {
         return Parser.encode(action);
     }
 
-    private static Message buildMessageWithId(String payload) {
+    public static Message buildMessageWithId(String payload) {
         byte[] messageId = UUID.randomUUID().toString().getBytes(UTF_8);
         OutgoingKafkaRecordMetadata metadata = OutgoingKafkaRecordMetadata.builder()
                 .withHeaders(new RecordHeaders().add(MESSAGE_ID_HEADER, messageId))

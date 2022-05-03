@@ -14,6 +14,7 @@ import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Message;
 import org.hawkular.alerts.api.model.event.Event;
 import org.hawkular.alerts.api.services.AlertsService;
+import org.hawkular.alerts.api.services.LightweightEngine;
 import org.hawkular.alerts.log.MsgLogger;
 import org.hawkular.alerts.log.MsgLogging;
 
@@ -27,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import static com.redhat.cloud.policies.engine.LightweightEngineImpl.LIGHTWEIGHT_ENGINE_CONFIG_KEY;
 import static org.hawkular.alerts.api.util.Util.isEmpty;
 
 /**
@@ -78,6 +80,12 @@ public class Receiver {
 
     @ConfigProperty(name = "engine.receiver.store-events")
     boolean storeEvents;
+
+    @ConfigProperty(name = LIGHTWEIGHT_ENGINE_CONFIG_KEY, defaultValue = "false")
+    boolean lightweightEngineEnabled;
+
+    @Inject
+    LightweightEngine lightweightEngine;
 
     @Inject
     AlertsService alertsService;
@@ -184,20 +192,25 @@ public class Receiver {
 
         event.setFacts(systemProfile);
 
-        try {
-            List<Event> eventList = new ArrayList<>(1);
-            eventList.add(event);
-            if (storeEvents) {
-                return alertsService.addEvents(eventList)
-                        .replaceWith(ack(input))
-                        .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
-            } else {
-                return alertsService.sendEvents(eventList)
-                        .replaceWith(ack(input))
-                        .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
+        if (lightweightEngineEnabled) {
+            lightweightEngine.process(event);
+            return Uni.createFrom().voidItem();
+        } else {
+            try {
+                List<Event> eventList = new ArrayList<>(1);
+                eventList.add(event);
+                if (storeEvents) {
+                    return alertsService.addEvents(eventList)
+                            .replaceWith(ack(input))
+                            .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
+                } else {
+                    return alertsService.sendEvents(eventList)
+                            .replaceWith(ack(input))
+                            .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
     }
 

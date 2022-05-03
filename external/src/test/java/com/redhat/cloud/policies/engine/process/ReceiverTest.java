@@ -204,7 +204,8 @@ public class ReceiverTest {
         Page<Alert> alerts = alertsService.getAlerts(TENANT_ID, criteria, null);
 
         // 4, because we have two triggers and we send the correct input twice
-        assertEquals(4, alerts.size());
+        // This assertion no longer works with LightweightEngine because alerts are no longer known to Hawkular.
+        //assertEquals(4, alerts.size());
 
         definitionsService.removeTrigger(TENANT_ID, TRIGGER_ID + "2");
     }
