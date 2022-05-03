@@ -102,7 +102,9 @@ public class LightweightEngineImpl implements LightweightEngine {
         Map<String, FullTrigger> tenantTriggers = triggersByTenant.get(tenantId);
         if (tenantTriggers != null) {
             found = tenantTriggers.remove(triggerId) != null;
-            LOGGER.debugf("Trigger removed");
+            if (found) {
+                LOGGER.debugf("Trigger removed");
+            }
         }
         if (!found) {
             LOGGER.debugf("Trigger to remove not found");
