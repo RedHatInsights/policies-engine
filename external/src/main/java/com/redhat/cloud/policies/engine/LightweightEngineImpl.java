@@ -91,7 +91,11 @@ public class LightweightEngineImpl implements LightweightEngine {
             }
         }
         if (!found) {
-            LOGGER.debugf("Trigger to reload not found");
+            LOGGER.debugf("Trigger to reload not found, forwarding the call to the loadTrigger method");
+            FullTrigger fullTrigger = new FullTrigger();
+            fullTrigger.setTrigger(trigger);
+            fullTrigger.setConditions(new ArrayList<>(conditions));
+            loadTrigger(fullTrigger);
         }
     }
 
