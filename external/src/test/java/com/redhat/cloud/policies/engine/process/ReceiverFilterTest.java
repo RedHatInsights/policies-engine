@@ -32,7 +32,7 @@ public class ReceiverFilterTest {
         InputStream is = getClass().getClassLoader().getResourceAsStream("input/host.json");
         String inputJson = IOUtils.toString(is, StandardCharsets.UTF_8);
 
-        receiver.processAsync(Message.of(inputJson)).await().indefinitely();
+        receiver.processAsync(Message.of(inputJson)).toCompletableFuture().get();
 
         assertEquals(1, mockedAlertsService.getPushedEvents().size());
         assertEquals(1, incomingMessagesCount.getCount());
@@ -76,7 +76,7 @@ public class ReceiverFilterTest {
         jsonObject.getJsonObject("host").remove("id");
         inputJson = jsonObject.toString();
 
-        receiver.processAsync(Message.of(inputJson)).await().indefinitely();
+        receiver.processAsync(Message.of(inputJson)).toCompletableFuture().get();
 
         assertEquals(0, mockedAlertsService.getPushedEvents().size());
         assertEquals(1, incomingMessagesCount.getCount());
@@ -88,7 +88,7 @@ public class ReceiverFilterTest {
         InputStream is = getClass().getClassLoader().getResourceAsStream("input/host.json");
         String inputJson = IOUtils.toString(is, StandardCharsets.UTF_8);
 
-        receiver.processAsync(Message.of(inputJson)).await().indefinitely();
+        receiver.processAsync(Message.of(inputJson)).toCompletableFuture().get();
 
         assertEquals("ba11a21a-8b22-431b-9b4b-b06006472d54", mockedAlertsService.getPushedEvents().get(0).getTags().get(Receiver.INVENTORY_ID_FIELD).iterator().next());
     }
@@ -102,7 +102,7 @@ public class ReceiverFilterTest {
         jsonObject.put("type", "deleted");
         inputJson = jsonObject.toString();
 
-        receiver.processAsync(Message.of(inputJson)).await().indefinitely();
+        receiver.processAsync(Message.of(inputJson)).toCompletableFuture().get();
 
         assertEquals(0, mockedAlertsService.getPushedEvents().size());
         assertEquals(1, incomingMessagesCount.getCount());
@@ -115,7 +115,7 @@ public class ReceiverFilterTest {
         jsonObject.getJsonObject("host").put("reporter", "rhsm-conduit");
         inputJson = jsonObject.toString();
 
-        receiver.processAsync(Message.of(inputJson)).await().indefinitely();
+        receiver.processAsync(Message.of(inputJson)).toCompletableFuture().get();
 
         assertEquals(0, mockedAlertsService.getPushedEvents().size());
         assertEquals(2, incomingMessagesCount.getCount());
