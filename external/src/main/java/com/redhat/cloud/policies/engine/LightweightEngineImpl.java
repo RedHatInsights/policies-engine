@@ -30,11 +30,11 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static com.redhat.cloud.policies.engine.actions.plugins.NotificationActionPluginListener.WEBHOOK_CHANNEL;
 import static com.redhat.cloud.policies.engine.actions.plugins.NotificationActionPluginListener.buildMessageWithId;
@@ -50,7 +50,7 @@ public class LightweightEngineImpl implements LightweightEngine {
     private static final Logger LOGGER = Logger.getLogger(LightweightEngineImpl.class);
 
     // The key of the outer map is the tenantId. The key of the inner map is the triggerId.
-    private final Map<String, Map<String, FullTrigger>> triggersByTenant = new HashMap<>();
+    private final Map<String, Map<String, FullTrigger>> triggersByTenant = new ConcurrentHashMap<>();
 
     @Inject
     /*
@@ -83,7 +83,7 @@ public class LightweightEngineImpl implements LightweightEngine {
         LOGGER.debugf("Loading trigger %s", fullTrigger);
         provideDefaultDampening(fullTrigger);
         String tenantId = fullTrigger.getTrigger().getTenantId();
-        triggersByTenant.computeIfAbsent(tenantId, unused -> new HashMap<>()).put(fullTrigger.getTrigger().getId(), fullTrigger);
+        triggersByTenant.computeIfAbsent(tenantId, unused -> new ConcurrentHashMap<>()).put(fullTrigger.getTrigger().getId(), fullTrigger);
     }
 
     @Override
