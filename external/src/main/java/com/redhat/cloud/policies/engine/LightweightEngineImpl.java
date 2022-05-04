@@ -2,6 +2,8 @@ package com.redhat.cloud.policies.engine;
 
 import com.redhat.cloud.policies.engine.actions.plugins.notification.PoliciesAction;
 import org.eclipse.microprofile.config.ConfigProvider;
+import org.eclipse.microprofile.metrics.Counter;
+import org.eclipse.microprofile.metrics.annotation.Metric;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.OnOverflow;
@@ -61,6 +63,14 @@ public class LightweightEngineImpl implements LightweightEngine {
 
     @Inject
     PoliciesHistoryService policiesHistoryService;
+
+    @Inject
+    @Metric(absolute = true, name = "engine.actions.notifications.processed")
+    Counter alertsCounter;
+
+    @Inject
+    @Metric(absolute = true, name = "engine.actions.notifications.aggregated")
+    Counter notificationsCounter;
 
     @PostConstruct
     void postConstruct() {
@@ -134,6 +144,7 @@ public class LightweightEngineImpl implements LightweightEngine {
             PoliciesAction.Context context = policiesAction.getContext();
 
             for (Alert alert : alerts) {
+                alertsCounter.inc();
 
                 // Tags from all alerts are merged into the policies action context tags.
                 for (Map.Entry<String, String> tagEntry : alert.getTags().entries()) {
@@ -180,6 +191,7 @@ public class LightweightEngineImpl implements LightweightEngine {
                 String payload = serializeAction(policiesAction);
                 LOGGER.debugf("Sending Kafka payload %s", payload);
                 emitter.send(buildMessageWithId(payload));
+                notificationsCounter.inc();
             } catch (IOException e) {
                 LOGGER.warnf("Failed to serialize action for accountId", policiesAction.getAccountId());
             }
