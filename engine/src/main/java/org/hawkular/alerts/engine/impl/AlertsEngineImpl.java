@@ -483,6 +483,10 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
             log.debugf("Trigger Fact not found. Nothing removed from rulebase %s", trigger.toString());
         }
 
+        if (lightweightEngine != null) {
+            lightweightEngine.removeTrigger(tenantId, triggerId);
+        }
+
         // Remove dataId associated from cache
         if (distributed) {
             alertsEngineCache.remove(trigger.getTenantId(), trigger.getId());
