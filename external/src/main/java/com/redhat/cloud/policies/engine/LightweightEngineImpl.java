@@ -16,6 +16,7 @@ import org.hawkular.alerts.api.model.event.Alert;
 import org.hawkular.alerts.api.model.event.Event;
 import org.hawkular.alerts.api.model.trigger.FullTrigger;
 import org.hawkular.alerts.api.model.trigger.Trigger;
+import org.hawkular.alerts.api.model.trigger.TriggerAction;
 import org.hawkular.alerts.api.services.LightweightEngine;
 import org.hawkular.alerts.api.services.PoliciesHistoryService;
 import org.jboss.logging.Logger;
@@ -247,7 +248,9 @@ public class LightweightEngineImpl implements LightweightEngine {
                     LOGGER.debugf("Dampening satisfied");
                     Alert alert = new Alert(event.getTenantId(), fullTrigger.getTrigger(), dampening, dampening.getSatisfyingEvals());
                     policiesHistoryService.put(alert);
-                    alerts.add(alert);
+                    if (shouldSendNotification(fullTrigger)) {
+                        alerts.add(alert);
+                    }
                 } else {
                     LOGGER.debugf("Dampening not satisfied");
                 }
@@ -255,6 +258,18 @@ public class LightweightEngineImpl implements LightweightEngine {
             }
             return alerts;
         }
+    }
+
+    private boolean shouldSendNotification(FullTrigger fullTrigger) {
+        if (fullTrigger.getTrigger().getActions() != null) {
+            for (TriggerAction triggerAction : fullTrigger.getTrigger().getActions()) {
+                if (triggerAction.getActionPlugin().equals("email") || triggerAction.getActionPlugin().equals("notification")) {
+                    return true;
+                }
+            }
+        }
+        LOGGER.debug("Notification trigger action not found in trigger definition");
+        return false;
     }
 
     /*
