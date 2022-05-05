@@ -1,5 +1,6 @@
 package com.redhat.cloud.policies.engine.process;
 
+import com.redhat.cloud.policies.engine.lightweight.LightweightEngineConfig;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.microprofile.metrics.Counter;
@@ -56,6 +57,7 @@ public class ReceiverFilterTest {
         receiver.rejectedCountHost = new InternalCounter();
         receiver.rejectedCountId = new InternalCounter();
         receiver.rejectedCountType = rejectedCountType;
+        receiver.lightweightEngineConfig = new LightweightEngineConfig();
     }
 
     @AfterEach
