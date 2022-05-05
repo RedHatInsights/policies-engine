@@ -451,9 +451,6 @@ public class AlertsEngineImpl implements AlertsEngine, PartitionTriggerListener,
         } else {
             removeTrigger(triggerToRemove);
         }
-        if (lightweightEngine != null) {
-            lightweightEngine.removeTrigger(triggerToRemove.getTenantId(), triggerToRemove.getId());
-        }
     }
 
     private void removeTrigger(Trigger trigger) {
