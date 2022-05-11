@@ -331,19 +331,15 @@ public class LightweightEngineImpl implements LightweightEngine {
     }
 
     private boolean shouldSendNotification(FullTrigger fullTrigger) {
-        if (lightweightEngineConfig.isRestApiEnabled()) {
-            return true;
-        } else {
-            if (fullTrigger.getTrigger().getActions() != null) {
-                for (TriggerAction triggerAction : fullTrigger.getTrigger().getActions()) {
-                    if (triggerAction.getActionPlugin().equals("email") || triggerAction.getActionPlugin().equals("notification")) {
-                        return true;
-                    }
+        if (fullTrigger.getTrigger().getActions() != null) {
+            for (TriggerAction triggerAction : fullTrigger.getTrigger().getActions()) {
+                if (triggerAction.getActionPlugin().equals("email") || triggerAction.getActionPlugin().equals("notification")) {
+                    return true;
                 }
             }
-            LOGGER.debug("Notification trigger action not found in trigger definition");
-            return false;
         }
+        LOGGER.debug("Notification trigger action not found in trigger definition");
+        return false;
     }
 
     /*

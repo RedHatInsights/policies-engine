@@ -25,4 +25,6 @@ public class Policy {
 
     @Column(name = "is_enabled")
     public boolean enabled;
+
+    public String actions;
 }

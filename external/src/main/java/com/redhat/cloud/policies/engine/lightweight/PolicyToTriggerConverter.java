@@ -4,12 +4,16 @@ import org.hawkular.alerts.api.model.condition.Condition;
 import org.hawkular.alerts.api.model.condition.EventCondition;
 import org.hawkular.alerts.api.model.trigger.FullTrigger;
 import org.hawkular.alerts.api.model.trigger.Trigger;
+import org.hawkular.alerts.api.model.trigger.TriggerAction;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class PolicyToTriggerConverter {
 
     private static final String NO_LONGER_USED = "";
+    private static final Pattern ACTIONS_SPLIT_PATTERN = Pattern.compile(";");
 
     public static FullTrigger convert(Policy policy) {
         FullTrigger fullTrigger = new FullTrigger();
@@ -25,6 +29,20 @@ public class PolicyToTriggerConverter {
         trigger.setName(policy.name);
         trigger.setDescription(policy.description);
         trigger.setEnabled(policy.enabled);
+        if (policy.actions != null) {
+            String[] actionPlugins = ACTIONS_SPLIT_PATTERN.split(policy.actions);
+            if (actionPlugins.length > 0) {
+                trigger.setActions(new HashSet<>());
+                for (String actionPlugin : actionPlugins) {
+                    String plugin = actionPlugin.trim();
+                    if (!plugin.isEmpty()) {
+                        TriggerAction triggerAction = new TriggerAction();
+                        triggerAction.setActionPlugin(plugin);
+                        trigger.getActions().add(triggerAction);
+                    }
+                }
+            }
+        }
         return trigger;
     }
 
