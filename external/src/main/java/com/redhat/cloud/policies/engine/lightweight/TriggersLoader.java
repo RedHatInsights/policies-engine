@@ -44,7 +44,7 @@ public class TriggersLoader {
                 .getSingleResult();
     }
 
-    public List<FullTrigger> loadTriggersByAccount(String accountId) {
+    private List<FullTrigger> loadTriggersByAccount(String accountId) {
         String hql = "SELECT p FROM Policy p WHERE p.accountId = :accountId";
         return entityManager.createQuery(hql, Policy.class)
                 .setParameter("accountId", accountId)
