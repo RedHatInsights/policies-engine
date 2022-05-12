@@ -37,7 +37,6 @@ public class PoliciesAction {
         } else {
             return accountId + context.systemCheckIn;
         }
-
     }
 
     public String getAccountId() {
