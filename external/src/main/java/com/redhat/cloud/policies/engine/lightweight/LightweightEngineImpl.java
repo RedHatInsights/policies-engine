@@ -252,7 +252,7 @@ public class LightweightEngineImpl implements LightweightEngine {
             LOGGER.debugf("No triggers found for tenant %s", event.getTenantId());
             return Collections.emptySet();
         } else {
-            LOGGER.debugf("Found %d triggers for tenant %s", tenantTriggers.size(), event.getTenantId());
+            LOGGER.debugf("Found %d trigger(s) for tenant %s", tenantTriggers.size(), event.getTenantId());
             Set<Alert> alerts = new HashSet<>();
             for (FullTrigger fullTrigger : tenantTriggers) {
                 if (fullTrigger.getTrigger().isEnabled()) {

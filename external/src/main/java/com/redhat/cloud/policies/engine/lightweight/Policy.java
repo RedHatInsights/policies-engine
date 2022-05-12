@@ -13,7 +13,7 @@ public class Policy {
     @Id
     public UUID id;
 
-    @Column(name = "customerId")
+    @Column(name = "customerid")
     public String accountId;
 
     public String name;
