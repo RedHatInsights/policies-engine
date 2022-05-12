@@ -11,7 +11,7 @@ class PoliciesActionTest {
 
     @BeforeEach
     void setUp() {
-        testee = new PoliciesAction();
+        testee = new PoliciesAction(false);
     }
 
     @Test
@@ -25,6 +25,7 @@ class PoliciesActionTest {
 
     @Test
     void shouldContainAccountIfAsPartOfKeyWhen() {
+        testee = new PoliciesAction(true);
         testee.setOrgId("someOrgId");
 
         final String key = testee.getKey();
@@ -34,6 +35,8 @@ class PoliciesActionTest {
 
     @Test
     void shouldContainOrgIdWhenAccountIdAndOrgIdArePresent() {
+        testee = new PoliciesAction(true);
+
         testee.setAccountId("someAccountId");
         testee.setOrgId("someOrgId");
 

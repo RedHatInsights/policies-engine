@@ -22,13 +22,17 @@ public class PoliciesAction {
     private Context context;
     private Set<Event> events;
 
-    public PoliciesAction() {
+    private boolean useOrgId;
+
+    public PoliciesAction(boolean useOrgId) {
         events = new HashSet<>();
         context = new Context();
+
+        this.useOrgId = useOrgId;
     }
 
     public String getKey() {
-        if(orgId != null && !orgId.isEmpty()) {
+        if (useOrgId) {
             return orgId + context.systemCheckIn;
         } else {
             return accountId + context.systemCheckIn;

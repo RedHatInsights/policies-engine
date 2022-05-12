@@ -2,6 +2,7 @@ package com.redhat.cloud.policies.engine;
 
 import com.redhat.cloud.policies.engine.actions.plugins.notification.PoliciesAction;
 import org.eclipse.microprofile.config.ConfigProvider;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.metrics.Counter;
 import org.eclipse.microprofile.metrics.annotation.Metric;
 import org.eclipse.microprofile.reactive.messaging.Channel;
@@ -45,6 +46,11 @@ import static org.eclipse.microprofile.reactive.messaging.OnOverflow.Strategy.UN
 
 @ApplicationScoped
 public class LightweightEngineImpl implements LightweightEngine {
+
+    public static final String USE_ORG_ID = "policies.use-org-id";
+
+    @ConfigProperty(name = USE_ORG_ID, defaultValue = "false")
+    public boolean useOrgId;
 
     public static final String LIGHTWEIGHT_ENGINE_CONFIG_KEY = "lightweight-engine.enabled";
 
@@ -138,9 +144,11 @@ public class LightweightEngineImpl implements LightweightEngine {
             // In the old implementation, the time comes from the Action constructor which relies on System.currentTimeMillis().
             LocalDateTime nowUTC = LocalDateTime.ofInstant(Instant.ofEpochMilli(System.currentTimeMillis()), UTC);
 
-            PoliciesAction policiesAction = new PoliciesAction();
+            PoliciesAction policiesAction = new PoliciesAction(useOrgId);
 
             // TODO POL-650 is tenantId also the orgID? I guess it will become the ordId.
+            policiesAction.setOrgId(event.getTenantId());
+
             policiesAction.setAccountId(event.getTenantId());
             policiesAction.setTimestamp(nowUTC);
 

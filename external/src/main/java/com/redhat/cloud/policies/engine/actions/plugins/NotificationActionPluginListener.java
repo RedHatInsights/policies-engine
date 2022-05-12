@@ -75,7 +75,7 @@ public class NotificationActionPluginListener implements ActionPluginListener {
     @Override
     public void process(ActionMessage actionMessage) throws Exception {
         messagesCount.inc();
-        PoliciesAction policiesAction = new PoliciesAction();
+        PoliciesAction policiesAction = new PoliciesAction(false);
         policiesAction.setAccountId(actionMessage.getAction().getTenantId());
         policiesAction.setTimestamp(
             LocalDateTime.ofInstant(Instant.ofEpochMilli(actionMessage.getAction().getCtime()), ZoneOffset.UTC)
