@@ -1,7 +1,9 @@
 package com.redhat.cloud.policies.engine.lightweight;
 
 import io.quarkus.cache.CacheResult;
+import org.hawkular.alerts.api.model.dampening.Dampening;
 import org.hawkular.alerts.api.model.trigger.FullTrigger;
+import org.hawkular.alerts.api.model.trigger.Trigger;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -62,7 +64,21 @@ public class TriggersLoader {
                 .stream()
                 .map(PolicyToTriggerConverter::convert)
                 .collect(toList());
+        for (FullTrigger trigger : triggers) {
+            provideDefaultDampening(trigger);
+        }
         LOGGER.debugf("%d database trigger(s) loaded for account %s", triggers.size(), accountId);
         return triggers;
+    }
+
+    /*
+     * Java equivalent of the old ProvideDefaultDampening rule.
+     * See the ConditionMatch.drl file for more details about that rule.
+     */
+    private void provideDefaultDampening(FullTrigger fullTrigger) {
+        Trigger trigger = fullTrigger.getTrigger();
+        LOGGER.debugf("Adding default %s dampening for trigger! %s", trigger.getMode(), trigger.getId());
+        Dampening dampening = Dampening.forStrict(trigger.getTenantId(), trigger.getId(), trigger.getMode(), 1);
+        fullTrigger.getDampenings().add(dampening);
     }
 }

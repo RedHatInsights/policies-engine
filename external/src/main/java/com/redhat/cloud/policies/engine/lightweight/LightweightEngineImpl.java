@@ -233,7 +233,7 @@ public class LightweightEngineImpl implements LightweightEngine {
         if (fullTrigger.getDampenings().isEmpty()) {
             Trigger trigger = fullTrigger.getTrigger();
             LOGGER.debugf("Adding default %s dampening for trigger! %s", trigger.getMode(), trigger.getId());
-            Dampening dampening = Dampening.forStrict(trigger.getTenantId(), trigger.getId(), trigger.getMode(), 1 );
+            Dampening dampening = Dampening.forStrict(trigger.getTenantId(), trigger.getId(), trigger.getMode(), 1);
             fullTrigger.getDampenings().add(dampening);
         } else if (fullTrigger.getDampenings().size() > 1) {
             // This should never be logged.
