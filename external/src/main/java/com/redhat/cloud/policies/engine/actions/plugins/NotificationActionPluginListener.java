@@ -77,6 +77,10 @@ public class NotificationActionPluginListener implements ActionPluginListener {
         messagesCount.inc();
         PoliciesAction policiesAction = new PoliciesAction(false);
         policiesAction.setAccountId(actionMessage.getAction().getTenantId());
+
+        // TODO POL-650 replace with orgId
+        policiesAction.setOrgId(actionMessage.getAction().getTenantId());
+
         policiesAction.setTimestamp(
             LocalDateTime.ofInstant(Instant.ofEpochMilli(actionMessage.getAction().getCtime()), ZoneOffset.UTC)
         );
