@@ -4,6 +4,7 @@ import com.redhat.cloud.policies.api.model.condition.expression.ExprParser;
 import com.redhat.cloud.policies.engine.actions.plugins.notification.PoliciesAction;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.metrics.Counter;
 import org.eclipse.microprofile.metrics.annotation.Metric;
 import org.eclipse.microprofile.reactive.messaging.Channel;
