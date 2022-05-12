@@ -9,30 +9,9 @@ import java.util.List;
 import java.util.Map;
 
 import static com.redhat.cloud.policies.api.model.condition.expression.ExprParser.evaluate;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class ExprComplexTypeTest {
-
-//    @Test
-    public void testSemverComparison() {
-
-    }
-
-//    @Test
-    public void testInstalledComparisons() {
-
-    }
-
-//    @Test
-    public void testRepositories() {
-
-    }
-
-//    @Test
-    public void testNetworkInterfaces() {
-
-    }
 
     @Test
     public void testFactsAssumedParsingLogic() {
