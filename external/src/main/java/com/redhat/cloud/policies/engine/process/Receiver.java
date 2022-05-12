@@ -2,6 +2,7 @@ package com.redhat.cloud.policies.engine.process;
 
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
+import com.redhat.cloud.policies.engine.lightweight.LightweightEngineConfig;
 import io.smallrye.reactive.messaging.annotations.Blocking;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -28,7 +29,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletionStage;
 
-import static com.redhat.cloud.policies.engine.LightweightEngineImpl.LIGHTWEIGHT_ENGINE_CONFIG_KEY;
 import static org.hawkular.alerts.api.util.Util.isEmpty;
 
 /**
@@ -81,8 +81,8 @@ public class Receiver {
     @ConfigProperty(name = "engine.receiver.store-events")
     boolean storeEvents;
 
-    @ConfigProperty(name = LIGHTWEIGHT_ENGINE_CONFIG_KEY, defaultValue = "false")
-    boolean lightweightEngineEnabled;
+    @Inject
+    LightweightEngineConfig lightweightEngineConfig;
 
     @Inject
     LightweightEngine lightweightEngine;
@@ -193,7 +193,7 @@ public class Receiver {
 
         event.setFacts(systemProfile);
 
-        if (lightweightEngineEnabled) {
+        if (lightweightEngineConfig.isKafkaProcessingEnabled()) {
             lightweightEngine.process(event);
         } else {
             try {

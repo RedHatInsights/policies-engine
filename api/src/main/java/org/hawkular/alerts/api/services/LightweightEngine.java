@@ -8,29 +8,41 @@ import org.hawkular.alerts.api.model.trigger.Trigger;
 import java.util.Collection;
 
 /**
- * Simple engine implementation that does not rely on Infinispan or Drools for the Kafka messages processing. This is
- * the first step of a more important work aimed at making policies-engine simpler.
+ * Simple engine implementation that does not rely on Infinispan or Drools for the Kafka messages processing.
  */
 public interface LightweightEngine {
 
     /**
+     * Validates a policy condition.
+     * @param condition the condition to validate
+     * @throws javax.ws.rs.BadRequestException if the condition is not valid
+     */
+    void validateCondition(String condition);
+
+    /**
      * Adds a trigger to the in-memory collection of known triggers.
      * @param fullTrigger the trigger to load
+     * @deprecated Only used when step 2 of the policies refactoring is not enabled
      */
+    @Deprecated(forRemoval = true)
     void loadTrigger(FullTrigger fullTrigger);
 
     /**
      * Updates a trigger in the in-memory collection of known triggers.
      * @param trigger the trigger to update
      * @param conditions the trigger conditions
+     * @deprecated Only used when step 2 of the policies refactoring is not enabled
      */
+    @Deprecated(forRemoval = true)
     void reloadTrigger(Trigger trigger, Collection<Condition> conditions);
 
     /**
      * Removes a trigger from the in-memory collection of known triggers.
      * @param tenantId the tenant id of the trigger owner
      * @param triggerId the trigger id
+     * @deprecated Only used when step 2 of the policies refactoring is not enabled
      */
+    @Deprecated(forRemoval = true)
     void removeTrigger(String tenantId, String triggerId);
 
     /**
