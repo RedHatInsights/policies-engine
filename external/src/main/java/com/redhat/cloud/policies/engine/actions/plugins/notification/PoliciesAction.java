@@ -28,8 +28,12 @@ public class PoliciesAction {
     }
 
     public String getKey() {
-        // TODO POL-650 replace with orgId
-        return accountId + context.systemCheckIn;
+        if(orgId != null && !orgId.isEmpty()) {
+            return orgId + context.systemCheckIn;
+        } else {
+            return accountId + context.systemCheckIn;
+        }
+
     }
 
     public String getAccountId() {

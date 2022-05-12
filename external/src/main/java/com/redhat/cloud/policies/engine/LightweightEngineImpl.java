@@ -139,6 +139,8 @@ public class LightweightEngineImpl implements LightweightEngine {
             LocalDateTime nowUTC = LocalDateTime.ofInstant(Instant.ofEpochMilli(System.currentTimeMillis()), UTC);
 
             PoliciesAction policiesAction = new PoliciesAction();
+
+            // TODO POL-650 is tenantId also the orgID? I guess it will become the ordId.
             policiesAction.setAccountId(event.getTenantId());
             policiesAction.setTimestamp(nowUTC);
 
