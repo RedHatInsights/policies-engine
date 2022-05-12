@@ -194,6 +194,7 @@ public class LightweightEngineImpl implements LightweightEngine {
                 emitter.send(buildMessageWithId(payload));
                 notificationsCounter.inc();
             } catch (IOException e) {
+                // TODO POL-650 replace with orgId
                 LOGGER.warnf("Failed to serialize action for accountId", policiesAction.getAccountId());
             }
         }

@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 
 public class PoliciesAction {
     private String accountId;
+    private String orgId;
     private LocalDateTime timestamp;
     private Context context;
     private Set<Event> events;
@@ -27,6 +28,7 @@ public class PoliciesAction {
     }
 
     public String getKey() {
+        // TODO POL-650 replace with orgId
         return accountId + context.systemCheckIn;
     }
 
@@ -36,6 +38,14 @@ public class PoliciesAction {
 
     public void setAccountId(String accountId) {
         this.accountId = accountId;
+    }
+
+    public String getOrgId() {
+        return orgId;
+    }
+
+    public void setOrgId(String orgId) {
+        this.orgId = orgId;
     }
 
     public LocalDateTime getTimestamp() {
