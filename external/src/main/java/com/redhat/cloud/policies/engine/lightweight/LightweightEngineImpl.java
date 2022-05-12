@@ -248,7 +248,7 @@ public class LightweightEngineImpl implements LightweightEngine {
      */
     private Set<Alert> fireTriggers(Event event) {
         Collection<FullTrigger> tenantTriggers = getTriggers(event.getTenantId());
-        if (tenantTriggers == null) {
+        if (tenantTriggers.isEmpty()) {
             LOGGER.debugf("No triggers found for tenant %s", event.getTenantId());
             return Collections.emptySet();
         } else {
@@ -292,7 +292,12 @@ public class LightweightEngineImpl implements LightweightEngine {
         if (lightweightEngineConfig.isDbLoadingEnabled()) {
             return triggerLoader.getTriggers(accountId);
         } else {
-            return triggersByTenant.get(accountId).values();
+            Map<String, FullTrigger> tenantTriggers = triggersByTenant.get(accountId);
+            if (tenantTriggers == null) {
+                return Collections.emptyList();
+            } else {
+                return tenantTriggers.values();
+            }
         }
     }
 
