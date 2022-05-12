@@ -102,8 +102,10 @@ objects:
           value: "0"
         - name: _JAVA_OPTIONS
           value: -Dhawkular.data=/data -Dengine.alerts.condition-evaluation-time=false -Dengine.data-driven-triggers-enabled=false
-        - name: LIGHTWEIGHT_ENGINE_ENABLED
-          value: ${LIGHTWEIGHT_ENGINE_ENABLED}
+        - name: LIGHTWEIGHT_ENGINE_DB_LOADING_ENABLED
+          value: ${LIGHTWEIGHT_ENGINE_DB_LOADING_ENABLED}
+        - name: LIGHTWEIGHT_ENGINE_KAFKA_PROCESSING_ENABLED
+          value: ${LIGHTWEIGHT_ENGINE_KAFKA_PROCESSING_ENABLED}
         - name: QUARKUS_HTTP_PORT
           value: "8000"
         - name: QUARKUS_LOG_CLOUDWATCH_ENABLED
@@ -144,7 +146,9 @@ parameters:
   value: 10Gi
 - name: EXTERNAL_LOGGING_LEVEL
   value: INFO
-- name: LIGHTWEIGHT_ENGINE_ENABLED
+- name: LIGHTWEIGHT_ENGINE_DB_LOADING_ENABLED
+  value: "false"
+- name: LIGHTWEIGHT_ENGINE_KAFKA_PROCESSING_ENABLED
   value: "false"
 - name: MEMORY_LIMIT
   description: Memory limit
