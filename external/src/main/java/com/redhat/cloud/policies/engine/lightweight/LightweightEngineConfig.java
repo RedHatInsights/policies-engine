@@ -16,22 +16,22 @@ public class LightweightEngineConfig {
     @ConfigProperty(name = "lightweight-engine.kafka-processing.enabled", defaultValue = "false")
     boolean kafkaProcessingEnabled;
 
-    @ConfigProperty(name = "lightweight-engine.rest-api.enabled", defaultValue = "false")
-    boolean restApiEnabled;
+    @ConfigProperty(name = "lightweight-engine.db-loading.enabled", defaultValue = "false")
+    boolean dbLoadingEnabled;
 
     public void runAtStartup(@Observes StartupEvent event) {
-        if (!kafkaProcessingEnabled && restApiEnabled) {
-            throw new IllegalStateException("The lightweight engine REST API should not be enabled when the Kafka processing is disabled");
+        if (!kafkaProcessingEnabled && dbLoadingEnabled) {
+            throw new IllegalStateException("The lightweight engine DB loading should not be enabled when the Kafka processing is disabled");
         }
         LOGGER.infof("The lightweight engine Kafka processing is %s", kafkaProcessingEnabled ? "enabled" : "disabled");
-        LOGGER.infof("The lightweight engine REST API is %s", restApiEnabled ? "enabled" : "disabled");
+        LOGGER.infof("The lightweight engine DB loading is %s", dbLoadingEnabled ? "enabled" : "disabled");
     }
 
     public boolean isKafkaProcessingEnabled() {
         return kafkaProcessingEnabled;
     }
 
-    public boolean isRestApiEnabled() {
-        return restApiEnabled;
+    public boolean isDbLoadingEnabled() {
+        return dbLoadingEnabled;
     }
 }

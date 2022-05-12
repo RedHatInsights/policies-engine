@@ -6,8 +6,6 @@ import org.hawkular.alerts.api.model.trigger.FullTrigger;
 import org.hawkular.alerts.api.model.trigger.Trigger;
 
 import java.util.Collection;
-import java.util.Set;
-import java.util.UUID;
 
 /**
  * Simple engine implementation that does not rely on Infinispan or Drools for the Kafka messages processing.
@@ -15,25 +13,11 @@ import java.util.UUID;
 public interface LightweightEngine {
 
     /**
-     * Loads all policies from the DB and converts them into full triggers that are stored in memory by the engine.
-     */
-    void init();
-
-    /**
      * Validates a policy condition.
      * @param condition the condition to validate
      * @throws javax.ws.rs.BadRequestException if the condition is not valid
      */
     void validateCondition(String condition);
-
-    /**
-     * Reloads a set of triggers. For each trigger, if it was previously loaded by the engine and is still available in
-     * the DB, the engine reloads it. If it was previously loaded and is no longer available in the DB, the engine
-     * unloads it. If it has not been loaded yet and is available in the DB, the engine loads it.
-     * @param accountId account ID
-     * @param triggerIds the identifiers of the triggers to reload
-     */
-    void reloadTriggers(String accountId, Set<UUID> triggerIds);
 
     /**
      * Adds a trigger to the in-memory collection of known triggers.

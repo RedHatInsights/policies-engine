@@ -2,7 +2,6 @@ package com.redhat.cloud.policies.engine.lightweight;
 
 import com.redhat.cloud.policies.api.model.condition.expression.ExprParser;
 import com.redhat.cloud.policies.engine.actions.plugins.notification.PoliciesAction;
-import io.quarkus.runtime.StartupEvent;
 import org.eclipse.microprofile.metrics.Counter;
 import org.eclipse.microprofile.metrics.annotation.Metric;
 import org.eclipse.microprofile.reactive.messaging.Channel;
@@ -23,7 +22,6 @@ import org.hawkular.alerts.api.services.PoliciesHistoryService;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.ws.rs.BadRequestException;
 import java.io.IOException;
@@ -37,7 +35,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.redhat.cloud.policies.engine.actions.plugins.NotificationActionPluginListener.WEBHOOK_CHANNEL;
@@ -72,7 +69,7 @@ public class LightweightEngineImpl implements LightweightEngine {
     LightweightEngineConfig lightweightEngineConfig;
 
     @Inject
-    TriggerRepository triggerRepository;
+    TriggersLoader triggerLoader;
 
     @Inject
     @Metric(absolute = true, name = "engine.actions.notifications.processed")
@@ -82,29 +79,9 @@ public class LightweightEngineImpl implements LightweightEngine {
     @Metric(absolute = true, name = "engine.actions.notifications.aggregated")
     Counter notificationsCounter;
 
-    public void runAtStartup(@Observes StartupEvent event) {
-        init();
-    }
-
-    @Override
-    public void init() {
-        if (lightweightEngineConfig.isRestApiEnabled()) {
-            LOGGER.debug("Initializing the in-memory triggers cache");
-            for (FullTrigger fullTrigger : triggerRepository.findAll()) {
-                triggersByTenant.computeIfAbsent(
-                        fullTrigger.getTrigger().getTenantId(),
-                        unused -> new ConcurrentHashMap<>()
-                ).put(fullTrigger.getTrigger().getId(), fullTrigger);
-            }
-            LOGGER.debug("Initialization done");
-        } else {
-            LOGGER.debug("Ignoring init call because the lightweight engine REST API is disabled");
-        }
-    }
-
     @Override
     public void validateCondition(String condition) {
-        if (lightweightEngineConfig.isRestApiEnabled()) {
+        if (lightweightEngineConfig.isDbLoadingEnabled()) {
             try {
                 ExprParser.validate(condition);
             } catch (Exception e) {
@@ -112,44 +89,25 @@ public class LightweightEngineImpl implements LightweightEngine {
                 throw new BadRequestException(e.getMessage());
             }
         } else {
-            LOGGER.debug("Ignoring validateCondition call because the lightweight engine REST API is disabled");
-        }
-    }
-
-    @Override
-    public void reloadTriggers(String accountId, Set<UUID> triggerIds) {
-        if (lightweightEngineConfig.isRestApiEnabled()) {
-            Map<String, FullTrigger> inMemoryTriggers = triggersByTenant.getOrDefault(accountId, Collections.emptyMap());
-            Map<UUID, FullTrigger> dbTriggers = triggerRepository.findByAccountAndIds(accountId, triggerIds);
-            for (UUID triggerId : triggerIds) {
-                if (inMemoryTriggers.containsKey(triggerId) && !dbTriggers.containsKey(triggerId)) {
-                    // The trigger has been removed from the DB, it is also removed from the in-memory collection.
-                    inMemoryTriggers.remove(triggerId);
-                } else if (dbTriggers.containsKey(triggerId)) {
-                    // The trigger is loaded or reloaded.
-                    inMemoryTriggers.put(triggerId.toString(), dbTriggers.get(triggerId));
-                }
-            }
-        } else {
-            LOGGER.debug("Ignoring reloadTriggers call because the lightweight engine REST API is disabled");
+            LOGGER.debug("Ignoring validateCondition call because the lightweight engine DB loading is disabled");
         }
     }
 
     @Override
     public void loadTrigger(FullTrigger fullTrigger) {
-        if (!lightweightEngineConfig.isRestApiEnabled()) {
+        if (!lightweightEngineConfig.isDbLoadingEnabled()) {
             LOGGER.debugf("Loading trigger %s", fullTrigger);
             provideDefaultDampening(fullTrigger);
             String tenantId = fullTrigger.getTrigger().getTenantId();
             triggersByTenant.computeIfAbsent(tenantId, unused -> new ConcurrentHashMap<>()).put(fullTrigger.getTrigger().getId(), fullTrigger);
         } else {
-            LOGGER.debug("Ignoring loadTrigger call because the lightweight engine REST API is enabled");
+            LOGGER.debug("Ignoring loadTrigger call because the lightweight engine DB loading is enabled");
         }
     }
 
     @Override
     public void reloadTrigger(Trigger trigger, Collection<Condition> conditions) {
-        if (!lightweightEngineConfig.isRestApiEnabled()) {
+        if (!lightweightEngineConfig.isDbLoadingEnabled()) {
             LOGGER.debugf("Reloading trigger %s with conditions %s", trigger, conditions);
             boolean found = false;
             Map<String, FullTrigger> tenantTriggers = triggersByTenant.get(trigger.getTenantId());
@@ -170,13 +128,13 @@ public class LightweightEngineImpl implements LightweightEngine {
                 loadTrigger(fullTrigger);
             }
         } else {
-            LOGGER.debug("Ignoring reloadTrigger call because the lightweight engine REST API is enabled");
+            LOGGER.debug("Ignoring reloadTrigger call because the lightweight engine DB loading is enabled");
         }
     }
 
     @Override
     public void removeTrigger(String tenantId, String triggerId) {
-        if (!lightweightEngineConfig.isRestApiEnabled()) {
+        if (!lightweightEngineConfig.isDbLoadingEnabled()) {
             LOGGER.debugf("Removing trigger %s/%s", tenantId, triggerId);
             boolean found = false;
             Map<String, FullTrigger> tenantTriggers = triggersByTenant.get(tenantId);
@@ -190,7 +148,7 @@ public class LightweightEngineImpl implements LightweightEngine {
                 LOGGER.debugf("Trigger to remove not found");
             }
         } else {
-            LOGGER.debug("Ignoring removeTrigger call because the lightweight engine REST API is enabled");
+            LOGGER.debug("Ignoring removeTrigger call because the lightweight engine DB loading is enabled");
         }
     }
 
@@ -289,14 +247,14 @@ public class LightweightEngineImpl implements LightweightEngine {
      * See the ConditionMatch.drl file for more details about that rule.
      */
     private Set<Alert> fireTriggers(Event event) {
-        Map<String, FullTrigger> tenantTriggers = triggersByTenant.get(event.getTenantId());
+        Collection<FullTrigger> tenantTriggers = getTriggers(event.getTenantId());
         if (tenantTriggers == null) {
             LOGGER.debugf("No triggers found for tenant %s", event.getTenantId());
             return Collections.emptySet();
         } else {
             LOGGER.debugf("Found %d triggers for tenant %s", tenantTriggers.size(), event.getTenantId());
             Set<Alert> alerts = new HashSet<>();
-            for (FullTrigger fullTrigger : tenantTriggers.values()) {
+            for (FullTrigger fullTrigger : tenantTriggers) {
                 if (fullTrigger.getTrigger().isEnabled()) {
                     LOGGER.debugf("Starting the trigger conditions evaluation");
                     Set<ConditionEval> conditionEvals = new HashSet<>();
@@ -330,6 +288,14 @@ public class LightweightEngineImpl implements LightweightEngine {
         }
     }
 
+    private Collection<FullTrigger> getTriggers(String accountId) {
+        if (lightweightEngineConfig.isDbLoadingEnabled()) {
+            return triggerLoader.getTriggers(accountId);
+        } else {
+            return triggersByTenant.get(accountId).values();
+        }
+    }
+
     private boolean shouldSendNotification(FullTrigger fullTrigger) {
         if (fullTrigger.getTrigger().getActions() != null) {
             for (TriggerAction triggerAction : fullTrigger.getTrigger().getActions()) {
@@ -347,7 +313,7 @@ public class LightweightEngineImpl implements LightweightEngine {
      * See the ConditionMatch.drl file for more details about that rule.
      */
     private Optional<EventConditionEval> evaluateCondition(Trigger trigger, EventCondition eventCondition, Event event) {
-        if (lightweightEngineConfig.isRestApiEnabled()) {
+        if (lightweightEngineConfig.isDbLoadingEnabled()) {
             EventConditionEval eval = new EventConditionEval(eventCondition, event);
             LOGGER.debugf("Event Eval: %s %s", eval.isMatch() ? "Match!" : "no match", eval.getDisplayString());
             return Optional.of(eval);
