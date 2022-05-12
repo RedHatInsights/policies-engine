@@ -15,7 +15,7 @@ public interface LightweightEngine {
     /**
      * Validates a policy condition.
      * @param condition the condition to validate
-     * @throws javax.ws.rs.BadRequestException if the condition is not valid
+     * @throws IllegalArgumentException if the condition is not valid
      */
     void validateCondition(String condition);
 
