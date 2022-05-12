@@ -22,7 +22,7 @@ public class PoliciesAction {
     private Context context;
     private Set<Event> events;
 
-    private boolean useOrgId;
+    private final boolean useOrgId;
 
     public PoliciesAction(boolean useOrgId) {
         events = new HashSet<>();
