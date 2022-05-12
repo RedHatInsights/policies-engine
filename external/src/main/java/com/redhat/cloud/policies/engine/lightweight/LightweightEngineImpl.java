@@ -48,9 +48,7 @@ public class LightweightEngineImpl implements LightweightEngine {
 
     private static final Logger LOGGER = Logger.getLogger(LightweightEngineImpl.class);
 
-    // The key of the outer map is the accountId. The key of the inner map is the triggerId.
-    // TODO POL-649 Change the inner map key type to UUID when we're done migrating to the lightweight engine.
-    // TODO POL-649 Introduce entries expiration.
+    // The key of the outer map is the tenantId. The key of the inner map is the triggerId.
     private final Map<String, Map<String, FullTrigger>> triggersByTenant = new ConcurrentHashMap<>();
 
     @Inject
