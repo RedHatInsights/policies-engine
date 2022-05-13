@@ -25,7 +25,6 @@ import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.ws.rs.BadRequestException;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -87,12 +86,7 @@ public class LightweightEngineImpl implements LightweightEngine {
     @Override
     public void validateCondition(String condition) {
         if (lightweightEngineConfig.isDbLoadingEnabled()) {
-            try {
-                ExprParser.validate(condition);
-            } catch (Exception e) {
-                LOGGER.debugf(e, "Validation failed for condition %s", condition);
-                throw new BadRequestException(e.getMessage());
-            }
+            ExprParser.validate(condition);
         } else {
             LOGGER.debug("Ignoring validateCondition call because the lightweight engine DB loading is disabled");
         }
