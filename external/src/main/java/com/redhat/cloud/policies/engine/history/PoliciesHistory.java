@@ -43,7 +43,9 @@ public class PoliciesHistory implements PoliciesHistoryService {
             getSingleTagValue(alert, INVENTORY_ID_TAG_KEY).ifPresent(historyEntry::setHostId);
             getSingleTagValue(alert, DISPLAY_NAME_TAG_KEY).ifPresent(historyEntry::setHostName);
             if (lightweightEngineConfig.isDbLoadingEnabled()) {
-                statelessSessionFactory.getCurrentSession().insert(historyEntry);
+                statelessSessionFactory.withSession(statelessSession -> {
+                    statelessSession.insert(historyEntry);
+                });
             } else {
                 session.persist(historyEntry);
             }
