@@ -1,5 +1,6 @@
 package com.redhat.cloud.policies.engine.lightweight;
 
+import com.redhat.cloud.policies.engine.db.StatelessSessionFactory;
 import io.quarkus.cache.CacheResult;
 import org.hawkular.alerts.api.model.dampening.Dampening;
 import org.hawkular.alerts.api.model.trigger.FullTrigger;
@@ -8,7 +9,6 @@ import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -30,16 +30,18 @@ public class TriggersLoader {
     private final Map</* accountId */ String, AccountTriggers> cache = new HashMap<>();
 
     @Inject
-    EntityManager entityManager;
+    StatelessSessionFactory statelessSessionFactory;
 
     public List<FullTrigger> getTriggers(String accountId) {
         AccountTriggers accountTriggers = cache.computeIfAbsent(accountId, unused -> new AccountTriggers());
-        LocalDateTime dbLatestUpdate = findLatestUpdate(accountId);
-        if (accountTriggers.latestUpdate == null || accountTriggers.latestUpdate.isBefore(dbLatestUpdate)) {
-            accountTriggers.triggers = loadTriggersByAccount(accountId);
-            accountTriggers.latestUpdate = dbLatestUpdate;
-        }
-        return accountTriggers.triggers;
+        return statelessSessionFactory.withSession(statelessSession -> {
+            LocalDateTime dbLatestUpdate = findLatestUpdate(accountId);
+            if (accountTriggers.latestUpdate == null || accountTriggers.latestUpdate.isBefore(dbLatestUpdate)) {
+                accountTriggers.triggers = loadTriggersByAccount(accountId);
+                accountTriggers.latestUpdate = dbLatestUpdate;
+            }
+            return accountTriggers.triggers;
+        });
     }
 
     @CacheResult(cacheName = "account-latest-update")
@@ -47,7 +49,7 @@ public class TriggersLoader {
         LOGGER.debugf("Finding latest triggers update for account %s", accountId);
         String hql = "SELECT latest FROM AccountLatestUpdate WHERE accountId = :accountId";
         try {
-            return entityManager.createQuery(hql, LocalDateTime.class)
+            return statelessSessionFactory.getCurrentSession().createQuery(hql, LocalDateTime.class)
                     .setParameter("accountId", accountId)
                     .getSingleResult();
         } catch (NoResultException e) {
@@ -58,7 +60,7 @@ public class TriggersLoader {
 
     private List<FullTrigger> loadTriggersByAccount(String accountId) {
         String hql = "SELECT p FROM Policy p WHERE p.accountId = :accountId";
-        List<FullTrigger> triggers = entityManager.createQuery(hql, Policy.class)
+        List<FullTrigger> triggers = statelessSessionFactory.getCurrentSession().createQuery(hql, Policy.class)
                 .setParameter("accountId", accountId)
                 .getResultList()
                 .stream()
