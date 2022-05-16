@@ -1,5 +1,7 @@
 package com.redhat.cloud.policies.engine.history;
 
+import com.redhat.cloud.policies.engine.db.StatelessSessionFactory;
+import com.redhat.cloud.policies.engine.lightweight.LightweightEngineConfig;
 import org.hawkular.alerts.api.model.event.Alert;
 import org.hawkular.alerts.api.services.PoliciesHistoryService;
 import org.hibernate.Session;
@@ -22,9 +24,15 @@ public class PoliciesHistory implements PoliciesHistoryService {
     @Inject
     Session session;
 
+    @Inject
+    LightweightEngineConfig lightweightEngineConfig;
+
+    @Inject
+    StatelessSessionFactory statelessSessionFactory;
+
     @Override
     @Transactional
-    @ActivateRequestContext
+    @ActivateRequestContext // TODO POL-649 Remove this in the cleaning PR.
     public void put(Alert alert) {
         try {
             LOGGER.debugf("Creating %s from %s", PoliciesHistoryEntry.class.getSimpleName(), alert);
@@ -34,7 +42,11 @@ public class PoliciesHistory implements PoliciesHistoryService {
             historyEntry.setCtime(alert.getCtime());
             getSingleTagValue(alert, INVENTORY_ID_TAG_KEY).ifPresent(historyEntry::setHostId);
             getSingleTagValue(alert, DISPLAY_NAME_TAG_KEY).ifPresent(historyEntry::setHostName);
-            session.persist(historyEntry);
+            if (lightweightEngineConfig.isDbLoadingEnabled()) {
+                statelessSessionFactory.getCurrentSession().insert(historyEntry);
+            } else {
+                session.persist(historyEntry);
+            }
             LOGGER.debugf("Persisted %s", historyEntry);
         } catch (Exception e) {
             LOGGER.error("Policies history entry persist failed", e);
