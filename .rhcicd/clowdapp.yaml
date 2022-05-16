@@ -88,8 +88,6 @@ objects:
           successThreshold: 1
           failureThreshold: 3
         env:
-        - name: ENGINE_ALERTS_ENGINE_PERIOD
-          value: ${ENGINE_ALERTS_ENGINE_PERIOD}
         - name: ENV_NAME
           value: ${ENV_NAME}
         - name: EXTERNAL_LOGGING_LEVEL
@@ -100,12 +98,6 @@ objects:
           value: "256"
         - name: JAVA_CORE_LIMIT
           value: "0"
-        - name: _JAVA_OPTIONS
-          value: -Dhawkular.data=/data -Dengine.alerts.condition-evaluation-time=false -Dengine.data-driven-triggers-enabled=false
-        - name: LIGHTWEIGHT_ENGINE_DB_LOADING_ENABLED
-          value: ${LIGHTWEIGHT_ENGINE_DB_LOADING_ENABLED}
-        - name: LIGHTWEIGHT_ENGINE_KAFKA_PROCESSING_ENABLED
-          value: ${LIGHTWEIGHT_ENGINE_KAFKA_PROCESSING_ENABLED}
         - name: QUARKUS_HTTP_PORT
           value: "8000"
         - name: QUARKUS_LOG_CLOUDWATCH_ENABLED
@@ -128,9 +120,6 @@ parameters:
 - name: CPU_REQUEST
   description: CPU request
   value: 500m
-- name: ENGINE_ALERTS_ENGINE_PERIOD
-  description: Delay in milliseconds between two executions of the TimerTask that processes the events
-  value: "2000"
 - name: ENV_NAME
   description: ClowdEnvironment name (ephemeral, stage, prod)
   required: true
@@ -146,10 +135,6 @@ parameters:
   value: 10Gi
 - name: EXTERNAL_LOGGING_LEVEL
   value: INFO
-- name: LIGHTWEIGHT_ENGINE_DB_LOADING_ENABLED
-  value: "false"
-- name: LIGHTWEIGHT_ENGINE_KAFKA_PROCESSING_ENABLED
-  value: "false"
 - name: MEMORY_LIMIT
   description: Memory limit
   value: 3Gi

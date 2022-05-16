@@ -21,7 +21,7 @@ public class TypedJsonExtract {
         JsonObject json = new JsonObject(inputJson);
 
         JsonObject systemProfile = json.getJsonObject("system_profile");
-        Map<String, Object> facts = Receiver.parseSystemProfile(systemProfile);
+        Map<String, Object> facts = PayloadParser.parseSystemProfile(systemProfile);
 
         Map<String, Object> yum_repos = (Map<String, Object>) facts.get("yum_repos");
         Map<String, Object> string = (Map<String, Object>) yum_repos.get("string");

@@ -7,7 +7,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.redhat.cloud.policies.engine.actions.plugins.NotificationActionPluginListener.WEBHOOK_CHANNEL;
+import static com.redhat.cloud.policies.engine.process.NotificationSender.WEBHOOK_CHANNEL;
 import static com.redhat.cloud.policies.engine.process.Receiver.EVENTS_CHANNEL;
 import static io.smallrye.reactive.messaging.providers.connectors.InMemoryConnector.switchIncomingChannelsToInMemory;
 import static io.smallrye.reactive.messaging.providers.connectors.InMemoryConnector.switchOutgoingChannelsToInMemory;

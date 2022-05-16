@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<kmodule xmlns="http://www.drools.org/xsd/kmodule">
-  <kbase name="customProfilesEngine" packages="org.hawkular.alerts.engine.rules" equalsBehavior="equality">
-    <ksession name="customProfilesEngineSession"/>
-  </kbase>
-</kmodule>

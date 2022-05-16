@@ -41,17 +41,12 @@
     <version.junit>4.13.2</version.junit> <!-- External module uses Quarkus' JUnit 5 -->
     <version.org.antlr>4.9.3</version.org.antlr>
     <version.org.apache.commons.commons-math3>3.6.1</version.org.apache.commons.commons-math3>
-    <version.org.drools>7.38.0.Final</version.org.drools>
     <version.com.google.guava>31.1-jre</version.com.google.guava>
 
     <!-- Used for openapi generation and itests -->
     <version.org.codehaus.groovy>3.0.10</version.org.codehaus.groovy>
     <version.org.codehaus.gmavenplus>1.13.1</version.org.codehaus.gmavenplus>
     <version.org.codehaus.groovy.modules.http-builder>0.7.1</version.org.codehaus.groovy.modules.http-builder>
-
-    <!-- Wildfly to Quarkus related stuff to be ported / removed -->
-    <version.org.infinispan>10.1.8.Final</version.org.infinispan>
-    <version.org.jboss.logging.jboss-logging-tools>2.2.1.Final</version.org.jboss.logging.jboss-logging-tools>
 
     <!-- Quarkus -->
     <quarkus.version>2.8.2.Final</quarkus.version>
@@ -65,26 +60,6 @@
 
   <dependencyManagement>
     <dependencies>
-      <dependency>
-        <groupId>org.infinispan</groupId>
-        <artifactId>infinispan-cachestore-rocksdb</artifactId>
-        <version>10.1.9-20201009.125110-1</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.infinispan</groupId>
-        <artifactId>infinispan-jboss-marshalling</artifactId>
-        <version>10.1.9-20200921.120848-1</version>
-      </dependency>
-
-      <!-- Infinispan BOM, needs to be before Quarkus -->
-      <dependency>
-        <groupId>org.infinispan</groupId>
-        <artifactId>infinispan-bom</artifactId>
-        <version>${version.org.infinispan}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
 
       <dependency>
         <groupId>io.quarkus</groupId>
@@ -92,25 +67,6 @@
         <version>${quarkus.version}</version>
         <type>pom</type>
         <scope>import</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.drools</groupId>
-        <artifactId>drools-bom</artifactId>
-        <type>pom</type>
-        <version>${version.org.drools}</version>
-        <scope>import</scope>
-      </dependency>
-
-      <!-- Logging -->
-      <dependency>
-        <groupId>org.jboss.logging</groupId>
-        <artifactId>jboss-logging-annotations</artifactId>
-        <version>${version.org.jboss.logging.jboss-logging-tools}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jboss.logging</groupId>
-        <artifactId>jboss-logging-processor</artifactId>
-        <version>${version.org.jboss.logging.jboss-logging-tools}</version>
       </dependency>
 
       <!-- Misc -->
@@ -156,7 +112,6 @@
       </activation>
       <modules>
         <module>api</module>
-        <module>engine</module>
         <module>external</module>
       </modules>
     </profile>
