@@ -15,16 +15,22 @@ public class PolicyToTriggerConverter {
     private static final String NO_LONGER_USED = "";
     private static final Pattern ACTIONS_SPLIT_PATTERN = Pattern.compile(";");
 
-    public static FullTrigger convert(Policy policy) {
+    public static FullTrigger convert(Policy policy, boolean useOrgId) {
         FullTrigger fullTrigger = new FullTrigger();
-        fullTrigger.setTrigger(buildTrigger(policy));
+        fullTrigger.setTrigger(buildTrigger(policy, useOrgId));
         fullTrigger.setConditions(List.of(buildCondition(fullTrigger.getTrigger(), policy.condition)));
         return fullTrigger;
     }
 
-    private static Trigger buildTrigger(Policy policy) {
+    private static Trigger buildTrigger(Policy policy, boolean useOrgId) {
         Trigger trigger = new Trigger();
-        trigger.setTenantId(policy.accountId);
+
+        if (useOrgId) {
+            trigger.setTenantId(policy.orgId);
+        } else {
+            trigger.setTenantId(policy.accountId);
+        }
+
         trigger.setId(policy.id.toString());
         trigger.setName(policy.name);
         trigger.setDescription(policy.description);

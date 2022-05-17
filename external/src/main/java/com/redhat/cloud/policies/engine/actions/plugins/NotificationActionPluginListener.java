@@ -10,6 +10,7 @@ import com.redhat.cloud.policies.engine.actions.plugins.notification.PoliciesAct
 import io.smallrye.reactive.messaging.kafka.api.OutgoingKafkaRecordMetadata;
 import io.vertx.core.json.JsonObject;
 import org.apache.kafka.common.header.internals.RecordHeaders;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.metrics.Counter;
 import org.eclipse.microprofile.metrics.annotation.Metric;
 import org.eclipse.microprofile.reactive.messaging.Channel;
@@ -50,6 +51,12 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 @Plugin(name = "notification")
 @Dependent
 public class NotificationActionPluginListener implements ActionPluginListener {
+
+    public static final String USE_ORG_ID = "policies.use-org-id";
+
+    @ConfigProperty(name = USE_ORG_ID, defaultValue = "false")
+    public boolean useOrgId;
+
     public static final String BUNDLE_NAME = "rhel";
     public static final String APP_NAME = "policies";
     public static final String EVENT_TYPE_NAME = "policy-triggered";
@@ -75,7 +82,14 @@ public class NotificationActionPluginListener implements ActionPluginListener {
     @Override
     public void process(ActionMessage actionMessage) throws Exception {
         messagesCount.inc();
-        PoliciesAction policiesAction = new PoliciesAction(false);
+
+        PoliciesAction policiesAction;
+        if (useOrgId) {
+            policiesAction = new PoliciesAction(true);
+            policiesAction.setOrgId(actionMessage.getAction().getTenantId());
+        } else {
+            policiesAction = new PoliciesAction(false);
+        }
         policiesAction.setAccountId(actionMessage.getAction().getTenantId());
 
         // TODO POL-650 replace with orgId
@@ -121,7 +135,7 @@ public class NotificationActionPluginListener implements ActionPluginListener {
             }
         }
 
-        notifyBuffer.merge(policiesAction.getKey(), policiesAction,(existing, addition) -> {
+        notifyBuffer.merge(policiesAction.getKey(), policiesAction, (existing, addition) -> {
             for (Map.Entry<String, Set<String>> tagEntry : addition.getContext().getTags().entrySet()) {
                 existing.getContext().getTags().merge(tagEntry.getKey(), tagEntry.getValue(), (existingTags, additionTags) -> {
                     existingTags.addAll(additionTags);
@@ -151,7 +165,11 @@ public class NotificationActionPluginListener implements ActionPluginListener {
                 channel.send(buildMessageWithId(payload));
                 messagesAggregated.inc();
             } catch (IOException ex) {
-                log.log(Level.WARNING, ex, () -> "Failed to serialize action for accountId" + action.getAccountId());
+                if (useOrgId) {
+                    log.log(Level.WARNING, ex, () -> "Failed to serialize action for orgId" + action.getOrgId());
+                } else {
+                    log.log(Level.WARNING, ex, () -> "Failed to serialize action for accountId" + action.getAccountId());
+                }
             }
 
         }

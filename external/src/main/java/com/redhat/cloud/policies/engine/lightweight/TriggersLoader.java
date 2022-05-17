@@ -2,6 +2,7 @@ package com.redhat.cloud.policies.engine.lightweight;
 
 import com.redhat.cloud.policies.engine.db.StatelessSessionFactory;
 import io.quarkus.cache.CacheResult;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.hawkular.alerts.api.model.dampening.Dampening;
 import org.hawkular.alerts.api.model.trigger.FullTrigger;
 import org.hawkular.alerts.api.model.trigger.Trigger;
@@ -19,6 +20,11 @@ import static java.util.stream.Collectors.toList;
 
 @ApplicationScoped
 public class TriggersLoader {
+
+    public static final String USE_ORG_ID = "policies.use-org-id";
+
+    @ConfigProperty(name = USE_ORG_ID, defaultValue = "false")
+    public boolean useOrgId;
 
     private static final Logger LOGGER = Logger.getLogger(TriggersLoader.class);
 
@@ -47,30 +53,58 @@ public class TriggersLoader {
     @CacheResult(cacheName = "account-latest-update")
     LocalDateTime findLatestUpdate(String accountId) {
         LOGGER.debugf("Finding latest triggers update for account %s", accountId);
-        String hql = "SELECT latest FROM AccountLatestUpdate WHERE accountId = :accountId";
-        try {
-            return statelessSessionFactory.getCurrentSession().createQuery(hql, LocalDateTime.class)
-                    .setParameter("accountId", accountId)
-                    .getSingleResult();
-        } catch (NoResultException e) {
-            LOGGER.debugf("No latest triggers update found for account %s", accountId);
-            return LocalDateTime.MIN;
+
+        if (useOrgId) {
+            String hql = "SELECT latest FROM AccountLatestUpdate WHERE orgId = :accountId";
+            try {
+                return statelessSessionFactory.getCurrentSession().createQuery(hql, LocalDateTime.class)
+                        .setParameter("accountId", accountId)
+                        .getSingleResult();
+            } catch (NoResultException e) {
+                LOGGER.debugf("No latest triggers update found for account %s", accountId);
+                return LocalDateTime.MIN;
+            }
+        } else {
+            String hql = "SELECT latest FROM AccountLatestUpdate WHERE accountId = :accountId";
+            try {
+                return statelessSessionFactory.getCurrentSession().createQuery(hql, LocalDateTime.class)
+                        .setParameter("orgId", accountId)
+                        .getSingleResult();
+            } catch (NoResultException e) {
+                LOGGER.debugf("No latest triggers update found for account %s", accountId);
+                return LocalDateTime.MIN;
+            }
         }
     }
 
     private List<FullTrigger> loadTriggersByAccount(String accountId) {
-        String hql = "SELECT p FROM Policy p WHERE p.accountId = :accountId";
-        List<FullTrigger> triggers = statelessSessionFactory.getCurrentSession().createQuery(hql, Policy.class)
-                .setParameter("accountId", accountId)
-                .getResultList()
-                .stream()
-                .map(PolicyToTriggerConverter::convert)
-                .collect(toList());
-        for (FullTrigger trigger : triggers) {
-            provideDefaultDampening(trigger);
+        if (useOrgId) {
+            String hql = "SELECT p FROM Policy p WHERE p.orgId = :accountId";
+            List<FullTrigger> triggers = statelessSessionFactory.getCurrentSession().createQuery(hql, Policy.class)
+                    .setParameter("accountId", accountId)
+                    .getResultList()
+                    .stream()
+                    .map(policy -> PolicyToTriggerConverter.convert(policy, true))
+                    .collect(toList());
+            for (FullTrigger trigger : triggers) {
+                provideDefaultDampening(trigger);
+            }
+            LOGGER.debugf("%d database trigger(s) loaded for account %s", triggers.size(), accountId);
+            return triggers;
+        } else {
+            String hql = "SELECT p FROM Policy p WHERE p.accountId = :accountId";
+            List<FullTrigger> triggers = statelessSessionFactory.getCurrentSession().createQuery(hql, Policy.class)
+                    .setParameter("accountId", accountId)
+                    .getResultList()
+                    .stream()
+                    .map(policy -> PolicyToTriggerConverter.convert(policy, false))
+                    .collect(toList());
+            for (FullTrigger trigger : triggers) {
+                provideDefaultDampening(trigger);
+            }
+            LOGGER.debugf("%d database trigger(s) loaded for account %s", triggers.size(), accountId);
+            return triggers;
         }
-        LOGGER.debugf("%d database trigger(s) loaded for account %s", triggers.size(), accountId);
-        return triggers;
     }
 
     /*
