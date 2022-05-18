@@ -166,7 +166,6 @@ public class LightweightEngineImpl implements LightweightEngine {
 
             PoliciesAction policiesAction = new PoliciesAction(useOrgId);
 
-            // TODO POL-650 is tenantId also the orgID? I guess it will become the ordId.
             policiesAction.setOrgId(event.getTenantId());
 
             policiesAction.setAccountId(event.getTenantId());
