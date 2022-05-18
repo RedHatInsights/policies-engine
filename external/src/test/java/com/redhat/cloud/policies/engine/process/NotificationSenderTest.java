@@ -33,6 +33,8 @@ import static com.redhat.cloud.policies.engine.process.NotificationSender.EVENT_
 import static com.redhat.cloud.policies.engine.process.NotificationSender.MESSAGE_ID_HEADER;
 import static com.redhat.cloud.policies.engine.process.NotificationSender.WEBHOOK_CHANNEL;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.time.format.DateTimeFormatter.ISO_DATE_TIME;
+import static java.time.temporal.ChronoUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -78,8 +80,8 @@ public class NotificationSenderTest {
 
         // The system_check_in field precision is different before and after the action serialization.
         LocalDateTime expectedSystemCheckIn = policiesAction.getContext().getSystemCheckIn();
-        String actualSystemCheckIn = (String) action.getContext().getAdditionalProperties().get("system_check_in");
-        assertTrue(expectedSystemCheckIn.toString().startsWith(actualSystemCheckIn));
+        LocalDateTime actualSystemCheckIn = LocalDateTime.parse((String) action.getContext().getAdditionalProperties().get("system_check_in"), ISO_DATE_TIME);
+        assertEquals(0, SECONDS.between(expectedSystemCheckIn, actualSystemCheckIn));
 
         // Actual tags: [{value=world, key=hello}, {value=intended, key=tags}, {value=as, key=tags}, {value=working, key=tags}, {value=are, key=tags}]
         JsonNode actualTags = objectMapper.valueToTree(action.getContext().getAdditionalProperties().get("tags"));
