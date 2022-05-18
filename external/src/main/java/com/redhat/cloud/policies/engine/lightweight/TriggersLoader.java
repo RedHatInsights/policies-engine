@@ -54,10 +54,10 @@ public class TriggersLoader {
         LOGGER.debugf("Finding latest triggers update for account %s", accountId);
 
         if (useOrgId) {
-            String hql = "SELECT latest FROM AccountLatestUpdate WHERE orgId = :accountId";
+            String hql = "SELECT latest FROM AccountLatestUpdate WHERE orgId = :orgId";
             try {
                 return statelessSessionFactory.getCurrentSession().createQuery(hql, LocalDateTime.class)
-                        .setParameter("accountId", accountId)
+                        .setParameter("orgId", accountId)
                         .getSingleResult();
             } catch (NoResultException e) {
                 LOGGER.debugf("No latest triggers update found for account %s", accountId);
@@ -67,7 +67,7 @@ public class TriggersLoader {
             String hql = "SELECT latest FROM AccountLatestUpdate WHERE accountId = :accountId";
             try {
                 return statelessSessionFactory.getCurrentSession().createQuery(hql, LocalDateTime.class)
-                        .setParameter("orgId", accountId)
+                        .setParameter("accountId", accountId)
                         .getSingleResult();
             } catch (NoResultException e) {
                 LOGGER.debugf("No latest triggers update found for account %s", accountId);
@@ -78,9 +78,9 @@ public class TriggersLoader {
 
     private List<FullTrigger> loadTriggersByAccount(String accountId) {
         if (useOrgId) {
-            String hql = "SELECT p FROM Policy p WHERE p.orgId = :accountId";
+            String hql = "SELECT p FROM Policy p WHERE p.orgId = :orgId";
             List<FullTrigger> triggers = statelessSessionFactory.getCurrentSession().createQuery(hql, Policy.class)
-                    .setParameter("accountId", accountId)
+                    .setParameter("orgId", accountId)
                     .getResultList()
                     .stream()
                     .map(policy -> PolicyToTriggerConverter.convert(policy, true))
