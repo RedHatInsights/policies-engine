@@ -1,8 +1,8 @@
 package com.redhat.cloud.policies.engine.lightweight;
 
+import com.redhat.cloud.policies.engine.config.OrgIdConfig;
 import com.redhat.cloud.policies.engine.db.StatelessSessionFactory;
 import io.quarkus.cache.CacheResult;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.hawkular.alerts.api.model.dampening.Dampening;
 import org.hawkular.alerts.api.model.trigger.FullTrigger;
 import org.hawkular.alerts.api.model.trigger.Trigger;
@@ -16,14 +16,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.redhat.cloud.policies.engine.actions.plugins.NotificationActionPluginListener.USE_ORG_ID;
 import static java.util.stream.Collectors.toList;
 
 @ApplicationScoped
 public class TriggersLoader {
-
-    @ConfigProperty(name = USE_ORG_ID, defaultValue = "false")
-    public boolean useOrgId;
 
     private static final Logger LOGGER = Logger.getLogger(TriggersLoader.class);
 
@@ -36,6 +32,9 @@ public class TriggersLoader {
 
     @Inject
     StatelessSessionFactory statelessSessionFactory;
+
+    @Inject
+    OrgIdConfig orgIdConfig;
 
     public List<FullTrigger> getTriggers(String accountId) {
         AccountTriggers accountTriggers = cache.computeIfAbsent(accountId, unused -> new AccountTriggers());
@@ -53,7 +52,7 @@ public class TriggersLoader {
     LocalDateTime findLatestUpdate(String accountId) {
         LOGGER.debugf("Finding latest triggers update for account %s", accountId);
 
-        if (useOrgId) {
+        if (orgIdConfig.isUseOrgId()) {
             String hql = "SELECT latest FROM AccountLatestUpdate WHERE orgId = :orgId";
             try {
                 return statelessSessionFactory.getCurrentSession().createQuery(hql, LocalDateTime.class)
@@ -77,7 +76,7 @@ public class TriggersLoader {
     }
 
     private List<FullTrigger> loadTriggersByAccount(String accountId) {
-        if (useOrgId) {
+        if (orgIdConfig.isUseOrgId()) {
             String hql = "SELECT p FROM Policy p WHERE p.orgId = :orgId";
             List<FullTrigger> triggers = statelessSessionFactory.getCurrentSession().createQuery(hql, Policy.class)
                     .setParameter("orgId", accountId)

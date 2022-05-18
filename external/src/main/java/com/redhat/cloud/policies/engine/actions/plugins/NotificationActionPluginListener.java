@@ -7,10 +7,10 @@ import com.redhat.cloud.notifications.ingress.Metadata;
 import com.redhat.cloud.notifications.ingress.Parser;
 import com.redhat.cloud.notifications.ingress.Payload;
 import com.redhat.cloud.policies.engine.actions.plugins.notification.PoliciesAction;
+import com.redhat.cloud.policies.engine.config.OrgIdConfig;
 import io.smallrye.reactive.messaging.kafka.api.OutgoingKafkaRecordMetadata;
 import io.vertx.core.json.JsonObject;
 import org.apache.kafka.common.header.internals.RecordHeaders;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.metrics.Counter;
 import org.eclipse.microprofile.metrics.annotation.Metric;
 import org.eclipse.microprofile.reactive.messaging.Channel;
@@ -52,11 +52,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 @Dependent
 public class NotificationActionPluginListener implements ActionPluginListener {
 
-    public static final String USE_ORG_ID = "policies.use-org-id";
-
-    @ConfigProperty(name = USE_ORG_ID, defaultValue = "false")
-    public boolean useOrgId;
-
     public static final String BUNDLE_NAME = "rhel";
     public static final String APP_NAME = "policies";
     public static final String EVENT_TYPE_NAME = "policy-triggered";
@@ -79,12 +74,15 @@ public class NotificationActionPluginListener implements ActionPluginListener {
     @Metric(absolute = true, name = "engine.actions.notifications.aggregated")
     Counter messagesAggregated;
 
+    @Inject
+    OrgIdConfig orgIdConfig;
+
     @Override
     public void process(ActionMessage actionMessage) throws Exception {
         messagesCount.inc();
 
         PoliciesAction policiesAction;
-        if (useOrgId) {
+        if (orgIdConfig.isUseOrgId()) {
             policiesAction = new PoliciesAction(true);
             policiesAction.setOrgId(actionMessage.getAction().getTenantId());
         } else {
@@ -165,7 +163,7 @@ public class NotificationActionPluginListener implements ActionPluginListener {
                 channel.send(buildMessageWithId(payload));
                 messagesAggregated.inc();
             } catch (IOException ex) {
-                if (useOrgId) {
+                if (orgIdConfig.isUseOrgId()) {
                     log.log(Level.WARNING, ex, () -> "Failed to serialize action for orgId" + action.getOrgId());
                 } else {
                     log.log(Level.WARNING, ex, () -> "Failed to serialize action for accountId" + action.getAccountId());

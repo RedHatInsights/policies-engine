@@ -2,7 +2,7 @@ package com.redhat.cloud.policies.engine.lightweight;
 
 import com.redhat.cloud.policies.api.model.condition.expression.ExprParser;
 import com.redhat.cloud.policies.engine.actions.plugins.notification.PoliciesAction;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import com.redhat.cloud.policies.engine.config.OrgIdConfig;
 import org.eclipse.microprofile.metrics.Counter;
 import org.eclipse.microprofile.metrics.annotation.Metric;
 import org.eclipse.microprofile.reactive.messaging.Channel;
@@ -37,7 +37,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.redhat.cloud.policies.engine.actions.plugins.NotificationActionPluginListener.USE_ORG_ID;
 import static com.redhat.cloud.policies.engine.actions.plugins.NotificationActionPluginListener.WEBHOOK_CHANNEL;
 import static com.redhat.cloud.policies.engine.actions.plugins.NotificationActionPluginListener.buildMessageWithId;
 import static com.redhat.cloud.policies.engine.actions.plugins.NotificationActionPluginListener.serializeAction;
@@ -46,9 +45,6 @@ import static org.eclipse.microprofile.reactive.messaging.OnOverflow.Strategy.UN
 
 @ApplicationScoped
 public class LightweightEngineImpl implements LightweightEngine {
-
-    @ConfigProperty(name = USE_ORG_ID, defaultValue = "false")
-    public boolean useOrgId;
 
     private static final Logger LOGGER = Logger.getLogger(LightweightEngineImpl.class);
 
@@ -80,6 +76,9 @@ public class LightweightEngineImpl implements LightweightEngine {
     @Inject
     @Metric(absolute = true, name = "engine.actions.notifications.aggregated")
     Counter notificationsCounter;
+
+    @Inject
+    OrgIdConfig orgIdConfig;
 
     @Override
     public void validateCondition(String condition) {
@@ -161,7 +160,7 @@ public class LightweightEngineImpl implements LightweightEngine {
             // In the old implementation, the time comes from the Action constructor which relies on System.currentTimeMillis().
             LocalDateTime nowUTC = LocalDateTime.ofInstant(Instant.ofEpochMilli(System.currentTimeMillis()), UTC);
 
-            PoliciesAction policiesAction = new PoliciesAction(useOrgId);
+            PoliciesAction policiesAction = new PoliciesAction(orgIdConfig.isUseOrgId());
 
             policiesAction.setOrgId(event.getTenantId());
 
@@ -220,7 +219,7 @@ public class LightweightEngineImpl implements LightweightEngine {
                 emitter.send(buildMessageWithId(payload));
                 notificationsCounter.inc();
             } catch (IOException e) {
-                if (useOrgId) {
+                if (orgIdConfig.isUseOrgId()) {
                     LOGGER.warnf("Failed to serialize action for orgId", policiesAction.getOrgId());
                 } else {
                     LOGGER.warnf("Failed to serialize action for accountId", policiesAction.getAccountId());
