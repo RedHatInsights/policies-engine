@@ -10,7 +10,6 @@ import java.time.LocalDateTime;
 @Table(name = "account_latest_update")
 public class AccountLatestUpdate {
 
-    // TODO POL-650 shouldn't we use auto generated ids as PK instead of natural keys?
     @Id
     @Column(name = "account_id")
     public String accountId;
