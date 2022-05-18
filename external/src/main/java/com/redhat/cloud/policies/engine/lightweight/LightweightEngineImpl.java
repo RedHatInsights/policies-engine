@@ -2,8 +2,6 @@ package com.redhat.cloud.policies.engine.lightweight;
 
 import com.redhat.cloud.policies.api.model.condition.expression.ExprParser;
 import com.redhat.cloud.policies.engine.actions.plugins.notification.PoliciesAction;
-import org.eclipse.microprofile.config.ConfigProvider;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.metrics.Counter;
 import org.eclipse.microprofile.metrics.annotation.Metric;
@@ -39,6 +37,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.redhat.cloud.policies.engine.actions.plugins.NotificationActionPluginListener.USE_ORG_ID;
 import static com.redhat.cloud.policies.engine.actions.plugins.NotificationActionPluginListener.WEBHOOK_CHANNEL;
 import static com.redhat.cloud.policies.engine.actions.plugins.NotificationActionPluginListener.buildMessageWithId;
 import static com.redhat.cloud.policies.engine.actions.plugins.NotificationActionPluginListener.serializeAction;
@@ -47,8 +46,6 @@ import static org.eclipse.microprofile.reactive.messaging.OnOverflow.Strategy.UN
 
 @ApplicationScoped
 public class LightweightEngineImpl implements LightweightEngine {
-
-    public static final String USE_ORG_ID = "policies.use-org-id";
 
     @ConfigProperty(name = USE_ORG_ID, defaultValue = "false")
     public boolean useOrgId;

@@ -16,12 +16,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.redhat.cloud.policies.engine.actions.plugins.NotificationActionPluginListener.USE_ORG_ID;
 import static java.util.stream.Collectors.toList;
 
 @ApplicationScoped
 public class TriggersLoader {
-
-    public static final String USE_ORG_ID = "policies.use-org-id";
 
     @ConfigProperty(name = USE_ORG_ID, defaultValue = "false")
     public boolean useOrgId;
