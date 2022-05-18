@@ -14,14 +14,6 @@
   <name>Policies Engine: API</name>
 
   <dependencies>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-jackson</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-mutiny</artifactId>
-    </dependency>
 
     <dependency>
       <groupId>org.antlr</groupId>
@@ -32,20 +24,6 @@
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
       <version>${version.com.google.guava}</version>
-    </dependency>
-
-    <!-- Logging -->
-    <dependency>
-      <groupId>org.jboss.logging</groupId>
-      <artifactId>jboss-logging-annotations</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.jboss.logging</groupId>
-      <artifactId>jboss-logging-processor</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkiverse.logging.cloudwatch</groupId>
-      <artifactId>quarkus-logging-cloudwatch</artifactId>
     </dependency>
 
     <!-- Tests -->

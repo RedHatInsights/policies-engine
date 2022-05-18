@@ -19,7 +19,7 @@
     <!-- Internal -->
     <dependency>
       <groupId>com.redhat.cloud.policies</groupId>
-      <artifactId>policies-engine-engine</artifactId>
+      <artifactId>policies-engine-api</artifactId>
       <version>${project.version}</version>
     </dependency>
 
@@ -46,18 +46,6 @@
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-smallrye-opentracing</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-vertx</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-reactive-routes</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-smallrye-context-propagation</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
@@ -112,7 +100,7 @@
     <!-- Tests -->
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-junit5</artifactId>
+      <artifactId>quarkus-junit5-mockito</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -285,25 +273,6 @@
                 <script>file:///${restDocDirectory}/metrics-generator.groovy</script>
               </scripts>
             </configuration>
-          </plugin>
-          <plugin>
-            <groupId>org.openapitools</groupId>
-            <artifactId>openapi-generator-maven-plugin</artifactId>
-            <version>${openapi-generator-version}</version>
-            <executions>
-              <execution>
-                <id>generate-api-doc</id>
-                <phase>compile</phase>
-                <goals>
-                  <goal>generate</goal>
-                </goals>
-                <configuration>
-                  <inputSpec>${project.basedir}/src/main/resources/META-INF/resources/api/policies/v1.0/openapi.json</inputSpec>
-                  <generatorName>asciidoc</generatorName>
-                  <skipValidateSpec>false</skipValidateSpec>
-                </configuration>
-              </execution>
-            </executions>
           </plugin>
         </plugins>
       </build>

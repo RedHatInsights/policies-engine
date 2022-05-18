@@ -35,13 +35,4 @@ public class NonApplicationRootPathTest {
                 .statusCode(200)
                 .contentType(TEXT);
     }
-
-    @Test
-    void testOpenApi() {
-        given()
-                .when().get("/api/policies/v1.0/openapi.json")
-                .then()
-                .statusCode(200)
-                .contentType(JSON);
-    }
 }

@@ -1,2 +1,0 @@
-Implementation-Vendor-Id: org.hawkular.alerts
-Implementation-Version: for-unit-testing
