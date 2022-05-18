@@ -3,7 +3,8 @@ package com.redhat.cloud.policies.engine.actions.plugins.notification;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 
 class PoliciesActionTest {
 

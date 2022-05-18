@@ -61,7 +61,9 @@ import static com.redhat.cloud.policies.engine.actions.plugins.NotificationActio
 import static com.redhat.cloud.policies.engine.process.Receiver.EVENTS_CHANNEL;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.awaitility.Awaitility.await;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
 @Tag("integration")
