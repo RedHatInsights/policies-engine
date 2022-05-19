@@ -1,18 +1,18 @@
 package com.redhat.cloud.policies.api.model.condition.expression;
 
 import org.hawkular.alerts.api.model.event.Event;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class ExprEvaluationTest {
+class ExprEvaluationTest {
 
     @Test
-    public void testStrComparisons() {
+    void testStrComparisons() {
         Event event = new Event();
         Map<String, Object> factMap = new HashMap<>();
         factMap.put("a", "b");
@@ -45,7 +45,7 @@ public class ExprEvaluationTest {
     }
 
     @Test
-    public void testImpossibleStrComparisons() {
+    void testImpossibleStrComparisons() {
         Event event = new Event();
         Map<String, Object> factMap = new HashMap<>();
         factMap.put("a", "b");
@@ -66,7 +66,7 @@ public class ExprEvaluationTest {
     }
 
     @Test
-    public void testNumberComparisons() {
+    void testNumberComparisons() {
         Event event = new Event();
         Map<String, Object> factMap = new HashMap<>();
         factMap.put("a", 2);
@@ -109,7 +109,7 @@ public class ExprEvaluationTest {
     }
 
     @Test
-    public void testNullMatching() {
+    void testNullMatching() {
         // Mainly error handling - should return false and not fail
         Event event = new Event();
         Map<String, Object> factMap = new HashMap<>();
@@ -124,7 +124,7 @@ public class ExprEvaluationTest {
     }
 
     @Test
-    public void testInMatching() {
+    void testInMatching() {
         Event event = new Event();
         Map<String, Object> factMap = new HashMap<>();
         factMap.put("a", "b");
@@ -144,7 +144,7 @@ public class ExprEvaluationTest {
     }
 
     @Test
-    public void testNotMatching() {
+    void testNotMatching() {
         Event event = new Event();
         Map<String, Object> factMap = new HashMap<>();
         factMap.put("a", "b");
@@ -168,7 +168,7 @@ public class ExprEvaluationTest {
     }
 
     @Test
-    public void testDefine() {
+    void testDefine() {
         Event event = new Event();
         Map<String, Object> factMap = new HashMap<>();
         factMap.put("a", "b");

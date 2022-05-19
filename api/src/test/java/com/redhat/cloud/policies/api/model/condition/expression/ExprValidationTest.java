@@ -1,14 +1,13 @@
 package com.redhat.cloud.policies.api.model.condition.expression;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
-public class ExprValidationTest {
+class ExprValidationTest {
 
     @Test
-    public void testSimple() {
+    void testSimple() {
         // Extra whitespace is intentional
         String expr = "(cores = 1  OR rhelversion > 8)";
         ExprParser.validate(expr);
@@ -24,7 +23,7 @@ public class ExprValidationTest {
     }
 
     @Test
-    public void testEquals() {
+    void testEquals() {
         String expr = "(cores = 1 OR rhelversion = \"auto\")";
         ExprParser.validate(expr);
 
@@ -33,7 +32,7 @@ public class ExprValidationTest {
     }
 
     @Test
-    public void testOnlyNumbersForCompares() {
+    void testOnlyNumbersForCompares() {
         String expr = "(process_time > 8 AND machines <= 7) OR (cores >= 2 OR day > 1)";
         ExprParser.validate(expr);
 
@@ -48,7 +47,7 @@ public class ExprValidationTest {
     }
 
     @Test
-    public void testCaseInsensitivityOperators() {
+    void testCaseInsensitivityOperators() {
         String expr = "(process_time > 8 and machines <= 7) or (cores >= 2 or day > 1)";
         ExprParser.validate(expr);
 
@@ -57,7 +56,7 @@ public class ExprValidationTest {
     }
 
     @Test
-    public void testOperatorsWithoutExpression() {
+    void testOperatorsWithoutExpression() {
         try {
             String expr = "a = 'b' OR";
             ExprParser.validate(expr);
@@ -78,7 +77,7 @@ public class ExprValidationTest {
     }
 
     @Test
-    public void testQuotes() {
+    void testQuotes() {
         String expr = "machine_name = 'localhost' AND brand = \"RedHat\"";
         ExprParser.validate(expr);
 
@@ -100,7 +99,7 @@ public class ExprValidationTest {
     }
 
     @Test
-    public void testNumericParsing() {
+    void testNumericParsing() {
         String expr = "a = 1.4";
         ExprParser.validate(expr);
 
@@ -119,7 +118,7 @@ public class ExprValidationTest {
     }
 
     @Test
-    public void testNegation() {
+    void testNegation() {
         String expr = "not (machine_name = 'localhost' OR cores > 9)";
         ExprParser.validate(expr);
 
@@ -137,7 +136,7 @@ public class ExprValidationTest {
     }
 
     @Test
-    public void testRejectUnquotedString() {
+    void testRejectUnquotedString() {
         try {
             // Unquoted strings are reserved for future use, don't allow them
             String expr = "a = b";
@@ -148,7 +147,7 @@ public class ExprValidationTest {
     }
 
     @Test
-    public void testQuotedNumbers() {
+    void testQuotedNumbers() {
         String expr = "a = \"9.0\"";
         ExprParser.validate(expr);
 
@@ -157,7 +156,7 @@ public class ExprValidationTest {
     }
 
     @Test
-    public void testRejectWrongQuotedNumbersWithNumericOperator() {
+    void testRejectWrongQuotedNumbersWithNumericOperator() {
         try {
             // Unquoted strings are reserved for future use, don't allow them
             String expr = "a > 'foobar'";
@@ -167,7 +166,7 @@ public class ExprValidationTest {
     }
 
     @Test
-    public void testQuotedNumbersWithNumericOperator() {
+    void testQuotedNumbersWithNumericOperator() {
         String expr = "a > \"9.0\"";
         ExprParser.validate(expr);
     }
