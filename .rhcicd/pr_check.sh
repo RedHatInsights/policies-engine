@@ -19,7 +19,7 @@ CICD_URL=https://raw.githubusercontent.com/RedHatInsights/bonfire/master/cicd
 curl -s $CICD_URL/bootstrap.sh > .cicd_bootstrap.sh && source .cicd_bootstrap.sh
 
 # Build the image and push to Quay
-export DOCKERFILE=external/src/main/docker/Dockerfile-build.jvm
+export DOCKERFILE=src/main/docker/Dockerfile-build.jvm
 source $CICD_ROOT/build.sh
 
 # Deploy on ephemeral
