@@ -114,7 +114,7 @@ parameters:
   value: INFO
 - name: MEMORY_LIMIT
   description: Memory limit
-  value: 1Gi
+  value: 1000Mi
 - name: MEMORY_REQUEST
   description: Memory request
   value: 500Mi
