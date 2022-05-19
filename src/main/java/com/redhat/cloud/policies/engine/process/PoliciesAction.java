@@ -3,7 +3,7 @@ package com.redhat.cloud.policies.engine.process;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -57,7 +57,7 @@ public class PoliciesAction {
         this.events = events;
     }
 
-    @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public static class Payload {
         private String policyId;
         private String policyName;
@@ -109,7 +109,7 @@ public class PoliciesAction {
         }
     }
 
-    @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public static class Context {
 
         private static class IsoDateTimeSerializer extends LocalDateTimeSerializer {
