@@ -1,7 +1,7 @@
 package com.redhat.cloud.policies.engine.condition;
 
 import com.redhat.cloud.policies.engine.process.Event;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -9,32 +9,12 @@ import java.util.List;
 import java.util.Map;
 
 import static com.redhat.cloud.policies.engine.condition.ConditionParser.evaluate;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class ExprComplexTypeTest {
-
-//    @Test
-    public void testSemverComparison() {
-
-    }
-
-//    @Test
-    public void testInstalledComparisons() {
-
-    }
-
-//    @Test
-    public void testRepositories() {
-
-    }
-
-//    @Test
-    public void testNetworkInterfaces() {
-
-    }
+class ExprComplexTypeTest {
 
     @Test
-    public void testFactsAssumedParsingLogic() {
+    void testFactsAssumedParsingLogic() {
         Event event = new Event();
         event.setFacts(createFacts());
 

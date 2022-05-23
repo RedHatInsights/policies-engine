@@ -1,18 +1,18 @@
 package com.redhat.cloud.policies.engine.condition;
 
 import com.redhat.cloud.policies.engine.process.Event;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class ExprLogicTest {
+class ExprLogicTest {
 
     @Test
-    public void testSingleOperators() {
+    void testSingleOperators() {
         Event event = new Event();
         Map<String, Object> factMap = new HashMap<>();
         factMap.put("a", "b");
@@ -37,7 +37,7 @@ public class ExprLogicTest {
     }
 
     @Test
-    public void testSimpleBrackets() {
+    void testSimpleBrackets() {
         Event event = new Event();
         Map<String, Object> factMap = new HashMap<>();
         factMap.put("a", "b");
@@ -59,7 +59,7 @@ public class ExprLogicTest {
     }
 
     @Test
-    public void testMultipleOperators() {
+    void testMultipleOperators() {
         Event event = new Event();
         Map<String, Object> factMap = new HashMap<>();
         factMap.put("a", "b");
@@ -87,7 +87,7 @@ public class ExprLogicTest {
     }
 
     @Test
-    public void testNegativeMultipleOperators() {
+    void testNegativeMultipleOperators() {
         Event event = new Event();
         Map<String, Object> factMap = new HashMap<>();
         factMap.put("a", "b");

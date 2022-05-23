@@ -1,18 +1,18 @@
 package com.redhat.cloud.policies.engine.condition;
 
 import com.redhat.cloud.policies.engine.process.Event;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class ExprKeyTest {
+class ExprKeyTest {
 
     @Test
-    public void compareMixedEventFields() {
+    void compareMixedEventFields() {
         Event event = new Event();
         Map<String, Object> factMap = new HashMap<>();
         factMap.put("a", "b");
@@ -29,7 +29,7 @@ public class ExprKeyTest {
     }
 
     @Test
-    public void testInnerMapReading() {
+    void testInnerMapReading() {
         Event event = new Event();
         Map<String, Object> factMap = new HashMap<>();
         factMap.put("a", "b");
@@ -53,7 +53,7 @@ public class ExprKeyTest {
     }
 
     @Test
-    public void testEscapedKeyName() {
+    void testEscapedKeyName() {
         Event event = new Event();
         Map<String, Object> factMap = new HashMap<>();
         factMap.put("log.category", "b");
@@ -67,7 +67,7 @@ public class ExprKeyTest {
     }
 
     @Test
-    public void testWhitespaceInKeyname() {
+    void testWhitespaceInKeyname() {
         Event event = new Event();
         // tag names are parsed to lower case format
         event.addTag("cost center", "12345");
