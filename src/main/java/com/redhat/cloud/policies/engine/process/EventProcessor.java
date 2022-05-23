@@ -63,18 +63,12 @@ public class EventProcessor {
         } else {
             LOGGER.debugf("Found %d enabled policies for account %s", enabledPolicies.size(), event.getAccountId());
 
-            PoliciesAction policiesAction;
-            if (orgIdConfig.isUseOrgId()) {
-                policiesAction = new PoliciesAction(true);
-                policiesAction.setOrgId(event.getAccountId());
-            } else {
-                policiesAction = new PoliciesAction(false);
-            }
+            PoliciesAction policiesAction = new PoliciesAction(orgIdConfig.isUseOrgId());
+
+            policiesAction.setOrgId(event.getAccountId());
+
             policiesAction.setAccountId(event.getAccountId());
             policiesAction.setTimestamp(LocalDateTime.now(UTC));
-
-            // TODO POL-650 replace with orgId
-            policiesAction.setOrgId(event.getAccountId());
 
             PoliciesAction.Context context = policiesAction.getContext();
             context.setSystemCheckIn(LocalDateTime.from(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(event.getContext().get(CHECK_IN_FIELD))));
