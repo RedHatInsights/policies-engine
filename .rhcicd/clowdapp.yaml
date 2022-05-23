@@ -75,10 +75,6 @@ objects:
           value: ${EXTERNAL_LOGGING_LEVEL}
         - name: GC_CONTAINER_OPTIONS
           value: "-XX:+UseG1GC"
-        - name: GC_MAX_METASPACE_SIZE
-          value: "256"
-        - name: JAVA_CORE_LIMIT
-          value: "0"
         - name: QUARKUS_HTTP_PORT
           value: "8000"
         - name: QUARKUS_LOG_CLOUDWATCH_ENABLED
