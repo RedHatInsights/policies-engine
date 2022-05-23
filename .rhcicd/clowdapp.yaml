@@ -4,18 +4,6 @@ kind: Template
 metadata:
   name: policies-engine
 objects:
-- apiVersion: v1
-  kind: PersistentVolumeClaim
-  metadata:
-    name: policies-engine-data
-    labels:
-      app: policies-engine
-  spec:
-    accessModes:
-    - ReadWriteOnce
-    resources:
-      requests:
-        storage: ${INFINISPAN_STORAGE}
 - apiVersion: cloud.redhat.com/v1alpha1
   kind: ClowdApp
   metadata:
@@ -41,9 +29,7 @@ objects:
       iqePlugin: policies
     deployments:
     - name: service
-      replicas: ${{REPLICAS}}
-      strategy:
-        type: Recreate
+      minReplicas: ${{MIN_REPLICAS}}
       webServices:
         public:
           enabled: true
@@ -57,14 +43,9 @@ objects:
             cpu: ${CPU_LIMIT}
             memory: ${MEMORY_LIMIT}
         volumes:
-        - name: policies-engine-data
-          persistentVolumeClaim:
-            claimName: policies-engine-data
         - name: certs
           emptyDir: {}
         volumeMounts:
-        - name: policies-engine-data
-          mountPath: /data
         - name: certs
           mountPath: /tmp
         readinessProbe:
@@ -72,7 +53,7 @@ objects:
             path: /health/ready
             port: 8000
             scheme: HTTP
-          initialDelaySeconds: 60
+          initialDelaySeconds: 40
           periodSeconds: 10
           timeoutSeconds: 1
           successThreshold: 1
@@ -82,7 +63,7 @@ objects:
             path: /health/live
             port: 8000
             scheme: HTTP
-          initialDelaySeconds: 60
+          initialDelaySeconds: 40
           periodSeconds: 10
           timeoutSeconds: 1
           successThreshold: 1
@@ -116,10 +97,10 @@ parameters:
   value: "false"
 - name: CPU_LIMIT
   description: CPU limit
-  value: 1000m
+  value: 500m
 - name: CPU_REQUEST
   description: CPU request
-  value: 500m
+  value: 250m
 - name: ENV_NAME
   description: ClowdEnvironment name (ephemeral, stage, prod)
   required: true
@@ -129,19 +110,15 @@ parameters:
 - name: IMAGE_TAG
   description: Image tag
   value: latest
-- name: INFINISPAN_STORAGE
-  displayName: Infinispan's persistent storage size
-  description: Amount of storage to request for the database persistent volume
-  value: 10Gi
 - name: EXTERNAL_LOGGING_LEVEL
   value: INFO
 - name: MEMORY_LIMIT
   description: Memory limit
-  value: 3Gi
+  value: 1000Mi
 - name: MEMORY_REQUEST
   description: Memory request
-  value: 1.5Gi
-- name: REPLICAS
+  value: 500Mi
+- name: MIN_REPLICAS
   value: "1"
 - name: SENTRY_ENABLED
   description: Enable Sentry (or not)
