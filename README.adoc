@@ -4,23 +4,13 @@
 [.lead]
 This project contains the execution engine for policies service. For the user-facing UI-backend see https://github.com/RedHatInsights/policies-ui-backend
 
-This repository contains parts of the Hawkular-Alerts core. It is not interchangeable with the previous maven modules as stuff has been moved around, removed and modified. For the old documentation (not necessarily relevant in all parts), see:
-
-link:http://www.hawkular.org/community/docs/developer-guide/alerts-v2.html[Hawkular Alerting User Guide]
-
-link:http://www.hawkular.org/docs/rest/rest-alerts-v2.html[Hawkular Alerting REST API]
-
-=== Module dependencies
-
-``external`` module depends on ``engine``
-
-``engine`` module depends on ``api``
-
-``engine`` is using a modified version of Infinispan's RocksDB cache-store. To build it, use the link:https://github.com/burmanm/infinispan/tree/10.1-mod[10.1-mod] branch. In the ``persistence/rocksdb`` run ``./mvnw clean install deploy -DskipTests`` and copy the resulting files from ``target/mvn-repo`` to ``engine/src/main/resources/repo``. Modify the ``.pom`` file by making the parent point to ``10.1.8.Final`` and then update the SNAPSHOT version in `dependencyManagement` to enable the newer build. You can also update the ``.md5`` and `.sha1` files with `openssl dgst -sha1 file.pom` after modifying the parent version.
-
 == Run
 
-See link:https://github.com/RedHatInsights/policies-engine/tree/master/external[external] module for instructions. Requires Kafka and Java 11 (or newer).
+Running Kafka instance is required to process inbound messages through the queue. If none exists, one can start Kafka with ``docker run --rm -e RUNTESTS=0 --net=host lensesio/fast-data-dev``
+
+To start a clean instance of Policies Engine, run in this directory: ``./mvnw quarkus:dev``
+
+REST-interface will be available by default from port ``8084`` (and ``8080`` in containers).
 
 == License
 

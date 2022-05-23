@@ -4,18 +4,6 @@ kind: Template
 metadata:
   name: policies-engine
 objects:
-- apiVersion: v1
-  kind: PersistentVolumeClaim
-  metadata:
-    name: policies-engine-data
-    labels:
-      app: policies-engine
-  spec:
-    accessModes:
-    - ReadWriteOnce
-    resources:
-      requests:
-        storage: ${INFINISPAN_STORAGE}
 - apiVersion: cloud.redhat.com/v1alpha1
   kind: ClowdApp
   metadata:
@@ -72,9 +60,7 @@ objects:
       iqePlugin: policies
     deployments:
     - name: service
-      replicas: ${{REPLICAS}}
-      strategy:
-        type: Recreate
+      minReplicas: ${{MIN_REPLICAS}}
       webServices:
         public:
           enabled: true
@@ -88,14 +74,9 @@ objects:
             cpu: ${CPU_LIMIT}
             memory: ${MEMORY_LIMIT}
         volumes:
-        - name: policies-engine-data
-          persistentVolumeClaim:
-            claimName: policies-engine-data
         - name: certs
           emptyDir: {}
         volumeMounts:
-        - name: policies-engine-data
-          mountPath: /data
         - name: certs
           mountPath: /tmp
         readinessProbe:
@@ -103,7 +84,7 @@ objects:
             path: /health/ready
             port: 8000
             scheme: HTTP
-          initialDelaySeconds: 60
+          initialDelaySeconds: 40
           periodSeconds: 10
           timeoutSeconds: 1
           successThreshold: 1
@@ -113,14 +94,12 @@ objects:
             path: /health/live
             port: 8000
             scheme: HTTP
-          initialDelaySeconds: 60
+          initialDelaySeconds: 40
           periodSeconds: 10
           timeoutSeconds: 1
           successThreshold: 1
           failureThreshold: 3
         env:
-        - name: ENGINE_ALERTS_ENGINE_PERIOD
-          value: ${ENGINE_ALERTS_ENGINE_PERIOD}
         - name: ENV_NAME
           value: ${ENV_NAME}
         - name: EXTERNAL_LOGGING_LEVEL
@@ -131,12 +110,6 @@ objects:
           value: "256"
         - name: JAVA_CORE_LIMIT
           value: "0"
-        - name: _JAVA_OPTIONS
-          value: -Dhawkular.data=/data -Dengine.alerts.condition-evaluation-time=false -Dengine.data-driven-triggers-enabled=false
-        - name: LIGHTWEIGHT_ENGINE_DB_LOADING_ENABLED
-          value: ${LIGHTWEIGHT_ENGINE_DB_LOADING_ENABLED}
-        - name: LIGHTWEIGHT_ENGINE_KAFKA_PROCESSING_ENABLED
-          value: ${LIGHTWEIGHT_ENGINE_KAFKA_PROCESSING_ENABLED}
         - name: QUARKUS_HTTP_PORT
           value: "8000"
         - name: QUARKUS_LOG_CLOUDWATCH_ENABLED
@@ -155,13 +128,10 @@ parameters:
   value: "false"
 - name: CPU_LIMIT
   description: CPU limit
-  value: 1000m
+  value: 500m
 - name: CPU_REQUEST
   description: CPU request
-  value: 500m
-- name: ENGINE_ALERTS_ENGINE_PERIOD
-  description: Delay in milliseconds between two executions of the TimerTask that processes the events
-  value: "2000"
+  value: 250m
 - name: ENV_NAME
   description: ClowdEnvironment name (ephemeral, stage, prod)
   required: true
@@ -171,23 +141,15 @@ parameters:
 - name: IMAGE_TAG
   description: Image tag
   value: latest
-- name: INFINISPAN_STORAGE
-  displayName: Infinispan's persistent storage size
-  description: Amount of storage to request for the database persistent volume
-  value: 10Gi
 - name: EXTERNAL_LOGGING_LEVEL
   value: INFO
-- name: LIGHTWEIGHT_ENGINE_DB_LOADING_ENABLED
-  value: "false"
-- name: LIGHTWEIGHT_ENGINE_KAFKA_PROCESSING_ENABLED
-  value: "false"
 - name: MEMORY_LIMIT
   description: Memory limit
-  value: 3Gi
+  value: 1000Mi
 - name: MEMORY_REQUEST
   description: Memory request
-  value: 1.5Gi
-- name: REPLICAS
+  value: 500Mi
+- name: MIN_REPLICAS
   value: "1"
 - name: SENTRY_ENABLED
   description: Enable Sentry (or not)
