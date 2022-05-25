@@ -44,6 +44,9 @@ public class PayloadParserTest {
     PayloadParser payloadParser;
 
     @Inject
+    OrgIdConfig orgIdConfig;
+
+    @Inject
     @Metric(absolute = true, name = "engine.input.processed", tags = {"queue=host-egress"})
     Counter incomingMessagesCount;
 
@@ -107,16 +110,16 @@ public class PayloadParserTest {
     void beforeEach() {
         saveCounterValues(incomingMessagesCount, rejectedCount, rejectedCountType, rejectedCountHost, rejectedCountReporter, rejectedCountId, processingErrors);
 
-        System.clearProperty(USE_ORG_ID);
+        orgIdConfig.setUseOrgId(false);
     }
 
     @AfterEach
     void afterEach() {
-        System.clearProperty(USE_ORG_ID);
+        orgIdConfig.setUseOrgId(false);
     }
     @Test
     void shouldContainorgId() {
-        System.setProperty(USE_ORG_ID, "true");
+        orgIdConfig.setUseOrgId(true);
 
         String payload = loadResource("input/host_org_id.json");
         Event event = payloadParser.parse(payload).get();
