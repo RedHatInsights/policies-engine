@@ -1,10 +1,12 @@
 package com.redhat.cloud.policies.engine.process;
 
+import com.redhat.cloud.policies.engine.config.OrgIdConfig;
 import io.quarkus.test.junit.QuarkusTest;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.microprofile.metrics.Counter;
 import org.eclipse.microprofile.metrics.annotation.Metric;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -18,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static com.redhat.cloud.policies.engine.config.OrgIdConfig.USE_ORG_ID;
 import static com.redhat.cloud.policies.engine.process.PayloadParser.CATEGORY_NAME;
 import static com.redhat.cloud.policies.engine.process.PayloadParser.CHECK_IN_FIELD;
 import static com.redhat.cloud.policies.engine.process.PayloadParser.DISPLAY_NAME_FIELD;
@@ -103,6 +106,23 @@ public class PayloadParserTest {
     @BeforeEach
     void beforeEach() {
         saveCounterValues(incomingMessagesCount, rejectedCount, rejectedCountType, rejectedCountHost, rejectedCountReporter, rejectedCountId, processingErrors);
+
+        System.clearProperty(USE_ORG_ID);
+    }
+
+    @AfterEach
+    void afterEach() {
+        System.clearProperty(USE_ORG_ID);
+    }
+    @Test
+    void shouldContainorgId() {
+        System.setProperty(USE_ORG_ID, "true");
+
+        String payload = loadResource("input/host_org_id.json");
+        Event event = payloadParser.parse(payload).get();
+
+        assertNull(event.getAccountId());
+        assertEquals("bennets orgId", event.getOrgId());
     }
 
     @Test
