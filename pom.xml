@@ -65,7 +65,7 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
-
+ 
   <dependencies>
 
     <!-- Conditions evaluation -->
