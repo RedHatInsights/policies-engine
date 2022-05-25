@@ -2,6 +2,7 @@ package com.redhat.cloud.policies.engine.process;
 
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
+import com.redhat.cloud.policies.engine.config.OrgIdConfig;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.metrics.Counter;
@@ -35,6 +36,7 @@ public class PayloadParser {
     private static final String TYPE_FIELD = "type";
     private static final String REPORTER_FIELD = "reporter";
     private static final String TENANT_ID_FIELD = "account";
+    private static final String ORG_ID = "org_id";
     private static final String SYSTEM_PROFILE_FIELD = "system_profile";
     private static final String NAME_FIELD = "name";
     private static final String TAGS_FIELD = "tags";
@@ -69,6 +71,9 @@ public class PayloadParser {
     @Inject
     @Metric(absolute = true, name = "engine.input.processed.errors", tags = {"queue=host-egress"})
     Counter processingErrors;
+
+    @Inject
+    OrgIdConfig orgIdConfig;
 
     public Optional<Event> parse(String payload) {
         incomingMessagesCount.inc();
@@ -118,7 +123,14 @@ public class PayloadParser {
         String displayName = json.getString(DISPLAY_NAME_FIELD);
         String text = String.format("host-egress report %s for %s", inventoryId, displayName);
 
-        Event event = new Event(tenantId, UUID.randomUUID().toString(), CATEGORY_NAME, text);
+        Event event;
+        if (orgIdConfig.isUseOrgId()) {
+            String orgId = json.getString(ORG_ID);
+            event = Event.createEventWithOrgId(orgId, UUID.randomUUID().toString(), CATEGORY_NAME, text);
+        } else {
+            event = new Event(tenantId, UUID.randomUUID().toString(), CATEGORY_NAME, text);
+        }
+
         // Indexed searchable events
         Multimap<String, String> tagsMap = parseTags(json.getJsonArray(TAGS_FIELD));
         tagsMap.put(DISPLAY_NAME_FIELD, displayName);

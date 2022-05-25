@@ -52,6 +52,7 @@ public class EventProcessor {
      * conditions of multiple policies are satisfied, one Kafka message is sent and it contains one event for each
      * policy that was fired. In that case, tags from each fired policy are also merged into a single collection and
      * added to the Kafka payload. Each fired policy also results in a new record in the policies history DB table.
+     *
      * @param event the event
      */
     public void process(Event event) {
@@ -65,7 +66,9 @@ public class EventProcessor {
 
             PoliciesAction policiesAction = new PoliciesAction(orgIdConfig.isUseOrgId());
 
-            policiesAction.setOrgId(event.getAccountId());
+            if (orgIdConfig.isUseOrgId()) {
+                policiesAction.setOrgId(event.getOrgId());
+            }
 
             policiesAction.setAccountId(event.getAccountId());
             policiesAction.setTimestamp(LocalDateTime.now(UTC));

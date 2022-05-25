@@ -9,6 +9,7 @@ import java.util.Map;
 public class Event {
 
     private String accountId;
+    private String orgId;
     private String id;
     private long ctime;
     private String category;
@@ -25,6 +26,16 @@ public class Event {
         setCtime(ctime);
         this.category = category;
         this.text = text;
+    }
+
+    public static Event createEventWithOrgId(String orgId, String id, String categoryName, String text) {
+        Event event = new Event();
+        event.setOrgId(orgId);
+        event.setId(id);
+        event.setCategory(categoryName);
+        event.setText(text);
+
+        return event;
     }
 
     public String getAccountId() {
@@ -106,6 +117,14 @@ public class Event {
 
     public void setContext(Map<String, String> context) {
         this.context = context;
+    }
+
+    public String getOrgId() {
+        return orgId;
+    }
+
+    public void setOrgId(String orgId) {
+        this.orgId = orgId;
     }
 
     @Override
