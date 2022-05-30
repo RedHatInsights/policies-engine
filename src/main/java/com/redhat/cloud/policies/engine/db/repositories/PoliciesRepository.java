@@ -50,7 +50,7 @@ public class PoliciesRepository {
         LOGGER.debugf("Finding latest policies update time for account %s", accountId);
         try {
             if (orgIdConfig.isUseOrgId()) {
-                String hql = "SELECT latest FROM AccountLatestUpdate WHERE orgId = :orgId";
+                String hql = "SELECT latest FROM OrgIdLatestUpdate WHERE orgId = :orgId";
                 return statelessSessionFactory.getCurrentSession().createQuery(hql, LocalDateTime.class)
                         .setParameter("orgId", accountId)
                         .getSingleResult();
