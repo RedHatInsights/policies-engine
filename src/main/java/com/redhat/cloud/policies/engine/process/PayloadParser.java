@@ -123,13 +123,8 @@ public class PayloadParser {
         String displayName = json.getString(DISPLAY_NAME_FIELD);
         String text = String.format("host-egress report %s for %s", inventoryId, displayName);
 
-        Event event;
-        if (orgIdConfig.isUseOrgId()) {
-            String orgId = json.getString(ORG_ID);
-            event = Event.createEventWithOrgId(orgId, UUID.randomUUID().toString(), CATEGORY_NAME, text);
-        } else {
-            event = new Event(tenantId, UUID.randomUUID().toString(), CATEGORY_NAME, text);
-        }
+        Event event = new Event(tenantId, UUID.randomUUID().toString(), CATEGORY_NAME, text);
+        event.setOrgId(json.getString(ORG_ID));
 
         // Indexed searchable events
         Multimap<String, String> tagsMap = parseTags(json.getJsonArray(TAGS_FIELD));
