@@ -2,7 +2,6 @@ package com.redhat.cloud.policies.engine.process;
 
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
-import com.redhat.cloud.policies.engine.config.OrgIdConfig;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.metrics.Counter;
@@ -71,9 +70,6 @@ public class PayloadParser {
     @Inject
     @Metric(absolute = true, name = "engine.input.processed.errors", tags = {"queue=host-egress"})
     Counter processingErrors;
-
-    @Inject
-    OrgIdConfig orgIdConfig;
 
     public Optional<Event> parse(String payload) {
         incomingMessagesCount.inc();

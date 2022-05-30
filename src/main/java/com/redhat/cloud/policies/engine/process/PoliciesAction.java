@@ -26,16 +26,6 @@ public class PoliciesAction {
     private Context context = new Context();
     private Set<Event> events = new HashSet<>();
 
-    private final boolean useOrgId;
-
-    public PoliciesAction() {
-        this(false);
-    }
-
-    public PoliciesAction(boolean useOrgId) {
-        this.useOrgId = useOrgId;
-    }
-
     public String getAccountId() {
         return accountId;
     }

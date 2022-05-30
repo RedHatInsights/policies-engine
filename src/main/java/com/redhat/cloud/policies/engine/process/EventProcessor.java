@@ -40,9 +40,6 @@ public class EventProcessor {
     NotificationSender notificationSender;
 
     @Inject
-    OrgIdConfig orgIdConfig;
-
-    @Inject
     @Metric(absolute = true, name = "engine.actions.notifications.processed")
     Counter firedPoliciesCounter;
 
@@ -64,7 +61,7 @@ public class EventProcessor {
         } else {
             LOGGER.debugf("Found %d enabled policies for account %s", enabledPolicies.size(), event.getAccountId());
 
-            PoliciesAction policiesAction = new PoliciesAction(orgIdConfig.isUseOrgId());
+            PoliciesAction policiesAction = new PoliciesAction();
 
             policiesAction.setOrgId(event.getOrgId());
 

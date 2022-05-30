@@ -124,7 +124,6 @@ public class PayloadParserTest {
         String payload = loadResource("input/host_org_id.json");
         Event event = payloadParser.parse(payload).get();
 
-        assertNull(event.getAccountId());
         assertEquals("bennets orgId", event.getOrgId());
     }
 
