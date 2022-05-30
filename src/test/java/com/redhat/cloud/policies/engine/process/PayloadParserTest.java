@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static com.redhat.cloud.policies.engine.config.OrgIdConfig.USE_ORG_ID;
 import static com.redhat.cloud.policies.engine.process.PayloadParser.CATEGORY_NAME;
 import static com.redhat.cloud.policies.engine.process.PayloadParser.CHECK_IN_FIELD;
 import static com.redhat.cloud.policies.engine.process.PayloadParser.DISPLAY_NAME_FIELD;
