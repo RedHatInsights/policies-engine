@@ -36,14 +36,6 @@ public class PoliciesAction {
         this.useOrgId = useOrgId;
     }
 
-    public String getKey() {
-        if (useOrgId) {
-            return orgId + context.systemCheckIn;
-        } else {
-            return accountId + context.systemCheckIn;
-        }
-    }
-
     public String getAccountId() {
         return accountId;
     }

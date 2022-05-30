@@ -66,9 +66,7 @@ public class EventProcessor {
 
             PoliciesAction policiesAction = new PoliciesAction(orgIdConfig.isUseOrgId());
 
-            if (orgIdConfig.isUseOrgId()) {
-                policiesAction.setOrgId(event.getOrgId());
-            }
+            policiesAction.setOrgId(event.getOrgId());
 
             policiesAction.setAccountId(event.getAccountId());
             policiesAction.setTimestamp(LocalDateTime.now(UTC));
