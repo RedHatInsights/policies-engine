@@ -14,8 +14,5 @@ public class AccountLatestUpdate {
     @Column(name = "account_id")
     public String accountId;
 
-    @Column(name = "org_id")
-    public String orgId;
-
     public LocalDateTime latest;
 }
