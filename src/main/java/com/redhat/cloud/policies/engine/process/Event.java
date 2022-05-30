@@ -119,7 +119,7 @@ public class Event {
 
     @Override
     public String toString() {
-        return "Event [accountId=" + accountId + ", id=" + id + ", ctime=" + ctime + ", category=" + category
+        return "Event [accountId=" + accountId + ", orgId=" + orgId + ", id=" + id + ", ctime=" + ctime + ", category=" + category
                 + ", text=" + text + ", context=" + context + ", " + "tags=" + tags + "]";
     }
 }
