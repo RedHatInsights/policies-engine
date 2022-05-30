@@ -28,16 +28,6 @@ public class Event {
         this.text = text;
     }
 
-    public static Event createEventWithOrgId(String orgId, String id, String categoryName, String text) {
-        Event event = new Event();
-        event.setOrgId(orgId);
-        event.setId(id);
-        event.setCategory(categoryName);
-        event.setText(text);
-
-        return event;
-    }
-
     public String getAccountId() {
         return accountId;
     }
