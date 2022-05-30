@@ -93,10 +93,10 @@ parameters:
   value: "false"
 - name: CPU_LIMIT
   description: CPU limit
-  value: 500m
+  value: 250m
 - name: CPU_REQUEST
   description: CPU request
-  value: 250m
+  value: 125m
 - name: ENV_NAME
   description: ClowdEnvironment name (ephemeral, stage, prod)
   required: true
