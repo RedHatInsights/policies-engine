@@ -45,21 +45,39 @@ public class PoliciesRepository {
         return enabledPolicies.policies;
     }
 
+    public List<Policy> getEnabledPoliciesOrgId(String orgId) {
+        EnabledPolicies enabledPolicies = enabledPoliciesCache.computeIfAbsent(orgId, unused -> new EnabledPolicies());
+        LocalDateTime dbLatestUpdate = findLatestUpdateOrgId(orgId);
+        if (enabledPolicies.latestUpdate == null || enabledPolicies.latestUpdate.isBefore(dbLatestUpdate)) {
+            LOGGER.debug("Reloading enabled policies from DB");
+            enabledPolicies.policies = findEnabledPoliciesByAccount(orgId);
+            enabledPolicies.latestUpdate = dbLatestUpdate;
+        }
+        return enabledPolicies.policies;
+    }
+
     @CacheResult(cacheName = ACCOUNT_LATEST_UPDATE_CACHE_NAME)
     LocalDateTime findLatestUpdate(String accountId) {
         LOGGER.debugf("Finding latest policies update time for account %s", accountId);
         try {
-            if (orgIdConfig.isUseOrgId()) {
-                String hql = "SELECT latest FROM OrgIdLatestUpdate WHERE orgId = :orgId";
-                return statelessSessionFactory.getCurrentSession().createQuery(hql, LocalDateTime.class)
-                        .setParameter("orgId", accountId)
-                        .getSingleResult();
-            } else {
-                String hql = "SELECT latest FROM AccountLatestUpdate WHERE accountId = :accountId";
-                return statelessSessionFactory.getCurrentSession().createQuery(hql, LocalDateTime.class)
-                        .setParameter("accountId", accountId)
-                        .getSingleResult();
-            }
+            String hql = "SELECT latest FROM AccountLatestUpdate WHERE accountId = :accountId";
+            return statelessSessionFactory.getCurrentSession().createQuery(hql, LocalDateTime.class)
+                    .setParameter("accountId", accountId)
+                    .getSingleResult();
+        } catch (NoResultException e) {
+            LOGGER.debug("No latest policies update time found, using default value");
+            return LocalDateTime.MIN;
+        }
+    }
+
+    @CacheResult(cacheName = ACCOUNT_LATEST_UPDATE_CACHE_NAME)
+    LocalDateTime findLatestUpdateOrgId(String orgId) {
+        LOGGER.debugf("Finding latest policies update time for account %s", orgId);
+        try {
+            String hql = "SELECT latest FROM OrgIdLatestUpdate WHERE orgId = :orgId";
+            return statelessSessionFactory.getCurrentSession().createQuery(hql, LocalDateTime.class)
+                    .setParameter("orgId", orgId)
+                    .getSingleResult();
         } catch (NoResultException e) {
             LOGGER.debug("No latest policies update time found, using default value");
             return LocalDateTime.MIN;

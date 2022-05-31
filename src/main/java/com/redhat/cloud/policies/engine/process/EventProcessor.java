@@ -1,6 +1,7 @@
 package com.redhat.cloud.policies.engine.process;
 
 import com.redhat.cloud.policies.engine.condition.ConditionParser;
+import com.redhat.cloud.policies.engine.config.OrgIdConfig;
 import com.redhat.cloud.policies.engine.db.repositories.PoliciesRepository;
 import com.redhat.cloud.policies.engine.db.entities.Policy;
 import com.redhat.cloud.policies.engine.db.repositories.PoliciesHistoryRepository;
@@ -42,6 +43,9 @@ public class EventProcessor {
     @Metric(absolute = true, name = "engine.actions.notifications.processed")
     Counter firedPoliciesCounter;
 
+    @Inject
+    OrgIdConfig orgIdConfig;
+
     /**
      * Processes an {@link Event}, evaluating conditions of all policies owned by the account of the event. If the
      * condition of at least one policy is satisfied, then a Kafka message is sent to the notifications topic. If the
@@ -54,11 +58,17 @@ public class EventProcessor {
     public void process(Event event) {
         LOGGER.debugf("Processing %s", event);
 
-        List<Policy> enabledPolicies = policiesRepository.getEnabledPolicies(event.getAccountId());
-        if (enabledPolicies.isEmpty()) {
-            LOGGER.debugf("No enabled policies found for account %s", event.getAccountId());
+        List<Policy> enabledPolicies;
+        if (orgIdConfig.isUseOrgId()) {
+            enabledPolicies = policiesRepository.getEnabledPoliciesOrgId(event.getOrgId());
         } else {
-            LOGGER.debugf("Found %d enabled policies for account %s", enabledPolicies.size(), event.getAccountId());
+            enabledPolicies = policiesRepository.getEnabledPolicies(event.getAccountId());
+        }
+
+        if (enabledPolicies.isEmpty()) {
+            LOGGER.debugf("No enabled policies found for account (accountId: %s, orgId: %s)", event.getAccountId(), event.getOrgId());
+        } else {
+            LOGGER.debugf("Found %d enabled policies for account (accountId: %s, orgId: %s)", enabledPolicies.size(), event.getAccountId(), event.getOrgId());
 
             PoliciesAction policiesAction = new PoliciesAction();
 
