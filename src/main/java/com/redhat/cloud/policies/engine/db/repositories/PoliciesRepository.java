@@ -29,9 +29,6 @@ public class PoliciesRepository {
     @Inject
     StatelessSessionFactory statelessSessionFactory;
 
-    @Inject
-    OrgIdConfig orgIdConfig;
-
     private final Map</* accountId */ String, EnabledPolicies> enabledPoliciesCache = new HashMap<>();
 
     public List<Policy> getEnabledPolicies(String accountId) {
@@ -50,7 +47,7 @@ public class PoliciesRepository {
         LocalDateTime dbLatestUpdate = findLatestUpdateOrgId(orgId);
         if (enabledPolicies.latestUpdate == null || enabledPolicies.latestUpdate.isBefore(dbLatestUpdate)) {
             LOGGER.debug("Reloading enabled policies from DB");
-            enabledPolicies.policies = findEnabledPoliciesByAccount(orgId);
+            enabledPolicies.policies = findEnabledPoliciesByOrgId(orgId);
             enabledPolicies.latestUpdate = dbLatestUpdate;
         }
         return enabledPolicies.policies;
@@ -85,17 +82,17 @@ public class PoliciesRepository {
     }
 
     private List<Policy> findEnabledPoliciesByAccount(String accountId) {
-        if (orgIdConfig.isUseOrgId()) {
-            String hql = "FROM Policy WHERE orgId = :orgId AND enabled IS TRUE";
-            return statelessSessionFactory.getCurrentSession().createQuery(hql, Policy.class)
-                    .setParameter("orgId", accountId)
-                    .getResultList();
-        } else {
-            String hql = "FROM Policy WHERE accountId = :accountId AND enabled IS TRUE";
-            return statelessSessionFactory.getCurrentSession().createQuery(hql, Policy.class)
-                    .setParameter("accountId", accountId)
-                    .getResultList();
-        }
+        String hql = "FROM Policy WHERE accountId = :accountId AND enabled IS TRUE";
+        return statelessSessionFactory.getCurrentSession().createQuery(hql, Policy.class)
+                .setParameter("accountId", accountId)
+                .getResultList();
+    }
+
+    private List<Policy> findEnabledPoliciesByOrgId(String orgId) {
+        String hql = "FROM Policy WHERE orgId = :orgId AND enabled IS TRUE";
+        return statelessSessionFactory.getCurrentSession().createQuery(hql, Policy.class)
+                .setParameter("orgId", orgId)
+                .getResultList();
     }
 
     @CacheInvalidateAll(cacheName = ACCOUNT_LATEST_UPDATE_CACHE_NAME)
