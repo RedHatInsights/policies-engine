@@ -125,6 +125,7 @@ public class EventProcessorTest {
     private static Event buildEvent() {
         Event event = new Event();
         event.setAccountId("account-id");
+        event.setOrgId("org-id");
         event.getContext().put(CHECK_IN_FIELD, OffsetDateTime.now().toString());
         event.getContext().put(INVENTORY_ID_FIELD, "inventory-id");
         event.setFacts(Map.of("arch", "x86_64"));
