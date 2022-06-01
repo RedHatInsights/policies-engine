@@ -1,0 +1,96 @@
+{
+  "timestamp": "2020-03-14T16:37:23.927968+00:00",
+  "host": {
+    "account": "integration-test",
+    "org_id": "bennets orgId",
+    "created": "2020-03-19T15:35:09.632864+00:00",
+    "display_name": "VM",
+    "tags": [],
+    "reporter": "puptoo",
+    "id": "ba11a21a-8b22-431b-9b4b-b06006472d54",
+    "insights_id": "d4039530-4e3c-44d8-83b9-44de55400c2b",
+    "system_profile": {
+      "arch": "string",
+      "bios_release_date": "string",
+      "bios_vendor": "string",
+      "bios_version": "string",
+      "cloud_provider": "string",
+      "cores_per_socket": 0,
+      "cpu_flags": [
+        "string"
+      ],
+      "disk_devices": [
+        {
+          "device": "/dev/fdd0",
+          "label": "string",
+          "mount_point": "/mnt/remote_nfs_shares",
+          "options": {
+            "ro": true,
+            "uid": "0"
+          },
+          "type": "ext3"
+        }
+      ],
+      "enabled_services": [
+        "string"
+      ],
+      "infrastructure_type": "string",
+      "infrastructure_vendor": "string",
+      "insights_client_version": "string",
+      "insights_egg_version": "string",
+      "installed_packages": [
+        "0:krb5-libs-1.16.1-23.fc29.i686"
+      ],
+      "installed_products": [
+        {
+          "id": "71",
+          "name": "string",
+          "status": "Subscribed"
+        }
+      ],
+      "installed_services": [
+        "string"
+      ],
+      "katello_agent_running": true,
+      "kernel_modules": [
+        "string"
+      ],
+      "last_boot_time": "2019-11-20T14:42:38.905Z",
+      "network_interfaces": [
+        {
+          "ipv4_addresses": [
+            "198.51.100.42"
+          ],
+          "ipv6_addresses": [
+            "2001:0db8:5b96:0000:0000:426f:8e17:642a"
+          ],
+          "mac_address": "00:00:00:00:00:00",
+          "mtu": 0,
+          "name": "eth0",
+          "state": "UP",
+          "type": "ether"
+        }
+      ],
+      "number_of_cpus": 0,
+      "number_of_sockets": 0,
+      "os_kernel_version": "string",
+      "os_release": "string",
+      "running_processes": [
+        "string"
+      ],
+      "satellite_managed": true,
+      "subscription_auto_attach": "string",
+      "subscription_status": "string",
+      "system_memory_bytes": 0,
+      "yum_repos": [
+        {
+          "baseurl": "string",
+          "enabled": true,
+          "gpgcheck": true,
+          "name": "string"
+        }
+      ]
+    },
+    "updated":"2020-04-16T16:10:42.199046+00:00"
+  }
+}

@@ -17,6 +17,8 @@ public class PoliciesHistoryEntry {
 
     private String tenantId;
 
+    private String orgId;
+
     private String policyId;
 
     private long ctime;
@@ -39,6 +41,14 @@ public class PoliciesHistoryEntry {
 
     public void setTenantId(String tenantId) {
         this.tenantId = tenantId;
+    }
+
+    public String getOrgId() {
+        return orgId;
+    }
+
+    public void setOrgId(String orgId) {
+        this.orgId = orgId;
     }
 
     public String getPolicyId() {

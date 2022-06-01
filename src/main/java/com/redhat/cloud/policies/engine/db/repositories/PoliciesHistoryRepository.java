@@ -26,6 +26,7 @@ public class PoliciesHistoryRepository {
         try {
             PoliciesHistoryEntry historyEntry = new PoliciesHistoryEntry();
             historyEntry.setTenantId(event.getAccountId());
+            historyEntry.setOrgId(event.getOrgId());
             historyEntry.setPolicyId(policyId.toString());
             historyEntry.setCtime(event.getCtime());
             getSingleTagValue(event, INVENTORY_ID_FIELD).ifPresent(historyEntry::setHostId);

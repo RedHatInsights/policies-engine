@@ -16,6 +16,8 @@ public class Policy {
     @Column(name = "customerid")
     public String accountId;
 
+    public String orgId;
+
     public String name;
 
     public String description;

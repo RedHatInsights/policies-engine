@@ -9,6 +9,7 @@ import java.util.Map;
 public class Event {
 
     private String accountId;
+    private String orgId;
     private String id;
     private long ctime;
     private String category;
@@ -108,9 +109,17 @@ public class Event {
         this.context = context;
     }
 
+    public String getOrgId() {
+        return orgId;
+    }
+
+    public void setOrgId(String orgId) {
+        this.orgId = orgId;
+    }
+
     @Override
     public String toString() {
-        return "Event [accountId=" + accountId + ", id=" + id + ", ctime=" + ctime + ", category=" + category
+        return "Event [accountId=" + accountId + ", orgId=" + orgId + ", id=" + id + ", ctime=" + ctime + ", category=" + category
                 + ", text=" + text + ", context=" + context + ", " + "tags=" + tags + "]";
     }
 }

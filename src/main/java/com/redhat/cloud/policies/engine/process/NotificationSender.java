@@ -63,6 +63,7 @@ public class NotificationSender {
                 .withApplication(APP_NAME)
                 .withEventType(EVENT_TYPE_NAME)
                 .withAccountId(policiesAction.getAccountId())
+                .withOrgId(policiesAction.getOrgId())
                 .withTimestamp(policiesAction.getTimestamp())
                 .withContext(contextBuilder.build())
                 .withEvents(policiesAction.getEvents().stream().map(event -> {

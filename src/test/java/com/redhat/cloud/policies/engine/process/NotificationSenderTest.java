@@ -74,6 +74,7 @@ public class NotificationSenderTest {
         assertEquals(APP_NAME, action.getApplication());
         assertEquals(EVENT_TYPE_NAME, action.getEventType());
         assertEquals(policiesAction.getAccountId(), action.getAccountId());
+        assertEquals(policiesAction.getOrgId(), action.getOrgId());
         assertEquals(policiesAction.getTimestamp(), action.getTimestamp());
         assertEquals(policiesAction.getContext().getInventoryId(), action.getContext().getAdditionalProperties().get("inventory_id"));
         assertEquals(policiesAction.getContext().getDisplayName(), action.getContext().getAdditionalProperties().get("display_name"));
@@ -112,6 +113,7 @@ public class NotificationSenderTest {
     private static PoliciesAction buildPoliciesAction() {
         PoliciesAction action = new PoliciesAction();
         action.setAccountId("account-id");
+        action.setOrgId("org-id");
         action.setTimestamp(LocalDateTime.now());
         action.getContext().setInventoryId("inventory-id");
         action.getContext().setDisplayName("display-name");

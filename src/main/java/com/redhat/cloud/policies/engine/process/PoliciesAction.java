@@ -21,13 +21,10 @@ import java.util.stream.Collectors;
 
 public class PoliciesAction {
     private String accountId;
+    private String orgId;
     private LocalDateTime timestamp;
     private Context context = new Context();
     private Set<Event> events = new HashSet<>();
-
-    public String getKey() {
-        return accountId + context.systemCheckIn;
-    }
 
     public String getAccountId() {
         return accountId;
@@ -35,6 +32,14 @@ public class PoliciesAction {
 
     public void setAccountId(String accountId) {
         this.accountId = accountId;
+    }
+
+    public String getOrgId() {
+        return orgId;
+    }
+
+    public void setOrgId(String orgId) {
+        this.orgId = orgId;
     }
 
     public LocalDateTime getTimestamp() {

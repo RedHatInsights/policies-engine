@@ -35,6 +35,7 @@ public class PayloadParser {
     private static final String TYPE_FIELD = "type";
     private static final String REPORTER_FIELD = "reporter";
     private static final String TENANT_ID_FIELD = "account";
+    private static final String ORG_ID = "org_id";
     private static final String SYSTEM_PROFILE_FIELD = "system_profile";
     private static final String NAME_FIELD = "name";
     private static final String TAGS_FIELD = "tags";
@@ -119,6 +120,8 @@ public class PayloadParser {
         String text = String.format("host-egress report %s for %s", inventoryId, displayName);
 
         Event event = new Event(tenantId, UUID.randomUUID().toString(), CATEGORY_NAME, text);
+        event.setOrgId(json.getString(ORG_ID));
+
         // Indexed searchable events
         Multimap<String, String> tagsMap = parseTags(json.getJsonArray(TAGS_FIELD));
         tagsMap.put(DISPLAY_NAME_FIELD, displayName);

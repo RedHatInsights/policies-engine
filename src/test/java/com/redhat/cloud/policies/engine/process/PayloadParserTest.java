@@ -1,10 +1,12 @@
 package com.redhat.cloud.policies.engine.process;
 
+import com.redhat.cloud.policies.engine.config.OrgIdConfig;
 import io.quarkus.test.junit.QuarkusTest;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.microprofile.metrics.Counter;
 import org.eclipse.microprofile.metrics.annotation.Metric;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -39,6 +41,9 @@ public class PayloadParserTest {
 
     @Inject
     PayloadParser payloadParser;
+
+    @Inject
+    OrgIdConfig orgIdConfig;
 
     @Inject
     @Metric(absolute = true, name = "engine.input.processed", tags = {"queue=host-egress"})
@@ -103,6 +108,22 @@ public class PayloadParserTest {
     @BeforeEach
     void beforeEach() {
         saveCounterValues(incomingMessagesCount, rejectedCount, rejectedCountType, rejectedCountHost, rejectedCountReporter, rejectedCountId, processingErrors);
+
+        orgIdConfig.setUseOrgId(false);
+    }
+
+    @AfterEach
+    void afterEach() {
+        orgIdConfig.setUseOrgId(false);
+    }
+    @Test
+    void shouldContainorgId() {
+        orgIdConfig.setUseOrgId(true);
+
+        String payload = loadResource("input/host_org_id.json");
+        Event event = payloadParser.parse(payload).get();
+
+        assertEquals("bennets orgId", event.getOrgId());
     }
 
     @Test
