@@ -62,6 +62,9 @@ public class EventProcessor {
         if (orgIdConfig.isUseOrgId() && event.getOrgId() != null) {
             enabledPolicies = policiesRepository.getEnabledPoliciesOrgId(event.getOrgId());
         } else {
+            if (orgIdConfig.isUseOrgId()) {
+                LOGGER.warnf("The org ID is enabled but an event without the org ID field was processed: %s", event);
+            }
             enabledPolicies = policiesRepository.getEnabledPolicies(event.getAccountId());
         }
 
