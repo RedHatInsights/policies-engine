@@ -1,6 +1,5 @@
 package com.redhat.cloud.policies.engine.db.repositories;
 
-import com.redhat.cloud.policies.engine.config.OrgIdConfig;
 import com.redhat.cloud.policies.engine.db.StatelessSessionFactory;
 import com.redhat.cloud.policies.engine.db.entities.Policy;
 import io.quarkus.cache.CacheInvalidateAll;
@@ -20,7 +19,7 @@ public class PoliciesRepository {
 
     private static final Logger LOGGER = Logger.getLogger(PoliciesRepository.class);
     private static final String ACCOUNT_LATEST_UPDATE_CACHE_NAME = "account-latest-update";
-    private static final String ORG_ID__LATEST_UPDATE_CACHE_NAME = "org-id-latest-update";
+    private static final String ORG_ID_LATEST_UPDATE_CACHE_NAME = "org-id-latest-update";
 
     private static class EnabledPolicies {
         private LocalDateTime latestUpdate;
@@ -69,7 +68,7 @@ public class PoliciesRepository {
         }
     }
 
-    @CacheResult(cacheName = ORG_ID__LATEST_UPDATE_CACHE_NAME)
+    @CacheResult(cacheName = ORG_ID_LATEST_UPDATE_CACHE_NAME)
     LocalDateTime findLatestUpdateOrgId(String orgId) {
         LOGGER.debugf("Finding latest policies update time for orgId %s", orgId);
         try {
@@ -103,7 +102,7 @@ public class PoliciesRepository {
         enabledPoliciesCache.clear();
     }
 
-    @CacheInvalidateAll(cacheName = ORG_ID__LATEST_UPDATE_CACHE_NAME)
+    @CacheInvalidateAll(cacheName = ORG_ID_LATEST_UPDATE_CACHE_NAME)
     public void clearAllCachesOrgId() {
         LOGGER.debug("Clearing all caches");
         enabledPoliciesCacheOrgId.clear();
