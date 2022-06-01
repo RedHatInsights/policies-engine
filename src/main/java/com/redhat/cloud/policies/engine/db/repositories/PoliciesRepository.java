@@ -31,7 +31,7 @@ public class PoliciesRepository {
     StatelessSessionFactory statelessSessionFactory;
 
     private final Map</* accountId */ String, EnabledPolicies> enabledPoliciesCache = new HashMap<>();
-    private final Map</* accountId */ String, EnabledPolicies> enabledPoliciesCacheOrgId = new HashMap<>();
+    private final Map</* orgId */ String, EnabledPolicies> enabledPoliciesCacheOrgId = new HashMap<>();
 
     public List<Policy> getEnabledPolicies(String accountId) {
         EnabledPolicies enabledPolicies = enabledPoliciesCache.computeIfAbsent(accountId, unused -> new EnabledPolicies());
