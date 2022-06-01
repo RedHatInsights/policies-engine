@@ -59,7 +59,7 @@ public class EventProcessor {
         LOGGER.debugf("Processing %s", event);
 
         List<Policy> enabledPolicies;
-        if (orgIdConfig.isUseOrgId()) {
+        if (orgIdConfig.isUseOrgId() && event.getOrgId() != null) {
             enabledPolicies = policiesRepository.getEnabledPoliciesOrgId(event.getOrgId());
         } else {
             enabledPolicies = policiesRepository.getEnabledPolicies(event.getAccountId());
