@@ -69,7 +69,7 @@ public class PoliciesRepository {
 
     @CacheResult(cacheName = ACCOUNT_LATEST_UPDATE_CACHE_NAME)
     LocalDateTime findLatestUpdateOrgId(String orgId) {
-        LOGGER.debugf("Finding latest policies update time for account %s", orgId);
+        LOGGER.debugf("Finding latest policies update time for orgId %s", orgId);
         try {
             String hql = "SELECT latest FROM OrgIdLatestUpdate WHERE orgId = :orgId";
             return statelessSessionFactory.getCurrentSession().createQuery(hql, LocalDateTime.class)
