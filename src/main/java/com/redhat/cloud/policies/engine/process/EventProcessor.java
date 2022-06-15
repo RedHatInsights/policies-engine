@@ -5,9 +5,9 @@ import com.redhat.cloud.policies.engine.config.OrgIdConfig;
 import com.redhat.cloud.policies.engine.db.repositories.PoliciesRepository;
 import com.redhat.cloud.policies.engine.db.entities.Policy;
 import com.redhat.cloud.policies.engine.db.repositories.PoliciesHistoryRepository;
+import io.quarkus.logging.Log;
 import org.eclipse.microprofile.metrics.Counter;
 import org.eclipse.microprofile.metrics.annotation.Metric;
-import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -26,7 +26,6 @@ import static java.time.ZoneOffset.UTC;
 @ApplicationScoped
 public class EventProcessor {
 
-    private static final Logger LOGGER = Logger.getLogger(EventProcessor.class);
     private static final Pattern ACTIONS_SPLIT_PATTERN = Pattern.compile(";");
     private static final List<String> NOTIFICATIONS_ACTIONS = List.of("email", "notification");
 
@@ -56,22 +55,22 @@ public class EventProcessor {
      * @param event the event
      */
     public void process(Event event) {
-        LOGGER.debugf("Processing %s", event);
+        Log.debugf("Processing %s", event);
 
         List<Policy> enabledPolicies;
         if (orgIdConfig.isUseOrgId() && event.getOrgId() != null) {
             enabledPolicies = policiesRepository.getEnabledPoliciesOrgId(event.getOrgId());
         } else {
             if (orgIdConfig.isUseOrgId()) {
-                LOGGER.warnf("The org ID is enabled but an event without the org ID field was processed: %s", event);
+                Log.warnf("The org ID is enabled but an event without the org ID field was processed: %s", event);
             }
             enabledPolicies = policiesRepository.getEnabledPolicies(event.getAccountId());
         }
 
         if (enabledPolicies.isEmpty()) {
-            LOGGER.debugf("No enabled policies found for account (accountId: %s, orgId: %s)", event.getAccountId(), event.getOrgId());
+            Log.debugf("No enabled policies found for account (accountId: %s, orgId: %s)", event.getAccountId(), event.getOrgId());
         } else {
-            LOGGER.debugf("Found %d enabled policies for account (accountId: %s, orgId: %s)", enabledPolicies.size(), event.getAccountId(), event.getOrgId());
+            Log.debugf("Found %d enabled policies for account (accountId: %s, orgId: %s)", enabledPolicies.size(), event.getAccountId(), event.getOrgId());
 
             PoliciesAction policiesAction = new PoliciesAction();
 
@@ -111,7 +110,7 @@ public class EventProcessor {
                 }
             }
             firedPoliciesCounter.inc(firedPolicies);
-            LOGGER.debugf("%d policies fired from the event", firedPolicies);
+            Log.debugf("%d policies fired from the event", firedPolicies);
 
             /*
              * If the policies action contains at least one event, then it means at least one policy was fired and that
@@ -126,7 +125,7 @@ public class EventProcessor {
     private static boolean isFired(Policy policy, Event event) {
         String condition = policy.condition;
         boolean result = condition == null || condition.isBlank() || ConditionParser.evaluate(event, condition);
-        LOGGER.debugf("Condition [%s] was %s", condition, result ? "satisfied" : " not satisfied");
+        Log.debugf("Condition [%s] was %s", condition, result ? "satisfied" : " not satisfied");
         return result;
     }
 

@@ -4,7 +4,7 @@ import com.redhat.cloud.policies.engine.db.StatelessSessionFactory;
 import com.redhat.cloud.policies.engine.db.entities.Policy;
 import io.quarkus.cache.CacheInvalidateAll;
 import io.quarkus.cache.CacheResult;
-import org.jboss.logging.Logger;
+import io.quarkus.logging.Log;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -17,7 +17,6 @@ import java.util.Map;
 @ApplicationScoped
 public class PoliciesRepository {
 
-    private static final Logger LOGGER = Logger.getLogger(PoliciesRepository.class);
     private static final String ACCOUNT_LATEST_UPDATE_CACHE_NAME = "account-latest-update";
     private static final String ORG_ID_LATEST_UPDATE_CACHE_NAME = "org-id-latest-update";
 
@@ -36,7 +35,7 @@ public class PoliciesRepository {
         EnabledPolicies enabledPolicies = enabledPoliciesCache.computeIfAbsent(accountId, unused -> new EnabledPolicies());
         LocalDateTime dbLatestUpdate = findLatestUpdate(accountId);
         if (enabledPolicies.latestUpdate == null || enabledPolicies.latestUpdate.isBefore(dbLatestUpdate)) {
-            LOGGER.debug("Reloading enabled policies from DB");
+            Log.debug("Reloading enabled policies from DB");
             enabledPolicies.policies = findEnabledPoliciesByAccount(accountId);
             enabledPolicies.latestUpdate = dbLatestUpdate;
         }
@@ -47,7 +46,7 @@ public class PoliciesRepository {
         EnabledPolicies enabledPolicies = enabledPoliciesCacheOrgId.computeIfAbsent(orgId, unused -> new EnabledPolicies());
         LocalDateTime dbLatestUpdate = findLatestUpdateOrgId(orgId);
         if (enabledPolicies.latestUpdate == null || enabledPolicies.latestUpdate.isBefore(dbLatestUpdate)) {
-            LOGGER.debug("Reloading enabled policies from DB");
+            Log.debug("Reloading enabled policies from DB");
             enabledPolicies.policies = findEnabledPoliciesByOrgId(orgId);
             enabledPolicies.latestUpdate = dbLatestUpdate;
         }
@@ -56,28 +55,28 @@ public class PoliciesRepository {
 
     @CacheResult(cacheName = ACCOUNT_LATEST_UPDATE_CACHE_NAME)
     LocalDateTime findLatestUpdate(String accountId) {
-        LOGGER.debugf("Finding latest policies update time for account %s", accountId);
+        Log.debugf("Finding latest policies update time for account %s", accountId);
         try {
             String hql = "SELECT latest FROM AccountLatestUpdate WHERE accountId = :accountId";
             return statelessSessionFactory.getCurrentSession().createQuery(hql, LocalDateTime.class)
                     .setParameter("accountId", accountId)
                     .getSingleResult();
         } catch (NoResultException e) {
-            LOGGER.debug("No latest policies update time found, using default value");
+            Log.debug("No latest policies update time found, using default value");
             return LocalDateTime.MIN;
         }
     }
 
     @CacheResult(cacheName = ORG_ID_LATEST_UPDATE_CACHE_NAME)
     LocalDateTime findLatestUpdateOrgId(String orgId) {
-        LOGGER.debugf("Finding latest policies update time for orgId %s", orgId);
+        Log.debugf("Finding latest policies update time for orgId %s", orgId);
         try {
             String hql = "SELECT latest FROM OrgIdLatestUpdate WHERE orgId = :orgId";
             return statelessSessionFactory.getCurrentSession().createQuery(hql, LocalDateTime.class)
                     .setParameter("orgId", orgId)
                     .getSingleResult();
         } catch (NoResultException e) {
-            LOGGER.debug("No latest policies update time found, using default value");
+            Log.debug("No latest policies update time found, using default value");
             return LocalDateTime.MIN;
         }
     }
@@ -98,13 +97,13 @@ public class PoliciesRepository {
 
     @CacheInvalidateAll(cacheName = ACCOUNT_LATEST_UPDATE_CACHE_NAME)
     public void clearAllCaches() {
-        LOGGER.debug("Clearing all caches");
+        Log.debug("Clearing all caches");
         enabledPoliciesCache.clear();
     }
 
     @CacheInvalidateAll(cacheName = ORG_ID_LATEST_UPDATE_CACHE_NAME)
     public void clearAllCachesOrgId() {
-        LOGGER.debug("Clearing all caches");
+        Log.debug("Clearing all caches");
         enabledPoliciesCacheOrgId.clear();
     }
 }

@@ -1,8 +1,6 @@
 package com.redhat.cloud.policies.engine.condition;
 
-import com.redhat.cloud.policies.engine.condition.ExpressionBaseVisitor;
-import com.redhat.cloud.policies.engine.condition.ExpressionLexer;
-import com.redhat.cloud.policies.engine.condition.ExpressionParser;
+import io.quarkus.logging.Log;
 import org.antlr.v4.runtime.ANTLRErrorListener;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
@@ -20,7 +18,6 @@ import java.math.BigDecimal;
 import java.util.BitSet;
 import java.util.Collection;
 import java.util.Map;
-import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 public class ConditionParser extends ExpressionBaseVisitor<Boolean> {
@@ -34,8 +31,6 @@ public class ConditionParser extends ExpressionBaseVisitor<Boolean> {
 
     private static final Pattern KEY_REGEXP = Pattern.compile("(?<!\\\\)\\.");
     private static final Pattern ESCAPE_CLEANER_REGEXP = Pattern.compile("^(['\"])(.*)\\1$");
-
-    private static final Logger log = Logger.getLogger("ExpParser");
 
     static ParseTree createParserTree(String expression, ANTLRErrorListener errorListener) {
         CharStream cs = CharStreams.fromString(expression);
@@ -203,7 +198,7 @@ public class ConditionParser extends ExpressionBaseVisitor<Boolean> {
                     }
                 }
             } catch(NumberFormatException e) {
-                log.warning("Failed to parse value into a number " + e.getMessage());
+                Log.warn("Failed to parse value into a number " + e.getMessage());
                 return false;
             }
 

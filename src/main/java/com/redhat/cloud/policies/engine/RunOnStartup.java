@@ -1,5 +1,6 @@
 package com.redhat.cloud.policies.engine;
 
+import io.quarkus.logging.Log;
 import io.quarkus.runtime.Startup;
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -8,15 +9,12 @@ import java.util.regex.Pattern;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.annotation.PostConstruct;
-import org.jboss.logging.Logger;
 
 @Startup
 public class RunOnStartup {
 
     // TODO POL-649 Update that pattern after the new health check call has been confirmed.
     public static final Pattern ACCESS_LOG_FILTER_PATTERN = Pattern.compile(".*(/health(/\\w+)?|/metrics|/hawkular/alerts/triggers\\?triggerIds=dummy) HTTP/[0-9].[0-9]\" 200.*\\n?");
-
-    private static final Logger LOGGER = Logger.getLogger(RunOnStartup.class);
 
     @ConfigProperty(name = "quarkus.http.access-log.category")
     String accessLogCategory;
@@ -47,10 +45,10 @@ public class RunOnStartup {
                         }
                     }
                 }
-                LOGGER.info(result.toString());
+                Log.info(result.toString());
             }
         } catch (Exception e) {
-            LOGGER.error("Could not read git.properties", e);
+            Log.error("Could not read git.properties", e);
         }
     }
 }

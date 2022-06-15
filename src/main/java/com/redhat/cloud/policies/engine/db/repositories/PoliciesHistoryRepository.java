@@ -3,7 +3,7 @@ package com.redhat.cloud.policies.engine.db.repositories;
 import com.redhat.cloud.policies.engine.db.StatelessSessionFactory;
 import com.redhat.cloud.policies.engine.db.entities.PoliciesHistoryEntry;
 import com.redhat.cloud.policies.engine.process.Event;
-import org.jboss.logging.Logger;
+import io.quarkus.logging.Log;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -16,8 +16,6 @@ import static com.redhat.cloud.policies.engine.process.PayloadParser.INVENTORY_I
 
 @ApplicationScoped
 public class PoliciesHistoryRepository {
-
-    private static final Logger LOGGER = Logger.getLogger(PoliciesHistoryRepository.class);
 
     @Inject
     StatelessSessionFactory statelessSessionFactory;
@@ -32,9 +30,9 @@ public class PoliciesHistoryRepository {
             getSingleTagValue(event, INVENTORY_ID_FIELD).ifPresent(historyEntry::setHostId);
             getSingleTagValue(event, DISPLAY_NAME_FIELD).ifPresent(historyEntry::setHostName);
             statelessSessionFactory.getCurrentSession().insert(historyEntry);
-            LOGGER.debugf("Created %s", historyEntry);
+            Log.debugf("Created %s", historyEntry);
         } catch (Exception e) {
-            LOGGER.error("Policies history entry creation failed", e);
+            Log.error("Policies history entry creation failed", e);
         }
     }
 
