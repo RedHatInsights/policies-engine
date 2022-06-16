@@ -5,17 +5,18 @@ import com.redhat.cloud.notifications.ingress.Context;
 import com.redhat.cloud.notifications.ingress.Metadata;
 import com.redhat.cloud.notifications.ingress.Parser;
 import com.redhat.cloud.notifications.ingress.Payload;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.logging.Log;
 import io.smallrye.reactive.messaging.kafka.api.OutgoingKafkaRecordMetadata;
 import io.vertx.core.json.JsonObject;
 import org.apache.kafka.common.header.internals.RecordHeaders;
-import org.eclipse.microprofile.metrics.Counter;
-import org.eclipse.microprofile.metrics.annotation.Metric;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Message;
 import org.eclipse.microprofile.reactive.messaging.OnOverflow;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.Map;
@@ -40,7 +41,13 @@ public class NotificationSender {
     Emitter<String> emitter;
 
     @Inject
-    @Metric(absolute = true, name = "engine.actions.notifications.aggregated")
+    MeterRegistry meterRegistry;
+
+    @PostConstruct
+    void postConstruct() {
+        notificationsCounter = meterRegistry.counter("engine.actions.notifications.aggregated");
+    }
+
     Counter notificationsCounter;
 
     public void send(PoliciesAction policiesAction) {
@@ -48,7 +55,7 @@ public class NotificationSender {
         Log.debugf("Sending Kafka payload %s", payload);
         Message<String> message = buildMessageWithId(payload);
         emitter.send(message);
-        notificationsCounter.inc();
+        notificationsCounter.increment();
     }
 
     private static String serializeAction(PoliciesAction policiesAction) {

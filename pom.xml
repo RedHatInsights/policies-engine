@@ -142,12 +142,6 @@
       <version>${quarkus-logging-sentry.version}</version>
     </dependency>
 
-    <!-- Misc -->
-    <dependency>
-      <groupId>org.eclipse.microprofile.metrics</groupId>
-      <artifactId>microprofile-metrics-api</artifactId>
-    </dependency>
-
     <!-- Tests -->
     <dependency>
       <groupId>io.quarkus</groupId>
