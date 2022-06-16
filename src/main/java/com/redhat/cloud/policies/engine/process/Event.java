@@ -1,10 +1,9 @@
 package com.redhat.cloud.policies.engine.process;
 
-import com.google.common.collect.Multimap;
-import com.google.common.collect.MultimapBuilder;
-
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class Event {
 
@@ -15,7 +14,7 @@ public class Event {
     private String category;
     private String text;
     private Map<String, String> context;
-    private Multimap<String, String> tags;
+    private Map<String, Set<String>> tags = new HashMap<>();
     private Map<String, Object> facts;
 
     public Event() {}
@@ -68,15 +67,36 @@ public class Event {
         this.text = text;
     }
 
-    private Multimap<String, String> tagsBuilder() {
-        return MultimapBuilder.hashKeys().hashSetValues().build();
+    public Map<String, Set<String>> getTags() {
+        return tags;
     }
 
-    public Multimap<String, String> getTags() {
-        if (null == tags) {
-            tags = tagsBuilder();
+    /**
+     * Returns the tags associated with the given {@code key}. Never returns {@code null}.
+     * @param key the key
+     * @return the tags associated with the key or an empty collection
+     */
+    public Set<String> getTags(String key) {
+        return tags.computeIfAbsent(key, unused -> new HashSet<>());
+    }
+
+    public void setTags(Map<String, Set<String>> tags) {
+        this.tags = tags;
+    }
+
+    public void addTag(String name, String value) {
+        if (null == name || null == value) {
+            throw new IllegalArgumentException("Tag must have non-null name and value");
         }
-        return tags;
+        getTags(name).add(value);
+    }
+
+    public int getTotalTagsSize() {
+        int size = 0;
+        for (Set<String> tagValues : tags.values()) {
+            size += tagValues.size();
+        }
+        return size;
     }
 
     public Map<String, Object> getFacts() {
@@ -85,17 +105,6 @@ public class Event {
 
     public void setFacts(Map<String, Object> facts) {
         this.facts = facts;
-    }
-
-    public void setTags(Multimap<String, String> tags) {
-        this.tags = tags;
-    }
-
-    public void addTag(String name, String value) {
-        if (null == name || null == value) {
-            throw new IllegalArgumentException("Tag must have non-null name and value");
-        }
-        getTags().put(name, value);
     }
 
     public Map<String, String> getContext() {
