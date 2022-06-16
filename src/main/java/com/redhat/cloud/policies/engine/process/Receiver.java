@@ -1,9 +1,9 @@
 package com.redhat.cloud.policies.engine.process;
 
 import com.redhat.cloud.policies.engine.db.StatelessSessionFactory;
+import io.quarkus.logging.Log;
 import io.smallrye.reactive.messaging.annotations.Blocking;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
-import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -17,8 +17,6 @@ public class Receiver {
 
     public static final String EVENTS_CHANNEL = "events";
 
-    private static final Logger LOGGER = Logger.getLogger(Receiver.class);
-
     @Inject
     PayloadParser payloadParser;
 
@@ -31,7 +29,7 @@ public class Receiver {
     @Incoming(EVENTS_CHANNEL)
     @Blocking
     public void process(String payload) {
-        LOGGER.tracef("Received payload: %s", payload);
+        Log.tracef("Received payload: %s", payload);
         payloadParser.parse(payload).ifPresent(event -> {
             statelessSessionFactory.withSession(statelessSession -> {
                 eventProcessor.process(event);

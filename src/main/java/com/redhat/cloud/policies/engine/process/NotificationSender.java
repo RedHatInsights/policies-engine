@@ -5,6 +5,7 @@ import com.redhat.cloud.notifications.ingress.Context;
 import com.redhat.cloud.notifications.ingress.Metadata;
 import com.redhat.cloud.notifications.ingress.Parser;
 import com.redhat.cloud.notifications.ingress.Payload;
+import io.quarkus.logging.Log;
 import io.smallrye.reactive.messaging.kafka.api.OutgoingKafkaRecordMetadata;
 import io.vertx.core.json.JsonObject;
 import org.apache.kafka.common.header.internals.RecordHeaders;
@@ -14,7 +15,6 @@ import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Message;
 import org.eclipse.microprofile.reactive.messaging.OnOverflow;
-import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -34,8 +34,6 @@ public class NotificationSender {
     public static final String APP_NAME = "policies";
     public static final String EVENT_TYPE_NAME = "policy-triggered";
 
-    private static final Logger LOGGER = Logger.getLogger(NotificationSender.class);
-
     @Inject
     @Channel(WEBHOOK_CHANNEL)
     @OnOverflow(UNBOUNDED_BUFFER)
@@ -47,7 +45,7 @@ public class NotificationSender {
 
     public void send(PoliciesAction policiesAction) {
         String payload = serializeAction(policiesAction);
-        LOGGER.debugf("Sending Kafka payload %s", payload);
+        Log.debugf("Sending Kafka payload %s", payload);
         Message<String> message = buildMessageWithId(payload);
         emitter.send(message);
         notificationsCounter.inc();

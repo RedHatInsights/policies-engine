@@ -2,11 +2,11 @@ package com.redhat.cloud.policies.engine.process;
 
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
+import io.quarkus.logging.Log;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.metrics.Counter;
 import org.eclipse.microprofile.metrics.annotation.Metric;
-import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -29,7 +29,6 @@ public class PayloadParser {
     public static final String NETWORK_INTERFACES_FIELD = "network_interfaces";
     public static final String YUM_REPOS_FIELD = "yum_repos";
 
-    private static final Logger LOGGER = Logger.getLogger(PayloadParser.class);
     private static final Set<String> ACCEPTED_REPORTERS = Set.of("puptoo");
     private static final Set<String> ACCEPTED_TYPES = Set.of("created", "updated");
     private static final String TYPE_FIELD = "type";
@@ -84,7 +83,7 @@ public class PayloadParser {
         if (json.containsKey(TYPE_FIELD)) {
             String eventType = json.getString(TYPE_FIELD);
             if(!ACCEPTED_TYPES.contains(eventType)) {
-                LOGGER.debugf("Got a request with type='%s', ignoring ", eventType);
+                Log.debugf("Got a request with type='%s', ignoring ", eventType);
                 rejectedCount.inc();
                 rejectedCountType.inc();
                 return Optional.empty();
