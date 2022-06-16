@@ -14,8 +14,8 @@ import org.mockito.ArgumentCaptor;
 
 import javax.inject.Inject;
 import java.time.OffsetDateTime;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -98,9 +98,9 @@ public class EventProcessorTest {
             assertNotNull(policiesAction.getTimestamp());
             assertNotNull(policiesAction.getContext().getSystemCheckIn());
             assertEquals(event.getContext().get(INVENTORY_ID_FIELD), policiesAction.getContext().getInventoryId());
-            assertEquals(event.getTags().get(DISPLAY_NAME_FIELD).iterator().next(), policiesAction.getContext().getDisplayName());
+            assertEquals(event.getTags(DISPLAY_NAME_FIELD).iterator().next(), policiesAction.getContext().getDisplayName());
 
-            for (Map.Entry<String, Collection<String>> expectedTags : event.getTags().asMap().entrySet()) {
+            for (Map.Entry<String, Set<String>> expectedTags : event.getTags().entrySet()) {
                 Set<String> actualTags = policiesAction.getContext().getTags().get(expectedTags.getKey());
                 if (actualTags == null) {
                     fail("Tag key " + expectedTags.getKey() + " was not found");
@@ -178,9 +178,9 @@ public class EventProcessorTest {
             assertNotNull(policiesAction.getTimestamp());
             assertNotNull(policiesAction.getContext().getSystemCheckIn());
             assertEquals(event.getContext().get(INVENTORY_ID_FIELD), policiesAction.getContext().getInventoryId());
-            assertEquals(event.getTags().get(DISPLAY_NAME_FIELD).iterator().next(), policiesAction.getContext().getDisplayName());
+            assertEquals(event.getTags(DISPLAY_NAME_FIELD).iterator().next(), policiesAction.getContext().getDisplayName());
 
-            for (Map.Entry<String, Collection<String>> expectedTags : event.getTags().asMap().entrySet()) {
+            for (Map.Entry<String, Set<String>> expectedTags : event.getTags().entrySet()) {
                 Set<String> actualTags = policiesAction.getContext().getTags().get(expectedTags.getKey());
                 if (actualTags == null) {
                     fail("Tag key " + expectedTags.getKey() + " was not found");
@@ -221,10 +221,10 @@ public class EventProcessorTest {
         event.getContext().put(CHECK_IN_FIELD, OffsetDateTime.now().toString());
         event.getContext().put(INVENTORY_ID_FIELD, "inventory-id");
         event.setFacts(Map.of("arch", "x86_64"));
-        event.getTags().put(DISPLAY_NAME_FIELD, "display-name");
-        event.getTags().put("Contact", "spam@redhat.com");
-        event.getTags().put("Location", "Neuchatel");
-        event.getTags().put("Location", "Charmey");
+        event.addTag(DISPLAY_NAME_FIELD, "display-name");
+        event.addTag("Contact", "spam@redhat.com");
+        event.addTag("Location", "Neuchatel");
+        event.addTag("Location", "Charmey");
         return event;
     }
 

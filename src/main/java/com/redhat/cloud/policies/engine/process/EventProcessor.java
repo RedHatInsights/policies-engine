@@ -16,6 +16,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import static com.redhat.cloud.policies.engine.process.PayloadParser.CHECK_IN_FIELD;
@@ -73,24 +74,23 @@ public class EventProcessor {
             Log.debugf("Found %d enabled policies for account (accountId: %s, orgId: %s)", enabledPolicies.size(), event.getAccountId(), event.getOrgId());
 
             PoliciesAction policiesAction = new PoliciesAction();
-
             policiesAction.setOrgId(event.getOrgId());
-
             policiesAction.setAccountId(event.getAccountId());
             policiesAction.setTimestamp(LocalDateTime.now(UTC));
 
             PoliciesAction.Context context = policiesAction.getContext();
             context.setSystemCheckIn(LocalDateTime.from(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(event.getContext().get(CHECK_IN_FIELD))));
             context.setInventoryId(event.getContext().get(INVENTORY_ID_FIELD));
-            context.setDisplayName(event.getTags().get(DISPLAY_NAME_FIELD).iterator().next());
+            context.setDisplayName(event.getTags(DISPLAY_NAME_FIELD).iterator().next());
 
-            for (Map.Entry<String, String> tagEntry : event.getTags().entries()) {
-                String tagValue = tagEntry.getValue();
-                if (tagValue == null) {
-                    // Same behavior as previously with JsonObjectNoNullSerializer with old hooks
-                    tagValue = "";
+            for (Map.Entry<String, Set<String>> tagEntry : event.getTags().entrySet()) {
+                for (String tagValue : tagEntry.getValue()) {
+                    if (tagValue == null) {
+                        // Same behavior as previously with JsonObjectNoNullSerializer with old hooks
+                        tagValue = "";
+                    }
+                    context.getTags().computeIfAbsent(tagEntry.getKey(), unused -> new HashSet<>()).add(tagValue);
                 }
-                context.getTags().computeIfAbsent(tagEntry.getKey(), unused -> new HashSet<>()).add(tagValue);
             }
 
             int firedPolicies = 0;

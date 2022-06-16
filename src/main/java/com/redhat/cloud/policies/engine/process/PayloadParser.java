@@ -1,7 +1,5 @@
 package com.redhat.cloud.policies.engine.process;
 
-import com.google.common.collect.Multimap;
-import com.google.common.collect.MultimapBuilder;
 import io.quarkus.logging.Log;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -11,6 +9,7 @@ import org.eclipse.microprofile.metrics.annotation.Metric;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -122,9 +121,9 @@ public class PayloadParser {
         event.setOrgId(json.getString(ORG_ID));
 
         // Indexed searchable events
-        Multimap<String, String> tagsMap = parseTags(json.getJsonArray(TAGS_FIELD));
-        tagsMap.put(DISPLAY_NAME_FIELD, displayName);
-        tagsMap.put(INVENTORY_ID_FIELD, json.getString(HOST_ID));
+        Map<String, Set<String>> tagsMap = parseTags(json.getJsonArray(TAGS_FIELD));
+        tagsMap.computeIfAbsent(DISPLAY_NAME_FIELD, unused -> new HashSet<>()).add(displayName);
+        tagsMap.computeIfAbsent(INVENTORY_ID_FIELD, unused -> new HashSet<>()).add(json.getString(HOST_ID));
         event.setTags(tagsMap);
 
         // Additional context for processing
@@ -178,15 +177,14 @@ public class PayloadParser {
         return arrayObjectKey;
     }
 
-    static Multimap<String, String> parseTags(JsonArray tagsInput) {
-        Multimap<String, String> tagsMap = MultimapBuilder.hashKeys().hashSetValues().build();
+    static Map<String, Set<String>> parseTags(JsonArray tagsInput) {
+        Map<String, Set<String>> tags = new HashMap<>();
         for (Object o : tagsInput) {
             JsonObject json = (JsonObject) o;
             String key = json.getString(TAGS_KEY_FIELD).toLowerCase();
             String value = json.getString(TAGS_VALUE_FIELD);
-            tagsMap.put(key, value);
+            tags.computeIfAbsent(key, unused -> new HashSet<>()).add(value);
         }
-
-        return tagsMap;
+        return tags;
     }
 }

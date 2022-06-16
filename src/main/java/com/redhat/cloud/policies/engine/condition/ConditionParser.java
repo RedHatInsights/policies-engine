@@ -337,16 +337,16 @@ public class ConditionParser extends ExpressionBaseVisitor<Boolean> {
             } else if (eventField.startsWith(TAGS)) {
                 // We get the key from tags.<key> string
                 String key = eventField.substring(5);
-                Collection<String> tagValues = value.getTags().get(key);
+                Collection<String> tagValues = value.getTags(key);
                 if(tagValues.size() == 1) {
                     sEventValue = tagValues.iterator().next();
                 } else {
                     // No values for the tag
-                    if(!value.getTags().containsKey(key)) {
+                    if(tagValues.isEmpty()) {
                         return null;
                     }
                     // Multiple values
-                    sEventValue = value.getTags().get(key);
+                    sEventValue = value.getTags(key);
                 }
             } else if (eventField.startsWith(FACTS)) {
                 if(value.getFacts() == null) {
