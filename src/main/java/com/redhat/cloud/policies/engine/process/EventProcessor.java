@@ -66,7 +66,7 @@ public class EventProcessor {
         Log.debugf("Processing %s", event);
 
         List<Policy> enabledPolicies;
-        if (orgIdConfig.isUseOrgId() && event.getOrgId() != null) {
+        if (orgIdConfig.isUseOrgId() && event.getOrgId() != null && !event.getOrgId().isBlank()) {
             enabledPolicies = policiesRepository.getEnabledPoliciesOrgId(event.getOrgId());
         } else {
             if (orgIdConfig.isUseOrgId()) {
