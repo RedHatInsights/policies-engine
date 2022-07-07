@@ -76,9 +76,17 @@ public class EventProcessor {
         }
 
         if (enabledPolicies.isEmpty()) {
-            Log.debugf("No enabled policies found for account (accountId: %s, orgId: %s)", event.getAccountId(), event.getOrgId());
+            if (orgIdConfig.isUseOrgId()) {
+                Log.debugf("No enabled policies found for orgId %s", event.getOrgId());
+            } else {
+                Log.debugf("No enabled policies found for accountId %s", event.getAccountId());
+            }
         } else {
-            Log.debugf("Found %d enabled policies for account (accountId: %s, orgId: %s)", enabledPolicies.size(), event.getAccountId(), event.getOrgId());
+            if (orgIdConfig.isUseOrgId()) {
+                Log.debugf("Found %d enabled policies for orgId %s", enabledPolicies.size(), event.getOrgId());
+            } else {
+                Log.debugf("Found %d enabled policies for accountId %s", enabledPolicies.size(), event.getAccountId());
+            }
 
             PoliciesAction policiesAction = new PoliciesAction();
             policiesAction.setOrgId(event.getOrgId());
