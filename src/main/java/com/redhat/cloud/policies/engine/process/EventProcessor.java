@@ -1,7 +1,6 @@
 package com.redhat.cloud.policies.engine.process;
 
 import com.redhat.cloud.policies.engine.condition.ConditionParser;
-import com.redhat.cloud.policies.engine.config.OrgIdConfig;
 import com.redhat.cloud.policies.engine.db.repositories.PoliciesRepository;
 import com.redhat.cloud.policies.engine.db.entities.Policy;
 import com.redhat.cloud.policies.engine.db.repositories.PoliciesHistoryRepository;
@@ -41,9 +40,6 @@ public class EventProcessor {
     NotificationSender notificationSender;
 
     @Inject
-    OrgIdConfig orgIdConfig;
-
-    @Inject
     MeterRegistry meterRegistry;
 
     Counter firedPoliciesCounter;
@@ -54,7 +50,7 @@ public class EventProcessor {
     }
 
     /**
-     * Processes an {@link Event}, evaluating conditions of all policies owned by the account of the event. If the
+     * Processes an {@link Event}, evaluating conditions of all policies owned by the orgId of the event. If the
      * condition of at least one policy is satisfied, then a Kafka message is sent to the notifications topic. If the
      * conditions of multiple policies are satisfied, one Kafka message is sent and it contains one event for each
      * policy that was fired. In that case, tags from each fired policy are also merged into a single collection and
@@ -65,28 +61,11 @@ public class EventProcessor {
     public void process(Event event) {
         Log.debugf("Processing %s", event);
 
-        List<Policy> enabledPolicies;
-        if (orgIdConfig.isUseOrgId() && event.getOrgId() != null && !event.getOrgId().isBlank()) {
-            enabledPolicies = policiesRepository.getEnabledPoliciesOrgId(event.getOrgId());
-        } else {
-            if (orgIdConfig.isUseOrgId()) {
-                Log.warnf("The org ID is enabled but an event without the org ID field was processed: %s", event);
-            }
-            enabledPolicies = policiesRepository.getEnabledPolicies(event.getAccountId());
-        }
-
+        List<Policy> enabledPolicies = policiesRepository.getEnabledPolicies(event.getOrgId());
         if (enabledPolicies.isEmpty()) {
-            if (orgIdConfig.isUseOrgId()) {
-                Log.debugf("No enabled policies found for orgId %s", event.getOrgId());
-            } else {
-                Log.debugf("No enabled policies found for accountId %s", event.getAccountId());
-            }
+            Log.debugf("No enabled policies found for orgId %s", event.getOrgId());
         } else {
-            if (orgIdConfig.isUseOrgId()) {
-                Log.debugf("Found %d enabled policies for orgId %s", enabledPolicies.size(), event.getOrgId());
-            } else {
-                Log.debugf("Found %d enabled policies for accountId %s", enabledPolicies.size(), event.getAccountId());
-            }
+            Log.debugf("Found %d enabled policies for orgId %s", enabledPolicies.size(), event.getOrgId());
 
             PoliciesAction policiesAction = new PoliciesAction();
             policiesAction.setOrgId(event.getOrgId());

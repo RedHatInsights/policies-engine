@@ -19,8 +19,9 @@ public class Event {
 
     public Event() {}
 
-    public Event(String accountId, String id, String category, String text) {
+    public Event(String accountId, String orgId, String id, String category, String text) {
         this.accountId = accountId;
+        this.orgId = orgId;
         this.id = id;
         setCtime(ctime);
         this.category = category;

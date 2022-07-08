@@ -1,12 +1,10 @@
 package com.redhat.cloud.policies.engine.process;
 
-import com.redhat.cloud.policies.engine.config.OrgIdConfig;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.test.junit.QuarkusTest;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.io.IOUtils;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -42,9 +40,6 @@ public class PayloadParserTest {
 
     @Inject
     PayloadParser payloadParser;
-
-    @Inject
-    OrgIdConfig orgIdConfig;
 
     @Inject
     MeterRegistry meterRegistry;
@@ -103,22 +98,6 @@ public class PayloadParserTest {
     @BeforeEach
     void beforeEach() {
         saveCounterValues(incomingMessagesCount, rejectedCount, rejectedCountType, rejectedCountHost, rejectedCountReporter, rejectedCountId, processingErrors);
-
-        orgIdConfig.setUseOrgId(false);
-    }
-
-    @AfterEach
-    void afterEach() {
-        orgIdConfig.setUseOrgId(false);
-    }
-    @Test
-    void shouldContainorgId() {
-        orgIdConfig.setUseOrgId(true);
-
-        String payload = loadResource("input/host_org_id.json");
-        Event event = payloadParser.parse(payload).get();
-
-        assertEquals("bennets orgId", event.getOrgId());
     }
 
     @Test
@@ -126,7 +105,8 @@ public class PayloadParserTest {
         String payload = loadResource("input/host.json");
         Event event = payloadParser.parse(payload).get();
 
-        assertEquals("integration-test", event.getAccountId());
+        assertEquals("integration-test-account", event.getAccountId());
+        assertEquals("integration-test-org-id", event.getOrgId());
         assertNotNull(event.getId());
         assertEquals(CATEGORY_NAME, event.getCategory());
         assertTrue(event.getText().startsWith("host-egress report"));
@@ -150,7 +130,8 @@ public class PayloadParserTest {
         String payload = loadResource("input/thomas-host.json");
         Event event = payloadParser.parse(payload).get();
 
-        assertEquals("integration-test", event.getAccountId());
+        assertEquals("integration-test-account", event.getAccountId());
+        assertEquals("integration-test-org-id", event.getOrgId());
         assertNotNull(event.getId());
         assertEquals(CATEGORY_NAME, event.getCategory());
         assertTrue(event.getText().startsWith("host-egress report"));
