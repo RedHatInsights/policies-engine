@@ -42,7 +42,7 @@
 
     <!-- Dependencies -->
     <insights-notification-schemas-java.version>0.14</insights-notification-schemas-java.version>
-    <clowder-quarkus-config-source.version>1.1.0</clowder-quarkus-config-source.version>
+    <clowder-quarkus-config-source.version>1.2.0</clowder-quarkus-config-source.version>
     <quarkus-logging-cloudwatch.version>4.5.0</quarkus-logging-cloudwatch.version>
     <quarkus-logging-sentry.version>1.2.0</quarkus-logging-sentry.version>
     <org.antlr.version>4.10.1</org.antlr.version>
