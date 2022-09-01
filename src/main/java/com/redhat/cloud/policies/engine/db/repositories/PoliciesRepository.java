@@ -62,7 +62,7 @@ public class PoliciesRepository {
     }
 
     @CacheInvalidateAll(cacheName = ORG_ID_LATEST_UPDATE_CACHE_NAME)
-    public void clearAllCachesOrgId() {
+    public void clearAllCaches() {
         Log.debug("Clearing all caches");
         enabledPoliciesCache.clear();
     }
