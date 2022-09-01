@@ -75,8 +75,6 @@ objects:
           value: ${EXTERNAL_LOGGING_LEVEL}
         - name: GC_CONTAINER_OPTIONS
           value: "-XX:+UseG1GC"
-        - name: POLICIES_USE_ORG_ID
-          value: ${USE_ORG_ID}
         - name: QUARKUS_HTTP_PORT
           value: "8000"
         - name: QUARKUS_LOG_CLOUDWATCH_ENABLED
@@ -120,6 +118,4 @@ parameters:
   value: "1"
 - name: SENTRY_ENABLED
   description: Enable Sentry (or not)
-  value: "false"
-- name: USE_ORG_ID
   value: "false"

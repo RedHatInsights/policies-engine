@@ -109,11 +109,11 @@ public class PayloadParser {
         }
 
         String tenantId = json.getString(TENANT_ID_FIELD);
+        String orgId = json.getString(ORG_ID);
         String displayName = json.getString(DISPLAY_NAME_FIELD);
         String text = String.format("host-egress report %s for %s", inventoryId, displayName);
 
-        Event event = new Event(tenantId, UUID.randomUUID().toString(), CATEGORY_NAME, text);
-        event.setOrgId(json.getString(ORG_ID));
+        Event event = new Event(tenantId, orgId, UUID.randomUUID().toString(), CATEGORY_NAME, text);
 
         // Indexed searchable events
         Map<String, Set<String>> tagsMap = parseTags(json.getJsonArray(TAGS_FIELD));
