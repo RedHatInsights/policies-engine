@@ -6,6 +6,7 @@ import io.smallrye.reactive.messaging.annotations.Blocking;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.control.ActivateRequestContext;
 import javax.inject.Inject;
 
 /**
@@ -28,6 +29,7 @@ public class Receiver {
 
     @Incoming(EVENTS_CHANNEL)
     @Blocking
+    @ActivateRequestContext
     public void process(String payload) {
         Log.tracef("Received payload: %s", payload);
         payloadParser.parse(payload).ifPresent(event -> {
