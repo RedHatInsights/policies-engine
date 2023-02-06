@@ -90,8 +90,9 @@ class ExprValueTest {
 
     @Test
     void multiKeyTagsMatching() {
+        final String namespace = "namespace";
         Event event = new Event();
-        event.addTag("a", "b");
+        event.addTag(namespace, "a", "b");
 
         String expr = "tags.a = 'b'";
         assertTrue(ConditionParser.evaluate(event, expr));
@@ -99,7 +100,7 @@ class ExprValueTest {
         expr = "tags.a contains 'b'";
         assertTrue(ConditionParser.evaluate(event, expr));
 
-        event.addTag("a", "c");
+        event.addTag(namespace, "a", "c");
 
         expr = "tags.a = 'b'";
         assertTrue(ConditionParser.evaluate(event, expr));
@@ -113,7 +114,7 @@ class ExprValueTest {
         expr = "tags.a contains 'c'";
         assertTrue(ConditionParser.evaluate(event, expr));
 
-        event.addTag("b", "d");
+        event.addTag(namespace, "b", "d");
 
         expr = "tags.b = 'd' and tags.a = 'c'";
         assertTrue(ConditionParser.evaluate(event, expr));
@@ -123,13 +124,69 @@ class ExprValueTest {
 
         // Tag parsing makes them lowerCase, but this test does not use that lowerCase parsing part - so we
         // need to add them in lower case
-        event.addTag("cost center", "PnT");
+        event.addTag(namespace, "cost center", "PnT");
 
-        event.addTag("owner", "Jerome Marc");
+        event.addTag(namespace, "owner", "Jerome Marc");
         expr = "tags.owner contains 'Jerome'";
         assertTrue(ConditionParser.evaluate(event, expr));
 
-        event.addTag("owner", "Michael Burman");
+        event.addTag(namespace, "owner", "Michael Burman");
+        expr = "tags.owner contains 'Jerome'";
+        assertTrue(ConditionParser.evaluate(event, expr));
+
+        // There's no Cost, only 'Cost Center'
+        expr = "tags.cost";
+        assertFalse(ConditionParser.evaluate(event, expr));
+
+        expr = "tags.owner IN ['Jerome Marc', 'Thomas Heute']";
+        assertTrue(ConditionParser.evaluate(event, expr));
+    }
+
+    @Test
+    void tagsMatchingAcrossNamespaces() {
+        Event event = new Event();
+        String namespace1 = "namespace1";
+        String namespace2 = "namespace2";
+
+        event.addTag(namespace1, "a", "b");
+
+        String expr = "tags.a = 'b'";
+        assertTrue(ConditionParser.evaluate(event, expr));
+
+        expr = "tags.a contains 'b'";
+        assertTrue(ConditionParser.evaluate(event, expr));
+
+        event.addTag(namespace2, "a", "c");
+
+        expr = "tags.a = 'b'";
+        assertTrue(ConditionParser.evaluate(event, expr));
+
+        expr = "tags.a contains 'b'";
+        assertTrue(ConditionParser.evaluate(event, expr));
+
+        expr = "tags.a = 'c'";
+        assertTrue(ConditionParser.evaluate(event, expr));
+
+        expr = "tags.a contains 'c'";
+        assertTrue(ConditionParser.evaluate(event, expr));
+
+        event.addTag(namespace1, "b", "d");
+
+        expr = "tags.b = 'd' and tags.a = 'c'";
+        assertTrue(ConditionParser.evaluate(event, expr));
+
+        expr = "tags.b = 'd' and tags.a contains 'c'";
+        assertTrue(ConditionParser.evaluate(event, expr));
+
+        // Tag parsing makes them lowerCase, but this test does not use that lowerCase parsing part - so we
+        // need to add them in lower case
+        event.addTag(namespace2, "cost center", "PnT");
+
+        event.addTag(namespace1, "owner", "Jerome Marc");
+        expr = "tags.owner contains 'Jerome'";
+        assertTrue(ConditionParser.evaluate(event, expr));
+
+        event.addTag(namespace2, "owner", "Michael Burman");
         expr = "tags.owner contains 'Jerome'";
         assertTrue(ConditionParser.evaluate(event, expr));
 

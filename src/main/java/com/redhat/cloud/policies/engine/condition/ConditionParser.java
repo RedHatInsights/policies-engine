@@ -19,6 +19,7 @@ import java.util.BitSet;
 import java.util.Collection;
 import java.util.Map;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class ConditionParser extends ExpressionBaseVisitor<Boolean> {
 
@@ -339,7 +340,7 @@ public class ConditionParser extends ExpressionBaseVisitor<Boolean> {
             } else if (eventField.startsWith(TAGS)) {
                 // We get the key from tags.<key> string
                 String key = eventField.substring(5);
-                Collection<String> tagValues = value.getTags(key);
+                Collection<String> tagValues = value.getTags(key).stream().map(c -> c.value).collect(Collectors.toSet());
                 if(tagValues.size() == 1) {
                     sEventValue = tagValues.iterator().next();
                 } else {
@@ -348,7 +349,7 @@ public class ConditionParser extends ExpressionBaseVisitor<Boolean> {
                         return null;
                     }
                     // Multiple values
-                    sEventValue = value.getTags(key);
+                    sEventValue = tagValues;
                 }
             } else if (eventField.startsWith(FACTS)) {
                 if(value.getFacts() == null) {

@@ -1,5 +1,7 @@
 package com.redhat.cloud.policies.engine.process;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.redhat.cloud.notifications.ingress.Action;
 import com.redhat.cloud.notifications.ingress.Context;
 import com.redhat.cloud.notifications.ingress.Metadata;
@@ -43,6 +45,9 @@ public class NotificationSender {
     @Inject
     MeterRegistry meterRegistry;
 
+    @Inject
+    ObjectMapper objectMapper;
+
     @PostConstruct
     void postConstruct() {
         notificationsCounter = meterRegistry.counter("engine.actions.notifications.aggregated");
@@ -52,10 +57,21 @@ public class NotificationSender {
 
     public void send(PoliciesAction policiesAction) {
         String payload = serializeAction(policiesAction);
-        Log.debugf("Sending Kafka payload %s", payload);
+        Log.debugf("Sending Kafka payload (old notification) %s", payload);
         Message<String> message = buildMessageWithId(payload);
         emitter.send(message);
         notificationsCounter.increment();
+    }
+
+    public void send(PoliciesTriggeredCloudEvent cloudEvent) {
+        try {
+            String payload = objectMapper.writeValueAsString(cloudEvent);
+            Log.debugf("Sending Kafka payload (cloud event) %s", payload);
+            emitter.send(Message.of(payload));
+            notificationsCounter.increment();
+        } catch (JsonProcessingException jpe) {
+            Log.error("Failed to send cloud event to notifications", jpe);
+        }
     }
 
     private static String serializeAction(PoliciesAction policiesAction) {

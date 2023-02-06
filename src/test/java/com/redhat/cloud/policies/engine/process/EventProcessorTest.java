@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static com.redhat.cloud.policies.engine.process.PayloadParser.CHECK_IN_FIELD;
 import static com.redhat.cloud.policies.engine.process.PayloadParser.DISPLAY_NAME_FIELD;
@@ -38,6 +39,7 @@ public class EventProcessorTest {
 
     private static final String ACCOUNT_ID = "account-id";
     private static final String ORG_ID = "org-id";
+    private static final String DEFAULT_NAMESPACE = "insights-client";
 
     @Inject
     EventProcessor eventProcessor;
@@ -89,14 +91,16 @@ public class EventProcessorTest {
         assertNotNull(policiesAction.getTimestamp());
         assertNotNull(policiesAction.getContext().getSystemCheckIn());
         assertEquals(event.getContext().get(INVENTORY_ID_FIELD), policiesAction.getContext().getInventoryId());
-        assertEquals(event.getTags(DISPLAY_NAME_FIELD).iterator().next(), policiesAction.getContext().getDisplayName());
 
-        for (Map.Entry<String, Set<String>> expectedTags : event.getTags().entrySet()) {
+        assertEquals(event.getTags(DISPLAY_NAME_FIELD).iterator().next().value, policiesAction.getContext().getDisplayName());
+        assertTrue(event.getTags(DISPLAY_NAME_FIELD).iterator().next().isSynthetic);
+
+        for (Map.Entry<String, Set<Event.TagContent>> expectedTags : event.getTags().entrySet()) {
             Set<String> actualTags = policiesAction.getContext().getTags().get(expectedTags.getKey());
             if (actualTags == null) {
                 fail("Tag key " + expectedTags.getKey() + " was not found");
             } else {
-                assertTrue(actualTags.containsAll(expectedTags.getValue()), "Tag values didn't match for key " + expectedTags.getKey());
+                assertTrue(actualTags.containsAll(expectedTags.getValue().stream().map(c -> c.value).collect(Collectors.toList())), "Tag values didn't match for key " + expectedTags.getKey());
             }
         }
 
@@ -131,10 +135,10 @@ public class EventProcessorTest {
         event.getContext().put(CHECK_IN_FIELD, OffsetDateTime.now().toString());
         event.getContext().put(INVENTORY_ID_FIELD, "inventory-id");
         event.setFacts(Map.of("arch", "x86_64"));
-        event.addTag(DISPLAY_NAME_FIELD, "display-name");
-        event.addTag("Contact", "spam@redhat.com");
-        event.addTag("Location", "Neuchatel");
-        event.addTag("Location", "Charmey");
+        event.addTag("policies", DISPLAY_NAME_FIELD, "display-name", true);
+        event.addTag(DEFAULT_NAMESPACE, "Contact", "spam@redhat.com");
+        event.addTag(DEFAULT_NAMESPACE, "Location", "Neuchatel");
+        event.addTag(DEFAULT_NAMESPACE, "Location", "Charmey");
         return event;
     }
 
