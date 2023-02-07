@@ -52,6 +52,11 @@ public class FeatureFlipper {
         return notificationsAsCloudEvents;
     }
 
+    public void setNotificationsAsCloudEvents(boolean notificationsAsCloudEvents) {
+        checkTestLaunchMode();
+        this.notificationsAsCloudEvents = notificationsAsCloudEvents;
+    }
+
     /**
      * This method throws an {@link IllegalStateException} if it is invoked with a launch mode different from
      * {@link io.quarkus.runtime.LaunchMode#TEST TEST}. It should be added to methods that allow overriding a

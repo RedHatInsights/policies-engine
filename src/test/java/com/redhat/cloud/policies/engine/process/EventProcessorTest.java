@@ -1,6 +1,8 @@
 package com.redhat.cloud.policies.engine.process;
 
+import com.redhat.cloud.event.apps.policies.v1.RHELSystemTag;
 import com.redhat.cloud.policies.engine.TestLifecycleManager;
+import com.redhat.cloud.policies.engine.config.FeatureFlipper;
 import com.redhat.cloud.policies.engine.db.entities.Policy;
 import com.redhat.cloud.policies.engine.db.repositories.PoliciesHistoryRepository;
 import com.redhat.cloud.policies.engine.db.repositories.PoliciesRepository;
@@ -18,10 +20,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.redhat.cloud.policies.engine.process.PayloadParser.CHECK_IN_FIELD;
 import static com.redhat.cloud.policies.engine.process.PayloadParser.DISPLAY_NAME_FIELD;
 import static com.redhat.cloud.policies.engine.process.PayloadParser.INVENTORY_ID_FIELD;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -43,6 +47,9 @@ public class EventProcessorTest {
 
     @Inject
     EventProcessor eventProcessor;
+
+    @Inject
+    FeatureFlipper featureFlipper;
 
     @InjectMock
     PoliciesRepository policiesRepository;
@@ -93,7 +100,6 @@ public class EventProcessorTest {
         assertEquals(event.getContext().get(INVENTORY_ID_FIELD), policiesAction.getContext().getInventoryId());
 
         assertEquals(event.getTags(DISPLAY_NAME_FIELD).iterator().next().value, policiesAction.getContext().getDisplayName());
-        assertTrue(event.getTags(DISPLAY_NAME_FIELD).iterator().next().isSynthetic);
 
         for (Map.Entry<String, Set<Event.TagContent>> expectedTags : event.getTags().entrySet()) {
             Set<String> actualTags = policiesAction.getContext().getTags().get(expectedTags.getKey());
@@ -106,6 +112,58 @@ public class EventProcessorTest {
 
         assertPolicyIncludedInPoliciesAction(policy1, policiesAction);
         assertPolicyIncludedInPoliciesAction(policy2, policiesAction);
+    }
+
+    @Test
+    void testEnabledPoliciesFoundAndAllPoliciesFiredAndSentAsCloudEvents() {
+        try {
+            featureFlipper.setNotificationsAsCloudEvents(true);
+            Event event = buildEvent();
+
+            Policy policy1 = buildPolicy("policy-1", "Policy 1", "facts.arch = 'x86_64'", "email");
+            Policy policy2 = buildPolicy("policy-2", "Policy 2", "facts.arch = 'x86_64'", "notification");
+            when(policiesRepository.getEnabledPolicies(eq(event.getOrgId()))).thenReturn(List.of(policy1, policy2));
+
+            eventProcessor.process(event);
+
+            verify(policiesRepository, times(1)).getEnabledPolicies(eq(event.getOrgId()));
+            // The following verify shows that the policy was fired.
+            verify(policiesHistoryRepository, times(1)).create(eq(policy1.id), eq(event));
+            // The following verify shows that the policy was fired.
+            verify(policiesHistoryRepository, times(1)).create(eq(policy2.id), eq(event));
+
+            ArgumentCaptor<PoliciesTriggeredCloudEvent> argumentCaptor = ArgumentCaptor.forClass(PoliciesTriggeredCloudEvent.class);
+            verify(notificationSender, times(1)).send(argumentCaptor.capture());
+            PoliciesTriggeredCloudEvent cloudEvent = argumentCaptor.getValue();
+
+            assertEquals(event.getAccountId(), cloudEvent.getRedhatAccount());
+            assertEquals(event.getOrgId(), cloudEvent.getRedhatOrgId());
+            assertNotNull(cloudEvent.getTime());
+            assertNotNull(cloudEvent.getData().getSystem());
+            assertNotNull(cloudEvent.getData().getPolicies());
+
+            assertEquals(event.getContext().get(INVENTORY_ID_FIELD), cloudEvent.getData().getSystem().getInventoryID());
+            assertEquals(event.getTags(DISPLAY_NAME_FIELD).iterator().next().value, cloudEvent.getData().getSystem().getDisplayName());
+            assertNotNull(cloudEvent.getData().getSystem().getCheckIn());
+            assertNotNull(cloudEvent.getData().getSystem().getTags());
+
+            List<RHELSystemTag> tags = List.of(cloudEvent.getData().getSystem().getTags());
+
+            assertEquals(3, tags.size());
+            assertEquals(2, tags.stream().map(RHELSystemTag::getKey).collect(Collectors.toSet()).size()); // Location is twice as a key
+            assertEquals(1, tags.stream().map(RHELSystemTag::getNamespace).collect(Collectors.toSet()).size()); // Only 1 different namespace
+
+            assertTrue(List.of("Contact", "Location").containsAll(tags.stream().map(RHELSystemTag::getKey).collect(Collectors.toList())));
+            assertTrue(List.of("spam@redhat.com", "Neuchatel", "Charmey").containsAll(tags.stream().map(RHELSystemTag::getValue).collect(Collectors.toList())));
+            assertTrue(List.of(DEFAULT_NAMESPACE).containsAll(tags.stream().map(RHELSystemTag::getNamespace).collect(Collectors.toList())));
+
+            assertPolicyIncludedInCloudEventPolicyTriggered(policy1, cloudEvent);
+            assertPolicyIncludedInCloudEventPolicyTriggered(policy2, cloudEvent);
+
+            eventProcessor.process(event);
+        } finally {
+            featureFlipper.setNotificationsAsCloudEvents(false);
+        }
     }
 
     @Test
@@ -162,5 +220,23 @@ public class EventProcessorTest {
                     policy.description.equals(payload.getPolicyDescription()) &&
                     policy.condition.equals(payload.getPolicyCondition());
         }));
+    }
+
+    private static void assertPolicyIncludedInCloudEventPolicyTriggered(Policy policy, PoliciesTriggeredCloudEvent cloudEvent) {
+        List<com.redhat.cloud.event.apps.policies.v1.Policy> policyList = Stream.of(cloudEvent.getData().getPolicies())
+                .filter(cloudEventPolicy -> cloudEventPolicy.getID().equals(policy.id.toString()))
+                .collect(Collectors.toList());
+
+        assertEquals(1, policyList.size());
+        com.redhat.cloud.event.apps.policies.v1.Policy cloudEventPolicy = policyList.get(0);
+
+        assertAll(
+                String.format("Policy %s", policy.name),
+                () -> assertEquals(policy.id.toString(), cloudEventPolicy.getID()),
+                () -> assertEquals(policy.name, cloudEventPolicy.getName()),
+                () -> assertEquals(policy.description, cloudEventPolicy.getDescription()),
+                () -> assertEquals(policy.condition, cloudEventPolicy.getCondition()),
+                () -> assertEquals("//insights/policies/policy/" + policy.id, cloudEventPolicy.getURL())
+        );
     }
 }

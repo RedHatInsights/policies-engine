@@ -144,7 +144,6 @@ public class EventProcessor {
 
                 // -- System fields
                 .setSystemInventoryId(inventoryId)
-                // Todo: Display name should not be part of the tags by default
                 .setSystemDisplayName(event.getTags(DISPLAY_NAME_FIELD).iterator().next().value)
                 .setSystemCheckinTime(systemCheckin);
 

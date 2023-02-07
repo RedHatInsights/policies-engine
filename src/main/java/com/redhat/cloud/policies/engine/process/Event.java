@@ -12,14 +12,13 @@ public class Event {
     /*
     Policies supports using tags in the conditions - The condition does not take into account the namespace of the tag.
     As we need to include the namespace as part of the cloud event - we are adding this class to hold that value.
-    Also - we support to index the display name and inventory id as part of the tags - so we keep track of these synthetic
+    Policies adds the display-name and inventory-id as part of the tags - so we keep track of these synthetic
     tags to avoid sending them as "real" tags.
      */
     public static class TagContent {
         public final String value;
         public final String namespace;
 
-        // Policies adds
         public final boolean isSynthetic;
 
         public TagContent(String namespace, String value) {
