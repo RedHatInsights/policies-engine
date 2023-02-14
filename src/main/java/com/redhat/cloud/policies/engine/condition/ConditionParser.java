@@ -259,7 +259,9 @@ public class ConditionParser extends ExpressionBaseVisitor<Boolean> {
                     boolean validForAll = true;
                     for (ExpressionParser.ValueContext valueContext : ctx.array().value()) {
                         String val = valueToString(valueContext);
-                        validForAll &= targetValueStr.contains(val);
+                        if (val != null) {
+                            validForAll &= targetValueStr.contains(val);
+                        }
                     }
                     return validForAll;
                 }
