@@ -39,7 +39,7 @@
 
     <!-- Plugins -->
     <compiler-plugin.version>3.10.1</compiler-plugin.version>
-    <surefire-plugin.version>3.0.0-M7</surefire-plugin.version>
+    <surefire-plugin.version>3.0.0-M9</surefire-plugin.version>
     <maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
 
     <!-- Quarkus -->
