@@ -20,7 +20,7 @@ public class PoliciesTriggeredCloudEvent {
 
     static class Builder {
         private UUID id;
-        private String subject;
+        private String subjectPrefix = "urn:redhat:subject:rhel_system:";
         private LocalDateTime time;
         private String account;
         private String orgId;
@@ -37,11 +37,6 @@ public class PoliciesTriggeredCloudEvent {
 
         public Builder setId(UUID id) {
             this.id = id;
-            return this;
-        }
-
-        public Builder setSubject(String subject) {
-            this.subject = subject;
             return this;
         }
 
@@ -103,7 +98,7 @@ public class PoliciesTriggeredCloudEvent {
 
             PoliciesTriggeredCloudEvent event = new PoliciesTriggeredCloudEvent();
             event.id = id;
-            event.subject = subject;
+            event.subject = subjectPrefix + this.system.getInventoryID();
             event.data = new PolicyTriggered();
             event.getData().setSystem(system);
             event.getData().setPolicies(policies
@@ -138,7 +133,7 @@ public class PoliciesTriggeredCloudEvent {
     }
 
     private UUID id;
-    private final String source = "urn:redhat:policies:insights:policies";
+    private final String source = "urn:redhat:source:policies:insights:policies";
     private String subject;
 
     @JsonProperty(value = "specversion")

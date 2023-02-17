@@ -140,7 +140,6 @@ public class EventProcessor {
                 .setOrgId(event.getOrgId())
                 .setAccount(event.getAccountId())
                 .setTime(LocalDateTime.now(UTC))
-                .setSubject("urn:redhat:subject:rhel_system:" + inventoryId)
 
                 // -- System fields
                 .setSystemInventoryId(inventoryId)
