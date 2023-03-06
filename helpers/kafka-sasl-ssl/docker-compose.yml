@@ -1,0 +1,87 @@
+version: '2'
+
+services:
+
+  create-keys:
+    image: ${KAFKA_IMAGE}
+    user: "1000" # Update as needed
+    working_dir: "/etc/cert_path"
+    command: [
+      "sh", "-c",
+      "./create-certs.sh"
+    ]
+    volumes:
+      - "./:/etc/cert_path"
+  update-cdappconfig:
+    image: apteno/alpine-jq
+    working_dir: /root/cert_path
+    command: [
+      "sh", "-c",
+      "jq \".kafka.brokers[].cacert = \\\"`cat certs/ca/cacert.pem`\\\"\" cdappconfig-template.json > cdappconfig.json"
+    ]
+    volumes:
+      - "./:/root/cert_path"
+    depends_on:
+      create-keys:
+        condition: service_completed_successfully
+
+  zookeeper:
+    image: ${KAFKA_IMAGE}
+    command: [
+      "sh",
+      "-c",
+      "bin/zookeeper-server-start.sh config/zookeeper.properties"
+    ]
+    ports:
+      - "2181:2181"
+    environment:
+      LOG_DIR: /tmp/logs
+
+  zookeeper_post_init:
+    image: ${KAFKA_IMAGE}
+    command: [
+        "sh", "-c",
+        "bin/kafka-configs.sh --zookeeper zookeeper:2181 --alter --add-config 'SCRAM-SHA-512=[password='admin-secret']' --entity-type users --entity-name admin"
+    ]
+    depends_on:
+      zookeeper:
+        condition: service_started
+
+  kafka:
+    image: ${KAFKA_IMAGE}
+    command: [
+      "sh", "-c",
+      "bin/kafka-server-start.sh config/server.properties \
+        --override sasl.mechanism=SCRAM-SHA-512 \
+        --override sasl.enabled.mechanisms=SCRAM-SHA-512 \
+        --override security.protocol=SASL_SSL \
+        --override listeners=$${KAFKA_LISTENERS} \
+        --override advertised.listeners=$${KAFKA_ADVERTISED_LISTENERS} \
+        --override zookeeper.connect=$${KAFKA_ZOOKEEPER_CONNECT} \
+        --override inter.broker.listener.name=$${KAFKA_SECURITY_INTER_BROKER_PROTOCOL} \
+        --override ssl.keystore.location=$${KAFKA_SSL_KEYSTORE_FILENAME} \
+        --override ssl.keystore.password=$${KAFKA_SSL_KEYSTORE_CREDENTIALS} \
+        --override ssl.endpoint.identification.algorithm='' \
+        --override enable.ssl.certificate.verification=false"
+    ]
+    depends_on:
+      zookeeper:
+        condition: service_started
+      create-keys:
+        condition: service_completed_successfully
+      zookeeper_post_init:
+        condition: service_completed_successfully
+    ports:
+      - "29092:29092"
+    environment:
+      LOG_DIR: "/tmp/logs"
+      KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf"
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://127.0.0.1:9092,SASL_SSL://127.0.0.1:29092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,SASL_SSL://0.0.0.0:29092
+      KAFKA_SECURITY_INTER_BROKER_PROTOCOL: PLAINTEXT
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_SSL_KEYSTORE_FILENAME: /etc/certs-root/certs/server/server-keystore.jks
+      KAFKA_SSL_KEYSTORE_CREDENTIALS: supersecure
+    volumes:
+      - "./:/etc/certs-root/"
+      - "./kafka_server_jaas.conf:/etc/kafka/kafka_server_jaas.conf"
