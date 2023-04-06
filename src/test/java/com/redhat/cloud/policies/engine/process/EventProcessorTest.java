@@ -150,7 +150,7 @@ public class EventProcessorTest {
             List<RHELSystemTag> tags = List.of(cloudEvent.getData().getSystem().getTags());
 
             assertEquals(3, tags.size());
-            assertEquals(2, tags.stream().map(RHELSystemTag::getKey).collect(Collectors.toSet()).size()); // Location is twice as a key
+            assertEquals(2, tags.stream().map(RHELSystemTag::getKey).collect(Collectors.toSet()).size()); // "Location" is found 2 times and key "Contact" is found once.
             assertEquals(1, tags.stream().map(RHELSystemTag::getNamespace).collect(Collectors.toSet()).size()); // Only 1 different namespace
 
             assertTrue(List.of("Contact", "Location").containsAll(tags.stream().map(RHELSystemTag::getKey).collect(Collectors.toList())));
