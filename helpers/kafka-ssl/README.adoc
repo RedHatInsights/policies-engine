@@ -21,11 +21,10 @@ docker-compose up
 .Start `policies-engine` passing the following environment variables:
 
 ```bash
-cd external;
 KAFKA_BOOTSTRAP_SERVERS="localhost:29092" \
 KAFKA_SECURITY_PROTOCOL="SSL" \
 KAFKA_SSL_TRUSTSTORE_LOCATION="`pwd`/../helpers/kafka-ssl/certs/ca/cacert.pem" \
 KAFKA_SSL_TRUSTSTORE_TYPE="PEM" \
 KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM="" \
-mvn compile quarkus:dev
+./mvnw compile quarkus:dev
 ```

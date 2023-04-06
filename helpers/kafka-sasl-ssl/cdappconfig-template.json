@@ -1,0 +1,45 @@
+{
+  "database": {
+    "adminPassword": "postgres",
+    "adminUsername": "postgres",
+    "hostname": "localhost",
+    "name": "policies",
+    "password": "postgres",
+    "port": 5432,
+    "sslMode": "disable",
+    "username": "postgres"
+  },
+  "kafka": {
+    "brokers": [
+      {
+        "authtype": "sasl",
+        "hostname": "localhost",
+        "cacert": "",
+        "port": 29092,
+        "sasl": {
+          "password": "admin-secret",
+          "saslMechanism": "SCRAM-SHA-512",
+          "username": "admin",
+          "securityProtocol": "SASL_SSL"
+        },
+        "securityProtocol": "SASL_SSL"
+      }
+    ],
+    "topics": [
+      {
+        "name": "platform.inventory.events",
+        "requestedName": "platform.inventory.events"
+      },
+      {
+        "name": "platform.notifications.ingress",
+        "requestedName": "platform.notifications.ingress"
+      }
+    ]
+  },
+  "logging": {
+    "cloudwatch": {
+
+    }
+  },
+  "webPort": 8000
+}

@@ -1,0 +1,21 @@
+This folder contains files to help test the connection from `policies-engine` to a Kafka instance with SASL-SSL using SCRAM-SHA-512.
+
+## Usage
+
+. Start the docker-compose instance - This will take care of create certificates and configuring the users required.
+
+The default username and passwords are admin/admin-secret -  a `cdappconfig.json` file is created with the kafka configuration.
+Copy to the root of the project and update as needed for other configuration.
+
+```bash
+docker-compose up
+```
+
+.Start `policies-engine` - this command assumes you copied `cdappconfig.json` to the root of the project - passing the following environment variables.
+
+```bash
+KAFKA_BOOTSTRAP_SERVERS="localhost:29092" \
+KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM="" \
+ACG_CONFIG="./cdappconfig.json" \
+./mvnw compile quarkus:dev
+```
