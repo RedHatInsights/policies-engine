@@ -136,8 +136,8 @@ public class EventProcessorTest {
             verify(notificationSender, times(1)).send(argumentCaptor.capture());
             PoliciesTriggeredCloudEvent cloudEvent = argumentCaptor.getValue();
 
-            assertEquals(event.getAccountId(), cloudEvent.getRedhatAccount());
-            assertEquals(event.getOrgId(), cloudEvent.getRedhatOrgId());
+            assertEquals(event.getAccountId(), cloudEvent.getAccountId());
+            assertEquals(event.getOrgId(), cloudEvent.getOrgId());
             assertNotNull(cloudEvent.getTime());
             assertNotNull(cloudEvent.getData().getSystem());
             assertNotNull(cloudEvent.getData().getPolicies());

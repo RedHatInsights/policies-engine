@@ -2,6 +2,8 @@ package com.redhat.cloud.policies.engine.process;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.redhat.cloud.event.parser.ConsoleCloudEventParser;
+import com.redhat.cloud.event.parser.ConsoleCloudEventParsingException;
 import com.redhat.cloud.notifications.ingress.Action;
 import com.redhat.cloud.notifications.ingress.Context;
 import com.redhat.cloud.notifications.ingress.Metadata;
@@ -45,8 +47,7 @@ public class NotificationSender {
     @Inject
     MeterRegistry meterRegistry;
 
-    @Inject
-    ObjectMapper objectMapper;
+    ConsoleCloudEventParser parser = new ConsoleCloudEventParser();
 
     @PostConstruct
     void postConstruct() {
@@ -65,12 +66,12 @@ public class NotificationSender {
 
     public void send(PoliciesTriggeredCloudEvent cloudEvent) {
         try {
-            String payload = objectMapper.writeValueAsString(cloudEvent);
+            String payload = parser.toJson(cloudEvent);
             Log.debugf("Sending Kafka payload (cloud event) %s", payload);
             emitter.send(Message.of(payload));
             notificationsCounter.increment();
-        } catch (JsonProcessingException jpe) {
-            Log.error("Failed to send cloud event to notifications", jpe);
+        } catch (ConsoleCloudEventParsingException parsingException) {
+            Log.error("Failed to send cloud event to notifications", parsingException);
         }
     }
 

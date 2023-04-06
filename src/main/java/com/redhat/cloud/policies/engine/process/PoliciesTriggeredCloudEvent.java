@@ -1,10 +1,10 @@
 package com.redhat.cloud.policies.engine.process;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.redhat.cloud.event.apps.policies.v1.Policy;
 import com.redhat.cloud.event.apps.policies.v1.PolicyTriggered;
 import com.redhat.cloud.event.apps.policies.v1.RHELSystemTag;
 import com.redhat.cloud.event.apps.policies.v1.SystemClass;
+import com.redhat.cloud.event.parser.GenericConsoleCloudEvent;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -12,15 +12,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class PoliciesTriggeredCloudEvent {
+public class PoliciesTriggeredCloudEvent extends GenericConsoleCloudEvent<PolicyTriggered> {
 
     public static Builder builder() {
         return new Builder();
     }
 
     static class Builder {
+
+        private static final String source = "urn:redhat:source:policies:insights:policies";
+        private static final String specVersion = "1.0";
+        private static final String type = "com.redhat.console.insights.policies.policy-triggered";
+        private static final String dataschema = "https://console.redhat.com/api/schemas/apps/policies/v1/policy-triggered.json";
+        private static final String subjectPrefix = "urn:redhat:subject:rhel_system:";
         private UUID id;
-        private String subjectPrefix = "urn:redhat:subject:rhel_system:";
         private LocalDateTime time;
         private String account;
         private String orgId;
@@ -97,18 +102,23 @@ public class PoliciesTriggeredCloudEvent {
             );
 
             PoliciesTriggeredCloudEvent event = new PoliciesTriggeredCloudEvent();
-            event.id = id;
-            event.subject = subjectPrefix + this.system.getInventoryID();
-            event.data = new PolicyTriggered();
+            event.setId(id);
+            event.setSource(source);
+            event.setSpecVersion(specVersion);
+            event.setType(type);
+            event.setDataSchema(dataschema);
+
+            event.setSubject(subjectPrefix + this.system.getInventoryID());
+            event.setData(new PolicyTriggered());
             event.getData().setSystem(system);
             event.getData().setPolicies(policies
                     .stream()
                     .map(p -> createPolicy(p.getID(), p.getName(), p.getDescription(), p.getCondition(), p.getURL()))
                     .toArray(Policy[]::new)
             );
-            event.time = time;
-            event.redhatAccount = account;
-            event.redhatOrgId = orgId;
+            event.setTime(time);
+            event.setAccountId(account);
+            event.setOrgId(orgId);
 
             return event;
         }
@@ -130,63 +140,5 @@ public class PoliciesTriggeredCloudEvent {
             policy.setURL(url);
             return policy;
         }
-    }
-
-    private UUID id;
-    private final String source = "urn:redhat:source:policies:insights:policies";
-    private String subject;
-
-    @JsonProperty(value = "specversion")
-    private final String specVersion = "1.0";
-
-    private final String type = "com.redhat.console.insights.policies.policy-triggered";
-    private final String dataschema = "https://console.redhat.com/api/schemas/apps/policies/v1/policy-triggered.json";
-    private PolicyTriggered data;
-    private LocalDateTime time;
-
-    @JsonProperty(value = "redhataccount")
-    private String redhatAccount;
-
-    @JsonProperty(value = "redhatorgid")
-    private String redhatOrgId;
-
-    public UUID getId() {
-        return id;
-    }
-
-    public String getSource() {
-        return source;
-    }
-
-    public String getSubject() {
-        return subject;
-    }
-
-    public String getSpecVersion() {
-        return specVersion;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public String getDataschema() {
-        return dataschema;
-    }
-
-    public PolicyTriggered getData() {
-        return data;
-    }
-
-    public LocalDateTime getTime() {
-        return time;
-    }
-
-    public String getRedhatAccount() {
-        return redhatAccount;
-    }
-
-    public String getRedhatOrgId() {
-        return redhatOrgId;
     }
 }
