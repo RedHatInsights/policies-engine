@@ -116,7 +116,7 @@ public class Event {
 
     public void addTag(String namespace, String key, String value, boolean isSynthetic) {
         if (null == namespace || null == key || null == value) {
-            throw new IllegalArgumentException("Tag must have non-null name and value");
+            throw new IllegalArgumentException("Tag must have non-null namespace, key and value");
         }
         getTags(key).add(new TagContent(namespace, value, isSynthetic));
     }
