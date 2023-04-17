@@ -25,7 +25,7 @@
   <properties>
 
     <!-- Maven -->
-    <enforcer-plugin.version>3.2.1</enforcer-plugin.version>
+    <enforcer-plugin.version>3.3.0</enforcer-plugin.version>
     <maven-minimum-version>3.8.6</maven-minimum-version>
     <java-version>17</java-version>
 
