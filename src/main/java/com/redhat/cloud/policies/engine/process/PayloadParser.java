@@ -19,6 +19,7 @@ import java.util.UUID;
 @ApplicationScoped
 public class PayloadParser {
 
+    public static final String POLICIES_TAG_NAMESPACE = "policies";
     public static final String DISPLAY_NAME_FIELD = "display_name";
     public static final String INVENTORY_ID_FIELD = "inventory_id";
     public static final String CHECK_IN_FIELD = "check_in";
@@ -40,6 +41,7 @@ public class PayloadParser {
     private static final String TAGS_FIELD = "tags";
     private static final String TAGS_KEY_FIELD = "key";
     private static final String TAGS_VALUE_FIELD = "value";
+    private static final String TAGS_NAMESPACE_FIELD = "namespace";
     private static final String UPDATED = "updated";
 
     @Inject
@@ -116,10 +118,10 @@ public class PayloadParser {
         Event event = new Event(tenantId, orgId, UUID.randomUUID().toString(), CATEGORY_NAME, text);
 
         // Indexed searchable events
-        Map<String, Set<String>> tagsMap = parseTags(json.getJsonArray(TAGS_FIELD));
-        tagsMap.computeIfAbsent(DISPLAY_NAME_FIELD, unused -> new HashSet<>()).add(displayName);
-        tagsMap.computeIfAbsent(INVENTORY_ID_FIELD, unused -> new HashSet<>()).add(json.getString(HOST_ID));
+        Map<String, Set<Event.TagContent>> tagsMap = parseTags(json.getJsonArray(TAGS_FIELD));
         event.setTags(tagsMap);
+        event.addTag(POLICIES_TAG_NAMESPACE, DISPLAY_NAME_FIELD, displayName, true);
+        event.addTag(POLICIES_TAG_NAMESPACE, INVENTORY_ID_FIELD, json.getString(HOST_ID), true);
 
         // Additional context for processing
         Map<String, String> contextMap = new HashMap<>();
@@ -172,13 +174,14 @@ public class PayloadParser {
         return arrayObjectKey;
     }
 
-    static Map<String, Set<String>> parseTags(JsonArray tagsInput) {
-        Map<String, Set<String>> tags = new HashMap<>();
+    static Map<String, Set<Event.TagContent>> parseTags(JsonArray tagsInput) {
+        Map<String, Set<Event.TagContent>> tags = new HashMap<>();
         for (Object o : tagsInput) {
             JsonObject json = (JsonObject) o;
             String key = json.getString(TAGS_KEY_FIELD).toLowerCase();
             String value = json.getString(TAGS_VALUE_FIELD);
-            tags.computeIfAbsent(key, unused -> new HashSet<>()).add(value);
+            String namespace = json.getString(TAGS_NAMESPACE_FIELD);
+            tags.computeIfAbsent(key, unused -> new HashSet<>()).add(new Event.TagContent(namespace, value));
         }
         return tags;
     }

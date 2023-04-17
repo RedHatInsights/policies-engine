@@ -1,5 +1,7 @@
 package com.redhat.cloud.policies.engine.process;
 
+import com.redhat.cloud.event.parser.ConsoleCloudEventParser;
+import com.redhat.cloud.event.parser.ConsoleCloudEventParsingException;
 import com.redhat.cloud.notifications.ingress.Action;
 import com.redhat.cloud.notifications.ingress.Context;
 import com.redhat.cloud.notifications.ingress.Metadata;
@@ -43,6 +45,8 @@ public class NotificationSender {
     @Inject
     MeterRegistry meterRegistry;
 
+    ConsoleCloudEventParser parser = new ConsoleCloudEventParser();
+
     @PostConstruct
     void postConstruct() {
         notificationsCounter = meterRegistry.counter("engine.actions.notifications.aggregated");
@@ -52,10 +56,21 @@ public class NotificationSender {
 
     public void send(PoliciesAction policiesAction) {
         String payload = serializeAction(policiesAction);
-        Log.debugf("Sending Kafka payload %s", payload);
+        Log.debugf("Sending Kafka payload (old notification) %s", payload);
         Message<String> message = buildMessageWithId(payload);
         emitter.send(message);
         notificationsCounter.increment();
+    }
+
+    public void send(PolicyTriggeredCloudEvent cloudEvent) {
+        try {
+            String payload = parser.toJson(cloudEvent);
+            Log.debugf("Sending Kafka payload (cloud event) %s", payload);
+            emitter.send(Message.of(payload));
+            notificationsCounter.increment();
+        } catch (ConsoleCloudEventParsingException parsingException) {
+            Log.error("Failed to send cloud event to notifications", parsingException);
+        }
     }
 
     private static String serializeAction(PoliciesAction policiesAction) {

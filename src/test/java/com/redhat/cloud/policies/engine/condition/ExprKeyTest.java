@@ -19,7 +19,7 @@ class ExprKeyTest {
         factMap.put("b", 1);
         event.setFacts(factMap);
         event.setCategory("timeless");
-        event.addTag("c", "f");
+        event.addTag("namespace", "c", "f");
 
         String expr = "facts.a = 'b' AND category = 'timeless' AND tags.c = 'f'";
         assertTrue(ConditionParser.evaluate(event, expr));
@@ -34,7 +34,7 @@ class ExprKeyTest {
         Map<String, Object> factMap = new HashMap<>();
         factMap.put("a", "b");
         factMap.put("b", 1);
-        event.addTag("c", "f");
+        event.addTag("namespace", "c", "f");
 
         Map<String, Object> innerMap = new HashMap<>();
         innerMap.put("d", "e");
@@ -70,7 +70,7 @@ class ExprKeyTest {
     void testWhitespaceInKeyname() {
         Event event = new Event();
         // tag names are parsed to lower case format
-        event.addTag("cost center", "12345");
+        event.addTag("namespace", "cost center", "12345");
 
         // In the query we don't care about the case
         String expr = "'tags.Cost Center' = '12345'";

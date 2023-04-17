@@ -87,6 +87,8 @@ objects:
           value: https://a22a69dec467495e8dabc9a937104f34@o271843.ingest.sentry.io/5217678?environment=${ENV_NAME}
         - name: QUARKUS_LOG_SENTRY_ENVIRONMENT
           value: ${ENV_NAME}
+        - name: NOTIFICATIONS_SEND_AS_CLOUD_EVENT
+          value: ${NOTIFICATIONS_SEND_AS_CLOUD_EVENT}
 parameters:
 - name: CLOUDWATCH_ENABLED
   description: Enable Cloudwatch (or not)
@@ -118,4 +120,7 @@ parameters:
   value: "1"
 - name: SENTRY_ENABLED
   description: Enable Sentry (or not)
+  value: "false"
+- name: NOTIFICATIONS_SEND_AS_CLOUD_EVENT
+  description: Send the notifications as cloud events
   value: "false"

@@ -49,6 +49,7 @@
 
     <!-- Dependencies -->
     <insights-notification-schemas-java.version>0.17</insights-notification-schemas-java.version>
+    <redhat.event-schemas.version>1.3.0</redhat.event-schemas.version>
     <clowder-quarkus-config-source.version>1.2.0</clowder-quarkus-config-source.version>
     <quarkus-logging-cloudwatch.version>5.6.0</quarkus-logging-cloudwatch.version>
     <quarkus-logging-sentry.version>1.2.1</quarkus-logging-sentry.version>
@@ -128,6 +129,12 @@
       <groupId>com.redhat.cloud.common</groupId>
       <artifactId>insights-notification-schemas-java</artifactId>
       <version>${insights-notification-schemas-java.version}</version>
+    </dependency>
+    <!-- event-schemas -->
+    <dependency>
+      <groupId>com.redhat.cloud.event</groupId>
+      <artifactId>event-schemas</artifactId>
+      <version>${redhat.event-schemas.version}</version>
     </dependency>
 
     <!-- Configuration -->

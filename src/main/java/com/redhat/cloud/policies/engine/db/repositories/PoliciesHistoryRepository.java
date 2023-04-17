@@ -37,9 +37,9 @@ public class PoliciesHistoryRepository {
     }
 
     private static Optional<String> getSingleTagValue(Event event, String tagKey) {
-        Iterator<String> iterator = event.getTags(tagKey).iterator(); // .iterator() won't cause a NPE if tagKey is not found.
+        Iterator<Event.TagContent> iterator = event.getTags(tagKey).iterator(); // .iterator() won't cause a NPE if tagKey is not found.
         if (iterator.hasNext()) {
-            return Optional.ofNullable(iterator.next());
+            return Optional.ofNullable(iterator.next().value);
         } else {
             return Optional.empty();
         }
