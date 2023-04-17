@@ -110,7 +110,7 @@ public class EventProcessor {
         return false;
     }
 
-    private List<Policy> fireAndGetPoliciesWithActions(Event event, List<Policy> enabledPolicies) {
+    private List<Policy> getFiredPoliciesWithNotificationAction(Event event, List<Policy> enabledPolicies) {
         List<Policy> policiesWithNotification = new ArrayList<>();
 
         int firedPolicies = 0;
