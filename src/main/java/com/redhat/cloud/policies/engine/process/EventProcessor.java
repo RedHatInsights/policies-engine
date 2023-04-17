@@ -76,7 +76,7 @@ public class EventProcessor {
             Log.debugf("No enabled policies found for orgId %s", event.getOrgId());
         } else {
             Log.debugf("Found %d enabled policies for orgId %s", enabledPolicies.size(), event.getOrgId());
-            List<Policy> policiesWithNotifications = fireAndGetPoliciesWithActions(event, enabledPolicies);
+            List<Policy> policiesWithNotifications = getFiredPoliciesWithNotificationAction(event, enabledPolicies);
 
             /*
              * If the policies action contains at least one event, then it means at least one policy was fired and that

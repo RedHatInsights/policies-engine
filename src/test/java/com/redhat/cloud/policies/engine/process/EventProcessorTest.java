@@ -132,9 +132,9 @@ public class EventProcessorTest {
             // The following verify shows that the policy was fired.
             verify(policiesHistoryRepository, times(1)).create(eq(policy2.id), eq(event));
 
-            ArgumentCaptor<PoliciesTriggeredCloudEvent> argumentCaptor = ArgumentCaptor.forClass(PoliciesTriggeredCloudEvent.class);
+            ArgumentCaptor<PolicyTriggeredCloudEvent> argumentCaptor = ArgumentCaptor.forClass(PolicyTriggeredCloudEvent.class);
             verify(notificationSender, times(1)).send(argumentCaptor.capture());
-            PoliciesTriggeredCloudEvent cloudEvent = argumentCaptor.getValue();
+            PolicyTriggeredCloudEvent cloudEvent = argumentCaptor.getValue();
 
             assertEquals(event.getAccountId(), cloudEvent.getAccountId());
             assertEquals(event.getOrgId(), cloudEvent.getOrgId());
@@ -221,7 +221,7 @@ public class EventProcessorTest {
         }));
     }
 
-    private static void assertPolicyIncludedInCloudEventPolicyTriggered(Policy policy, PoliciesTriggeredCloudEvent cloudEvent) {
+    private static void assertPolicyIncludedInCloudEventPolicyTriggered(Policy policy, PolicyTriggeredCloudEvent cloudEvent) {
         List<com.redhat.cloud.event.apps.policies.v1.Policy> policyList = Stream.of(cloudEvent.getData().getPolicies())
                 .filter(cloudEventPolicy -> cloudEventPolicy.getID().equals(policy.id.toString()))
                 .collect(Collectors.toList());
