@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class PoliciesTriggeredCloudEvent extends GenericConsoleCloudEvent<PolicyTriggered> {
+public class PolicyTriggeredCloudEvent extends GenericConsoleCloudEvent<PolicyTriggered> {
 
     public static Builder builder() {
         return new Builder();
@@ -83,7 +83,7 @@ public class PoliciesTriggeredCloudEvent extends GenericConsoleCloudEvent<Policy
             return this;
         }
 
-        public PoliciesTriggeredCloudEvent build() {
+        public PolicyTriggeredCloudEvent build() {
             SystemClass system = new SystemClass();
             system.setDisplayName(this.system.getDisplayName());
             system.setInventoryID(this.system.getInventoryID());
@@ -95,7 +95,7 @@ public class PoliciesTriggeredCloudEvent extends GenericConsoleCloudEvent<Policy
                             .toArray(RHELSystemTag[]::new)
             );
 
-            PoliciesTriggeredCloudEvent event = new PoliciesTriggeredCloudEvent();
+            PolicyTriggeredCloudEvent event = new PolicyTriggeredCloudEvent();
             event.setId(id);
             event.setSource(source);
             event.setSpecVersion(specVersion);

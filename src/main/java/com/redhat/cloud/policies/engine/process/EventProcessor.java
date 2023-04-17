@@ -134,7 +134,7 @@ public class EventProcessor {
         String inventoryId = event.getContext().get(INVENTORY_ID_FIELD);
         LocalDateTime systemCheckin = LocalDateTime.from(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(event.getContext().get(CHECK_IN_FIELD)));
 
-        PoliciesTriggeredCloudEvent.Builder builder = PoliciesTriggeredCloudEvent.builder()
+        PolicyTriggeredCloudEvent.Builder builder = PolicyTriggeredCloudEvent.builder()
                 // Event fields
                 .setId(UUID.randomUUID())
                 .setOrgId(event.getOrgId())

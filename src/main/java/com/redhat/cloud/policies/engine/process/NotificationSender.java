@@ -1,7 +1,5 @@
 package com.redhat.cloud.policies.engine.process;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.redhat.cloud.event.parser.ConsoleCloudEventParser;
 import com.redhat.cloud.event.parser.ConsoleCloudEventParsingException;
 import com.redhat.cloud.notifications.ingress.Action;
@@ -64,7 +62,7 @@ public class NotificationSender {
         notificationsCounter.increment();
     }
 
-    public void send(PoliciesTriggeredCloudEvent cloudEvent) {
+    public void send(PolicyTriggeredCloudEvent cloudEvent) {
         try {
             String payload = parser.toJson(cloudEvent);
             Log.debugf("Sending Kafka payload (cloud event) %s", payload);
