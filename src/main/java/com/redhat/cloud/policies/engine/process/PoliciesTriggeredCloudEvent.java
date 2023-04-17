@@ -30,15 +30,9 @@ public class PoliciesTriggeredCloudEvent extends GenericConsoleCloudEvent<Policy
         private String account;
         private String orgId;
 
-        final private SystemClass system;
-        final private List<Policy> policies;
-        final private List<RHELSystemTag> systemTags;
-
-        public Builder() {
-            this.system = new SystemClass();
-            this.policies = new ArrayList<>();
-            this.systemTags = new ArrayList<>();
-        }
+        private final SystemClass system = new SystemClass();
+        private final List<Policy> policies = new ArrayList<>();
+        private final List<RHELSystemTag> systemTags = new ArrayList<>();
 
         public Builder setId(UUID id) {
             this.id = id;

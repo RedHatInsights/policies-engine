@@ -160,7 +160,6 @@ public class EventProcessorTest {
             assertPolicyIncludedInCloudEventPolicyTriggered(policy1, cloudEvent);
             assertPolicyIncludedInCloudEventPolicyTriggered(policy2, cloudEvent);
 
-            eventProcessor.process(event);
         } finally {
             featureFlipper.setNotificationsAsCloudEvents(false);
         }
@@ -193,7 +192,7 @@ public class EventProcessorTest {
         event.getContext().put(CHECK_IN_FIELD, OffsetDateTime.now().toString());
         event.getContext().put(INVENTORY_ID_FIELD, "inventory-id");
         event.setFacts(Map.of("arch", "x86_64"));
-        event.addTag("policies", DISPLAY_NAME_FIELD, "display-name", true);
+        event.addTag(PayloadParser.POLICIES_TAG_NAMESPACE, DISPLAY_NAME_FIELD, "display-name", true);
         event.addTag(DEFAULT_NAMESPACE, "Contact", "spam@redhat.com");
         event.addTag(DEFAULT_NAMESPACE, "Location", "Neuchatel");
         event.addTag(DEFAULT_NAMESPACE, "Location", "Charmey");
