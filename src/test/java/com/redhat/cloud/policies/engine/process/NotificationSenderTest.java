@@ -20,6 +20,7 @@ import io.smallrye.reactive.messaging.providers.connectors.InMemoryConnector;
 import io.smallrye.reactive.messaging.providers.connectors.InMemorySink;
 import org.apache.kafka.common.header.Header;
 import org.eclipse.microprofile.reactive.messaging.Message;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import javax.annotation.PostConstruct;
@@ -70,6 +71,11 @@ public class NotificationSenderTest {
     @PostConstruct
     void postConstruct() {
         webhookChannel = inMemoryConnector.sink(WEBHOOK_CHANNEL);
+    }
+
+    @BeforeEach
+    void resetWebhookChannel() {
+        webhookChannel.clear();
     }
 
     @Test

@@ -223,15 +223,15 @@ public class EventProcessorTest {
 
     private static void assertPolicyIncludedInCloudEventPolicyTriggered(Policy policy, PolicyTriggeredCloudEvent cloudEvent) {
         List<com.redhat.cloud.event.apps.policies.v1.Policy> policyList = Stream.of(cloudEvent.getData().getPolicies())
-                .filter(cloudEventPolicy -> cloudEventPolicy.getID().equals(policy.id.toString()))
-                .collect(Collectors.toList());
+                .filter(cloudEventPolicy -> cloudEventPolicy.getID().equals(policy.id))
+                .toList();
 
         assertEquals(1, policyList.size());
         com.redhat.cloud.event.apps.policies.v1.Policy cloudEventPolicy = policyList.get(0);
 
         assertAll(
                 String.format("Policy %s", policy.name),
-                () -> assertEquals(policy.id.toString(), cloudEventPolicy.getID()),
+                () -> assertEquals(policy.id, cloudEventPolicy.getID()),
                 () -> assertEquals(policy.name, cloudEventPolicy.getName()),
                 () -> assertEquals(policy.description, cloudEventPolicy.getDescription()),
                 () -> assertEquals(policy.condition, cloudEventPolicy.getCondition()),
