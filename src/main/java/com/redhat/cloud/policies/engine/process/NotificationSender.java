@@ -1,7 +1,7 @@
 package com.redhat.cloud.policies.engine.process;
 
 import com.redhat.cloud.event.parser.ConsoleCloudEventParser;
-import com.redhat.cloud.event.parser.ConsoleCloudEventParsingException;
+import com.redhat.cloud.event.parser.exceptions.ConsoleCloudEventParsingException;
 import com.redhat.cloud.notifications.ingress.Action;
 import com.redhat.cloud.notifications.ingress.Context;
 import com.redhat.cloud.notifications.ingress.Metadata;

@@ -2,10 +2,17 @@ package com.redhat.cloud.policies.engine.process;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.redhat.cloud.event.apps.policies.v1.Policy;
+import com.redhat.cloud.event.apps.policies.v1.PolicyTriggered;
+import com.redhat.cloud.event.apps.policies.v1.SystemClass;
+import com.redhat.cloud.event.parser.ConsoleCloudEvent;
+import com.redhat.cloud.event.parser.ConsoleCloudEventParser;
+import com.redhat.cloud.event.parser.GenericConsoleCloudEvent;
 import com.redhat.cloud.notifications.ingress.Action;
 import com.redhat.cloud.notifications.ingress.Parser;
 import com.redhat.cloud.notifications.ingress.Payload;
 import com.redhat.cloud.policies.engine.TestLifecycleManager;
+import com.redhat.cloud.policies.engine.config.FeatureFlipper;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.reactive.messaging.kafka.api.KafkaMessageMetadata;
@@ -37,6 +44,7 @@ import static java.time.format.DateTimeFormatter.ISO_DATE_TIME;
 import static java.time.temporal.ChronoUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -56,13 +64,16 @@ public class NotificationSenderTest {
     @Inject
     ObjectMapper objectMapper;
 
+    @Inject
+    FeatureFlipper featureFlipper;
+
     @PostConstruct
     void postConstruct() {
         webhookChannel = inMemoryConnector.sink(WEBHOOK_CHANNEL);
     }
 
     @Test
-    void testSend() {
+    void testSendAction() {
         PoliciesAction policiesAction = buildPoliciesAction();
         notificationSender.send(policiesAction);
         await().until(() -> webhookChannel.received().size() == 1);
@@ -87,7 +98,8 @@ public class NotificationSenderTest {
         // Actual tags: [{value=world, key=hello}, {value=intended, key=tags}, {value=as, key=tags}, {value=working, key=tags}, {value=are, key=tags}]
         JsonNode actualTags = objectMapper.valueToTree(action.getContext().getAdditionalProperties().get("tags"));
         for (Map.Entry<String, Set<String>> tagsEntry : policiesAction.getContext().getTags().entrySet()) {
-            next: for (String tagValue : tagsEntry.getValue()) {
+            next:
+            for (String tagValue : tagsEntry.getValue()) {
                 for (JsonNode actualTag : actualTags) {
                     if (actualTag.get("key").asText().equals(tagsEntry.getKey()) && actualTag.get("value").asText().equals(tagValue)) {
                         System.out.println("Tag [key=" + tagsEntry.getKey() + ", value=" + tagValue + "] was found");
@@ -110,6 +122,53 @@ public class NotificationSenderTest {
         }
     }
 
+    @Test
+    void testSendCloudEvent() {
+        try {
+            featureFlipper.setNotificationsAsCloudEvents(true);
+            PolicyTriggeredCloudEvent buildCloudEvent = buildPoliciesCloudEvent();
+            notificationSender.send(buildCloudEvent);
+            await().until(() -> webhookChannel.received().size() == 1);
+            Message<String> message = webhookChannel.received().get(0);
+
+            ConsoleCloudEventParser parser = new ConsoleCloudEventParser();
+            PolicyTriggeredCloudEvent receivedEvent = parser.fromJsonString(message.getPayload(), PolicyTriggeredCloudEvent.class);
+
+            assertNotNull(receivedEvent);
+
+            assertEquals(PolicyTriggeredCloudEvent.CLOUD_EVENT_TYPE, receivedEvent.getType());
+            assertEquals(buildCloudEvent.getAccountId(), receivedEvent.getAccountId());
+            assertEquals(buildCloudEvent.getOrgId(), receivedEvent.getOrgId());
+            assertEquals(buildCloudEvent.getTime(), receivedEvent.getTime());
+            assertEquals(buildCloudEvent.getSource(), receivedEvent.getSource());
+            assertEquals(buildCloudEvent.getId(), receivedEvent.getId());
+            assertEquals(buildCloudEvent.getDataSchema(), receivedEvent.getDataSchema());
+            assertEquals(buildCloudEvent.getSubject(), receivedEvent.getSubject());
+
+            assertEquals(buildCloudEvent.getData().getSystem().getInventoryID(), receivedEvent.getData().getSystem().getInventoryID());
+            assertEquals(buildCloudEvent.getData().getSystem().getCheckIn(), receivedEvent.getData().getSystem().getCheckIn());
+            assertEquals(buildCloudEvent.getData().getSystem().getTags().length, receivedEvent.getData().getSystem().getTags().length);
+
+            assertEquals(buildCloudEvent.getData().getPolicies().length, receivedEvent.getData().getPolicies().length);
+
+            for (int i = 0; i < buildCloudEvent.getData().getPolicies().length; ++i) {
+                assertEquals(buildCloudEvent.getData().getPolicies()[i].getID(), receivedEvent.getData().getPolicies()[i].getID());
+                assertEquals(buildCloudEvent.getData().getPolicies()[i].getName(), receivedEvent.getData().getPolicies()[i].getName());
+                assertEquals(buildCloudEvent.getData().getPolicies()[i].getCondition(), receivedEvent.getData().getPolicies()[i].getCondition());
+                assertEquals(buildCloudEvent.getData().getPolicies()[i].getDescription(), receivedEvent.getData().getPolicies()[i].getDescription());
+                assertEquals(buildCloudEvent.getData().getPolicies()[i].getURL(), receivedEvent.getData().getPolicies()[i].getURL());
+            }
+
+            for (int i = 0; i < buildCloudEvent.getData().getSystem().getTags().length; ++i) {
+                assertEquals(buildCloudEvent.getData().getSystem().getTags()[i].getNamespace(), receivedEvent.getData().getSystem().getTags()[i].getNamespace());
+                assertEquals(buildCloudEvent.getData().getSystem().getTags()[i].getKey(), receivedEvent.getData().getSystem().getTags()[i].getKey());
+                assertEquals(buildCloudEvent.getData().getSystem().getTags()[i].getValue(), receivedEvent.getData().getSystem().getTags()[i].getValue());
+            }
+        } finally {
+            featureFlipper.setNotificationsAsCloudEvents(false);
+        }
+    }
+
     private static PoliciesAction buildPoliciesAction() {
         PoliciesAction action = new PoliciesAction();
         action.setAccountId("account-id");
@@ -121,6 +180,36 @@ public class NotificationSenderTest {
         action.setEvents(Set.of(buildPoliciesEvent(), buildPoliciesEvent()));
         action.getContext().setTags(buildTags());
         return action;
+    }
+
+    private static PolicyTriggeredCloudEvent buildPoliciesCloudEvent() {
+        return PolicyTriggeredCloudEvent
+                .builder()
+                .setId(UUID.randomUUID())
+                .setAccount("account-id")
+                .setOrgId("org-id")
+                .setTime(LocalDateTime.now())
+                .setSystemInventoryId(UUID.randomUUID().toString())
+                .setSystemCheckinTime(LocalDateTime.now())
+                .setSystemDisplayName("my system name")
+                .addSystemTag("ns-1", "key-1", "val-1")
+                .addSystemTag("ns-1", "key-2", "val-2")
+                .addSystemTag("ns-2", "key-3", "val-3")
+                .addPolicy(
+                        UUID.randomUUID(),
+                        "Policy1",
+                        "Policy with description",
+                        "arch = 'x86_64'",
+                        "https://some-url-using-https"
+                )
+                .addPolicy(
+                        UUID.randomUUID(),
+                        "Policy2",
+                        "",
+                        "arch = 'x86_64'",
+                        "http://some-url-using-http"
+                )
+                .build();
     }
 
     private static PoliciesAction.Event buildPoliciesEvent() {

@@ -14,6 +14,8 @@ import java.util.UUID;
 
 public class PolicyTriggeredCloudEvent extends GenericConsoleCloudEvent<PolicyTriggered> {
 
+    static final String CLOUD_EVENT_TYPE = "com.redhat.console.insights.policies.policy-triggered";
+
     public static Builder builder() {
         return new Builder();
     }
@@ -22,7 +24,6 @@ public class PolicyTriggeredCloudEvent extends GenericConsoleCloudEvent<PolicyTr
 
         private static final String source = "urn:redhat:source:policies:insights:policies";
         private static final String specVersion = "1.0";
-        private static final String type = "com.redhat.console.insights.policies.policy-triggered";
         private static final String dataschema = "https://console.redhat.com/api/schemas/apps/policies/v1/policy-triggered.json";
         private static final String subjectPrefix = "urn:redhat:subject:rhel_system:";
         private UUID id;
@@ -76,7 +77,7 @@ public class PolicyTriggeredCloudEvent extends GenericConsoleCloudEvent<PolicyTr
             return this;
         }
 
-        public Builder addPolicy(String id, String name, String description, String condition, String url) {
+        public Builder addPolicy(UUID id, String name, String description, String condition, String url) {
             this.policies.add(
                     createPolicy(id, name, description, condition, url)
             );
@@ -99,7 +100,7 @@ public class PolicyTriggeredCloudEvent extends GenericConsoleCloudEvent<PolicyTr
             event.setId(id);
             event.setSource(source);
             event.setSpecVersion(specVersion);
-            event.setType(type);
+            event.setType(CLOUD_EVENT_TYPE);
             event.setDataSchema(dataschema);
 
             event.setSubject(subjectPrefix + this.system.getInventoryID());
@@ -125,7 +126,7 @@ public class PolicyTriggeredCloudEvent extends GenericConsoleCloudEvent<PolicyTr
             return tag;
         }
 
-        private Policy createPolicy(String id, String name, String description, String condition, String url) {
+        private Policy createPolicy(UUID id, String name, String description, String condition, String url) {
             Policy policy = new Policy();
             policy.setID(id);
             policy.setName(name);

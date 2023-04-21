@@ -121,7 +121,7 @@ public class EventProcessorTest {
             Event event = buildEvent();
 
             Policy policy1 = buildPolicy("policy-1", "Policy 1", "facts.arch = 'x86_64'", "email");
-            Policy policy2 = buildPolicy("policy-2", "Policy 2", "facts.arch = 'x86_64'", "notification");
+            Policy policy2 = buildPolicy("policy-2", "", "facts.arch = 'x86_64'", "notification");
             when(policiesRepository.getEnabledPolicies(eq(event.getOrgId()))).thenReturn(List.of(policy1, policy2));
 
             eventProcessor.process(event);
