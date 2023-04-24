@@ -121,7 +121,7 @@ public class EventProcessorTest {
             Event event = buildEvent();
 
             Policy policy1 = buildPolicy("policy-1", "Policy 1", "facts.arch = 'x86_64'", "email");
-            Policy policy2 = buildPolicy("policy-2", "Policy 2", "facts.arch = 'x86_64'", "notification");
+            Policy policy2 = buildPolicy("policy-2", "", "facts.arch = 'x86_64'", "notification");
             when(policiesRepository.getEnabledPolicies(eq(event.getOrgId()))).thenReturn(List.of(policy1, policy2));
 
             eventProcessor.process(event);
@@ -223,15 +223,15 @@ public class EventProcessorTest {
 
     private static void assertPolicyIncludedInCloudEventPolicyTriggered(Policy policy, PolicyTriggeredCloudEvent cloudEvent) {
         List<com.redhat.cloud.event.apps.policies.v1.Policy> policyList = Stream.of(cloudEvent.getData().getPolicies())
-                .filter(cloudEventPolicy -> cloudEventPolicy.getID().equals(policy.id.toString()))
-                .collect(Collectors.toList());
+                .filter(cloudEventPolicy -> cloudEventPolicy.getID().equals(policy.id))
+                .toList();
 
         assertEquals(1, policyList.size());
         com.redhat.cloud.event.apps.policies.v1.Policy cloudEventPolicy = policyList.get(0);
 
         assertAll(
                 String.format("Policy %s", policy.name),
-                () -> assertEquals(policy.id.toString(), cloudEventPolicy.getID()),
+                () -> assertEquals(policy.id, cloudEventPolicy.getID()),
                 () -> assertEquals(policy.name, cloudEventPolicy.getName()),
                 () -> assertEquals(policy.description, cloudEventPolicy.getDescription()),
                 () -> assertEquals(policy.condition, cloudEventPolicy.getCondition()),

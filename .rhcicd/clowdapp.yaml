@@ -71,6 +71,8 @@ objects:
         env:
         - name: ENV_NAME
           value: ${ENV_NAME}
+        - name: ENV_BASE_URL
+          value: ${ENV_BASE_URL}
         - name: EXTERNAL_LOGGING_LEVEL
           value: ${EXTERNAL_LOGGING_LEVEL}
         - name: GC_CONTAINER_OPTIONS
@@ -124,3 +126,6 @@ parameters:
 - name: NOTIFICATIONS_SEND_AS_CLOUD_EVENT
   description: Send the notifications as cloud events
   value: "false"
+- name: ENV_BASE_URL
+  value: https://console.redhat.com
+  description: The environment's base URL

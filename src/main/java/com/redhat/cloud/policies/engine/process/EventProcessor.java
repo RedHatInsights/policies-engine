@@ -154,7 +154,7 @@ public class EventProcessor {
         }));
 
         policies.forEach(p -> builder.addPolicy(
-                p.id.toString(), p.name, p.description, p.condition, baseUrl + "/insights/policies/policy/" + p.id
+                p.id, p.name, p.description, p.condition, baseUrl + "/insights/policies/policy/" + p.id
         ));
 
         notificationSender.send(builder.build());
