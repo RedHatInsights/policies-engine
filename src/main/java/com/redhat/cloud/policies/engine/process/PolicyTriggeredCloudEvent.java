@@ -130,7 +130,7 @@ public class PolicyTriggeredCloudEvent extends GenericConsoleCloudEvent<PolicyTr
             Policy policy = new Policy();
             policy.setID(id);
             policy.setName(name);
-            policy.setDescription(description);
+            policy.setDescription(description == null ? "" : description);
             policy.setCondition(condition);
             policy.setURL(url);
             return policy;
