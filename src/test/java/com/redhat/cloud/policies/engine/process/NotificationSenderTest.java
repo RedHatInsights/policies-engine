@@ -215,6 +215,13 @@ public class NotificationSenderTest {
                         "arch = 'x86_64'",
                         "http://some-url-using-http"
                 )
+                .addPolicy(
+                        UUID.randomUUID(),
+                        "Policy3",
+                        null,
+                        "arch = 'x86_64'",
+                        "http://some-url-using-http"
+                )
                 .build();
     }
 
