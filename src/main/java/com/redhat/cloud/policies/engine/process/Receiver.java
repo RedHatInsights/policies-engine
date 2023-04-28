@@ -32,10 +32,14 @@ public class Receiver {
     @ActivateRequestContext
     public void process(String payload) {
         Log.tracef("Received payload: %s", payload);
-        payloadParser.parse(payload).ifPresent(event -> {
-            statelessSessionFactory.withSession(statelessSession -> {
-                eventProcessor.process(event);
+        try {
+            payloadParser.parse(payload).ifPresent(event -> {
+                statelessSessionFactory.withSession(statelessSession -> {
+                    eventProcessor.process(event);
+                });
             });
-        });
+        } catch (Exception e) {
+            Log.errorf(e, "Payload processing failed: %s", payload);
+        }
     }
 }
