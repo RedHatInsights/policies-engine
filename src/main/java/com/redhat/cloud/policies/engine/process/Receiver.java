@@ -39,7 +39,15 @@ public class Receiver {
                 });
             });
         } catch (Exception e) {
-            Log.errorf(e, "Payload processing failed: %s", payload);
+            if (Log.isDebugEnabled()) {
+                /*
+                 * When the DEBUG log level is enabled, the log entry will include the payload.
+                 * The entry is still logged at ERROR level because the dev team needs to be alerted through Sentry that an issue happened.
+                 */
+                Log.errorf(e, "Payload processing failed: %s", payload);
+            } else {
+                Log.error("Payload processing failed. Set the log level to DEBUG to print the payload in the logs.", e);
+            }
         }
     }
 }
