@@ -124,6 +124,10 @@ public class PayloadParserTest {
         assertNotNull(event.getFacts().get(NETWORK_INTERFACES_FIELD));
         assertNotNull(event.getFacts().get(YUM_REPOS_FIELD));
 
+        assertEquals(1, event.getHostGroups().size());
+        assertEquals("df57820e-965c-49a6-b0bc-797b7dd60581", event.getHostGroups().get(0).id);
+        assertEquals("Example group name", event.getHostGroups().get(0).name);
+
         CounterExpectations expectations = new CounterExpectations();
         expectations.incomingMessages = 1;
         checkCounterValues(expectations);
