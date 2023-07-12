@@ -1,11 +1,18 @@
 package com.redhat.cloud.policies.engine.process;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 public class Event {
 
@@ -32,9 +39,38 @@ public class Event {
         }
     }
 
+    public static class HostGroup {
+        public final String id;
+        public final String name;
+
+        public HostGroup(String id, String name) {
+            this.id = id;
+            this.name = name;
+        }
+
+        public HostGroup(JsonObject obj) {
+            this.id = obj.getString("id", "");
+            this.name = obj.getString("name", "");
+        }
+
+        public JsonObject toJsonObject() {
+            return new JsonObject(this.toMap());
+        }
+
+        public Map<String, Object> toMap() {
+            return Map.of("id", this.id, "name", this.name);
+        }
+
+        @Override
+        public String toString() {
+            return "HostGroup["+ name +";"+ id +"]";
+        }
+    }
+
     private String accountId;
     private String orgId;
     private String id;
+    private List<HostGroup> hostGroups = new LinkedList<HostGroup>();
     private long ctime;
     private String category;
     private String text;
@@ -67,6 +103,25 @@ public class Event {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public List<HostGroup> getHostGroups() {
+        return this.hostGroups;
+    }
+
+    public void setHostGroups(List<HostGroup> hostGroups) {
+        this.hostGroups = hostGroups;
+    }
+
+    public void addHostGroups(Iterable<Object> hostGroups) throws RuntimeException {
+        hostGroups.forEach(obj -> {
+            if (obj instanceof JsonObject) {
+                this.hostGroups.add(new HostGroup((JsonObject) obj));
+            } else {
+                throw new RuntimeException("Cannot handle host group of type "+ obj.getClass().toString()
+                                           + " to be addded to the collection");
+            }
+        });
     }
 
     public String getCategory() {

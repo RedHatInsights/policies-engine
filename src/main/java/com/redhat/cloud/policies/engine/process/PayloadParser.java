@@ -25,6 +25,7 @@ public class PayloadParser {
     public static final String CHECK_IN_FIELD = "check_in";
     public static final String HOST_FIELD = "host";
     public static final String HOST_ID = "id";
+    public static final String HOST_GROUPS_FIELD = "groups";
     public static final String CATEGORY_NAME = "insight_report";
     public static final String FQDN_NAME_FIELD = "fqdn";
     public static final String NETWORK_INTERFACES_FIELD = "network_interfaces";
@@ -122,6 +123,12 @@ public class PayloadParser {
         event.setTags(tagsMap);
         event.addTag(POLICIES_TAG_NAMESPACE, DISPLAY_NAME_FIELD, displayName, true);
         event.addTag(POLICIES_TAG_NAMESPACE, INVENTORY_ID_FIELD, json.getString(HOST_ID), true);
+
+        // Add Host Groups
+        JsonArray groups = json.getJsonArray(HOST_GROUPS_FIELD);
+        if (groups != null) {
+            event.addHostGroups(groups);
+        }
 
         // Additional context for processing
         Map<String, String> contextMap = new HashMap<>();

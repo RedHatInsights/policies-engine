@@ -9,6 +9,12 @@
     "reporter": "puptoo",
     "id": "ba11a21a-8b22-431b-9b4b-b06006472d54",
     "insights_id": "d4039530-4e3c-44d8-83b9-44de55400c2b",
+    "groups": [
+      {
+        "id": "df57820e-965c-49a6-b0bc-797b7dd60581",
+        "name": "Example group name"
+      }
+    ],
     "system_profile": {
       "arch": "string",
       "bios_release_date": "string",
