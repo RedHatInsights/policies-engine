@@ -123,6 +123,12 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-smallrye-reactive-messaging-kafka</artifactId>
     </dependency>
+    <!-- ORM types support incl. JSON (for Hibernate <= 5) -->
+    <dependency>
+      <groupId>io.quarkiverse.hibernatetypes</groupId>
+      <artifactId>quarkus-hibernate-types</artifactId>
+      <version>1.0.1</version>
+    </dependency>
 
     <!-- Insights -->
     <dependency>
