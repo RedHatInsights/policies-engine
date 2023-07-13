@@ -4,6 +4,7 @@ import com.redhat.cloud.policies.engine.db.StatelessSessionFactory;
 import com.redhat.cloud.policies.engine.db.entities.PoliciesHistoryEntry;
 import com.redhat.cloud.policies.engine.process.Event;
 import io.quarkus.logging.Log;
+import io.vertx.core.json.JsonArray;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -27,6 +28,7 @@ public class PoliciesHistoryRepository {
             historyEntry.setOrgId(event.getOrgId());
             historyEntry.setPolicyId(policyId.toString());
             historyEntry.setCtime(event.getCtime());
+            historyEntry.setHostGroups(getHostGroupsAsJsonArray(event));
             getSingleTagValue(event, INVENTORY_ID_FIELD).ifPresent(historyEntry::setHostId);
             getSingleTagValue(event, DISPLAY_NAME_FIELD).ifPresent(historyEntry::setHostName);
             statelessSessionFactory.getCurrentSession().insert(historyEntry);
@@ -43,5 +45,16 @@ public class PoliciesHistoryRepository {
         } else {
             return Optional.empty();
         }
+    }
+
+    private static JsonArray getHostGroupsAsJsonArray(Event event) {
+        var hostGroups = event.getHostGroups();
+        JsonArray json = new JsonArray();
+        if (hostGroups != null && hostGroups.size() > 0) {
+            hostGroups.forEach(group -> {
+                json.add(group.toJsonObject());
+            });
+        }
+        return json;
     }
 }

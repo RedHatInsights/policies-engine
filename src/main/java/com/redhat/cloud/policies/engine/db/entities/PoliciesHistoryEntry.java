@@ -1,14 +1,22 @@
 package com.redhat.cloud.policies.engine.db.entities;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import java.util.Objects;
 import java.util.UUID;
+import io.vertx.core.json.JsonArray;
+
+import org.hibernate.annotations.TypeDef;
+import org.hibernate.annotations.Type;
+import io.quarkiverse.hibernate.types.json.JsonBinaryType;
+import io.quarkiverse.hibernate.types.json.JsonTypes;
 
 @Entity
 @Table(name = "policies_history")
+@TypeDef(name = JsonTypes.JSON_BIN, typeClass = JsonBinaryType.class)
 public class PoliciesHistoryEntry {
 
     @Id
@@ -26,6 +34,10 @@ public class PoliciesHistoryEntry {
     private String hostId;
 
     private String hostName;
+
+    @Type(type = JsonTypes.JSON_BIN)
+    @Column(name = "host_groups", nullable = false, columnDefinition = JsonTypes.JSON_BIN)
+    private JsonArray hostGroups = new JsonArray();
 
     public UUID getId() {
         return id;
@@ -81,6 +93,14 @@ public class PoliciesHistoryEntry {
 
     public void setHostName(String hostName) {
         this.hostName = hostName;
+    }
+
+    public JsonArray getHostGroups() {
+        return hostGroups;
+    }
+
+    public void setHostGroups(JsonArray hostGroups) {
+        this.hostGroups = hostGroups;
     }
 
     @Override
