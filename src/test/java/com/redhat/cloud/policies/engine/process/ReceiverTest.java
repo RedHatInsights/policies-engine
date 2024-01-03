@@ -2,15 +2,15 @@ package com.redhat.cloud.policies.engine.process;
 
 import com.redhat.cloud.policies.engine.TestLifecycleManager;
 import com.redhat.cloud.policies.engine.db.StatelessSessionFactory;
+import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.junit.mockito.InjectMock;
 import io.quarkus.test.junit.mockito.InjectSpy;
-import io.smallrye.reactive.messaging.providers.connectors.InMemoryConnector;
+import io.smallrye.reactive.messaging.memory.InMemoryConnector;
 import org.junit.jupiter.api.Test;
 
-import javax.enterprise.inject.Any;
-import javax.inject.Inject;
+import jakarta.enterprise.inject.Any;
+import jakarta.inject.Inject;
 
 import java.util.Optional;
 import java.util.function.Consumer;

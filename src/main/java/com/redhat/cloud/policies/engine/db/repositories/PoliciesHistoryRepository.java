@@ -6,8 +6,8 @@ import com.redhat.cloud.policies.engine.process.Event;
 import io.quarkus.logging.Log;
 import io.vertx.core.json.JsonArray;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.UUID;

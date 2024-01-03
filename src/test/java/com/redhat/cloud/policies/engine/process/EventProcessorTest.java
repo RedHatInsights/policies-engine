@@ -6,13 +6,13 @@ import com.redhat.cloud.policies.engine.config.FeatureFlipper;
 import com.redhat.cloud.policies.engine.db.entities.Policy;
 import com.redhat.cloud.policies.engine.db.repositories.PoliciesHistoryRepository;
 import com.redhat.cloud.policies.engine.db.repositories.PoliciesRepository;
+import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.junit.mockito.InjectMock;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;

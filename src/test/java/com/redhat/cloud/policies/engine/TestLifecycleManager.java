@@ -1,7 +1,7 @@
 package com.redhat.cloud.policies.engine;
 
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
-import io.smallrye.reactive.messaging.providers.connectors.InMemoryConnector;
+import io.smallrye.reactive.messaging.memory.InMemoryConnector;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 import java.util.HashMap;
@@ -9,8 +9,8 @@ import java.util.Map;
 
 import static com.redhat.cloud.policies.engine.process.NotificationSender.WEBHOOK_CHANNEL;
 import static com.redhat.cloud.policies.engine.process.Receiver.EVENTS_CHANNEL;
-import static io.smallrye.reactive.messaging.providers.connectors.InMemoryConnector.switchIncomingChannelsToInMemory;
-import static io.smallrye.reactive.messaging.providers.connectors.InMemoryConnector.switchOutgoingChannelsToInMemory;
+import static io.smallrye.reactive.messaging.memory.InMemoryConnector.switchIncomingChannelsToInMemory;
+import static io.smallrye.reactive.messaging.memory.InMemoryConnector.switchOutgoingChannelsToInMemory;
 
 public class TestLifecycleManager implements QuarkusTestResourceLifecycleManager {
 

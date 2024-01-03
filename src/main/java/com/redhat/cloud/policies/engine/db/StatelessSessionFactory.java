@@ -4,9 +4,9 @@ import io.quarkus.logging.Log;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.persistence.EntityManager;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
