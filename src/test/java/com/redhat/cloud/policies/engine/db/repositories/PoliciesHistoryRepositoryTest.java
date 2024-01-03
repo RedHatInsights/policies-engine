@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 
 import com.redhat.cloud.policies.engine.process.Event;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.List;
 import java.util.UUID;
 

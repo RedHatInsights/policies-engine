@@ -8,11 +8,11 @@ import com.redhat.cloud.policies.engine.db.repositories.PoliciesHistoryRepositor
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.logging.Log;
+import jakarta.annotation.PostConstruct;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;

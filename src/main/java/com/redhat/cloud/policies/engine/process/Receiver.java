@@ -5,9 +5,9 @@ import io.quarkus.logging.Log;
 import io.smallrye.reactive.messaging.annotations.Blocking;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.control.ActivateRequestContext;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.control.ActivateRequestContext;
+import jakarta.inject.Inject;
 
 /**
  * This is the main process for Policies. It ingests data from Kafka, enriches it with information from

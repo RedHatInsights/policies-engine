@@ -5,10 +5,10 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.logging.Log;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import jakarta.annotation.PostConstruct;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
