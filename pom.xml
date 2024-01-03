@@ -32,6 +32,7 @@
     <compiler-plugin.version>3.11.0</compiler-plugin.version>
 
     <maven.compiler.parameters>true</maven.compiler.parameters>
+    <maven.compiler.release>${java-version}</maven.compiler.release>
     <maven.compiler.source>$java-version}</maven.compiler.source>
     <maven.compiler.target>$java-version}</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
