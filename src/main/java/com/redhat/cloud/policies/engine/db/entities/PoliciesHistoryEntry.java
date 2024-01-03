@@ -3,24 +3,23 @@ package com.redhat.cloud.policies.engine.db.entities;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.util.Objects;
 import java.util.UUID;
 import io.vertx.core.json.JsonArray;
 
-import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.Type;
 import io.quarkiverse.hibernate.types.json.JsonBinaryType;
 import io.quarkiverse.hibernate.types.json.JsonTypes;
 
 @Entity
 @Table(name = "policies_history")
-@TypeDef(name = JsonTypes.JSON_BIN, typeClass = JsonBinaryType.class)
 public class PoliciesHistoryEntry {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     private String tenantId;
@@ -35,7 +34,7 @@ public class PoliciesHistoryEntry {
 
     private String hostName;
 
-    @Type(type = JsonTypes.JSON_BIN)
+    @Type(JsonBinaryType.class)
     @Column(name = "host_groups", nullable = false, columnDefinition = JsonTypes.JSON_BIN)
     private JsonArray hostGroups = new JsonArray();
 
