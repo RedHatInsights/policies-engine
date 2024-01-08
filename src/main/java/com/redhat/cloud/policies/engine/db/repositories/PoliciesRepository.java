@@ -55,7 +55,7 @@ public class PoliciesRepository {
     }
 
     private List<Policy> findEnabledPolicies(String orgId) {
-        String hql = "FROM Policy WHERE orgId = :orgId AND enabled IS TRUE";
+        String hql = "FROM Policy WHERE orgId = :orgId AND enabled = TRUE";
         return statelessSessionFactory.getCurrentSession().createQuery(hql, Policy.class)
                 .setParameter("orgId", orgId)
                 .getResultList();
