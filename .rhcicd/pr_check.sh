@@ -8,6 +8,10 @@ export COMPONENT_NAME="policies-engine"
 export IMAGE="quay.io/cloudservices/policies-engine"
 export DEPLOY_TIMEOUT="600"
 
+# Temporary deploy template fix of policies-ui-backend [RHINENG-6805]
+EXTRA_DEPLOY_ARGS="--set-template-ref policies-ui-backend=ddeef618125b31f083788040b6344cca372ec09c
+                   --set-image-tag quay.io/cloudservices/policies-ui-backend=pr-602-ddeef61"
+
 # IQE plugin config
 export IQE_PLUGINS="policies"
 export IQE_MARKER_EXPRESSION="policies_api_smoke"
