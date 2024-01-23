@@ -67,6 +67,7 @@ public class Event {
         }
     }
 
+    private String recordKey;
     private String accountId;
     private String orgId;
     private String id;
@@ -80,13 +81,22 @@ public class Event {
 
     public Event() {}
 
-    public Event(String accountId, String orgId, String id, String category, String text) {
+    public Event(String recordKey, String accountId, String orgId, String id, String category, String text) {
+        this.recordKey = recordKey;
         this.accountId = accountId;
         this.orgId = orgId;
         this.id = id;
         setCtime(ctime);
         this.category = category;
         this.text = text;
+    }
+
+    public String getRecordKey() {
+        return recordKey;
+    }
+
+    public void setRecordKey(String recordKey) {
+        this.recordKey = recordKey;
     }
 
     public String getAccountId() {
@@ -213,7 +223,8 @@ public class Event {
 
     @Override
     public String toString() {
-        return "Event [accountId=" + accountId + ", orgId=" + orgId + ", id=" + id + ", ctime=" + ctime + ", category=" + category
-                + ", text=" + text + ", context=" + context + ", " + "tags=" + tags + "]";
+        return "Event [recordKey=" + recordKey + ", accountId=" + accountId + ", orgId=" + orgId + ", id=" + id
+                + ", ctime=" + ctime + ", category=" + category + ", text=" + text + ", context=" + context
+                + ", tags=" + tags + "]";
     }
 }

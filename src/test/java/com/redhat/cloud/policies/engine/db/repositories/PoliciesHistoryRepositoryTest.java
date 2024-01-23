@@ -38,7 +38,7 @@ class PoliciesHistoryRepositoryTest {
     @Test
     public void testHostGroupsPersistence() {
         var orgId = UUID.randomUUID().toString();
-        var event = new Event(UUID.randomUUID().toString(), orgId, "123", "category", "text");
+        var event = new Event(UUID.randomUUID().toString(), UUID.randomUUID().toString(), orgId, "123", "category", "text");
 
         List<Object> groups = List.of(JsonObject.of("name", "group_one",
                                                     "id", "00000000-0000-0000-0000-000000000001"));

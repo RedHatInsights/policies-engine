@@ -187,6 +187,7 @@ public class EventProcessorTest {
 
     private static Event buildEvent() {
         Event event = new Event();
+        event.setRecordKey(UUID.randomUUID().toString());
         event.setAccountId(ACCOUNT_ID);
         event.setOrgId(ORG_ID);
         event.getContext().put(CHECK_IN_FIELD, OffsetDateTime.now().toString());
