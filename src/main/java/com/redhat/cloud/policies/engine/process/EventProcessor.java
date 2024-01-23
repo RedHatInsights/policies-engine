@@ -76,7 +76,11 @@ public class EventProcessor {
             Log.debugf("No enabled policies found for orgId %s", event.getOrgId());
         } else {
             Log.debugf("Found %d enabled policies for orgId %s", enabledPolicies.size(), event.getOrgId());
-            List<Policy> policiesWithNotifications = getFiredPoliciesWithNotificationAction(event, enabledPolicies);
+            List<Policy> firedPolicies = getFiredPoliciesForEvent(event, enabledPolicies);
+            List<Policy> policiesWithNotifications = getNotificationActionsForFiredPolicies(firedPolicies);
+
+            firedPoliciesCounter.increment(firedPolicies.size());
+            Log.debugf("%d policies fired from the event", firedPolicies.size());
 
             /*
              * If the policies action contains at least one event, then it means at least one policy was fired and that
@@ -110,22 +114,27 @@ public class EventProcessor {
         return false;
     }
 
-    private List<Policy> getFiredPoliciesWithNotificationAction(Event event, List<Policy> enabledPolicies) {
-        List<Policy> policiesWithNotification = new ArrayList<>();
+    private List<Policy> getFiredPoliciesForEvent(Event event, List<Policy> enabledPolicies) {
+        List<Policy> firedPolicies = new ArrayList<>();
 
-        int firedPolicies = 0;
         for (Policy policy : enabledPolicies) {
             if (isFired(policy, event)) {
-                firedPolicies++;
                 policiesHistoryRepository.create(policy.id, event);
-                if (hasNotificationAction(policy)) {
-                    policiesWithNotification.add(policy);
-                }
+                firedPolicies.add(policy);
             }
         }
 
-        firedPoliciesCounter.increment(firedPolicies);
-        Log.debugf("%d policies fired from the event", firedPolicies);
+        return firedPolicies;
+    }
+
+    private List<Policy> getNotificationActionsForFiredPolicies(List<Policy> firedPolicies) {
+        List<Policy> policiesWithNotification = new ArrayList<>();
+
+        for (Policy policy : firedPolicies) {
+            if (hasNotificationAction(policy)) {
+                policiesWithNotification.add(policy);
+            }
+        }
 
         return policiesWithNotification;
     }
