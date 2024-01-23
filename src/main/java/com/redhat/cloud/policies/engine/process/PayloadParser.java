@@ -75,7 +75,7 @@ public class PayloadParser {
             json = new JsonObject(payload);
         } catch(Exception e) {
             processingErrors.increment();
-            return Optional.empty();
+            throw e;
         }
         if (json.containsKey(TYPE_FIELD)) {
             String eventType = json.getString(TYPE_FIELD);

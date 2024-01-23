@@ -3,6 +3,7 @@ package com.redhat.cloud.policies.engine.process;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.test.junit.QuarkusTest;
+import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
 import jakarta.annotation.PostConstruct;
 import org.apache.commons.io.IOUtils;
@@ -34,6 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
@@ -168,8 +170,9 @@ public class PayloadParserTest {
 
     @Test
     void testInvalidJson() {
-        Optional<Event> event = payloadParser.parse("I am not a valid JSON!");
-        assertTrue(event.isEmpty());
+        assertThrows(DecodeException.class, () -> {
+            payloadParser.parse("I am not a valid JSON!");
+        });
 
         CounterExpectations expectations = new CounterExpectations();
         expectations.incomingMessages = 1;
