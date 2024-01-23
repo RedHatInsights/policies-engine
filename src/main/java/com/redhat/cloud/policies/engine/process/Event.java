@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import io.vertx.core.json.JsonArray;
@@ -70,7 +71,7 @@ public class Event {
     private String recordKey;
     private String accountId;
     private String orgId;
-    private String id;
+    private UUID id;
     private List<HostGroup> hostGroups = new LinkedList<HostGroup>();
     private long ctime;
     private String category;
@@ -81,11 +82,11 @@ public class Event {
 
     public Event() {}
 
-    public Event(String recordKey, String accountId, String orgId, String id, String category, String text) {
+    public Event(String recordKey, String accountId, String orgId, String category, String text) {
         this.recordKey = recordKey;
         this.accountId = accountId;
         this.orgId = orgId;
-        this.id = id;
+        this.id = UUID.randomUUID();
         setCtime(ctime);
         this.category = category;
         this.text = text;
@@ -107,11 +108,11 @@ public class Event {
         this.accountId = accountId;
     }
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
