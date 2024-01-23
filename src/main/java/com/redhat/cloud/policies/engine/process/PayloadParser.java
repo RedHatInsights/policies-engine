@@ -67,7 +67,7 @@ public class PayloadParser {
         processingErrors = meterRegistry.counter("engine.input.processed.errors", "queue", "host-egress");
     }
 
-    public Optional<Event> parse(String payload) {
+    public Optional<Event> parse(String recordKey, String payload) {
         incomingMessagesCount.increment();
 
         JsonObject json;
@@ -116,7 +116,7 @@ public class PayloadParser {
         String displayName = json.getString(DISPLAY_NAME_FIELD);
         String text = String.format("host-egress report %s for %s", inventoryId, displayName);
 
-        Event event = new Event("", tenantId, orgId, UUID.randomUUID().toString(), CATEGORY_NAME, text);
+        Event event = new Event(recordKey, tenantId, orgId, UUID.randomUUID().toString(), CATEGORY_NAME, text);
 
         // Indexed searchable events
         Map<String, Set<Event.TagContent>> tagsMap = parseTags(json.getJsonArray(TAGS_FIELD));
