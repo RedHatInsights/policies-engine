@@ -15,6 +15,24 @@ import java.util.Map;
 @QuarkusTest
 public class EventTest {
     @Test
+    void testEventConstructor() {
+        var recordKey = "record key";
+        var accountId = "account id";
+        var orgId = "org id";
+        var id = "event id";
+        var category = "category";
+        var text = "some text";
+
+        Event event = new Event(recordKey, accountId, orgId, id, category, text);
+        assertEquals(recordKey, event.getRecordKey());
+        assertEquals(accountId, event.getAccountId());
+        assertEquals(orgId, event.getOrgId());
+        assertEquals(id, event.getId());
+        assertEquals(category, event.getCategory());
+        assertEquals(text, event.getText());
+    }
+
+    @Test
     void testAddHostGroupsFromJsonObjects() {
         Event event = new Event();
 
