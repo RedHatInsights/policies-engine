@@ -3,6 +3,7 @@ package com.redhat.cloud.policies.engine.process;
 import com.redhat.cloud.policies.engine.db.StatelessSessionFactory;
 import io.quarkus.logging.Log;
 import io.smallrye.reactive.messaging.annotations.Blocking;
+import io.smallrye.reactive.messaging.kafka.Record;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -30,7 +31,8 @@ public class Receiver {
     @Incoming(EVENTS_CHANNEL)
     @Blocking
     @ActivateRequestContext
-    public void process(String payload) {
+    public void process(Record<String, String> record) {
+        String payload = record.value();
         Log.tracef("Received payload: %s", payload);
         try {
             payloadParser.parse(payload).ifPresent(event -> {
