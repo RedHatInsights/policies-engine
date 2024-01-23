@@ -73,25 +73,47 @@ public class EventProcessor {
 
         List<Policy> enabledPolicies = policiesRepository.getEnabledPolicies(event.getOrgId());
         if (enabledPolicies.isEmpty()) {
-            Log.debugf("No enabled policies found for orgId %s", event.getOrgId());
+            Log.debugf(
+                "Message %s [orgId %s]: Clear (no enabled policies)",
+                event.getRecordKey(), event.getOrgId()
+            );
         } else {
             Log.debugf("Found %d enabled policies for orgId %s", enabledPolicies.size(), event.getOrgId());
             List<Policy> firedPolicies = getFiredPoliciesForEvent(event, enabledPolicies);
             List<Policy> policiesWithNotifications = getNotificationActionsForFiredPolicies(firedPolicies);
 
+            List<String> firedPoliciesIds = firedPolicies.stream().map(p -> p.id.toString()).toList();
             firedPoliciesCounter.increment(firedPolicies.size());
-            Log.debugf("%d policies fired from the event", firedPolicies.size());
 
             /*
              * If the policies action contains at least one event, then it means at least one policy was fired and that
              * policy has a notification action. We can send the policies action to the notifications app.
              */
             if (policiesWithNotifications.size() > 0) {
+                String eventMech;
                 if (featureFlipper.isNotificationsAsCloudEvents()) {
                     sendCloudEvent(event, policiesWithNotifications);
+                    eventMech = "CloudEvent";
                 } else {
                     sendOldNotification(event, policiesWithNotifications);
+                    eventMech = "notification";
                 }
+
+                Log.infof(
+                    "Message %s [orgId %s]: Fired policies %s with %d %s(s)",
+                    event.getRecordKey(), event.getOrgId(), firedPoliciesIds, policiesWithNotifications.size(),
+                    eventMech
+                );
+            } else if (firedPolicies.size() > 0) {
+                Log.infof(
+                    "Message %s [orgId %s]: Fired policies %s",
+                    event.getRecordKey(), event.getOrgId(), firedPoliciesIds
+                );
+            } else {
+                Log.debugf(
+                    "Message %s [orgId %s]: Clear (no fired policies)",
+                    event.getRecordKey(), event.getOrgId()
+                );
             }
         }
     }
