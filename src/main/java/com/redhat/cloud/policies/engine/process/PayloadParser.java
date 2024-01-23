@@ -80,7 +80,7 @@ public class PayloadParser {
         if (json.containsKey(TYPE_FIELD)) {
             String eventType = json.getString(TYPE_FIELD);
             if(!ACCEPTED_TYPES.contains(eventType)) {
-                Log.debugf("Got a request with type='%s', ignoring ", eventType);
+                Log.debugf("Message %s: Ignored, type='%s' (accepted are %s) ", recordKey, eventType, ACCEPTED_TYPES);
                 rejectedCount.increment();
                 rejectedCountType.increment();
                 return Optional.empty();
@@ -90,6 +90,7 @@ public class PayloadParser {
         if (json.containsKey(HOST_FIELD)) {
             json = json.getJsonObject(HOST_FIELD);
         } else {
+            Log.debugf("Message %s: Ignored, no host field", recordKey);
             rejectedCount.increment();
             rejectedCountHost.increment();
             return Optional.empty();
@@ -98,6 +99,7 @@ public class PayloadParser {
         // Verify host.reporter (not platform_metadata.metadata.reporter!) is one of the accepted values
         String reporter = json.getString(REPORTER_FIELD);
         if(!ACCEPTED_REPORTERS.contains(reporter)) {
+            Log.debugf("Message %s: Ignored, reporter='%s' (accepted are %s) ", recordKey, reporter, ACCEPTED_REPORTERS);
             rejectedCount.increment();
             rejectedCountReporter.increment();
             return Optional.empty();
@@ -106,6 +108,7 @@ public class PayloadParser {
         String inventoryId = json.getString(HOST_ID);
 
         if (inventoryId == null || inventoryId.isBlank()) {
+            Log.debugf("Message %s: Ignored, blank inventory id", recordKey);
             rejectedCount.increment();
             rejectedCountId.increment();
             return Optional.empty();
