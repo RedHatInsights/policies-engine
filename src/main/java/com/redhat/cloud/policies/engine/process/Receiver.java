@@ -33,7 +33,9 @@ public class Receiver {
     @ActivateRequestContext
     public void process(Record<String, String> record) {
         String payload = record.value();
-        Log.tracef("Received payload: %s", payload);
+        String key = record.key();
+
+        Log.tracef("Message %s: Received payload: %s", key, payload);
         try {
             payloadParser.parse(payload).ifPresent(event -> {
                 statelessSessionFactory.withSession(statelessSession -> {
@@ -46,9 +48,9 @@ public class Receiver {
                  * When the DEBUG log level is enabled, the log entry will include the payload.
                  * The entry is still logged at ERROR level because the dev team needs to be alerted through Sentry that an issue happened.
                  */
-                Log.errorf(e, "Payload processing failed: %s", payload);
+                Log.errorf(e, "Message %s: Payload processing failed: %s", key, payload);
             } else {
-                Log.error("Payload processing failed. Set the log level to DEBUG to print the payload in the logs.", e);
+                Log.errorf(e, "Message %s: Payload processing failed. Set the log level to DEBUG to print the payload in the logs.", key);
             }
         }
     }
