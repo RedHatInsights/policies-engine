@@ -107,7 +107,7 @@ public class PayloadParserTest {
     @Test
     void testValidSimpleJson() {
         String payload = loadResource("input/host.json");
-        Event event = payloadParser.parse(payload).get();
+        Event event = payloadParser.parse("someRecordKey", payload).get();
 
         assertEquals("integration-test-account", event.getAccountId());
         assertEquals("integration-test-org-id", event.getOrgId());
@@ -138,7 +138,7 @@ public class PayloadParserTest {
     @Test
     void testValidComplexJson() {
         String payload = loadResource("input/thomas-host.json");
-        Event event = payloadParser.parse(payload).get();
+        Event event = payloadParser.parse("someRecordKey", payload).get();
 
         assertEquals("integration-test-account", event.getAccountId());
         assertEquals("integration-test-org-id", event.getOrgId());
@@ -171,7 +171,7 @@ public class PayloadParserTest {
     @Test
     void testInvalidJson() {
         assertThrows(DecodeException.class, () -> {
-            payloadParser.parse("I am not a valid JSON!");
+            payloadParser.parse("someRecordKey", "I am not a valid JSON!");
         });
 
         CounterExpectations expectations = new CounterExpectations();
@@ -189,7 +189,7 @@ public class PayloadParserTest {
         jsonObject.put("type", "deleted");
         payload = jsonObject.encode();
 
-        Optional<Event> event = payloadParser.parse(payload);
+        Optional<Event> event = payloadParser.parse("someRecordKey", payload);
         assertTrue(event.isEmpty());
 
         CounterExpectations expectations = new CounterExpectations();
@@ -208,7 +208,7 @@ public class PayloadParserTest {
         jsonObject.remove(HOST_FIELD);
         payload = jsonObject.encode();
 
-        Optional<Event> event = payloadParser.parse(payload);
+        Optional<Event> event = payloadParser.parse("someRecordKey", payload);
         assertTrue(event.isEmpty());
 
         CounterExpectations expectations = new CounterExpectations();
@@ -227,7 +227,7 @@ public class PayloadParserTest {
         jsonObject.getJsonObject("host").put("reporter", "rhsm-conduit");
         payload = jsonObject.encode();
 
-        Optional<Event> event = payloadParser.parse(payload);
+        Optional<Event> event = payloadParser.parse("someRecordKey", payload);
         assertTrue(event.isEmpty());
 
         CounterExpectations expectations = new CounterExpectations();
@@ -246,7 +246,7 @@ public class PayloadParserTest {
         jsonObject.getJsonObject(HOST_FIELD).remove(HOST_ID);
         payload = jsonObject.encode();
 
-        Optional<Event> event = payloadParser.parse(payload);
+        Optional<Event> event = payloadParser.parse("someRecordKey", payload);
         assertTrue(event.isEmpty());
 
         CounterExpectations expectations = new CounterExpectations();

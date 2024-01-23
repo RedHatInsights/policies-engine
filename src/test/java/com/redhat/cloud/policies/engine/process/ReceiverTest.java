@@ -45,14 +45,14 @@ public class ReceiverTest {
         String payload = "Hello, world!";
         Event event = new Event();
 
-        when(payloadParser.parse(eq(payload))).thenReturn(Optional.of(event));
+        when(payloadParser.parse(eq("key"), eq(payload))).thenReturn(Optional.of(event));
 
         inMemoryConnector.source(EVENTS_CHANNEL).send(Record.of("key", payload));
 
         // Let's give SR Reactive Messaging some time to process the payload.
         Thread.sleep(2000L);
 
-        verify(payloadParser, times(1)).parse(eq(payload));
+        verify(payloadParser, times(1)).parse(eq("key"), eq(payload));
         verify(statelessSessionFactory, times(1)).withSession(any(Consumer.class));
         verify(eventProcessor, times(1)).process(eq(event));
     }

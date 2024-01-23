@@ -37,7 +37,7 @@ public class Receiver {
 
         Log.tracef("Message %s: Received payload: %s", key, payload);
         try {
-            payloadParser.parse(payload).ifPresent(event -> {
+            payloadParser.parse(key, payload).ifPresent(event -> {
                 statelessSessionFactory.withSession(statelessSession -> {
                     eventProcessor.process(event);
                 });
