@@ -6,6 +6,7 @@ import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.mockito.InjectSpy;
+import io.smallrye.reactive.messaging.kafka.Record;
 import io.smallrye.reactive.messaging.memory.InMemoryConnector;
 import org.junit.jupiter.api.Test;
 
@@ -46,7 +47,7 @@ public class ReceiverTest {
 
         when(payloadParser.parse(eq(payload))).thenReturn(Optional.of(event));
 
-        inMemoryConnector.source(EVENTS_CHANNEL).send(payload);
+        inMemoryConnector.source(EVENTS_CHANNEL).send(Record.of("key", payload));
 
         // Let's give SR Reactive Messaging some time to process the payload.
         Thread.sleep(2000L);
