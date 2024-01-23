@@ -167,7 +167,7 @@ public class EventProcessor {
 
         PolicyTriggeredCloudEvent.Builder builder = PolicyTriggeredCloudEvent.builder()
                 // Event fields
-                .setId(UUID.randomUUID())
+                .setId(event.getId())
                 .setOrgId(event.getOrgId())
                 .setAccount(event.getAccountId())
                 .setTime(LocalDateTime.now(UTC))
