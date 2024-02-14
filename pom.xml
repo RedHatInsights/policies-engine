@@ -51,7 +51,7 @@
     <!-- Dependencies -->
     <insights-notification-schemas-java.version>0.21</insights-notification-schemas-java.version>
     <redhat.event-schemas.version>1.4.10</redhat.event-schemas.version>
-    <clowder-quarkus-config-source.version>2.2.0</clowder-quarkus-config-source.version>
+    <clowder-quarkus-config-source.version>2.4.0</clowder-quarkus-config-source.version>
     <quarkus-logging-cloudwatch.version>6.6.0</quarkus-logging-cloudwatch.version>
     <quarkus-logging-sentry.version>2.0.5</quarkus-logging-sentry.version>
     <org.antlr.version>4.11.1</org.antlr.version>
