@@ -3,6 +3,7 @@ package com.redhat.cloud.policies.engine;
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
 import io.smallrye.reactive.messaging.memory.InMemoryConnector;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.utility.DockerImageName;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,7 +15,9 @@ import static io.smallrye.reactive.messaging.memory.InMemoryConnector.switchOutg
 
 public class TestLifecycleManager implements QuarkusTestResourceLifecycleManager {
 
-    private static final PostgreSQLContainer<?> POSTGRESQL_CONTAINER = new PostgreSQLContainer<>("postgres");
+    private static final PostgreSQLContainer<?> POSTGRESQL_CONTAINER = new PostgreSQLContainer<>(
+        DockerImageName.parse("docker.io/postgres").asCompatibleSubstituteFor("postgres")
+    );
 
     @Override
     public Map<String, String> start() {
