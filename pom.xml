@@ -46,7 +46,7 @@
     <!-- Quarkus -->
     <quarkus.platform.group-id>com.redhat.quarkus.platform</quarkus.platform.group-id>
     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
-    <quarkus.platform.version>3.2.12.Final-redhat-00002</quarkus.platform.version>
+    <quarkus.platform.version>3.8.6.redhat-00005</quarkus.platform.version>
 
     <!-- Dependencies -->
     <insights-notification-schemas-java.version>0.21</insights-notification-schemas-java.version>
