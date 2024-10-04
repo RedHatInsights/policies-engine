@@ -106,7 +106,7 @@ parameters:
   required: true
 - name: IMAGE
   description: Image URL
-  value: quay.io/cloudservices/policies-engine
+  value: quay.io/redhat-services-prod/insights-management-tenant/insights-policies/policies-engine
 - name: IMAGE_TAG
   description: Image tag
   value: latest
