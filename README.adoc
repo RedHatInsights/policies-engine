@@ -4,6 +4,7 @@
 [.lead]
 This project contains the execution engine for policies service. For the user-facing UI-backend see https://github.com/RedHatInsights/policies-ui-backend
 
+
 == Run
 
 Running Kafka instance is required to process inbound messages through the queue. If none exists, one can start Kafka with ``docker run --rm -e RUNTESTS=0 --net=host lensesio/fast-data-dev``
