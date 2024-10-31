@@ -19,8 +19,8 @@ export IQE_FILTER_EXPRESSION=""
 export IQE_CJI_TIMEOUT="30m"
 
 # Bonfire init
-CICD_URL=https://raw.githubusercontent.com/RedHatInsights/bonfire/master/cicd
-curl -s $CICD_URL/bootstrap.sh > .cicd_bootstrap.sh && source .cicd_bootstrap.sh
+CICD_SCRIPT_URL=https://raw.githubusercontent.com/RedHatInsights/cicd-tools/main/bootstrap.sh
+curl -sL $CICD_SCRIPT_URL > .cicd_bootstrap.sh && source .cicd_bootstrap.sh
 
 # Build the image and push to Quay
 export DOCKERFILE=src/main/docker/Dockerfile-build.jvm
