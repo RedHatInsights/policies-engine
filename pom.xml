@@ -46,7 +46,7 @@
     <!-- Quarkus -->
     <quarkus.platform.group-id>com.redhat.quarkus.platform</quarkus.platform.group-id>
     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
-    <quarkus.platform.version>3.8.3.redhat-00003</quarkus.platform.version>
+    <quarkus.platform.version>3.15.2.redhat-00003</quarkus.platform.version>
 
     <!-- Dependencies -->
     <insights-notification-schemas-java.version>0.21</insights-notification-schemas-java.version>
@@ -110,7 +110,7 @@
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-resteasy-reactive-jackson</artifactId>
+      <artifactId>quarkus-rest-jackson</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
@@ -122,7 +122,7 @@
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-smallrye-reactive-messaging-kafka</artifactId>
+      <artifactId>quarkus-messaging-kafka</artifactId>
     </dependency>
     <!-- ORM types support incl. JSON (for Hibernate <= 5) -->
     <dependency>
