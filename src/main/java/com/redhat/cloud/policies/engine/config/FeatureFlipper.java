@@ -2,7 +2,7 @@ package com.redhat.cloud.policies.engine.config;
 
 import io.quarkus.logging.Log;
 import io.quarkus.runtime.StartupEvent;
-import io.quarkus.runtime.configuration.ProfileManager;
+import io.quarkus.runtime.LaunchMode;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -63,7 +63,7 @@ public class FeatureFlipper {
      * config value from tests only, preventing doing so from runtime code.
      */
     private static void checkTestLaunchMode() {
-        if (ProfileManager.getLaunchMode() != TEST) {
+        if (LaunchMode.current() != TEST) {
             throw new IllegalStateException("Illegal config value override detected");
         }
     }
