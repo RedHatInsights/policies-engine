@@ -39,14 +39,14 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
     <!-- Plugins -->
-    <compiler-plugin.version>3.10.1</compiler-plugin.version>
+    <compiler-plugin.version>3.12.0</compiler-plugin.version>
     <surefire-plugin.version>3.0.0</surefire-plugin.version>
     <maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
 
     <!-- Quarkus -->
     <quarkus.platform.group-id>com.redhat.quarkus.platform</quarkus.platform.group-id>
     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
-    <quarkus.platform.version>3.2.12.Final-redhat-00002</quarkus.platform.version>
+    <quarkus.platform.version>3.8.3.redhat-00003</quarkus.platform.version>
 
     <!-- Dependencies -->
     <insights-notification-schemas-java.version>0.21</insights-notification-schemas-java.version>
