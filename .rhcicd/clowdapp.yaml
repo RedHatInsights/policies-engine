@@ -75,6 +75,8 @@ objects:
           value: ${ENV_BASE_URL}
         - name: EXTERNAL_LOGGING_LEVEL
           value: ${EXTERNAL_LOGGING_LEVEL}
+        - name: JAVA_OPTIONS
+          value: ${JAVA_OPTIONS}
         - name: GC_CONTAINER_OPTIONS
           value: "-XX:+UseG1GC"
         - name: QUARKUS_HTTP_PORT
@@ -95,6 +97,9 @@ parameters:
 - name: CLOUDWATCH_ENABLED
   description: Enable Cloudwatch (or not)
   value: "false"
+- name: JAVA_OPTIONS
+  description: Additional options to JDK runtime
+  value: "-XX:+ExitOnOutOfMemoryError -Xms640m -Xmx1024m"
 - name: CPU_LIMIT
   description: CPU limit
   value: 250m
