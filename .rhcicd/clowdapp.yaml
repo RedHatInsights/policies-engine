@@ -99,7 +99,7 @@ parameters:
   value: "false"
 - name: JAVA_OPTIONS
   description: Additional options to JDK runtime
-  value: "-XX:+ExitOnOutOfMemoryError -Xms640m -Xmx1024m"
+  value: "-XX:+ExitOnOutOfMemoryError -Xms128m -Xmx512m"
 - name: CPU_LIMIT
   description: CPU limit
   value: 250m
