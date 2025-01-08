@@ -77,8 +77,6 @@ objects:
           value: ${EXTERNAL_LOGGING_LEVEL}
         - name: JAVA_OPTIONS
           value: ${JAVA_OPTIONS}
-        - name: GC_CONTAINER_OPTIONS
-          value: "-XX:+UseG1GC"
         - name: QUARKUS_HTTP_PORT
           value: "8000"
         - name: QUARKUS_LOG_CLOUDWATCH_ENABLED
