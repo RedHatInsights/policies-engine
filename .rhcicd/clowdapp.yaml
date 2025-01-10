@@ -37,11 +37,11 @@ objects:
         image: ${IMAGE}:${IMAGE_TAG}
         resources:
           requests:
-            cpu: ${CPU_REQUEST}
-            memory: ${MEMORY_REQUEST}
+            cpu: ${CPU_REQUEST_ENGINE}
+            memory: ${MEMORY_REQUEST_ENGINE}
           limits:
-            cpu: ${CPU_LIMIT}
-            memory: ${MEMORY_LIMIT}
+            cpu: ${CPU_LIMIT_ENGINE}
+            memory: ${MEMORY_LIMIT_ENGINE}
         volumes:
         - name: certs
           emptyDir: {}
@@ -77,8 +77,6 @@ objects:
           value: ${EXTERNAL_LOGGING_LEVEL}
         - name: JAVA_OPTIONS
           value: ${JAVA_OPTIONS}
-        - name: GC_CONTAINER_OPTIONS
-          value: "-XX:+UseG1GC"
         - name: QUARKUS_HTTP_PORT
           value: "8000"
         - name: QUARKUS_LOG_CLOUDWATCH_ENABLED
@@ -99,11 +97,11 @@ parameters:
   value: "false"
 - name: JAVA_OPTIONS
   description: Additional options to JDK runtime
-  value: "-XX:+ExitOnOutOfMemoryError -Xms640m -Xmx1024m"
-- name: CPU_LIMIT
+  value: "-XX:+ExitOnOutOfMemoryError -Xms128m -Xmx512m"
+- name: CPU_LIMIT_ENGINE
   description: CPU limit
   value: 250m
-- name: CPU_REQUEST
+- name: CPU_REQUEST_ENGINE
   description: CPU request
   value: 125m
 - name: ENV_NAME
@@ -117,10 +115,10 @@ parameters:
   value: latest
 - name: EXTERNAL_LOGGING_LEVEL
   value: INFO
-- name: MEMORY_LIMIT
+- name: MEMORY_LIMIT_ENGINE
   description: Memory limit
   value: 1000Mi
-- name: MEMORY_REQUEST
+- name: MEMORY_REQUEST_ENGINE
   description: Memory request
   value: 500Mi
 - name: MIN_REPLICAS
