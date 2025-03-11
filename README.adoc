@@ -14,7 +14,7 @@ REST-interface will be available by default from port ``8084`` (and ``8080`` in 
 
 == License
 
-Policies Engine is released under Apache License, Version 2.0 as described in the link:LICENSE[LICENSE] document
+Policies Engine is released under Apache License, Version 2.0 as described in the link:LICENSE[LICENSE] document.
 
 ----
    Copyright 2015-2020 Red Hat, Inc.
