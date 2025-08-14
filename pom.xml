@@ -46,14 +46,14 @@
     <!-- Quarkus -->
     <quarkus.platform.group-id>com.redhat.quarkus.platform</quarkus.platform.group-id>
     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
-    <quarkus.platform.version>3.20.1.redhat-00003</quarkus.platform.version>
+    <quarkus.platform.version>3.20.2.redhat-00002</quarkus.platform.version>
 
     <!-- Dependencies -->
     <insights-notification-schemas-java.version>0.23</insights-notification-schemas-java.version>
     <redhat.event-schemas.version>1.4.12</redhat.event-schemas.version>
     <clowder-quarkus-config-source.version>2.7.1</clowder-quarkus-config-source.version>
     <quarkus-logging-cloudwatch.version>6.14.2</quarkus-logging-cloudwatch.version>
-    <quarkus-logging-sentry.version>2.1.6</quarkus-logging-sentry.version>
+    <quarkus-logging-sentry.version>2.1.7</quarkus-logging-sentry.version>
     <org.antlr.version>4.11.1</org.antlr.version>
 
   </properties>
