@@ -49,7 +49,7 @@
     <quarkus.platform.version>3.20.2.redhat-00002</quarkus.platform.version>
 
     <!-- Dependencies -->
-    <insights-notification-schemas-java.version>0.23</insights-notification-schemas-java.version>
+    <insights-notification-schemas-java.version>1.0.1</insights-notification-schemas-java.version>
     <redhat.event-schemas.version>1.4.12</redhat.event-schemas.version>
     <clowder-quarkus-config-source.version>2.7.1</clowder-quarkus-config-source.version>
     <quarkus-logging-cloudwatch.version>6.14.2</quarkus-logging-cloudwatch.version>
