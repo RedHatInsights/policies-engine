@@ -54,7 +54,7 @@
     <clowder-quarkus-config-source.version>2.7.1</clowder-quarkus-config-source.version>
     <quarkus-logging-cloudwatch.version>6.14.2</quarkus-logging-cloudwatch.version>
     <quarkus-logging-sentry.version>2.1.9</quarkus-logging-sentry.version>
-    <org.antlr.version>4.11.1</org.antlr.version>
+    <org.antlr.version>4.13.2.redhat-00001</org.antlr.version>
 
   </properties>
 
