@@ -1,6 +1,11 @@
 = Policies Engine
 :source-language: java
 
+[IMPORTANT]
+====
+*This repository has been archived. Policies service was discontinued on December 12, 2025. For more information read link:https://access.redhat.com/articles/7133051[this Red Hat article].*
+====
+
 [.lead]
 This project contains the execution engine for policies service. For the user-facing UI-backend see https://github.com/RedHatInsights/policies-ui-backend
 
